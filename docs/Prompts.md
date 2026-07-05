@@ -2319,3 +2319,260 @@ Acceptance criteria:
 - Existing designer actions still work.
 - No new frontend framework is added.
 - No build step is added.
+
+
+
+---------------------------------------------
+
+
+
+Sprint 5.5 — Multi-select, Align, Distribute, and Layer Controls
+
+Current status:
+- Framework-agnostic designer UI works.
+- Static designer works.
+- Flask designer works.
+- Drag/drop works.
+- Resize works.
+- Style inspector works.
+- Icons and local version history work.
+- Page properties work.
+- Image object support works.
+- Zoom, grid, snap, undo/redo work.
+- Inspector focus issue is fixed.
+- Preview/export PDF works in Flask.
+
+Goal:
+Add precision layout tools:
+- multi-select
+- align selected objects
+- distribute selected objects
+- layer ordering
+- lock/unlock objects
+
+Important rules:
+- Do not introduce React, Vue, TypeScript, npm, Tailwind, Bootstrap, CDN, or build steps.
+- Use plain HTML, CSS, and vanilla JavaScript modules only.
+- Keep designer UI framework-agnostic.
+- Static mode must work.
+- Flask mode must work.
+- Do not break existing templates.
+- Do not break preview/export PDF.
+- Do not break undo/redo.
+- Do not break drag/resize/zoom/snap.
+
+Files to inspect:
+- packages/slim_report_designer_ui/slim_report_designer_ui/static/js/designer.js
+- packages/slim_report_designer_ui/slim_report_designer_ui/static/js/canvas.js
+- packages/slim_report_designer_ui/slim_report_designer_ui/static/js/toolbar.js
+- packages/slim_report_designer_ui/slim_report_designer_ui/static/js/inspector.js
+- packages/slim_report_designer_ui/slim_report_designer_ui/static/js/objects.js
+- packages/slim_report_designer_ui/slim_report_designer_ui/static/css/designer.css
+- packages/slim_report_designer_ui/slim_report_designer_ui/static/index.html
+
+Tasks:
+
+1. Multi-select state
+
+Replace single selected id with support for:
+- selectedIds array
+- primarySelectedId
+
+Behavior:
+- Click object selects only that object.
+- Shift + click toggles object in selection.
+- Ctrl/Cmd + click also toggles object in selection.
+- Clicking empty canvas clears selection.
+- Existing single-object inspector still works when one object is selected.
+- When multiple objects are selected, inspector shows multi-selection summary.
+
+2. Multi-select visual UI
+
+Selected objects should show selected outline.
+Primary selected object may have stronger outline.
+Show group bounding box around multiple selected objects if practical.
+
+3. Drag multiple selected objects
+
+When multiple objects are selected:
+- dragging any selected object moves all selected objects together.
+- movement respects zoom.
+- movement respects snap-to-grid if enabled.
+- objects remain inside page as much as possible.
+- operation is undoable.
+
+4. Resize behavior
+
+For now, resize only primary selected object.
+Do not implement group resize yet.
+When multiple selected, hide individual resize handles except primary selected object.
+
+5. Multi-selection inspector
+
+When multiple objects are selected, show:
+- number of selected objects
+- selected object types count
+- common actions:
+  - align left
+  - align center
+  - align right
+  - align top
+  - align middle
+  - align bottom
+  - distribute horizontal
+  - distribute vertical
+  - lock selected
+  - unlock selected
+  - delete selected
+  - duplicate selected
+
+6. Align tools
+
+Add toolbar buttons and/or inspector buttons for:
+- Align left
+- Align horizontal center
+- Align right
+- Align top
+- Align vertical middle
+- Align bottom
+
+Behavior:
+- If multiple selected, align relative to the primary selected object or selection bounds.
+Recommended:
+  - align left uses minimum x among selected
+  - align right uses maximum right edge
+  - align center uses selection center
+  - align top uses minimum y
+  - align bottom uses maximum bottom edge
+  - align middle uses selection middle
+- Changes are undoable.
+
+7. Distribute tools
+
+Add:
+- Distribute horizontal
+- Distribute vertical
+
+Behavior:
+- Requires at least 3 selected objects.
+- Sort objects by x or y.
+- Keep first and last fixed.
+- Evenly distribute middle objects.
+- Changes are undoable.
+
+8. Layer ordering
+
+Add object order controls:
+- Bring forward
+- Send backward
+- Bring to front
+- Send to back
+
+Behavior:
+- Use order in template.objects array as z-order.
+- Later objects render above earlier objects.
+- Works for one or multiple selected objects.
+- Changes are undoable.
+- Canvas render should respect object array order.
+
+9. Lock/unlock objects
+
+Add object property:
+- locked: true/false
+
+Behavior:
+- Locked objects can be selected.
+- Locked objects cannot be dragged/resized.
+- Inspector should show locked state.
+- Toolbar/inspector should allow lock/unlock.
+- Locked objects should have subtle lock visual indicator.
+- Delete should still require explicit action; okay to allow delete locked only after confirm, or block delete locked.
+
+10. Duplicate/delete multi-selected
+
+- Duplicate selected duplicates all selected objects.
+- Duplicates should keep relative positions and offset by 10px or grid size.
+- Delete selected deletes all selected objects.
+- Operations are undoable.
+
+11. Keyboard support
+
+- Delete removes selected objects.
+- Arrow keys move selected objects by 1px.
+- Shift + Arrow moves selected objects by grid size.
+- Ctrl/Cmd + A selects all objects.
+- Escape clears selection.
+- Do not trigger shortcuts while typing in inspector inputs.
+
+12. Toolbar state
+
+Disable align/distribute/layer buttons when not applicable.
+Example:
+- align requires at least 2 selected
+- distribute requires at least 3 selected
+- layer requires at least 1 selected
+- delete/duplicate requires at least 1 selected
+
+13. Status bar
+
+Update selected info:
+- no selection: Page selected
+- one selection: Selected: text text_1
+- multi-selection: Selected: 5 objects
+
+14. Undo/redo integration
+
+All new operations must push undo snapshots:
+- multi-drag
+- align
+- distribute
+- layer changes
+- lock/unlock
+- duplicate multi
+- delete multi
+
+15. Manual tests
+
+Static mode:
+python examples/designer_static_server/serve.py
+
+Test:
+- Add 5 text objects
+- Shift-click multi-select
+- Drag selected group
+- Align left/top/center
+- Distribute horizontal/vertical
+- Bring front/send back
+- Lock object
+- Try drag locked object
+- Unlock object
+- Duplicate selected group
+- Delete selected group
+- Undo/redo every operation
+- Ctrl+A selects all
+- Escape clears selection
+
+Flask mode:
+python examples/flask_app/app.py
+
+Open:
+http://127.0.0.1:5000/report-designer/designer?template=cerebro_cbc
+
+Test:
+- Multi-select existing CBC objects
+- Align selected labels
+- Move selected group
+- Preview still works
+- Export PDF still works
+
+Acceptance criteria:
+- Multi-select works.
+- Multi-object drag works.
+- Align tools work.
+- Distribute tools work.
+- Layer controls work.
+- Lock/unlock works.
+- Undo/redo works for new operations.
+- Static mode still works.
+- Flask mode still works.
+- Preview/export PDF still works.

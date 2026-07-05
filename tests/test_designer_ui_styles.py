@@ -145,6 +145,46 @@ def test_designer_exposes_undo_redo_history_hooks() -> None:
     assert "redo:" in icons_source
 
 
+def test_designer_exposes_multi_select_layout_tools() -> None:
+    designer_source = (
+        Path(__file__).resolve().parents[1]
+        / "packages/slim_report_designer_ui/slim_report_designer_ui/static/js/designer.js"
+    ).read_text(encoding="utf-8")
+    canvas_source = (
+        Path(__file__).resolve().parents[1]
+        / "packages/slim_report_designer_ui/slim_report_designer_ui/static/js/canvas.js"
+    ).read_text(encoding="utf-8")
+    toolbar_source = (
+        Path(__file__).resolve().parents[1]
+        / "packages/slim_report_designer_ui/slim_report_designer_ui/static/js/toolbar.js"
+    ).read_text(encoding="utf-8")
+    inspector_source = (
+        Path(__file__).resolve().parents[1]
+        / "packages/slim_report_designer_ui/slim_report_designer_ui/static/js/inspector.js"
+    ).read_text(encoding="utf-8")
+
+    for token in [
+        "selectedIds",
+        "primarySelectedId",
+        "alignSelected",
+        "distributeSelected",
+        "reorderSelected",
+        "setLockedSelected",
+    ]:
+        assert token in designer_source
+
+    assert "selection-bounds" in canvas_source
+    assert "primary-selected" in canvas_source
+    assert "lock-indicator" in canvas_source
+    assert "movingObjects" in canvas_source
+    assert "renderMultiSelectionInspector" in inspector_source
+    assert "data-inspector-command" in inspector_source
+    assert "alignLeft" in toolbar_source
+    assert "distributeHorizontal" in toolbar_source
+    assert "bringToFront" in toolbar_source
+    assert "lockSelected" in toolbar_source
+
+
 def test_inspector_live_input_preserves_focus() -> None:
     inspector_source = (
         Path(__file__).resolve().parents[1]
@@ -199,6 +239,16 @@ const line = normalizeObject({
 const lineStyle = objectStyle(line);
 if (lineStyle.stroke_color !== '#123456' || lineStyle.stroke_width !== 3) {
   throw new Error('line style was not preserved');
+}
+
+const locked = normalizeObject({
+  id: 'locked_title',
+  type: 'text',
+  locked: true,
+  text: 'Locked'
+});
+if (!locked.locked || locked.properties.locked !== true) {
+  throw new Error('locked state was not preserved');
 }
 """.replace("__MODULE_PATH__", module_path)
 

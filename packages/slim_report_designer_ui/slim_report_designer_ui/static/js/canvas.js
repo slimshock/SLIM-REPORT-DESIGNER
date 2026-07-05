@@ -4,7 +4,8 @@ import { gridSizeForUnit, maybeSnap, screenDeltaToRealDelta } from "./canvas_set
 export function createCanvasController({
   canvas,
   getTemplate,
-  getSelectedId,
+  getSelectedIds,
+  getPrimarySelectedId,
   getCanvasSettings,
   onSelect,
   onChange,
@@ -33,16 +34,40 @@ export function createCanvasController({
 
     const resizing = Boolean(event.target.closest(".resize-handle"));
 
-    onSelect(object.id);
+    const toggle = event.shiftKey || event.ctrlKey || event.metaKey;
+    onSelect(object.id, { toggle });
+    if (toggle) {
+      return;
+    }
 
     const currentObject = findObject(getTemplate(), objectId);
 
     if (!currentObject) {
       return;
     }
+    if (currentObject.locked) {
+      return;
+    }
+    const selectedIds = getSelectedIds();
+    const movingIds = resizing
+      ? [objectId]
+      : selectedIds.includes(objectId) ? selectedIds : [objectId];
+    const movingObjects = movingIds
+      .map((id) => findObject(getTemplate(), id))
+      .filter((item) => item && !item.locked);
+    if (movingObjects.length === 0) {
+      return;
+    }
 
     dragState = {
       objectId,
+      movingObjects: movingObjects.map((item) => ({
+        id: item.id,
+        x: Number(item.x) || 0,
+        y: Number(item.y) || 0,
+        width: Number(item.width) || 0,
+        height: Number(item.height) || 0
+      })),
       pointerId: event.pointerId,
       startClientX: event.clientX,
       startClientY: event.clientY,
@@ -91,6 +116,9 @@ export function createCanvasController({
     const realDy = screenDeltaToRealDelta(dy, settings.zoom) / unitScale;
 
     if (dragState.resizing) {
+      if (object.locked) {
+        return;
+      }
       object.width = Math.max(8, Math.round(dragState.startWidth + realDx));
       object.height = Math.max(
         object.type === "line" ? 0 : 8,
@@ -104,11 +132,21 @@ export function createCanvasController({
         object.height = Math.max(8, Math.round(object.width / dragState.startAspectRatio));
       }
     } else {
-      object.x = Math.round(maybeSnap(dragState.startX + realDx, settings, unitScale));
-      object.y = Math.round(maybeSnap(dragState.startY + realDy, settings, unitScale));
+      const adjusted = constrainedGroupDelta(dragState.movingObjects, realDx, realDy, getTemplate());
+      for (const item of dragState.movingObjects) {
+        const target = findObject(getTemplate(), item.id);
+        if (!target || target.locked) {
+          continue;
+        }
+        target.x = Math.round(maybeSnap(item.x + adjusted.dx, settings, unitScale));
+        target.y = Math.round(maybeSnap(item.y + adjusted.dy, settings, unitScale));
+        clampObjectToPage(target, getTemplate());
+      }
     }
 
-    clampObjectToPage(object, getTemplate());
+    if (dragState.resizing) {
+      clampObjectToPage(object, getTemplate());
+    }
     dragState.changed = true;
     onChange();
   });
@@ -145,21 +183,15 @@ export function createCanvasController({
       return;
     }
 
-    const selectedId = getSelectedId();
+    const selectedIds = getSelectedIds();
 
-    if (!selectedId) {
-      return;
-    }
-
-    const object = findObject(getTemplate(), selectedId);
-
-    if (!object) {
+    if (selectedIds.length === 0) {
       return;
     }
 
     if (event.key === "Delete") {
       event.preventDefault();
-      onSelect(selectedId, { deleteSelected: true });
+      onSelect(null, { deleteSelected: true });
       return;
     }
 
@@ -169,23 +201,31 @@ export function createCanvasController({
     const snapshot = onCaptureHistory();
     let changed = false;
 
+    let dx = 0;
+    let dy = 0;
     if (event.key === "ArrowLeft") {
-      object.x = Math.round((Number(object.x) || 0) - step);
-      changed = true;
+      dx = -step;
     } else if (event.key === "ArrowRight") {
-      object.x = Math.round((Number(object.x) || 0) + step);
-      changed = true;
+      dx = step;
     } else if (event.key === "ArrowUp") {
-      object.y = Math.round((Number(object.y) || 0) - step);
-      changed = true;
+      dy = -step;
     } else if (event.key === "ArrowDown") {
-      object.y = Math.round((Number(object.y) || 0) + step);
-      changed = true;
+      dy = step;
+    }
+    if (dx !== 0 || dy !== 0) {
+      for (const object of selectedIds.map((id) => findObject(getTemplate(), id))) {
+        if (!object || object.locked) {
+          continue;
+        }
+        object.x = Math.round((Number(object.x) || 0) + dx);
+        object.y = Math.round((Number(object.y) || 0) + dy);
+        clampObjectToPage(object, getTemplate());
+        changed = true;
+      }
     }
 
     if (changed) {
       event.preventDefault();
-      clampObjectToPage(object, getTemplate());
       onCommitHistory(snapshot, "Move object");
       onChange();
     }
@@ -193,7 +233,7 @@ export function createCanvasController({
 
   return {
     render() {
-      renderCanvas(canvas, getTemplate(), getSelectedId(), getCanvasSettings());
+      renderCanvas(canvas, getTemplate(), getSelectedIds(), getPrimarySelectedId(), getCanvasSettings());
     },
   };
 }
@@ -226,7 +266,7 @@ function safeReleasePointerCapture(element, event) {
   }
 }
 
-export function renderCanvas(canvas, template, selectedId, settings = {}) {
+export function renderCanvas(canvas, template, selectedIds = [], primarySelectedId = null, settings = {}) {
   const page = template.page || {};
   const zoom = Number(settings.zoom) || 1;
   const width = unitToPx(page.width || 595, page.unit);
@@ -248,17 +288,36 @@ export function renderCanvas(canvas, template, selectedId, settings = {}) {
   canvas.innerHTML = "";
 
   for (const object of template.objects || []) {
-    canvas.appendChild(renderObject(object, selectedId, page.unit));
+    canvas.appendChild(renderObject(object, selectedIds, primarySelectedId, page.unit));
+  }
+  if (selectedIds.length > 1) {
+    const selectedObjects = (template.objects || []).filter((object) => selectedIds.includes(object.id));
+    const bounds = objectBounds(selectedObjects, page.unit);
+    if (bounds) {
+      const group = document.createElement("div");
+      group.className = "selection-bounds";
+      group.style.left = `${bounds.left}px`;
+      group.style.top = `${bounds.top}px`;
+      group.style.width = `${bounds.width}px`;
+      group.style.height = `${bounds.height}px`;
+      canvas.appendChild(group);
+    }
   }
 }
 
-function renderObject(object, selectedId, unit = "px") {
+function renderObject(object, selectedIds = [], primarySelectedId = null, unit = "px") {
   const element = document.createElement("div");
 
   element.className = "report-object";
 
-  if (object.id === selectedId) {
+  if (selectedIds.includes(object.id)) {
     element.classList.add("selected");
+  }
+  if (object.id === primarySelectedId) {
+    element.classList.add("primary-selected");
+  }
+  if (object.locked) {
+    element.classList.add("locked");
   }
 
   element.dataset.objectId = object.id;
@@ -321,13 +380,36 @@ function renderObject(object, selectedId, unit = "px") {
     }
   }
 
-  if (object.id === selectedId) {
+  if (object.locked) {
+    const lock = document.createElement("span");
+    lock.className = "lock-indicator";
+    lock.textContent = "Locked";
+    element.appendChild(lock);
+  }
+
+  if (object.id === primarySelectedId && !object.locked) {
     const handle = document.createElement("div");
     handle.className = "resize-handle";
     element.appendChild(handle);
   }
 
   return element;
+}
+
+function objectBounds(objects, unit = "px") {
+  if (!objects.length) {
+    return null;
+  }
+  const left = Math.min(...objects.map((object) => unitToPx(object.x, unit)));
+  const top = Math.min(...objects.map((object) => unitToPx(object.y, unit)));
+  const right = Math.max(...objects.map((object) => unitToPx(object.x + object.width, unit)));
+  const bottom = Math.max(...objects.map((object) => unitToPx(object.y + object.height, unit)));
+  return {
+    left,
+    top,
+    width: right - left,
+    height: bottom - top
+  };
 }
 
 function unitToPx(value, unit = "px") {
@@ -368,6 +450,21 @@ function clampObjectToPage(object, template) {
   if (object.y + object.height > pageHeight) {
     object.y = Math.max(0, pageHeight - object.height);
   }
+}
+
+function constrainedGroupDelta(items, dx, dy, template) {
+  const page = template.page || {};
+  const pageWidth = Number(page.width) || 595;
+  const pageHeight = Number(page.height) || 842;
+  let adjustedDx = dx;
+  let adjustedDy = dy;
+  for (const item of items) {
+    adjustedDx = Math.max(adjustedDx, -item.x);
+    adjustedDx = Math.min(adjustedDx, pageWidth - item.x - item.width);
+    adjustedDy = Math.max(adjustedDy, -item.y);
+    adjustedDy = Math.min(adjustedDy, pageHeight - item.y - item.height);
+  }
+  return { dx: adjustedDx, dy: adjustedDy };
 }
 
 export function placeObjectOnCanvas(object, template, settings, viewport = null) {

@@ -17,7 +17,9 @@ export function createInspector({
   form,
   getTemplate,
   getSelectedObject,
+  getSelectedObjects = () => [],
   onBeforeChange = () => {},
+  onCommand = () => {},
   onChange
 }) {
   form.addEventListener("input", (event) => {
@@ -54,6 +56,12 @@ export function createInspector({
     onChange();
   });
   form.addEventListener("click", (event) => {
+    const commandButton = event.target.closest("button[data-inspector-command]");
+    if (commandButton) {
+      event.preventDefault();
+      onCommand(commandButton.dataset.inspectorCommand);
+      return;
+    }
     const button = event.target.closest("button[data-style-key]");
     if (!button) {
       return;
@@ -80,13 +88,17 @@ export function createInspector({
 
   return {
     render() {
-      renderInspector(form, getSelectedObject(), getTemplate());
+      renderInspector(form, getSelectedObject(), getTemplate(), getSelectedObjects());
     }
   };
 }
 
-export function renderInspector(form, object, template = {}) {
+export function renderInspector(form, object, template = {}, selectedObjects = []) {
   form.innerHTML = "";
+  if (selectedObjects.length > 1) {
+    form.appendChild(renderMultiSelectionInspector(selectedObjects));
+    return;
+  }
   if (!object) {
     form.appendChild(renderPageInspector(template));
     return;
@@ -156,6 +168,62 @@ export function renderInspector(form, object, template = {}) {
       })
     ]));
   }
+  form.appendChild(section("Object State", [
+    fieldRow("locked", Boolean(object.locked), { type: "checkbox", name: "locked" })
+  ]));
+}
+
+function renderMultiSelectionInspector(objects) {
+  const fragment = document.createDocumentFragment();
+  const typeCounts = objects.reduce((counts, object) => {
+    counts[object.type] = (counts[object.type] || 0) + 1;
+    return counts;
+  }, {});
+  const summary = document.createElement("div");
+  summary.className = "empty-state";
+  summary.textContent = `${objects.length} objects selected: ${Object.entries(typeCounts)
+    .map(([type, count]) => `${count} ${type}`)
+    .join(", ")}`;
+  fragment.appendChild(summary);
+  fragment.appendChild(section("Align", [
+    commandGrid([
+      ["alignLeft", "Left"],
+      ["alignCenter", "Center"],
+      ["alignRight", "Right"],
+      ["alignTop", "Top"],
+      ["alignMiddle", "Middle"],
+      ["alignBottom", "Bottom"]
+    ])
+  ]));
+  fragment.appendChild(section("Distribute", [
+    commandGrid([
+      ["distributeHorizontal", "Horizontal"],
+      ["distributeVertical", "Vertical"]
+    ])
+  ]));
+  fragment.appendChild(section("Actions", [
+    commandGrid([
+      ["lockSelected", "Lock"],
+      ["unlockSelected", "Unlock"],
+      ["duplicate", "Duplicate"],
+      ["delete", "Delete"]
+    ])
+  ]));
+  return fragment;
+}
+
+function commandGrid(commands) {
+  const row = document.createElement("div");
+  row.className = "inspector-command-grid";
+  for (const [command, label] of commands) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = command === "delete" ? "toolbar-button danger" : "toolbar-button";
+    button.dataset.inspectorCommand = command;
+    button.textContent = label;
+    row.appendChild(button);
+  }
+  return row;
 }
 
 function renderPageInspector(template) {
@@ -230,6 +298,12 @@ function applyInput(object, input) {
   const numericFields = new Set(["x", "y", "width", "height"]);
   if (numericFields.has(input.name)) {
     object[input.name] = Number(value) || 0;
+    return;
+  }
+  if (input.name === "locked") {
+    object.locked = Boolean(value);
+    object.properties = object.properties || {};
+    object.properties.locked = object.locked;
     return;
   }
   if (input.dataset.styleKey) {

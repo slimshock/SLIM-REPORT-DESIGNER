@@ -34,7 +34,8 @@ const HISTORY_LIMIT = 50;
 
 const state = {
   template: null,
-  selectedId: null,
+  selectedIds: [],
+  primarySelectedId: null,
   canvasSettings: loadCanvasSettings(),
   undoStack: [],
   redoStack: [],
@@ -64,7 +65,8 @@ const elements = {
 const canvasController = createCanvasController({
   canvas: elements.canvas,
   getTemplate: () => state.template,
-  getSelectedId: () => state.selectedId,
+  getSelectedIds: () => state.selectedIds,
+  getPrimarySelectedId: () => state.primarySelectedId,
   getCanvasSettings: () => state.canvasSettings,
   onSelect: handleCanvasSelect,
   onChange: markDirty,
@@ -76,8 +78,10 @@ const inspector = createInspector({
   form: elements.inspectorForm,
   getTemplate: () => state.template,
   getSelectedObject,
+  getSelectedObjects,
   onBeforeChange: recordUndo,
   onChange: markDirty,
+  onCommand: handleCommand,
   onSelect: selectObject
 });
 
@@ -98,7 +102,7 @@ elements.toolbox.addEventListener("click", (event) => {
   const object = createObject(button.dataset.tool, state.template);
   placeObjectOnCanvas(object, state.template, state.canvasSettings, elements.canvasScroller);
   state.template.objects.push(object);
-  selectObject(object.id);
+  selectOnly(object.id);
   showActiveTool(button);
   markDirty(`Added ${object.type}`);
 });
@@ -115,7 +119,7 @@ elements.importFile.addEventListener("change", async () => {
     }
     const payload = JSON.parse(await file.text());
     state.template = normalizeTemplate(payload);
-    state.selectedId = null;
+    clearSelection();
     markDirty(`Imported ${file.name}`);
   } catch (error) {
     setStatus(error.message);
@@ -145,6 +149,16 @@ document.addEventListener("keydown", (event) => {
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "y") {
     event.preventDefault();
     redo();
+    return;
+  }
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "a") {
+    event.preventDefault();
+    selectAll();
+    return;
+  }
+  if (event.key === "Escape") {
+    event.preventDefault();
+    clearSelection();
   }
 });
 
@@ -188,6 +202,24 @@ async function handleCommand(command, payload = {}) {
       duplicateSelected();
     } else if (command === "delete") {
       deleteSelected();
+    } else if (command.startsWith("align")) {
+      alignSelected(command.replace("align", "").toLowerCase());
+    } else if (command === "distributeHorizontal") {
+      distributeSelected("horizontal");
+    } else if (command === "distributeVertical") {
+      distributeSelected("vertical");
+    } else if (command === "bringForward") {
+      reorderSelected("forward");
+    } else if (command === "sendBackward") {
+      reorderSelected("backward");
+    } else if (command === "bringToFront") {
+      reorderSelected("front");
+    } else if (command === "sendToBack") {
+      reorderSelected("back");
+    } else if (command === "lockSelected") {
+      setLockedSelected(true);
+    } else if (command === "unlockSelected") {
+      setLockedSelected(false);
     } else if (command === "history") {
       openHistory();
     } else if (command === "zoomIn") {
@@ -236,46 +268,207 @@ function handleCanvasSelect(objectId, options = {}) {
     deleteSelected();
     return;
   }
-  selectObject(objectId);
+  selectObject(objectId, options);
 }
 
-function selectObject(objectId) {
-  state.selectedId = objectId;
+function selectObject(objectId, options = {}) {
+  if (!objectId) {
+    clearSelection();
+    return;
+  }
+  if (options.toggle) {
+    toggleSelection(objectId);
+    return;
+  }
+  selectOnly(objectId);
+}
+
+function selectOnly(objectId) {
+  state.selectedIds = objectId ? [objectId] : [];
+  state.primarySelectedId = objectId || null;
+  render();
+}
+
+function toggleSelection(objectId) {
+  if (state.selectedIds.includes(objectId)) {
+    state.selectedIds = state.selectedIds.filter((id) => id !== objectId);
+    if (state.primarySelectedId === objectId) {
+      state.primarySelectedId = state.selectedIds[state.selectedIds.length - 1] || null;
+    }
+  } else {
+    state.selectedIds = [...state.selectedIds, objectId];
+    state.primarySelectedId = objectId;
+  }
+  render();
+}
+
+function clearSelection() {
+  state.selectedIds = [];
+  state.primarySelectedId = null;
+  render();
+}
+
+function selectAll() {
+  state.selectedIds = state.template.objects.map((object) => object.id);
+  state.primarySelectedId = state.selectedIds[state.selectedIds.length - 1] || null;
   render();
 }
 
 function getSelectedObject() {
-  if (!state.selectedId) {
+  if (!state.primarySelectedId || state.selectedIds.length !== 1) {
     return null;
   }
-  return state.template.objects.find((object) => object.id === state.selectedId) || null;
+  return state.template.objects.find((object) => object.id === state.primarySelectedId) || null;
+}
+
+function getSelectedObjects() {
+  const selected = new Set(state.selectedIds);
+  return state.template.objects.filter((object) => selected.has(object.id));
 }
 
 function duplicateSelected() {
-  const selected = getSelectedObject();
-  if (!selected) {
+  const selectedObjects = getSelectedObjects();
+  if (selectedObjects.length === 0) {
     setStatus("No object selected");
     return;
   }
-  recordUndo(`Duplicate ${selected.id}`);
-  const clone = duplicateObject(selected, state.template);
-  state.template.objects.push(clone);
-  state.selectedId = clone.id;
-  markDirty(`Duplicated ${selected.id}`);
+  recordUndo("Duplicate selected");
+  const clones = [];
+  for (const object of selectedObjects) {
+    const clone = duplicateObject(object, {
+      objects: state.template.objects.concat(clones)
+    });
+    clone.x += 10;
+    clone.y += 10;
+    clones.push(clone);
+  }
+  state.template.objects.push(...clones);
+  state.selectedIds = clones.map((object) => object.id);
+  state.primarySelectedId = state.selectedIds[state.selectedIds.length - 1] || null;
+  markDirty(`Duplicated ${clones.length} ${clones.length === 1 ? "object" : "objects"}`);
 }
 
 function deleteSelected() {
-  if (!state.selectedId) {
+  if (state.selectedIds.length === 0) {
     setStatus("No object selected");
     return;
   }
-  const index = state.template.objects.findIndex((object) => object.id === state.selectedId);
-  if (index >= 0) {
-    recordUndo(`Delete ${state.selectedId}`);
-    const [removed] = state.template.objects.splice(index, 1);
-    state.selectedId = null;
-    markDirty(`Deleted ${removed.id}`);
+  recordUndo("Delete selected");
+  const selected = new Set(state.selectedIds);
+  const count = state.template.objects.filter((object) => selected.has(object.id)).length;
+  state.template.objects = state.template.objects.filter((object) => !selected.has(object.id));
+  state.selectedIds = [];
+  state.primarySelectedId = null;
+  markDirty(`Deleted ${count} ${count === 1 ? "object" : "objects"}`);
+}
+
+function alignSelected(kind) {
+  const selected = getSelectedObjects();
+  if (selected.length < 2) {
+    setStatus("Select at least 2 objects");
+    return;
   }
+  recordUndo(`Align ${kind}`);
+  const bounds = selectionBounds(selected);
+  for (const object of selected.filter((item) => !item.locked)) {
+    if (kind === "left") {
+      object.x = bounds.left;
+    } else if (kind === "center") {
+      object.x = Math.round(bounds.centerX - object.width / 2);
+    } else if (kind === "right") {
+      object.x = bounds.right - object.width;
+    } else if (kind === "top") {
+      object.y = bounds.top;
+    } else if (kind === "middle") {
+      object.y = Math.round(bounds.centerY - object.height / 2);
+    } else if (kind === "bottom") {
+      object.y = bounds.bottom - object.height;
+    }
+  }
+  markDirty(`Aligned ${selected.length} objects`);
+}
+
+function distributeSelected(axis) {
+  const selected = getSelectedObjects().filter((object) => !object.locked);
+  if (selected.length < 3) {
+    setStatus("Select at least 3 unlocked objects");
+    return;
+  }
+  recordUndo(`Distribute ${axis}`);
+  const key = axis === "horizontal" ? "x" : "y";
+  const sizeKey = axis === "horizontal" ? "width" : "height";
+  selected.sort((a, b) => a[key] - b[key]);
+  const first = selected[0];
+  const last = selected[selected.length - 1];
+  const available = (last[key] + last[sizeKey]) - first[key];
+  const totalSize = selected.reduce((sum, object) => sum + object[sizeKey], 0);
+  const gap = (available - totalSize) / (selected.length - 1);
+  let cursor = first[key] + first[sizeKey] + gap;
+  for (const object of selected.slice(1, -1)) {
+    object[key] = Math.round(cursor);
+    cursor += object[sizeKey] + gap;
+  }
+  markDirty(`Distributed ${selected.length} objects`);
+}
+
+function reorderSelected(direction) {
+  const selected = new Set(state.selectedIds);
+  if (selected.size === 0) {
+    setStatus("No object selected");
+    return;
+  }
+  recordUndo(`Layer ${direction}`);
+  const objects = state.template.objects;
+  if (direction === "front" || direction === "back") {
+    const selectedObjects = objects.filter((object) => selected.has(object.id));
+    const remaining = objects.filter((object) => !selected.has(object.id));
+    state.template.objects = direction === "front"
+      ? [...remaining, ...selectedObjects]
+      : [...selectedObjects, ...remaining];
+  } else if (direction === "forward") {
+    for (let index = objects.length - 2; index >= 0; index -= 1) {
+      if (selected.has(objects[index].id) && !selected.has(objects[index + 1].id)) {
+        [objects[index], objects[index + 1]] = [objects[index + 1], objects[index]];
+      }
+    }
+  } else if (direction === "backward") {
+    for (let index = 1; index < objects.length; index += 1) {
+      if (selected.has(objects[index].id) && !selected.has(objects[index - 1].id)) {
+        [objects[index], objects[index - 1]] = [objects[index - 1], objects[index]];
+      }
+    }
+  }
+  markDirty("Layer order changed");
+}
+
+function setLockedSelected(locked) {
+  const selected = getSelectedObjects();
+  if (selected.length === 0) {
+    setStatus("No object selected");
+    return;
+  }
+  recordUndo(locked ? "Lock selected" : "Unlock selected");
+  for (const object of selected) {
+    object.locked = locked;
+    object.properties = object.properties || {};
+    object.properties.locked = locked;
+  }
+  markDirty(locked ? "Locked selected" : "Unlocked selected");
+}
+
+function selectionBounds(objects) {
+  const left = Math.min(...objects.map((object) => object.x));
+  const top = Math.min(...objects.map((object) => object.y));
+  const right = Math.max(...objects.map((object) => object.x + object.width));
+  const bottom = Math.max(...objects.map((object) => object.y + object.height));
+  return {
+    left,
+    top,
+    right,
+    bottom,
+    centerX: left + (right - left) / 2,
+    centerY: top + (bottom - top) / 2
+  };
 }
 
 function exportJson() {
@@ -418,7 +611,8 @@ function restoreHistoricalVersion(versionId) {
   createVersion(templateId, state.template, "Before restore");
   recordUndo("Restore version");
   state.template = normalizeTemplate(restored);
-  state.selectedId = null;
+  state.selectedIds = [];
+  state.primarySelectedId = null;
   markDirty(`Restored version from ${formatDate(version?.created_at)}`);
   renderHistory();
 }
@@ -442,7 +636,8 @@ function render(options = {}) {
     inspector.render();
   }
   toolbar.render({
-    hasSelection: Boolean(getSelectedObject()),
+    hasSelection: state.selectedIds.length > 0,
+    selectionCount: state.selectedIds.length,
     canvasSettings: state.canvasSettings,
     canUndo: state.undoStack.length > 0,
     canRedo: state.redoStack.length > 0
@@ -539,8 +734,10 @@ function redo() {
 
 function restoreTemplateSnapshot(snapshot) {
   state.template = normalizeTemplate(structuredClone(snapshot));
-  if (state.selectedId && !state.template.objects.some((object) => object.id === state.selectedId)) {
-    state.selectedId = null;
+  const existing = new Set(state.template.objects.map((object) => object.id));
+  state.selectedIds = state.selectedIds.filter((id) => existing.has(id));
+  if (!state.primarySelectedId || !existing.has(state.primarySelectedId)) {
+    state.primarySelectedId = state.selectedIds[state.selectedIds.length - 1] || null;
   }
 }
 
@@ -559,11 +756,14 @@ function statusLabel() {
 }
 
 function selectedObjectLabel() {
-  const selected = getSelectedObject();
-  if (!selected) {
-    return "No selection";
+  const selected = getSelectedObjects();
+  if (selected.length === 0) {
+    return "Page selected";
   }
-  return `Selected: ${selected.type} ${selected.id}`;
+  if (selected.length > 1) {
+    return `Selected: ${selected.length} objects`;
+  }
+  return `Selected: ${selected[0].type} ${selected[0].id}`;
 }
 
 function canvasInfoLabel() {

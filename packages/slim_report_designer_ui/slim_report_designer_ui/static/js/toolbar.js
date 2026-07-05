@@ -34,6 +34,30 @@ export function createToolbar({ container, onCommand }) {
       ]
     },
     {
+      label: "Align",
+      actions: [
+        ["alignLeft", "Align Left", "icon-action", "Align selected left", "", "align-left"],
+        ["alignCenter", "Align Center", "icon-action", "Align selected center", "", "align-center"],
+        ["alignRight", "Align Right", "icon-action", "Align selected right", "", "align-right"],
+        ["alignTop", "Align Top", "icon-action", "Align selected top", "", "align-top"],
+        ["alignMiddle", "Align Middle", "icon-action", "Align selected middle", "", "align-middle"],
+        ["alignBottom", "Align Bottom", "icon-action", "Align selected bottom", "", "align-bottom"],
+        ["distributeHorizontal", "Distribute Horizontal", "icon-action", "Distribute selected horizontally", "", "distribute-horizontal"],
+        ["distributeVertical", "Distribute Vertical", "icon-action", "Distribute selected vertically", "", "distribute-vertical"]
+      ]
+    },
+    {
+      label: "Layer",
+      actions: [
+        ["bringForward", "Bring Forward", "icon-action", "Bring selected forward", "", "bring-forward"],
+        ["sendBackward", "Send Backward", "icon-action", "Send selected backward", "", "send-backward"],
+        ["bringToFront", "Bring To Front", "icon-action", "Bring selected to front", "", "bring-front"],
+        ["sendToBack", "Send To Back", "icon-action", "Send selected to back", "", "send-back"],
+        ["lockSelected", "Lock Selected", "icon-action", "Lock selected objects", "", "lock"],
+        ["unlockSelected", "Unlock Selected", "icon-action", "Unlock selected objects", "", "unlock"]
+      ]
+    },
+    {
       label: "History",
       actions: [
         ["history", "Version History", "icon-action", "View Version History", "", "history"]
@@ -81,7 +105,13 @@ export function createToolbar({ container, onCommand }) {
   });
 
   return {
-    render({ hasSelection, canvasSettings, canUndo = false, canRedo = false }) {
+    render({
+      hasSelection,
+      selectionCount = hasSelection ? 1 : 0,
+      canvasSettings,
+      canUndo = false,
+      canRedo = false
+    }) {
       for (const command of ["duplicate", "delete"]) {
         const button = container.querySelector(`[data-command="${command}"]`);
         if (button) {
@@ -94,6 +124,26 @@ export function createToolbar({ container, onCommand }) {
           button.disabled = !enabled;
         }
       }
+      setCommandGroupDisabled(container, [
+        "alignLeft",
+        "alignCenter",
+        "alignRight",
+        "alignTop",
+        "alignMiddle",
+        "alignBottom"
+      ], selectionCount < 2);
+      setCommandGroupDisabled(container, [
+        "distributeHorizontal",
+        "distributeVertical"
+      ], selectionCount < 3);
+      setCommandGroupDisabled(container, [
+        "bringForward",
+        "sendBackward",
+        "bringToFront",
+        "sendToBack",
+        "lockSelected",
+        "unlockSelected"
+      ], selectionCount < 1);
       const zoomDisplay = container.querySelector("[data-zoom-display]");
       if (zoomDisplay) {
         zoomDisplay.textContent = zoomPercent(canvasSettings?.zoom || 1);
@@ -110,6 +160,15 @@ export function createToolbar({ container, onCommand }) {
       }
     }
   };
+}
+
+function setCommandGroupDisabled(container, commands, disabled) {
+  for (const command of commands) {
+    const button = container.querySelector(`[data-command="${command}"]`);
+    if (button) {
+      button.disabled = disabled;
+    }
+  }
 }
 
 function canvasControls() {

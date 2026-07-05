@@ -49,10 +49,12 @@ export function normalizeObject(object) {
     y: numberValue(object.y, 40),
     width: numberValue(object.width, 160),
     height: numberValue(object.height, defaultHeightForType(type)),
+    locked: Boolean(object.locked ?? object.properties?.locked ?? false),
     properties: {
       ...(object.properties || {})
     }
   };
+  normalized.properties.locked = normalized.locked;
 
   if (object.text !== undefined) {
     normalized.text = String(object.text);

@@ -27,6 +27,15 @@ const ICONS = {
   "align-top": '<path d="M5 5h14"/><path d="M8 9h8"/><path d="M10 13h4"/><path d="M10 17h4"/>',
   "align-middle": '<path d="M5 12h14"/><path d="M8 7h8"/><path d="M8 17h8"/>',
   "align-bottom": '<path d="M5 19h14"/><path d="M8 15h8"/><path d="M10 11h4"/><path d="M10 7h4"/>'
+  ,
+  "distribute-horizontal": '<path d="M4 5v14"/><path d="M20 5v14"/><rect x="7" y="8" width="3" height="8"/><rect x="14" y="8" width="3" height="8"/>',
+  "distribute-vertical": '<path d="M5 4h14"/><path d="M5 20h14"/><rect x="8" y="7" width="8" height="3"/><rect x="8" y="14" width="8" height="3"/>',
+  "bring-forward": '<rect x="8" y="4" width="10" height="10"/><rect x="4" y="10" width="10" height="10"/>',
+  "send-backward": '<rect x="4" y="10" width="10" height="10"/><rect x="8" y="4" width="10" height="10"/>',
+  "bring-front": '<rect x="7" y="3" width="12" height="12"/><path d="M5 9v10h10"/>',
+  "send-back": '<rect x="5" y="9" width="12" height="12"/><path d="M9 5h10v10"/>',
+  lock: '<rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+  unlock: '<rect x="5" y="10" width="14" height="10" rx="2"/><path d="M16 10V7a4 4 0 0 0-7.5-2"/>'
 };
 
 export function icon(name) {
