@@ -1485,3 +1485,208 @@ Update README examples.
 
 Document lessons learned.
 
+
+
+Sprint 5
+"The Canvas"
+
+Mission
+
+Create the first framework-agnostic drag-and-drop designer UI for Slim Report Designer.
+
+Important Architecture Rules
+
+The designer UI must not depend on Flask, Django, FastAPI, or any backend framework.
+
+The designer UI is a frontend package that edits Slim Report JSON.
+
+Framework adapters only host the UI and provide APIs for loading, saving, previewing, and exporting.
+
+Create package:
+
+packages/slim_report_designer_ui/
+
+Structure:
+
+packages/slim_report_designer_ui/
+  pyproject.toml
+  slim_report_designer_ui/
+    __init__.py
+    static/
+      index.html
+      css/
+        designer.css
+      js/
+        designer.js
+        canvas.js
+        objects.js
+        inspector.js
+        api.js
+        toolbar.js
+
+Designer UI requirements:
+
+1. Layout
+
+Create a full-screen designer interface with:
+
+- top toolbar
+- left toolbox
+- center canvas/page area
+- right property inspector
+- bottom status bar
+
+2. Canvas
+
+Create an A4 page canvas using plain HTML/CSS/JavaScript first.
+
+Do not use Fabric.js yet.
+
+Use absolutely positioned div elements for objects.
+
+Show a light grid background.
+
+3. Toolbox
+
+Add buttons:
+
+- Text
+- Field
+- Line
+- Rectangle
+
+4. Object behavior
+
+Support:
+
+- add text object
+- add field object
+- add line object
+- add rectangle object
+- select object
+- drag object
+- basic resize
+- delete selected object
+- duplicate selected object
+
+5. Property inspector
+
+When selecting an object, show editable properties:
+
+Common:
+- id
+- type
+- x
+- y
+- width
+- height
+
+Text:
+- text
+- font_size
+- bold
+
+Field:
+- binding
+- font_size
+- bold
+
+Rectangle:
+- border_width
+
+Line:
+- stroke_width
+
+Changing inspector values should update both the canvas and JSON.
+
+6. Template JSON
+
+Maintain one JavaScript template object.
+
+Example:
+
+{
+  "version": "0.1",
+  "metadata": {
+    "name": "Untitled Report"
+  },
+  "page": {
+    "size": "A4",
+    "orientation": "portrait",
+    "width": 595,
+    "height": 842
+  },
+  "objects": []
+}
+
+7. Import / Export
+
+Add buttons:
+
+- Export JSON
+- Import JSON
+- Copy JSON
+
+Export should download report-template.json.
+
+Import should allow loading JSON file.
+
+Copy should copy JSON to clipboard.
+
+8. API abstraction
+
+Create api.js with functions:
+
+loadTemplate()
+saveTemplate(template)
+previewTemplate(template)
+exportPdf(template)
+
+For now, these can use local mode by default.
+
+If window.SLIM_REPORT_API_BASE exists, call backend endpoints.
+
+9. Pure Python test mode
+
+Add examples/designer_static_server/
+
+Create a simple Python HTTP server example that serves the designer UI without Flask.
+
+10. Flask integration
+
+Update slim_report_flask so it can serve the same designer UI package.
+
+Add route:
+
+GET /report-designer/designer
+
+This should serve the designer index.html.
+
+Add API routes:
+
+GET /report-designer/api/templates/<id>
+POST /report-designer/api/templates/<id>
+POST /report-designer/api/preview
+POST /report-designer/api/export/pdf
+
+These routes should use slim_report_core.
+
+11. Keep it simple
+
+No React.
+No Vue.
+No build step.
+No TypeScript yet.
+No Fabric.js yet.
+
+Use plain JavaScript modules so the project remains easy to understand.
+
+Acceptance Criteria
+
+- Designer UI works without Flask using static server.
+- Designer UI works inside Flask.
+- User can add objects visually.
+- User can drag objects.
+- User can edit properties.
+- User can export JSON.
+- Flask can preview/export using the designer JSON.

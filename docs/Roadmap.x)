@@ -4,8 +4,8 @@ Developer Preview (v0.1.x)
     Sprint 2 - Let It Breathe                  done
     Sprint 3 - The Report                      done
     Sprint 4 - The Developer Experience        done
-    Sprint 5 - Persistence                     next
-    Sprint 6 - The Canvas
+    Sprint 5 - The Canvas                      active
+    Sprint 6 - Persistence                     next
 
 Alpha (v0.2.x)
 
@@ -46,3 +46,11 @@ Sprint 4 review answers:
     YAML can be added later as a serializer.
     XML can live as a plugin serializer.
     Database storage can serialize or decompose Report, but loading must return Report.
+
+Sprint 5 Canvas checkpoint:
+
+    Designer UI is a framework-agnostic static package.
+    Flask, Django, FastAPI, and other adapters should host the same UI files.
+    Adapters provide APIs for template load/save, preview, and PDF export.
+    The Canvas edits Slim Report JSON in the browser and sends it to serializers at the boundary.
+    No React, Vue, TypeScript, Fabric.js, or build step yet.

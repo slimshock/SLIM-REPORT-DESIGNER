@@ -27,6 +27,8 @@ Current implementation notes:
 - Rendering lives in `slim_report_core.rendering`.
 - `Report` is the primary daily developer API.
 - Beginners, AI tools, designers, Flask, and CLI should all target `Report` directly.
+- The Canvas designer UI lives in `slim_report_designer_ui` as static HTML/CSS/JavaScript.
+- Framework adapters host the Canvas UI and provide load/save/preview/export APIs.
 - Drawable elements share one `ReportObject` inheritance model.
 - `ObjectFactory` is the shared construction point for report objects.
 - Serialization lives in `slim_report_core.serialization`.

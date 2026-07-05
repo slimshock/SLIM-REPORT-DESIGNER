@@ -69,6 +69,27 @@ def test_flask_adapter_creates_lists_and_returns_template(tmp_path: Path) -> Non
     assert "/report-designer/templates/lab-template/export/pdf/sample" in designer_html
 
 
+def test_flask_adapter_serves_framework_agnostic_designer_ui(tmp_path: Path) -> None:
+    app, _designer = create_app(tmp_path)
+    client = app.test_client()
+
+    response = client.get("/report-designer/designer?template=lab-template")
+    script_response = client.get("/report-designer/designer-ui/js/designer.js")
+    css_response = client.get("/report-designer/designer-ui/css/designer.css")
+
+    assert response.status_code == 200
+    assert response.mimetype == "text/html"
+    html = response.get_data(as_text=True)
+    assert "Slim Report Designer" in html
+    assert "window.SLIM_REPORT_API_BASE" in html
+    assert "/report-designer/api" in html
+    assert script_response.status_code == 200
+    assert script_response.mimetype in {"application/javascript", "text/javascript"}
+    assert "createCanvasController" in script_response.get_data(as_text=True)
+    assert css_response.status_code == 200
+    assert css_response.mimetype == "text/css"
+
+
 def test_flask_adapter_new_template_get_returns_default_template(tmp_path: Path) -> None:
     app, _designer = create_app(tmp_path)
 
@@ -76,6 +97,58 @@ def test_flask_adapter_new_template_get_returns_default_template(tmp_path: Path)
 
     assert response.status_code == 200
     assert response.get_json()["objects"] == []
+
+
+def test_flask_designer_api_loads_and_saves_templates(tmp_path: Path) -> None:
+    app, designer = create_app(tmp_path)
+    designer.create_template(template_payload())
+    client = app.test_client()
+
+    get_response = client.get("/report-designer/api/templates/lab-template")
+    payload = get_response.get_json()
+    payload["metadata"]["name"] = "Canvas Lab Result"
+    payload["metadata"].pop("title", None)
+
+    save_response = client.post("/report-designer/api/templates/lab-template", json=payload)
+
+    assert get_response.status_code == 200
+    assert payload["objects"][0]["id"] == "patient_name"
+    assert save_response.status_code == 200
+    assert save_response.get_json()["metadata"]["title"] == "Canvas Lab Result"
+    assert designer.get_report("lab-template").metadata.title == "Canvas Lab Result"
+
+
+def test_flask_designer_api_previews_and_exports_posted_json(tmp_path: Path) -> None:
+    app, _designer = create_app(tmp_path)
+    payload = {
+        "version": "0.1",
+        "metadata": {"name": "API Preview"},
+        "page": {"size": "A4", "orientation": "portrait", "width": 595, "height": 842},
+        "objects": [
+            {
+                "id": "title",
+                "type": "text",
+                "x": 40,
+                "y": 40,
+                "width": 240,
+                "height": 24,
+                "text": "Canvas Preview",
+            }
+        ],
+        "bands": [],
+        "assets": [],
+    }
+    client = app.test_client()
+
+    preview_response = client.post("/report-designer/api/preview", json=payload)
+    pdf_response = client.post("/report-designer/api/export/pdf", json=payload)
+
+    assert preview_response.status_code == 200
+    assert preview_response.mimetype == "text/html"
+    assert "Canvas Preview" in preview_response.get_data(as_text=True)
+    assert pdf_response.status_code == 200
+    assert pdf_response.mimetype == "application/pdf"
+    assert pdf_response.get_data().startswith(b"%PDF")
 
 
 def test_flask_designer_save_route_persists_template_json(tmp_path: Path) -> None:

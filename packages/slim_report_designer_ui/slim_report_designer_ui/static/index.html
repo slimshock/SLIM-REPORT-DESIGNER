@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Slim Report Designer</title>
+  <link rel="stylesheet" href="./css/designer.css">
+</head>
+<body>
+  <main class="designer-app">
+    <header class="top-toolbar" aria-label="Designer toolbar">
+      <div class="brand">
+        <span class="brand-mark">SR</span>
+        <span>Slim Report Designer</span>
+      </div>
+      <div class="toolbar-group" id="toolbar-actions"></div>
+      <div class="toolbar-spacer"></div>
+      <div class="template-title" id="template-title">Untitled Report</div>
+    </header>
+
+    <aside class="toolbox" aria-label="Toolbox">
+      <div class="panel-title">Toolbox</div>
+      <button class="tool-button" type="button" data-tool="text">Text</button>
+      <button class="tool-button" type="button" data-tool="field">Field</button>
+      <button class="tool-button" type="button" data-tool="line">Line</button>
+      <button class="tool-button" type="button" data-tool="rectangle">Rectangle</button>
+    </aside>
+
+    <section class="canvas-shell" aria-label="Report canvas">
+      <div class="canvas-scroller">
+        <div id="page-canvas" class="page-canvas" tabindex="0" aria-label="A4 page canvas"></div>
+      </div>
+    </section>
+
+    <aside class="inspector" aria-label="Property inspector">
+      <div class="panel-title">Inspector</div>
+      <form id="inspector-form" class="inspector-form">
+        <div class="empty-state">Select an object to edit its properties.</div>
+      </form>
+    </aside>
+
+    <footer class="status-bar">
+      <span id="status-message">Ready</span>
+      <span id="object-count">0 objects</span>
+    </footer>
+  </main>
+
+  <input id="import-file" type="file" accept="application/json,.json" hidden>
+  <script type="module" src="./js/designer.js"></script>
+</body>
+</html>

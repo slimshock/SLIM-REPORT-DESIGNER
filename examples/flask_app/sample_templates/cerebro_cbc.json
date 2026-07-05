@@ -1,0 +1,2517 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "title": "Cerebro CBC Result",
+    "description": "Cerebro Diagnostic System CBC report demo.",
+    "author": "Slim Report Designer",
+    "tags": [
+      "demo",
+      "lab",
+      "cbc",
+      "cerebro"
+    ],
+    "custom": {
+      "id": "cerebro_cbc",
+      "provider": "cerebro_cbc"
+    }
+  },
+  "page": {
+    "width": 651,
+    "height": 842,
+    "unit": "in",
+    "orientation": "portrait",
+    "margin_top": 0.5,
+    "margin_right": 0.5,
+    "margin_bottom": 0.5,
+    "margin_left": 0.5,
+    "id": "page_1"
+  },
+  "objects": [
+    {
+      "id": "cerebro_logo",
+      "type": "text",
+      "x": 16,
+      "y": 26,
+      "width": 150,
+      "height": 30,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "CEREBRO",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 27,
+          "color": "#0B79C9"
+        }
+      },
+      "text": "CEREBRO",
+      "style": {
+        "font_size": 27,
+        "color": "#0B79C9"
+      }
+    },
+    {
+      "id": "cerebro_subtitle",
+      "type": "text",
+      "x": 18,
+      "y": 56,
+      "width": 150,
+      "height": 16,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "DIAGNOSTIC SYSTEM",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 10,
+          "color": "#E53935"
+        }
+      },
+      "text": "DIAGNOSTIC SYSTEM",
+      "style": {
+        "font_size": 10,
+        "color": "#E53935"
+      }
+    },
+    {
+      "id": "clinic_name",
+      "type": "text",
+      "x": 170,
+      "y": 4,
+      "width": 360,
+      "height": 30,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "Cerebro Diagnostic System",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 26,
+          "bold": true
+        }
+      },
+      "text": "Cerebro Diagnostic System",
+      "style": {
+        "font_size": 26,
+        "bold": true
+      }
+    },
+    {
+      "id": "clinic_address",
+      "type": "text",
+      "x": 171,
+      "y": 35,
+      "width": 390,
+      "height": 12,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "Alwana Business Park, Zone 4 Cugman, Cagayan de Oro City",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 10
+        }
+      },
+      "text": "Alwana Business Park, Zone 4 Cugman, Cagayan de Oro City",
+      "style": {
+        "font_size": 10
+      }
+    },
+    {
+      "id": "clinic_contact",
+      "type": "text",
+      "x": 171,
+      "y": 61,
+      "width": 360,
+      "height": 12,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "Contact No.: +639 260 235 049, +639 222 979 774",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 10
+        }
+      },
+      "text": "Contact No.: +639 260 235 049, +639 222 979 774",
+      "style": {
+        "font_size": 10
+      }
+    },
+    {
+      "id": "clinic_email",
+      "type": "text",
+      "x": 171,
+      "y": 74,
+      "width": 300,
+      "height": 12,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "Email Address: cerebro.info@gmail.com",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 10
+        }
+      },
+      "text": "Email Address: cerebro.info@gmail.com",
+      "style": {
+        "font_size": 10
+      }
+    },
+    {
+      "id": "header_rule",
+      "type": "line",
+      "x": 14,
+      "y": 90,
+      "width": 624,
+      "height": 0.0,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "page_id": "page_1",
+        "style": {
+          "stroke_width": 1
+        }
+      },
+      "style": {
+        "stroke_width": 1
+      }
+    },
+    {
+      "id": "patient_name_label",
+      "type": "text",
+      "x": 14,
+      "y": 98,
+      "width": 96,
+      "height": 12,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "Patient Name:",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 10
+        }
+      },
+      "text": "Patient Name:",
+      "style": {
+        "font_size": 10
+      }
+    },
+    {
+      "id": "patient_name_value",
+      "type": "field",
+      "x": 110,
+      "y": 98,
+      "width": 180,
+      "height": 12,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "patient.name",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 10,
+          "bold": true
+        }
+      },
+      "binding": "patient.name",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      }
+    },
+    {
+      "id": "age_label",
+      "type": "text",
+      "x": 14,
+      "y": 111,
+      "width": 96,
+      "height": 12,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "Age:",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 10
+        }
+      },
+      "text": "Age:",
+      "style": {
+        "font_size": 10
+      }
+    },
+    {
+      "id": "age_value",
+      "type": "field",
+      "x": 110,
+      "y": 111,
+      "width": 180,
+      "height": 12,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "patient.age",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 10,
+          "bold": true
+        }
+      },
+      "binding": "patient.age",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      }
+    },
+    {
+      "id": "dob_label",
+      "type": "text",
+      "x": 14,
+      "y": 124,
+      "width": 96,
+      "height": 12,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "DOB:",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 10
+        }
+      },
+      "text": "DOB:",
+      "style": {
+        "font_size": 10
+      }
+    },
+    {
+      "id": "dob_value",
+      "type": "field",
+      "x": 110,
+      "y": 124,
+      "width": 180,
+      "height": 12,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "patient.dob",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 10,
+          "bold": true
+        }
+      },
+      "binding": "patient.dob",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      }
+    },
+    {
+      "id": "sex_label",
+      "type": "text",
+      "x": 14,
+      "y": 137,
+      "width": 96,
+      "height": 12,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "Sex:",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 10
+        }
+      },
+      "text": "Sex:",
+      "style": {
+        "font_size": 10
+      }
+    },
+    {
+      "id": "sex_value",
+      "type": "field",
+      "x": 110,
+      "y": 137,
+      "width": 180,
+      "height": 12,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "patient.sex",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 10,
+          "bold": true
+        }
+      },
+      "binding": "patient.sex",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      }
+    },
+    {
+      "id": "order_no_label",
+      "type": "text",
+      "x": 330,
+      "y": 98,
+      "width": 98,
+      "height": 12,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "Order No.:",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 10
+        }
+      },
+      "text": "Order No.:",
+      "style": {
+        "font_size": 10
+      }
+    },
+    {
+      "id": "order_no_value",
+      "type": "field",
+      "x": 428,
+      "y": 98,
+      "width": 185,
+      "height": 12,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "order.id",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 10,
+          "bold": true
+        }
+      },
+      "binding": "order.id",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      }
+    },
+    {
+      "id": "source_label",
+      "type": "text",
+      "x": 330,
+      "y": 111,
+      "width": 98,
+      "height": 12,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "Source:",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 10
+        }
+      },
+      "text": "Source:",
+      "style": {
+        "font_size": 10
+      }
+    },
+    {
+      "id": "source_value",
+      "type": "field",
+      "x": 428,
+      "y": 111,
+      "width": 185,
+      "height": 12,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "order.source",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 10,
+          "bold": true
+        }
+      },
+      "binding": "order.source",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      }
+    },
+    {
+      "id": "date_received_label",
+      "type": "text",
+      "x": 330,
+      "y": 137,
+      "width": 98,
+      "height": 12,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "Date Received:",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 10
+        }
+      },
+      "text": "Date Received:",
+      "style": {
+        "font_size": 10
+      }
+    },
+    {
+      "id": "date_received_value",
+      "type": "field",
+      "x": 428,
+      "y": 137,
+      "width": 185,
+      "height": 12,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "order.received",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 10,
+          "bold": true
+        }
+      },
+      "binding": "order.received",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      }
+    },
+    {
+      "id": "date_printed_label",
+      "type": "text",
+      "x": 330,
+      "y": 176,
+      "width": 98,
+      "height": 12,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "Date Printed:",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 10
+        }
+      },
+      "text": "Date Printed:",
+      "style": {
+        "font_size": 10
+      }
+    },
+    {
+      "id": "date_printed_value",
+      "type": "field",
+      "x": 428,
+      "y": 176,
+      "width": 185,
+      "height": 12,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "order.printed",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 10,
+          "bold": true
+        }
+      },
+      "binding": "order.printed",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      }
+    },
+    {
+      "id": "section",
+      "type": "text",
+      "x": 0,
+      "y": 198,
+      "width": 651,
+      "height": 16,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "HEMATOLOGY",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 12,
+          "bold": true,
+          "color": "#9AA0A6",
+          "align": "center"
+        }
+      },
+      "text": "HEMATOLOGY",
+      "style": {
+        "font_size": 12,
+        "bold": true,
+        "color": "#9AA0A6",
+        "align": "center"
+      }
+    },
+    {
+      "id": "test_header",
+      "type": "text",
+      "x": 16,
+      "y": 232,
+      "width": 150,
+      "height": 14,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "TEST NAME",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 10,
+          "bold": true
+        }
+      },
+      "text": "TEST NAME",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      }
+    },
+    {
+      "id": "result_header",
+      "type": "text",
+      "x": 226,
+      "y": 232,
+      "width": 54,
+      "height": 14,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "RESULT",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 10,
+          "bold": true
+        }
+      },
+      "text": "RESULT",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      }
+    },
+    {
+      "id": "unit_header",
+      "type": "text",
+      "x": 315,
+      "y": 232,
+      "width": 58,
+      "height": 14,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "UNIT",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 10,
+          "bold": true
+        }
+      },
+      "text": "UNIT",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      }
+    },
+    {
+      "id": "range_header",
+      "type": "text",
+      "x": 378,
+      "y": 232,
+      "width": 130,
+      "height": 14,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "REFERENCE RANGE",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 10,
+          "bold": true
+        }
+      },
+      "text": "REFERENCE RANGE",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      }
+    },
+    {
+      "id": "flag_header",
+      "type": "text",
+      "x": 570,
+      "y": 232,
+      "width": 54,
+      "height": 14,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "FLAGS",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 10,
+          "bold": true
+        }
+      },
+      "text": "FLAGS",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      }
+    },
+    {
+      "id": "result_0_test",
+      "type": "text",
+      "x": 16,
+      "y": 248,
+      "width": 190,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "White Blood Cell Count",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "bold": false
+        }
+      },
+      "text": "White Blood Cell Count",
+      "style": {
+        "font_size": 9,
+        "bold": false
+      }
+    },
+    {
+      "id": "result_0_value",
+      "type": "field",
+      "x": 226,
+      "y": 248,
+      "width": 54,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "results.wbc",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#FF0000",
+          "align": "center"
+        }
+      },
+      "binding": "results.wbc",
+      "style": {
+        "font_size": 9,
+        "color": "#FF0000",
+        "align": "center"
+      }
+    },
+    {
+      "id": "result_0_unit",
+      "type": "text",
+      "x": 312,
+      "y": 248,
+      "width": 58,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "x10^9/L",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "text": "x10^9/L",
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_0_range",
+      "type": "text",
+      "x": 378,
+      "y": 248,
+      "width": 120,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "5-14.5",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "text": "5-14.5",
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_0_flag",
+      "type": "text",
+      "x": 592,
+      "y": 248,
+      "width": 40,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "HIGH",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#FF0000",
+          "bold": true
+        }
+      },
+      "text": "HIGH",
+      "style": {
+        "font_size": 9,
+        "color": "#FF0000",
+        "bold": true
+      }
+    },
+    {
+      "id": "result_1_test",
+      "type": "text",
+      "x": 16,
+      "y": 264,
+      "width": 190,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "Red Blood Cell Count",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "bold": false
+        }
+      },
+      "text": "Red Blood Cell Count",
+      "style": {
+        "font_size": 9,
+        "bold": false
+      }
+    },
+    {
+      "id": "result_1_value",
+      "type": "field",
+      "x": 226,
+      "y": 264,
+      "width": 54,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "results.rbc",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#000000",
+          "align": "center"
+        }
+      },
+      "binding": "results.rbc",
+      "style": {
+        "font_size": 9,
+        "color": "#000000",
+        "align": "center"
+      }
+    },
+    {
+      "id": "result_1_unit",
+      "type": "text",
+      "x": 312,
+      "y": 264,
+      "width": 58,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "x10^12/L",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "text": "x10^12/L",
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_1_range",
+      "type": "text",
+      "x": 378,
+      "y": 264,
+      "width": 120,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "3.9 - 5.3",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "text": "3.9 - 5.3",
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_1_flag",
+      "type": "text",
+      "x": 592,
+      "y": 264,
+      "width": 40,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#000000",
+          "bold": false
+        }
+      },
+      "style": {
+        "font_size": 9,
+        "color": "#000000",
+        "bold": false
+      }
+    },
+    {
+      "id": "result_2_test",
+      "type": "text",
+      "x": 16,
+      "y": 280,
+      "width": 190,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "Hemoglobin",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "bold": false
+        }
+      },
+      "text": "Hemoglobin",
+      "style": {
+        "font_size": 9,
+        "bold": false
+      }
+    },
+    {
+      "id": "result_2_value",
+      "type": "field",
+      "x": 226,
+      "y": 280,
+      "width": 54,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "results.hgb",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#003BFF",
+          "align": "center"
+        }
+      },
+      "binding": "results.hgb",
+      "style": {
+        "font_size": 9,
+        "color": "#003BFF",
+        "align": "center"
+      }
+    },
+    {
+      "id": "result_2_unit",
+      "type": "text",
+      "x": 312,
+      "y": 280,
+      "width": 58,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "g/dL",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "text": "g/dL",
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_2_range",
+      "type": "text",
+      "x": 378,
+      "y": 280,
+      "width": 120,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "11.5 - 13.5",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "text": "11.5 - 13.5",
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_2_flag",
+      "type": "text",
+      "x": 592,
+      "y": 280,
+      "width": 40,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "LOW",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#003BFF",
+          "bold": true
+        }
+      },
+      "text": "LOW",
+      "style": {
+        "font_size": 9,
+        "color": "#003BFF",
+        "bold": true
+      }
+    },
+    {
+      "id": "result_3_test",
+      "type": "text",
+      "x": 16,
+      "y": 296,
+      "width": 190,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "Hematocrit",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "bold": false
+        }
+      },
+      "text": "Hematocrit",
+      "style": {
+        "font_size": 9,
+        "bold": false
+      }
+    },
+    {
+      "id": "result_3_value",
+      "type": "field",
+      "x": 226,
+      "y": 296,
+      "width": 54,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "results.hct",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#003BFF",
+          "align": "center"
+        }
+      },
+      "binding": "results.hct",
+      "style": {
+        "font_size": 9,
+        "color": "#003BFF",
+        "align": "center"
+      }
+    },
+    {
+      "id": "result_3_unit",
+      "type": "text",
+      "x": 312,
+      "y": 296,
+      "width": 58,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "%",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "text": "%",
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_3_range",
+      "type": "text",
+      "x": 378,
+      "y": 296,
+      "width": 120,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "34 - 40",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "text": "34 - 40",
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_3_flag",
+      "type": "text",
+      "x": 592,
+      "y": 296,
+      "width": 40,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "LOW",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#003BFF",
+          "bold": true
+        }
+      },
+      "text": "LOW",
+      "style": {
+        "font_size": 9,
+        "color": "#003BFF",
+        "bold": true
+      }
+    },
+    {
+      "id": "result_4_test",
+      "type": "text",
+      "x": 16,
+      "y": 312,
+      "width": 190,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "MCV",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "bold": false
+        }
+      },
+      "text": "MCV",
+      "style": {
+        "font_size": 9,
+        "bold": false
+      }
+    },
+    {
+      "id": "result_4_value",
+      "type": "field",
+      "x": 226,
+      "y": 312,
+      "width": 54,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "results.mcv",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#000000",
+          "align": "center"
+        }
+      },
+      "binding": "results.mcv",
+      "style": {
+        "font_size": 9,
+        "color": "#000000",
+        "align": "center"
+      }
+    },
+    {
+      "id": "result_4_unit",
+      "type": "text",
+      "x": 312,
+      "y": 312,
+      "width": 58,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "c.u.",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "text": "c.u.",
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_4_range",
+      "type": "text",
+      "x": 378,
+      "y": 312,
+      "width": 120,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "75 - 87",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "text": "75 - 87",
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_4_flag",
+      "type": "text",
+      "x": 592,
+      "y": 312,
+      "width": 40,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#000000",
+          "bold": false
+        }
+      },
+      "style": {
+        "font_size": 9,
+        "color": "#000000",
+        "bold": false
+      }
+    },
+    {
+      "id": "result_5_test",
+      "type": "text",
+      "x": 16,
+      "y": 328,
+      "width": 190,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "MCH",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "bold": false
+        }
+      },
+      "text": "MCH",
+      "style": {
+        "font_size": 9,
+        "bold": false
+      }
+    },
+    {
+      "id": "result_5_value",
+      "type": "field",
+      "x": 226,
+      "y": 328,
+      "width": 54,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "results.mch",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#000000",
+          "align": "center"
+        }
+      },
+      "binding": "results.mch",
+      "style": {
+        "font_size": 9,
+        "color": "#000000",
+        "align": "center"
+      }
+    },
+    {
+      "id": "result_5_unit",
+      "type": "text",
+      "x": 312,
+      "y": 328,
+      "width": 58,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "uug",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "text": "uug",
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_5_range",
+      "type": "text",
+      "x": 378,
+      "y": 328,
+      "width": 120,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "24 - 30",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "text": "24 - 30",
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_5_flag",
+      "type": "text",
+      "x": 592,
+      "y": 328,
+      "width": 40,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#000000",
+          "bold": false
+        }
+      },
+      "style": {
+        "font_size": 9,
+        "color": "#000000",
+        "bold": false
+      }
+    },
+    {
+      "id": "result_6_test",
+      "type": "text",
+      "x": 16,
+      "y": 344,
+      "width": 190,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "MCHC",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "bold": false
+        }
+      },
+      "text": "MCHC",
+      "style": {
+        "font_size": 9,
+        "bold": false
+      }
+    },
+    {
+      "id": "result_6_value",
+      "type": "field",
+      "x": 226,
+      "y": 344,
+      "width": 54,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "results.mchc",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#000000",
+          "align": "center"
+        }
+      },
+      "binding": "results.mchc",
+      "style": {
+        "font_size": 9,
+        "color": "#000000",
+        "align": "center"
+      }
+    },
+    {
+      "id": "result_6_unit",
+      "type": "text",
+      "x": 312,
+      "y": 344,
+      "width": 58,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "g/dL",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "text": "g/dL",
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_6_range",
+      "type": "text",
+      "x": 378,
+      "y": 344,
+      "width": 120,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "31-37",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "text": "31-37",
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_6_flag",
+      "type": "text",
+      "x": 592,
+      "y": 344,
+      "width": 40,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#000000",
+          "bold": false
+        }
+      },
+      "style": {
+        "font_size": 9,
+        "color": "#000000",
+        "bold": false
+      }
+    },
+    {
+      "id": "result_7_test",
+      "type": "text",
+      "x": 16,
+      "y": 360,
+      "width": 190,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "RDW",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "bold": false
+        }
+      },
+      "text": "RDW",
+      "style": {
+        "font_size": 9,
+        "bold": false
+      }
+    },
+    {
+      "id": "result_7_value",
+      "type": "field",
+      "x": 226,
+      "y": 360,
+      "width": 54,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "results.rdw",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#000000",
+          "align": "center"
+        }
+      },
+      "binding": "results.rdw",
+      "style": {
+        "font_size": 9,
+        "color": "#000000",
+        "align": "center"
+      }
+    },
+    {
+      "id": "result_7_unit",
+      "type": "text",
+      "x": 312,
+      "y": 360,
+      "width": 58,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "%",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "text": "%",
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_7_range",
+      "type": "text",
+      "x": 378,
+      "y": 360,
+      "width": 120,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "11 - 16",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "text": "11 - 16",
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_7_flag",
+      "type": "text",
+      "x": 592,
+      "y": 360,
+      "width": 40,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#000000",
+          "bold": false
+        }
+      },
+      "style": {
+        "font_size": 9,
+        "color": "#000000",
+        "bold": false
+      }
+    },
+    {
+      "id": "result_8_test",
+      "type": "text",
+      "x": 16,
+      "y": 376,
+      "width": 190,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "Differential Count",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "bold": true
+        }
+      },
+      "text": "Differential Count",
+      "style": {
+        "font_size": 9,
+        "bold": true
+      }
+    },
+    {
+      "id": "result_8_unit",
+      "type": "text",
+      "x": 312,
+      "y": 376,
+      "width": 58,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_8_range",
+      "type": "text",
+      "x": 378,
+      "y": 376,
+      "width": 120,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_8_flag",
+      "type": "text",
+      "x": 592,
+      "y": 376,
+      "width": 40,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#000000",
+          "bold": false
+        }
+      },
+      "style": {
+        "font_size": 9,
+        "color": "#000000",
+        "bold": false
+      }
+    },
+    {
+      "id": "result_9_test",
+      "type": "text",
+      "x": 16,
+      "y": 392,
+      "width": 190,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "Neutrophils",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "bold": false
+        }
+      },
+      "text": "Neutrophils",
+      "style": {
+        "font_size": 9,
+        "bold": false
+      }
+    },
+    {
+      "id": "result_9_value",
+      "type": "field",
+      "x": 226,
+      "y": 392,
+      "width": 54,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "results.neutrophils",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#000000",
+          "align": "center"
+        }
+      },
+      "binding": "results.neutrophils",
+      "style": {
+        "font_size": 9,
+        "color": "#000000",
+        "align": "center"
+      }
+    },
+    {
+      "id": "result_9_unit",
+      "type": "text",
+      "x": 312,
+      "y": 392,
+      "width": 58,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "%",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "text": "%",
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_9_range",
+      "type": "text",
+      "x": 378,
+      "y": 392,
+      "width": 120,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "50 - 70",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "text": "50 - 70",
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_9_flag",
+      "type": "text",
+      "x": 592,
+      "y": 392,
+      "width": 40,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#000000",
+          "bold": false
+        }
+      },
+      "style": {
+        "font_size": 9,
+        "color": "#000000",
+        "bold": false
+      }
+    },
+    {
+      "id": "result_10_test",
+      "type": "text",
+      "x": 16,
+      "y": 408,
+      "width": 190,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "Lymphocytes",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "bold": false
+        }
+      },
+      "text": "Lymphocytes",
+      "style": {
+        "font_size": 9,
+        "bold": false
+      }
+    },
+    {
+      "id": "result_10_value",
+      "type": "field",
+      "x": 226,
+      "y": 408,
+      "width": 54,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "results.lymphocytes",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#000000",
+          "align": "center"
+        }
+      },
+      "binding": "results.lymphocytes",
+      "style": {
+        "font_size": 9,
+        "color": "#000000",
+        "align": "center"
+      }
+    },
+    {
+      "id": "result_10_unit",
+      "type": "text",
+      "x": 312,
+      "y": 408,
+      "width": 58,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "%",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "text": "%",
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_10_range",
+      "type": "text",
+      "x": 378,
+      "y": 408,
+      "width": 120,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "20 - 40",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "text": "20 - 40",
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_10_flag",
+      "type": "text",
+      "x": 592,
+      "y": 408,
+      "width": 40,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#000000",
+          "bold": false
+        }
+      },
+      "style": {
+        "font_size": 9,
+        "color": "#000000",
+        "bold": false
+      }
+    },
+    {
+      "id": "result_11_test",
+      "type": "text",
+      "x": 16,
+      "y": 424,
+      "width": 190,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "Monocytes",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "bold": false
+        }
+      },
+      "text": "Monocytes",
+      "style": {
+        "font_size": 9,
+        "bold": false
+      }
+    },
+    {
+      "id": "result_11_value",
+      "type": "field",
+      "x": 226,
+      "y": 424,
+      "width": 54,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "results.monocytes",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#000000",
+          "align": "center"
+        }
+      },
+      "binding": "results.monocytes",
+      "style": {
+        "font_size": 9,
+        "color": "#000000",
+        "align": "center"
+      }
+    },
+    {
+      "id": "result_11_unit",
+      "type": "text",
+      "x": 312,
+      "y": 424,
+      "width": 58,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "%",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "text": "%",
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_11_range",
+      "type": "text",
+      "x": 378,
+      "y": 424,
+      "width": 120,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "3 - 9",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "text": "3 - 9",
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_11_flag",
+      "type": "text",
+      "x": 592,
+      "y": 424,
+      "width": 40,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#000000",
+          "bold": false
+        }
+      },
+      "style": {
+        "font_size": 9,
+        "color": "#000000",
+        "bold": false
+      }
+    },
+    {
+      "id": "result_12_test",
+      "type": "text",
+      "x": 16,
+      "y": 440,
+      "width": 190,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "Basophils",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "bold": false
+        }
+      },
+      "text": "Basophils",
+      "style": {
+        "font_size": 9,
+        "bold": false
+      }
+    },
+    {
+      "id": "result_12_value",
+      "type": "field",
+      "x": 226,
+      "y": 440,
+      "width": 54,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "results.basophils",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#000000",
+          "align": "center"
+        }
+      },
+      "binding": "results.basophils",
+      "style": {
+        "font_size": 9,
+        "color": "#000000",
+        "align": "center"
+      }
+    },
+    {
+      "id": "result_12_unit",
+      "type": "text",
+      "x": 312,
+      "y": 440,
+      "width": 58,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "%",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "text": "%",
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_12_range",
+      "type": "text",
+      "x": 378,
+      "y": 440,
+      "width": 120,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "0 - 0.5",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "text": "0 - 0.5",
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_12_flag",
+      "type": "text",
+      "x": 592,
+      "y": 440,
+      "width": 40,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#000000",
+          "bold": false
+        }
+      },
+      "style": {
+        "font_size": 9,
+        "color": "#000000",
+        "bold": false
+      }
+    },
+    {
+      "id": "result_13_test",
+      "type": "text",
+      "x": 16,
+      "y": 456,
+      "width": 190,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "Total (%)",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "bold": false
+        }
+      },
+      "text": "Total (%)",
+      "style": {
+        "font_size": 9,
+        "bold": false
+      }
+    },
+    {
+      "id": "result_13_value",
+      "type": "field",
+      "x": 226,
+      "y": 456,
+      "width": 54,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "results.total",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#000000",
+          "align": "center"
+        }
+      },
+      "binding": "results.total",
+      "style": {
+        "font_size": 9,
+        "color": "#000000",
+        "align": "center"
+      }
+    },
+    {
+      "id": "result_13_unit",
+      "type": "text",
+      "x": 312,
+      "y": 456,
+      "width": 58,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_13_range",
+      "type": "text",
+      "x": 378,
+      "y": 456,
+      "width": 120,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_13_flag",
+      "type": "text",
+      "x": 592,
+      "y": 456,
+      "width": 40,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#000000",
+          "bold": false
+        }
+      },
+      "style": {
+        "font_size": 9,
+        "color": "#000000",
+        "bold": false
+      }
+    },
+    {
+      "id": "result_14_test",
+      "type": "text",
+      "x": 16,
+      "y": 472,
+      "width": 190,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "Platelet Count",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "bold": false
+        }
+      },
+      "text": "Platelet Count",
+      "style": {
+        "font_size": 9,
+        "bold": false
+      }
+    },
+    {
+      "id": "result_14_value",
+      "type": "field",
+      "x": 226,
+      "y": 472,
+      "width": 54,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "results.platelet",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#000000",
+          "align": "center"
+        }
+      },
+      "binding": "results.platelet",
+      "style": {
+        "font_size": 9,
+        "color": "#000000",
+        "align": "center"
+      }
+    },
+    {
+      "id": "result_14_unit",
+      "type": "text",
+      "x": 312,
+      "y": 472,
+      "width": 58,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "x10^9/L",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "text": "x10^9/L",
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_14_range",
+      "type": "text",
+      "x": 378,
+      "y": 472,
+      "width": 120,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "150 - 450",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9
+        }
+      },
+      "text": "150 - 450",
+      "style": {
+        "font_size": 9
+      }
+    },
+    {
+      "id": "result_14_flag",
+      "type": "text",
+      "x": 592,
+      "y": 472,
+      "width": 40,
+      "height": 13,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "color": "#000000",
+          "bold": false
+        }
+      },
+      "style": {
+        "font_size": 9,
+        "color": "#000000",
+        "bold": false
+      }
+    },
+    {
+      "id": "performed_name",
+      "type": "text",
+      "x": 52,
+      "y": 672,
+      "width": 150,
+      "height": 12,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "Cerebro Diagnostic System",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 7,
+          "bold": true,
+          "align": "center"
+        }
+      },
+      "text": "Cerebro Diagnostic System",
+      "style": {
+        "font_size": 7,
+        "bold": true,
+        "align": "center"
+      }
+    },
+    {
+      "id": "performed_line",
+      "type": "line",
+      "x": 14,
+      "y": 693,
+      "width": 193,
+      "height": 0.0,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "page_id": "page_1",
+        "style": {
+          "stroke_width": 1
+        }
+      },
+      "style": {
+        "stroke_width": 1
+      }
+    },
+    {
+      "id": "validator",
+      "type": "text",
+      "x": 276,
+      "y": 672,
+      "width": 130,
+      "height": 12,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "Dummy LAB_ENCODER",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 7,
+          "bold": true,
+          "align": "center"
+        }
+      },
+      "text": "Dummy LAB_ENCODER",
+      "style": {
+        "font_size": 7,
+        "bold": true,
+        "align": "center"
+      }
+    },
+    {
+      "id": "validated_line",
+      "type": "line",
+      "x": 232,
+      "y": 693,
+      "width": 192,
+      "height": 0.0,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "page_id": "page_1",
+        "style": {
+          "stroke_width": 1
+        }
+      },
+      "style": {
+        "stroke_width": 1
+      }
+    },
+    {
+      "id": "pathologist",
+      "type": "text",
+      "x": 473,
+      "y": 672,
+      "width": 150,
+      "height": 12,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "MARY ANN R. TORREGOSA, M.D.",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 7,
+          "bold": true,
+          "align": "center"
+        }
+      },
+      "text": "MARY ANN R. TORREGOSA, M.D.",
+      "style": {
+        "font_size": 7,
+        "bold": true,
+        "align": "center"
+      }
+    },
+    {
+      "id": "pathologist_line",
+      "type": "line",
+      "x": 448,
+      "y": 693,
+      "width": 193,
+      "height": 0.0,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "page_id": "page_1",
+        "style": {
+          "stroke_width": 1
+        }
+      },
+      "style": {
+        "stroke_width": 1
+      }
+    },
+    {
+      "id": "page_count",
+      "type": "text",
+      "x": 614,
+      "y": 738,
+      "width": 30,
+      "height": 11,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "1 of 1",
+        "page_id": "page_1",
+        "style": {
+          "font_size": 9,
+          "bold": true
+        }
+      },
+      "text": "1 of 1",
+      "style": {
+        "font_size": 9,
+        "bold": true
+      }
+    }
+  ],
+  "bands": [],
+  "assets": []
+}

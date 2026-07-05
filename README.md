@@ -74,6 +74,7 @@ Python API / AI / Designer / Flask / CLI / Serializer
 ## Packages
 
 - `slim_report_core`: report models, expression resolution, rendering, widgets, exporters, and pure Python API
+- `slim_report_designer_ui`: framework-agnostic static drag-and-drop designer UI
 - `slim_report_flask`: Flask extension, blueprint routes, template storage, and provider registration
 - `slim_report_cli`: command-line interface using only `slim_report_core`
 - `slim_report_django`: future Django adapter placeholder
@@ -268,6 +269,7 @@ python examples/flask_app/app.py
 Open these routes:
 
 ```text
+http://127.0.0.1:5000/report-designer/designer?template=lab_result
 http://127.0.0.1:5000/report-designer/templates/lab_result/designer
 http://127.0.0.1:5000/report-designer/templates/lab_result/preview/sample
 http://127.0.0.1:5000/report-designer/templates/lab_result/export/pdf/sample
@@ -295,6 +297,23 @@ slim-report render examples/flask_app/sample_templates/lab_result.json data.json
 The current CLI accepts JSON files as input, but commands deserialize to `Report` before validation,
 inspection, or rendering.
 
+## Static Designer UI
+
+The Canvas designer is a static frontend package. It can run without Flask:
+
+```bash
+python examples/designer_static_server/serve.py
+```
+
+Open:
+
+```text
+http://127.0.0.1:8008/
+```
+
+The same UI is hosted by Flask at `/report-designer/designer`. Framework adapters provide load,
+save, preview, and PDF APIs; the UI itself remains framework-agnostic.
+
 ## Development
 
 This repository uses a Python `src/` layout for each package and shared tool configuration in the root `pyproject.toml`.
@@ -313,11 +332,13 @@ python -m ruff check packages tests
 ```text
 packages/
   slim_report_core/
+  slim_report_designer_ui/
   slim_report_flask/
   slim_report_django/
   slim_report_fastapi/
   slim_report_cli/
 examples/
+  designer_static_server/
   pure_python/
   flask_app/
   django_app/
