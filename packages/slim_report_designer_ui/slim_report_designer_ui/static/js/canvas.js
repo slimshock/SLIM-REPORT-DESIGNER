@@ -1,4 +1,4 @@
-import { objectStyle } from "./objects.js";
+import { clampObjectToBand, getBandForObject, objectStyle } from "./objects.js";
 import { gridSizeForUnit, maybeSnap, screenDeltaToRealDelta } from "./canvas_settings.js";
 
 export function createCanvasController({
@@ -6,8 +6,10 @@ export function createCanvasController({
   getTemplate,
   getSelectedIds,
   getPrimarySelectedId,
+  getActiveBandId = () => "detail",
   getCanvasSettings,
   onSelect,
+  onSelectBand = () => {},
   onChange,
   onCaptureHistory = () => null,
   onCommitHistory = () => {}
@@ -18,6 +20,12 @@ export function createCanvasController({
     const objectElement = event.target.closest(".report-object");
 
     if (!objectElement) {
+      const bandElement = event.target.closest(".report-band");
+      if (bandElement?.dataset.bandId) {
+        onSelect(null);
+        onSelectBand(bandElement.dataset.bandId);
+        return;
+      }
       onSelect(null);
       return;
     }
@@ -45,7 +53,7 @@ export function createCanvasController({
     if (!currentObject) {
       return;
     }
-    if (currentObject.locked) {
+    if (currentObject.locked || getBandForObject(getTemplate(), currentObject)?.locked) {
       return;
     }
     const selectedIds = getSelectedIds();
@@ -54,7 +62,7 @@ export function createCanvasController({
       : selectedIds.includes(objectId) ? selectedIds : [objectId];
     const movingObjects = movingIds
       .map((id) => findObject(getTemplate(), id))
-      .filter((item) => item && !item.locked);
+      .filter((item) => item && !item.locked && !getBandForObject(getTemplate(), item)?.locked);
     if (movingObjects.length === 0) {
       return;
     }
@@ -116,7 +124,7 @@ export function createCanvasController({
     const realDy = screenDeltaToRealDelta(dy, settings.zoom) / unitScale;
 
     if (dragState.resizing) {
-      if (object.locked) {
+      if (object.locked || getBandForObject(getTemplate(), object)?.locked) {
         return;
       }
       object.width = Math.max(8, Math.round(dragState.startWidth + realDx));
@@ -140,12 +148,12 @@ export function createCanvasController({
         }
         target.x = Math.round(maybeSnap(item.x + adjusted.dx, settings, unitScale));
         target.y = Math.round(maybeSnap(item.y + adjusted.dy, settings, unitScale));
-        clampObjectToPage(target, getTemplate());
+        clampObjectToBand(getTemplate(), target);
       }
     }
 
     if (dragState.resizing) {
-      clampObjectToPage(object, getTemplate());
+      clampObjectToBand(getTemplate(), object);
     }
     dragState.changed = true;
     onChange();
@@ -214,12 +222,12 @@ export function createCanvasController({
     }
     if (dx !== 0 || dy !== 0) {
       for (const object of selectedIds.map((id) => findObject(getTemplate(), id))) {
-        if (!object || object.locked) {
+        if (!object || object.locked || getBandForObject(getTemplate(), object)?.locked) {
           continue;
         }
         object.x = Math.round((Number(object.x) || 0) + dx);
         object.y = Math.round((Number(object.y) || 0) + dy);
-        clampObjectToPage(object, getTemplate());
+        clampObjectToBand(getTemplate(), object);
         changed = true;
       }
     }
@@ -233,7 +241,14 @@ export function createCanvasController({
 
   return {
     render() {
-      renderCanvas(canvas, getTemplate(), getSelectedIds(), getPrimarySelectedId(), getCanvasSettings());
+      renderCanvas(
+        canvas,
+        getTemplate(),
+        getSelectedIds(),
+        getPrimarySelectedId(),
+        getCanvasSettings(),
+        getActiveBandId()
+      );
     },
   };
 }
@@ -266,7 +281,14 @@ function safeReleasePointerCapture(element, event) {
   }
 }
 
-export function renderCanvas(canvas, template, selectedIds = [], primarySelectedId = null, settings = {}) {
+export function renderCanvas(
+  canvas,
+  template,
+  selectedIds = [],
+  primarySelectedId = null,
+  settings = {},
+  activeBandId = "detail"
+) {
   const page = template.page || {};
   const zoom = Number(settings.zoom) || 1;
   const width = unitToPx(page.width || 595, page.unit);
@@ -287,6 +309,9 @@ export function renderCanvas(canvas, template, selectedIds = [], primarySelected
   }
   canvas.innerHTML = "";
 
+  for (const band of template.bands || []) {
+    canvas.appendChild(renderBand(band, page.unit, activeBandId));
+  }
   for (const object of template.objects || []) {
     canvas.appendChild(renderObject(object, selectedIds, primarySelectedId, page.unit));
   }
@@ -303,6 +328,30 @@ export function renderCanvas(canvas, template, selectedIds = [], primarySelected
       canvas.appendChild(group);
     }
   }
+}
+
+function renderBand(band, unit = "px", activeBandId = "detail") {
+  const element = document.createElement("div");
+  element.className = "report-band";
+  if (band.id === activeBandId) {
+    element.classList.add("active");
+  }
+  if (band.visible === false) {
+    element.classList.add("hidden-band");
+  }
+  if (band.locked) {
+    element.classList.add("locked-band");
+  }
+  element.dataset.bandId = band.id;
+  element.style.top = `${unitToPx(Number(band.y) || 0, unit)}px`;
+  element.style.height = `${unitToPx(Number(band.height) || 0, unit)}px`;
+  element.style.background = band.visible === false ? "transparent" : band.background_color || "transparent";
+
+  const label = document.createElement("span");
+  label.className = "report-band-label";
+  label.textContent = `${band.name || band.id}${band.locked ? " · Locked" : ""}`;
+  element.appendChild(label);
+  return element;
 }
 
 function renderObject(object, selectedIds = [], primarySelectedId = null, unit = "px") {
@@ -429,42 +478,20 @@ function findObject(template, objectId) {
   return (template.objects || []).find((object) => object.id === objectId);
 }
 
-function clampObjectToPage(object, template) {
-  const page = template.page || {};
-  const pageWidth = Number(page.width) || 595;
-  const pageHeight = Number(page.height) || 842;
-
-  object.width = Math.max(8, Math.round(Number(object.width) || 8));
-
-  if (object.type === "line") {
-    object.height = Math.max(0, Math.round(Number(object.height) || 0));
-  } else {
-    object.height = Math.max(8, Math.round(Number(object.height) || 8));
-  }
-
-  object.x = Math.max(0, Math.round(Number(object.x) || 0));
-  object.y = Math.max(0, Math.round(Number(object.y) || 0));
-
-  if (object.x + object.width > pageWidth) {
-    object.x = Math.max(0, pageWidth - object.width);
-  }
-
-  if (object.y + object.height > pageHeight) {
-    object.y = Math.max(0, pageHeight - object.height);
-  }
-}
-
 function constrainedGroupDelta(items, dx, dy, template) {
   const page = template.page || {};
   const pageWidth = Number(page.width) || 595;
-  const pageHeight = Number(page.height) || 842;
   let adjustedDx = dx;
   let adjustedDy = dy;
   for (const item of items) {
+    const band = getBandForObject(template, item);
+    const bandTop = Number(band?.y) || 0;
+    const bandHeight = Number(band?.height) || Number(page.height) || 842;
+    const bandBottom = bandTop + bandHeight;
     adjustedDx = Math.max(adjustedDx, -item.x);
     adjustedDx = Math.min(adjustedDx, pageWidth - item.x - item.width);
-    adjustedDy = Math.max(adjustedDy, -item.y);
-    adjustedDy = Math.min(adjustedDy, pageHeight - item.y - item.height);
+    adjustedDy = Math.max(adjustedDy, bandTop - item.y);
+    adjustedDy = Math.min(adjustedDy, bandBottom - item.y - item.height);
   }
   return { dx: adjustedDx, dy: adjustedDy };
 }
@@ -481,7 +508,7 @@ export function placeObjectOnCanvas(object, template, settings, viewport = null)
   }
   object.x = Math.round(maybeSnap(x, settings, unitScale));
   object.y = Math.round(maybeSnap(y, settings, unitScale));
-  clampObjectToPage(object, template);
+  clampObjectToBand(template, object);
 }
 
 function isEditingText(target) {

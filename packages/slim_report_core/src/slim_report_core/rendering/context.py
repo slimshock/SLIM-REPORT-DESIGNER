@@ -9,7 +9,7 @@ from typing import Any
 
 from ..exceptions import ReportValidationError
 from ..expressions import resolve_expression, resolve_text
-from ..models import Object, Page
+from ..models import Band, Object, Page
 from ..report import Report
 
 CSS_DPI = 96.0
@@ -109,10 +109,25 @@ class RenderObject:
     text: str = ""
     binding: str = ""
     style: dict[str, Any] = field(default_factory=dict)
+    band: str = "detail"
     locked: bool = False
     z_index: int = 0
     visible: bool = True
     properties: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class RenderBand:
+    """Normalized report band region."""
+
+    id: str
+    type: str
+    name: str
+    y: float
+    height: float
+    background_color: str = "transparent"
+    visible: bool = True
+    locked: bool = False
 
 
 @dataclass(frozen=True)
@@ -122,6 +137,7 @@ class RenderContext:
     report: Report
     data: Mapping[str, Any]
     page: RenderPage
+    bands: list[RenderBand]
     objects: list[RenderObject]
     title: str
 
@@ -132,6 +148,7 @@ def create_render_context(report: Report, data: Mapping[str, Any] | None = None)
         raise ReportValidationError("Renderer expects a Report domain model.")
 
     page = resolve_page(report.page)
+    bands = normalize_bands(report.bands, page)
     objects = [normalize_object(item) for item in report.objects]
     objects.sort(key=lambda item: item.z_index)
 
@@ -139,6 +156,7 @@ def create_render_context(report: Report, data: Mapping[str, Any] | None = None)
         report=report,
         data=data or {},
         page=page,
+        bands=bands,
         objects=objects,
         title=resolve_title(report),
     )
@@ -230,11 +248,70 @@ def normalize_object(obj: Object) -> RenderObject:
         text=str(getattr(obj, "text", "") or properties.get("text", "")),
         binding=str(binding_expression or ""),
         style=style,
+        band=str(getattr(obj, "band_id", None) or properties.get("band") or properties.get("band_id") or "detail"),
         locked=_bool(properties.get("locked", getattr(obj, "locked", False))),
         z_index=int(getattr(obj, "z_index", 0)),
         visible=bool(getattr(obj, "visible", True)),
         properties=dict(properties),
     )
+
+
+def normalize_bands(bands: list[Band], page: RenderPage) -> list[RenderBand]:
+    """Normalize report bands, creating a compatibility detail band when absent."""
+    if not bands:
+        return [
+            RenderBand(
+                id="detail",
+                type="detail",
+                name="Detail",
+                y=0,
+                height=page.height_px,
+            )
+        ]
+    normalized = [_normalize_band(item, page) for item in bands]
+    return _recalculate_standard_bands(normalized, page)
+
+
+def _normalize_band(band: Band, page: RenderPage) -> RenderBand:
+    names = {
+        "page_header": "Page Header",
+        "detail": "Detail",
+        "page_footer": "Page Footer",
+    }
+    band_type = str(getattr(band, "type", "") or getattr(band, "id", "") or "detail")
+    band_id = str(getattr(band, "id", "") or band_type)
+    return RenderBand(
+        id=band_id,
+        type=band_type,
+        name=str(getattr(band, "name", None) or names.get(band_type, band_id)),
+        y=float(getattr(band, "y", 0) or 0),
+        height=max(float(getattr(band, "height", page.height_px) or page.height_px), 0),
+        background_color=str(getattr(band, "background_color", "transparent") or "transparent"),
+        visible=bool(getattr(band, "visible", True)),
+        locked=bool(getattr(band, "locked", False)),
+    )
+
+
+def _recalculate_standard_bands(bands: list[RenderBand], page: RenderPage) -> list[RenderBand]:
+    by_id = {band.id: band for band in bands}
+    header = by_id.get("page_header")
+    detail = by_id.get("detail")
+    footer = by_id.get("page_footer")
+    if not header or not detail or not footer:
+        return bands
+    page_height = page.height_px
+    min_detail = min(80.0, page_height)
+    header_height = max(0.0, min(header.height, page_height - min_detail))
+    footer_height = max(0.0, min(footer.height, page_height - header_height - min_detail))
+    detail_height = max(min_detail, page_height - header_height - footer_height)
+    replacements = {
+        "page_header": RenderBand(**{**header.__dict__, "y": 0.0, "height": header_height}),
+        "detail": RenderBand(**{**detail.__dict__, "y": header_height, "height": detail_height}),
+        "page_footer": RenderBand(
+            **{**footer.__dict__, "y": header_height + detail_height, "height": footer_height}
+        ),
+    }
+    return [replacements.get(band.id, band) for band in bands]
 
 
 def resolve_title(report: Report) -> str:

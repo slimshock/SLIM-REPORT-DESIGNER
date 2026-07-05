@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from slim_report_core import Report, ReportValidationError, render_html, render_pdf
+from slim_report_core import Band, Report, ReportValidationError, render_html, render_pdf
 from slim_report_core.expressions import resolve_expression
 from slim_report_core.rendering import render_html as render_report_html
 from slim_report_core.rendering.context import create_render_context
@@ -159,6 +159,42 @@ def test_sample_templates_render_html_and_pdf() -> None:
         assert len(html) > 1000
         assert pdf.startswith(b"%PDF")
         assert len(pdf) > 1000
+
+
+def test_banded_template_renders_band_backgrounds_html_and_pdf() -> None:
+    report = Report(
+        page={"width": 595, "height": 842, "unit": "px"},
+        bands=[
+            Band(
+                id="page_header",
+                type="page_header",
+                name="Page Header",
+                y=0,
+                height=100,
+                background_color="#eeeeee",
+            ),
+            Band(id="detail", type="detail", name="Detail", y=100, height=682),
+            Band(
+                id="page_footer",
+                type="page_footer",
+                name="Page Footer",
+                y=782,
+                height=60,
+                background_color="#dddddd",
+            ),
+        ],
+    )
+    report.page().text("Header", id="header", x=20, y=20, width=120, height=24)
+    report.objects[0].band_id = "page_header"
+
+    html = render_html(report, {})
+    pdf = render_pdf(report, {})
+
+    assert 'data-slim-band="page_header"' in html
+    assert "background: #eeeeee" in html
+    assert "Header" in html
+    assert pdf.startswith(b"%PDF")
+    assert len(pdf) > 1000
 
 
 def test_public_renderer_rejects_json_mapping() -> None:

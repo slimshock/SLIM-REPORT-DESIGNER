@@ -1,7 +1,10 @@
 import { icon } from "./icons.js";
 import {
   objectStyle,
+  getBandById,
+  setBandValue,
   setObjectAlt,
+  setObjectBand,
   setObjectBinding,
   setObjectPropertyValue,
   setObjectSource,
@@ -18,8 +21,10 @@ export function createInspector({
   getTemplate,
   getSelectedObject,
   getSelectedObjects = () => [],
+  getActiveBandId = () => "detail",
   onBeforeChange = () => {},
   onCommand = () => {},
+  onSelectBand = () => {},
   onChange
 }) {
   form.addEventListener("input", (event) => {
@@ -30,14 +35,18 @@ export function createInspector({
     if (input instanceof HTMLInputElement && input.type === "file") {
       return;
     }
+    if (input.name === "active_band") {
+      onSelectBand(String(input.value));
+      return;
+    }
     const object = getSelectedObject();
     onBeforeChange("Edit properties");
     if (!object) {
-      applyPageInput(getTemplate(), input);
+      applyPageInput(getTemplate(), input, getActiveBandId());
       onChange({ preserveInspector: shouldPreserveInspectorFocus(input) });
       return;
     }
-    applyInput(object, input);
+    applyInput(getTemplate(), object, input);
     onChange({ preserveInspector: shouldPreserveInspectorFocus(input) });
   });
   form.addEventListener("change", async (event) => {
@@ -88,25 +97,30 @@ export function createInspector({
 
   return {
     render() {
-      renderInspector(form, getSelectedObject(), getTemplate(), getSelectedObjects());
+      renderInspector(form, getSelectedObject(), getTemplate(), getSelectedObjects(), getActiveBandId());
     }
   };
 }
 
-export function renderInspector(form, object, template = {}, selectedObjects = []) {
+export function renderInspector(form, object, template = {}, selectedObjects = [], activeBandId = "detail") {
   form.innerHTML = "";
   if (selectedObjects.length > 1) {
     form.appendChild(renderMultiSelectionInspector(selectedObjects));
     return;
   }
   if (!object) {
-    form.appendChild(renderPageInspector(template));
+    form.appendChild(renderPageInspector(template, activeBandId));
     return;
   }
 
   form.appendChild(section("Identity", [
     fieldRow("id", object.id, { disabled: true }),
-    fieldRow("type", object.type, { disabled: true })
+    fieldRow("type", object.type, { disabled: true }),
+    fieldRow("band", object.band || "detail", {
+      type: "select",
+      name: "band",
+      options: bandOptions(template)
+    })
   ]));
   form.appendChild(section("Position", [
     fieldRow("x", object.x, { type: "number" }),
@@ -227,7 +241,7 @@ function commandGrid(commands) {
   return row;
 }
 
-function renderPageInspector(template) {
+function renderPageInspector(template, activeBandId = "detail") {
   const page = template.page || {};
   const fragment = document.createDocumentFragment();
   fragment.appendChild(section("Page Properties", [
@@ -269,7 +283,36 @@ function renderPageInspector(template) {
       name: "page.transparent"
     })
   ]));
+  fragment.appendChild(renderBandInspector(template, activeBandId));
   return fragment;
+}
+
+function renderBandInspector(template, activeBandId = "detail") {
+  const band = getBandById(template, activeBandId) || template.bands?.[0] || {};
+  return section("Band Properties", [
+    fieldRow("active band", band.id || activeBandId, {
+      type: "select",
+      name: "active_band",
+      options: bandOptions(template)
+    }),
+    fieldRow("band id", band.id || "", { disabled: true }),
+    fieldRow("band type", band.type || "", { disabled: true }),
+    fieldRow("band name", band.name || "", { name: "band.name" }),
+    fieldRow("band y", band.y ?? 0, { type: "number", name: "band.y", disabled: true }),
+    fieldRow("band height", band.height ?? 0, { type: "number", name: "band.height" }),
+    fieldRow("band background", band.background_color || "transparent", {
+      type: "color",
+      name: "band.background_color"
+    }),
+    fieldRow("band visible", Boolean(band.visible ?? true), {
+      type: "checkbox",
+      name: "band.visible"
+    }),
+    fieldRow("band locked", Boolean(band.locked), {
+      type: "checkbox",
+      name: "band.locked"
+    })
+  ]);
 }
 
 function textStyleFields(object) {
@@ -295,7 +338,7 @@ function textStyleFields(object) {
   ];
 }
 
-function applyInput(object, input) {
+function applyInput(template, object, input) {
   const value = input.type === "checkbox" ? input.checked : input.value;
   const numericFields = new Set(["x", "y", "width", "height"]);
   if (numericFields.has(input.name)) {
@@ -310,6 +353,10 @@ function applyInput(object, input) {
   }
   if (input.dataset.styleKey) {
     setObjectStyleValue(object, input.dataset.styleKey, inputValue(input, value));
+    return;
+  }
+  if (input.name === "band") {
+    setObjectBand(template, object, String(value));
     return;
   }
   if (input.name === "src") {
@@ -335,8 +382,12 @@ function applyInput(object, input) {
   object[input.name] = String(value);
 }
 
-function applyPageInput(template, input) {
+function applyPageInput(template, input, activeBandId = "detail") {
   const value = inputValue(input, input.type === "checkbox" ? input.checked : input.value);
+  if (input.name.startsWith("band.")) {
+    setBandValue(template, activeBandId, input.name.slice("band.".length), value);
+    return;
+  }
   if (input.name === "report_name") {
     template.metadata = template.metadata || {};
     template.metadata.name = String(value);
@@ -575,4 +626,12 @@ function transparentButton(name) {
 
 function fontFamilyOptions() {
   return ["Arial", "Helvetica", "Times-Roman", "Courier"];
+}
+
+function bandOptions(template) {
+  const bands = template.bands || [];
+  if (bands.length === 0) {
+    return ["detail"];
+  }
+  return bands.map((band) => band.id);
 }

@@ -28,6 +28,9 @@ def render_pdf(report: Report, data: dict[str, Any] | None = None) -> bytes:
         _set_fill_color(canvas, context.page.background_color)
         canvas.rect(0, 0, context.page.width_pt, context.page.height_pt, stroke=0, fill=1)
 
+    for band in context.bands:
+        _render_band(canvas, band, context)
+
     for obj in context.objects:
         render_pdf_object(canvas, obj, context)
 
@@ -56,6 +59,18 @@ def render_pdf_object(canvas: Any, obj: RenderObject, context: RenderContext) ->
         _render_image(canvas, obj, context)
         return
     raise ReportValidationError(f"Unsupported report object type: {obj.type}.")
+
+
+def _render_band(canvas: Any, band: Any, context: RenderContext) -> None:
+    if not getattr(band, "visible", True):
+        return
+    background = getattr(band, "background_color", "transparent")
+    if _is_transparent(background):
+        return
+    y = convert_unit(float(getattr(band, "y", 0) or 0), "px", "pt")
+    height = convert_unit(float(getattr(band, "height", 0) or 0), "px", "pt")
+    _set_fill_color(canvas, background)
+    canvas.rect(0, _pdf_y(context, y + height), context.page.width_pt, height, stroke=0, fill=1)
 
 
 def _render_text(canvas: Any, obj: RenderObject, context: RenderContext) -> None:

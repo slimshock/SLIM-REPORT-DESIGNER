@@ -890,6 +890,8 @@ class Object:
             )
         if not self.style.resolved_values() and isinstance(self.properties.get("style"), Mapping):
             self.style = Style.from_dict(self.properties["style"])
+        if self.band_id is None:
+            self.band_id = _optional_str(self.properties.get("band", self.properties.get("band_id")))
 
     @property
     def position(self) -> Position:
@@ -942,6 +944,7 @@ class Object:
             data["style"] = self.style.to_dict()
             data["properties"]["style"] = self.style.to_dict()
         if self.band_id is not None:
+            data["band"] = self.band_id
             data["band_id"] = self.band_id
         if self.layer_id is not None:
             data["layer_id"] = self.layer_id
@@ -1303,28 +1306,48 @@ class Band:
 
     id: str
     type: str
+    name: str | None = None
+    y: float = 0.0
     height: float = 0.0
+    background_color: str = "transparent"
+    visible: bool = True
+    locked: bool = False
     properties: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> Band:
         mapping = ensure_mapping(data, context="Report band")
+        raw_properties = mapping.get("properties", {})
+        properties = ensure_mapping(raw_properties or {}, context="Report band properties")
         return cls(
             id=_required_str(mapping, "id", context="Report band"),
             type=_required_str(mapping, "type", context="Report band"),
+            name=_optional_str(mapping.get("name")),
+            y=float(mapping.get("y", mapping.get("top", 0.0))),
             height=float(mapping.get("height", 0.0)),
-            properties=dict(mapping.get("properties", {})),
+            background_color=str(mapping.get("background_color", properties.get("background_color", "transparent"))),
+            visible=bool(mapping.get("visible", True)),
+            locked=bool(mapping.get("locked", False)),
+            properties=dict(properties),
         )
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        data = asdict(self)
+        if self.name is None:
+            data.pop("name", None)
+        return data
 
     def clone(self, *, new_ids: bool = True) -> Band:
         """Return a deep clone of this band."""
         return Band(
             id=_clone_id("band", self.id, new_ids=new_ids),
             type=self.type,
+            name=self.name,
+            y=self.y,
             height=self.height,
+            background_color=self.background_color,
+            visible=self.visible,
+            locked=self.locked,
             properties=copy.deepcopy(self.properties),
         )
 

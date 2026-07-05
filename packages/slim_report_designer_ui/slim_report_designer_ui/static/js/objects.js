@@ -19,7 +19,11 @@ export function createDefaultTemplate() {
       transparent: false
     },
     objects: [],
-    bands: [],
+    bands: getDefaultBands({
+      width: 595,
+      height: 842,
+      unit: "px"
+    }),
     assets: []
   });
 }
@@ -35,7 +39,10 @@ export function normalizeTemplate(template) {
   };
   source.page = normalizePage(source.page || {});
   source.objects = Array.isArray(source.objects) ? source.objects.map(normalizeObject) : [];
-  source.bands = Array.isArray(source.bands) ? source.bands : [];
+  source.bands = normalizeBands(source);
+  for (const object of source.objects) {
+    assignObjectBand(source, object);
+  }
   source.assets = Array.isArray(source.assets) ? source.assets : [];
   return source;
 }
@@ -54,6 +61,12 @@ export function normalizeObject(object) {
       ...(object.properties || {})
     }
   };
+  normalized.band = String(
+    object.band ?? object.band_id ?? object.properties?.band ?? object.properties?.band_id ?? "detail"
+  );
+  normalized.band_id = normalized.band;
+  normalized.properties.band = normalized.band;
+  normalized.properties.band_id = normalized.band;
   normalized.properties.locked = normalized.locked;
 
   if (object.text !== undefined) {
@@ -94,6 +107,7 @@ export function createObject(type, template) {
     y: 60,
     width: 160,
     height: 32,
+    band: "detail",
     properties: {
       style: {}
     }
@@ -137,7 +151,103 @@ export function duplicateObject(object, template) {
   clone.id = uniqueId(`${object.type}_copy`, template.objects.map((item) => item.id));
   clone.x += 20;
   clone.y += 20;
+  clone.band = object.band || object.band_id || object.properties?.band || "detail";
+  clone.band_id = clone.band;
+  clone.properties.band = clone.band;
+  clone.properties.band_id = clone.band;
   return clone;
+}
+
+export function getDefaultBands(page = {}) {
+  const height = Math.max(numberValue(page.height, 842), 160);
+  const headerHeight = Math.min(100, Math.max(60, Math.round(height * 0.12)));
+  const footerHeight = Math.min(60, Math.max(40, Math.round(height * 0.07)));
+  const detailHeight = Math.max(80, height - headerHeight - footerHeight);
+  return [
+    bandRecord("page_header", "page_header", "Page Header", 0, headerHeight),
+    bandRecord("detail", "detail", "Detail", headerHeight, detailHeight),
+    bandRecord("page_footer", "page_footer", "Page Footer", headerHeight + detailHeight, footerHeight)
+  ];
+}
+
+export function normalizeBands(template) {
+  const page = template.page || {};
+  const bands = Array.isArray(template.bands) ? template.bands : [];
+  if (bands.length === 0) {
+    return [bandRecord("detail", "detail", "Detail", 0, numberValue(page.height, 842))];
+  }
+  const normalized = bands.map((band, index) => normalizeBand(band, page, index));
+  if (normalized.length === 1 && normalized[0].id === "detail") {
+    normalized[0].y = 0;
+    normalized[0].height = numberValue(page.height, normalized[0].height);
+  }
+  return recalculateStandardBands({ page, bands: normalized }).bands;
+}
+
+export function getBandById(template, bandId) {
+  return (template.bands || []).find((band) => band.id === bandId) || null;
+}
+
+export function getBandForObject(template, object) {
+  const bandId = object?.band || object?.band_id || object?.properties?.band || "detail";
+  return getBandById(template, bandId) || getBandById(template, "detail") || (template.bands || [])[0] || null;
+}
+
+export function assignObjectBand(template, object, bandId = null) {
+  const fallback = getBandById(template, "detail") || (template.bands || [])[0] || null;
+  const target = getBandById(template, bandId || object.band || object.band_id || object.properties?.band) || fallback;
+  object.band = target?.id || "detail";
+  object.band_id = object.band;
+  object.properties = object.properties || {};
+  object.properties.band = object.band;
+  object.properties.band_id = object.band;
+  return object.band;
+}
+
+export function setObjectBand(template, object, bandId) {
+  assignObjectBand(template, object, bandId);
+  clampObjectToBand(template, object);
+}
+
+export function setBandValue(template, bandId, key, value) {
+  const band = getBandById(template, bandId);
+  if (!band) {
+    return;
+  }
+  if (key === "height") {
+    band.height = Math.max(0, Number(value) || 0);
+    recalculateStandardBands(template);
+    return;
+  }
+  if (key === "visible" || key === "locked") {
+    band[key] = Boolean(value);
+    return;
+  }
+  if (key === "name" || key === "background_color") {
+    band[key] = String(value);
+  }
+}
+
+export function clampObjectToBand(template, object) {
+  const band = getBandForObject(template, object);
+  const page = template.page || {};
+  const pageWidth = Number(page.width) || 595;
+  if (!band) {
+    return;
+  }
+  object.width = Math.max(8, Math.round(Number(object.width) || 8));
+  if (object.type === "line") {
+    object.height = Math.max(0, Math.round(Number(object.height) || 0));
+  } else {
+    object.height = Math.max(8, Math.round(Number(object.height) || 8));
+  }
+  object.x = Math.max(0, Math.min(Math.round(Number(object.x) || 0), pageWidth - object.width));
+  const bandTop = Number(band.y) || 0;
+  const bandBottom = bandTop + Math.max(Number(band.height) || 0, object.height);
+  object.y = Math.max(bandTop, Math.round(Number(object.y) || bandTop));
+  if (object.y + object.height > bandBottom) {
+    object.y = Math.max(bandTop, bandBottom - object.height);
+  }
 }
 
 export function objectStyle(object) {
@@ -287,6 +397,61 @@ export function uniqueId(prefix, existingIds) {
 function numberValue(value, fallback) {
   const number = Number(value);
   return Number.isFinite(number) ? number : fallback;
+}
+
+function bandRecord(id, type, name, y, height, patch = {}) {
+  return {
+    id,
+    type,
+    name,
+    y: Number(y) || 0,
+    height: Math.max(0, Number(height) || 0),
+    background_color: "transparent",
+    visible: true,
+    locked: false,
+    ...patch
+  };
+}
+
+function normalizeBand(band, page, index) {
+  const type = String(band.type || band.id || `band_${index + 1}`);
+  const id = String(band.id || type);
+  const names = {
+    page_header: "Page Header",
+    detail: "Detail",
+    page_footer: "Page Footer"
+  };
+  return bandRecord(
+    id,
+    type,
+    String(band.name || names[type] || id),
+    numberValue(band.y, 0),
+    numberValue(band.height, numberValue(page.height, 842)),
+    {
+      background_color: String(band.background_color || band.properties?.background_color || "transparent"),
+      visible: Boolean(band.visible ?? band.properties?.visible ?? true),
+      locked: Boolean(band.locked ?? band.properties?.locked ?? false)
+    }
+  );
+}
+
+function recalculateStandardBands(template) {
+  const bands = template.bands || [];
+  const header = bands.find((band) => band.id === "page_header");
+  const detail = bands.find((band) => band.id === "detail");
+  const footer = bands.find((band) => band.id === "page_footer");
+  if (!header || !detail || !footer) {
+    return template;
+  }
+  const pageHeight = Math.max(numberValue(template.page?.height, 842), 120);
+  const minDetail = Math.min(80, pageHeight);
+  header.height = Math.max(0, Math.min(Number(header.height) || 0, pageHeight - minDetail));
+  footer.height = Math.max(0, Math.min(Number(footer.height) || 0, pageHeight - header.height - minDetail));
+  detail.height = Math.max(minDetail, pageHeight - header.height - footer.height);
+  header.y = 0;
+  detail.y = header.height;
+  footer.y = header.height + detail.height;
+  return template;
 }
 
 export function normalizePage(page) {

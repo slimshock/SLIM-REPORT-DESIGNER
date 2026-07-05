@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from slim_report_core import DEFAULT_REPORT_VERSION, Object, Page, Report, Style
+from slim_report_core import DEFAULT_REPORT_VERSION, Band, Object, Page, Report, Style
 from slim_report_core.serialization import JSONSerializer
 
 
@@ -86,6 +86,48 @@ def test_json_serializer_serializes_resolved_style_values() -> None:
     assert dumped["objects"][0]["style"] == dumped["styles"]["title"]
     assert loaded.styles["title"].resolved_values()["font_family"] == "Helvetica"
     assert loaded.objects[0].style.resolved_values()["font_size"] == 18
+
+
+def test_json_serializer_preserves_bands_and_object_band_alias() -> None:
+    serializer = JSONSerializer()
+    report = serializer.load_mapping(
+        {
+            "version": DEFAULT_REPORT_VERSION,
+            "metadata": {"title": "Bands"},
+            "page": {"width": 595, "height": 842, "unit": "px"},
+            "objects": [
+                {
+                    "id": "header_title",
+                    "type": "text",
+                    "text": "Header",
+                    "band": "page_header",
+                }
+            ],
+            "bands": [
+                {
+                    "id": "page_header",
+                    "type": "page_header",
+                    "name": "Page Header",
+                    "y": 0,
+                    "height": 100,
+                    "background_color": "#eeeeee",
+                    "visible": True,
+                    "locked": False,
+                }
+            ],
+            "assets": [],
+        }
+    )
+
+    dumped = serializer.dump_mapping(report)
+
+    assert isinstance(report.bands[0], Band)
+    assert report.bands[0].name == "Page Header"
+    assert report.bands[0].y == 0
+    assert report.bands[0].background_color == "#eeeeee"
+    assert report.objects[0].band_id == "page_header"
+    assert dumped["bands"][0]["background_color"] == "#eeeeee"
+    assert dumped["objects"][0]["band"] == "page_header"
 
 
 def sample_template() -> dict:

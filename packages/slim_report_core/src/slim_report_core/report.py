@@ -611,6 +611,7 @@ def _clone_object_with_reference_maps(
         cloned.layer_id = layer_id_map[cloned.layer_id]
 
     _remap_property_reference(cloned.properties, "band_id", band_id_map)
+    _remap_property_reference(cloned.properties, "band", band_id_map)
     _remap_property_reference(cloned.properties, "layer_id", layer_id_map)
     _remap_property_reference(cloned.properties, "style_id", style_id_map)
     _remap_property_reference(cloned.properties, "asset_id", asset_id_map)

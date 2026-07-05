@@ -19,6 +19,7 @@ from .context import (
 def render_html(report: Report, data: dict[str, Any] | None = None) -> str:
     """Render a report domain model and data as a full HTML document."""
     context = create_render_context(report, data)
+    bands = "\n      ".join(render_html_band(band) for band in context.bands)
     objects = "\n      ".join(render_html_object(obj, context) for obj in context.objects)
     page = context.page
     title = escape(context.title)
@@ -42,11 +43,26 @@ def render_html(report: Report, data: dict[str, Any] | None = None) -> str:
         '  <div class="slim-report-preview">\n'
         f'    <div class="slim-report-page" style="width: {page.width_px}px; '
         f'height: {page.height_px}px; background: {page_background};">\n'
+        f"      {bands}\n"
         f"      {objects}\n"
         "    </div>\n"
         "  </div>\n"
         "</body>\n"
         "</html>\n"
+    )
+
+
+def render_html_band(band: Any) -> str:
+    """Render a normalized band background as HTML."""
+    if not band.visible:
+        return ""
+    background = escape(str(band.background_color), quote=True)
+    if str(band.background_color).strip().lower() in {"", "none", "transparent"}:
+        background = "transparent"
+    return (
+        f'<div class="slim-report-band" data-slim-band="{escape(band.id, quote=True)}" '
+        f'style="position: absolute; left: 0; top: {band.y}px; width: 100%; '
+        f'height: {band.height}px; box-sizing: border-box; background: {background};"></div>'
     )
 
 

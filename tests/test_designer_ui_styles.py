@@ -332,3 +332,62 @@ if (objectStyle(created).object_fit !== 'contain') {
     )
 
     assert result.returncode == 0, result.stderr
+
+
+def test_designer_band_helpers_normalize_and_clamp_objects() -> None:
+    module_path = (
+        "./packages/slim_report_designer_ui/"
+        "slim_report_designer_ui/static/js/objects.js"
+    )
+    script = """
+import {
+  assignObjectBand,
+  clampObjectToBand,
+  createDefaultTemplate,
+  normalizeTemplate,
+  setBandValue,
+  setObjectBand
+} from '__MODULE_PATH__';
+
+const oldTemplate = normalizeTemplate({
+  metadata: { name: 'Old' },
+  page: { width: 500, height: 700, unit: 'px' },
+  objects: [{ id: 'title', type: 'text', y: 20, width: 100, height: 20 }],
+  bands: []
+});
+if (oldTemplate.bands.length !== 1 || oldTemplate.bands[0].id !== 'detail') {
+  throw new Error('old template did not receive compatibility detail band');
+}
+if (oldTemplate.objects[0].band !== 'detail') {
+  throw new Error('old object did not default to detail band');
+}
+
+const blank = createDefaultTemplate();
+if (blank.bands.length !== 3 || blank.bands[0].id !== 'page_header') {
+  throw new Error('blank template did not receive default report bands');
+}
+const object = { id: 'footer_text', type: 'text', x: 10, y: 0, width: 100, height: 20, properties: {} };
+assignObjectBand(blank, object, 'page_footer');
+clampObjectToBand(blank, object);
+if (object.band !== 'page_footer' || object.y < blank.bands[2].y) {
+  throw new Error('object was not clamped into footer band');
+}
+setObjectBand(blank, object, 'page_header');
+if (object.band !== 'page_header' || object.y >= blank.bands[1].y) {
+  throw new Error('object band change did not clamp into header');
+}
+setBandValue(blank, 'page_header', 'height', 120);
+if (blank.bands[1].y !== 120 || blank.bands[2].y !== blank.bands[0].height + blank.bands[1].height) {
+  throw new Error('band layout was not recalculated');
+}
+""".replace("__MODULE_PATH__", module_path)
+
+    result = subprocess.run(
+        ["node", "--input-type=module", "-e", script],
+        cwd=Path(__file__).resolve().parents[1],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr

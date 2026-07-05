@@ -9,7 +9,10 @@ import {
 import { createInspector } from "./inspector.js";
 import {
   createObject,
+  assignObjectBand,
+  clampObjectToBand,
   duplicateObject,
+  getBandById,
   normalizeTemplate,
   templateTitle
 } from "./objects.js";
@@ -36,6 +39,7 @@ const state = {
   template: null,
   selectedIds: [],
   primarySelectedId: null,
+  activeBandId: "detail",
   canvasSettings: loadCanvasSettings(),
   undoStack: [],
   redoStack: [],
@@ -67,8 +71,10 @@ const canvasController = createCanvasController({
   getTemplate: () => state.template,
   getSelectedIds: () => state.selectedIds,
   getPrimarySelectedId: () => state.primarySelectedId,
+  getActiveBandId: () => state.activeBandId,
   getCanvasSettings: () => state.canvasSettings,
   onSelect: handleCanvasSelect,
+  onSelectBand: selectBand,
   onChange: markDirty,
   onCaptureHistory: captureHistorySnapshot,
   onCommitHistory: commitHistorySnapshot
@@ -79,10 +85,12 @@ const inspector = createInspector({
   getTemplate: () => state.template,
   getSelectedObject,
   getSelectedObjects,
+  getActiveBandId: () => state.activeBandId,
   onBeforeChange: recordUndo,
   onChange: markDirty,
   onCommand: handleCommand,
-  onSelect: selectObject
+  onSelect: selectObject,
+  onSelectBand: selectBand
 });
 
 const toolbar = createToolbar({
@@ -100,7 +108,9 @@ elements.toolbox.addEventListener("click", (event) => {
   }
   recordUndo(`Add ${button.dataset.tool}`);
   const object = createObject(button.dataset.tool, state.template);
+  assignObjectBand(state.template, object, state.activeBandId);
   placeObjectOnCanvas(object, state.template, state.canvasSettings, elements.canvasScroller);
+  clampObjectToBand(state.template, object);
   state.template.objects.push(object);
   selectOnly(object.id);
   showActiveTool(button);
@@ -119,6 +129,7 @@ elements.importFile.addEventListener("change", async () => {
     }
     const payload = JSON.parse(await file.text());
     state.template = normalizeTemplate(payload);
+    ensureActiveBand();
     clearSelection();
     markDirty(`Imported ${file.name}`);
   } catch (error) {
@@ -167,10 +178,12 @@ initialize();
 async function initialize() {
   try {
     state.template = normalizeTemplate(await loadTemplate());
+    ensureActiveBand();
     setStatus("Ready");
   } catch (error) {
     setStatus(error.message);
     state.template = normalizeTemplate({});
+    ensureActiveBand();
   }
   render();
 }
@@ -232,6 +245,8 @@ async function handleCommand(command, payload = {}) {
       fitPage();
     } else if (command === "canvasSetting") {
       updateCanvasSettings({ [payload.key]: payload.value });
+    } else if (command === "activeBand") {
+      selectBand(payload.bandId);
     }
   } catch (error) {
     setStatus(error.message);
@@ -314,6 +329,15 @@ function selectAll() {
   render();
 }
 
+function selectBand(bandId) {
+  if (!getBandById(state.template, bandId)) {
+    return;
+  }
+  state.activeBandId = bandId;
+  setStatus(`Active band: ${bandLabel(bandId)}`);
+  render();
+}
+
 function getSelectedObject() {
   if (!state.primarySelectedId || state.selectedIds.length !== 1) {
     return null;
@@ -340,6 +364,7 @@ function duplicateSelected() {
     });
     clone.x += 10;
     clone.y += 10;
+    clampObjectToBand(state.template, clone);
     clones.push(clone);
   }
   state.template.objects.push(...clones);
@@ -370,7 +395,7 @@ function alignSelected(kind) {
   }
   recordUndo(`Align ${kind}`);
   const bounds = selectionBounds(selected);
-  for (const object of selected.filter((item) => !item.locked)) {
+  for (const object of selected.filter((item) => !item.locked && !getBandById(state.template, item.band)?.locked)) {
     if (kind === "left") {
       object.x = bounds.left;
     } else if (kind === "center") {
@@ -384,12 +409,13 @@ function alignSelected(kind) {
     } else if (kind === "bottom") {
       object.y = bounds.bottom - object.height;
     }
+    clampObjectToBand(state.template, object);
   }
   markDirty(`Aligned ${selected.length} objects`);
 }
 
 function distributeSelected(axis) {
-  const selected = getSelectedObjects().filter((object) => !object.locked);
+  const selected = getSelectedObjects().filter((object) => !object.locked && !getBandById(state.template, object.band)?.locked);
   if (selected.length < 3) {
     setStatus("Select at least 3 unlocked objects");
     return;
@@ -406,6 +432,7 @@ function distributeSelected(axis) {
   let cursor = first[key] + first[sizeKey] + gap;
   for (const object of selected.slice(1, -1)) {
     object[key] = Math.round(cursor);
+    clampObjectToBand(state.template, object);
     cursor += object[sizeKey] + gap;
   }
   markDirty(`Distributed ${selected.length} objects`);
@@ -631,6 +658,7 @@ function render(options = {}) {
     return;
   }
   state.template = normalizeTemplate(state.template);
+  ensureActiveBand();
   canvasController.render();
   if (!options.preserveInspector) {
     inspector.render();
@@ -639,6 +667,8 @@ function render(options = {}) {
     hasSelection: state.selectedIds.length > 0,
     selectionCount: state.selectedIds.length,
     canvasSettings: state.canvasSettings,
+    activeBandId: state.activeBandId,
+    bands: state.template.bands || [],
     canUndo: state.undoStack.length > 0,
     canRedo: state.redoStack.length > 0
   });
@@ -734,6 +764,7 @@ function redo() {
 
 function restoreTemplateSnapshot(snapshot) {
   state.template = normalizeTemplate(structuredClone(snapshot));
+  ensureActiveBand();
   const existing = new Set(state.template.objects.map((object) => object.id));
   state.selectedIds = state.selectedIds.filter((id) => existing.has(id));
   if (!state.primarySelectedId || !existing.has(state.primarySelectedId)) {
@@ -758,17 +789,31 @@ function statusLabel() {
 function selectedObjectLabel() {
   const selected = getSelectedObjects();
   if (selected.length === 0) {
-    return "Page selected";
+    return `Page selected | Active band: ${bandLabel(state.activeBandId)}`;
   }
   if (selected.length > 1) {
     return `Selected: ${selected.length} objects`;
   }
-  return `Selected: ${selected[0].type} ${selected[0].id}`;
+  return `Selected: ${selected[0].type} ${selected[0].id} | Band: ${bandLabel(selected[0].band)}`;
 }
 
 function canvasInfoLabel() {
   const settings = state.canvasSettings;
-  return `Grid: ${settings.grid_size}px | Zoom: ${Math.round(settings.zoom * 100)}% | Snap: ${settings.snap_to_grid ? "On" : "Off"}`;
+  return `Band: ${bandLabel(state.activeBandId)} | Grid: ${settings.grid_size}px | Zoom: ${Math.round(settings.zoom * 100)}% | Snap: ${settings.snap_to_grid ? "On" : "Off"}`;
+}
+
+function ensureActiveBand() {
+  if (!state.template) {
+    return;
+  }
+  if (!getBandById(state.template, state.activeBandId)) {
+    state.activeBandId = getBandById(state.template, "detail")?.id || state.template.bands?.[0]?.id || "detail";
+  }
+}
+
+function bandLabel(bandId) {
+  const band = getBandById(state.template, bandId);
+  return band?.name || bandId || "Detail";
 }
 
 function showActiveTool(button) {

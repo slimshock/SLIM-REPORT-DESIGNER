@@ -92,6 +92,7 @@ function openHtmlPreview(html) {
 
 function localPreviewHtml(template) {
   const page = template.page || {};
+  const bands = (template.bands || []).map((band) => localBandHtml(band, page.unit)).join("\n");
   const objects = (template.objects || []).map((object) => localObjectHtml(object, page.unit)).join("\n");
   const background = page.transparent ? "#fff" : page.background_color || "#fff";
   return `<!doctype html>
@@ -99,9 +100,17 @@ function localPreviewHtml(template) {
 <head><meta charset="utf-8"><title>${escapeHtml(template.metadata?.title || "Preview")}</title></head>
 <body style="margin:0;background:#e5e7eb;padding:24px;font-family:Arial,sans-serif">
 <div style="position:relative;margin:0 auto;background:${escapeHtml(background)};width:${unitToPx(page.width || 595, page.unit)}px;height:${unitToPx(page.height || 842, page.unit)}px">
+${bands}
 ${objects}
 </div>
 </body></html>`;
+}
+
+function localBandHtml(band, unit = "px") {
+  if (band.visible === false || isTransparent(band.background_color)) {
+    return "";
+  }
+  return `<div style="position:absolute;box-sizing:border-box;left:0;top:${unitToPx(band.y, unit)}px;width:100%;height:${unitToPx(band.height, unit)}px;background:${escapeHtml(band.background_color)}"></div>`;
 }
 
 function localObjectHtml(object, unit = "px") {
@@ -186,4 +195,8 @@ function unitToPx(value, unit = "px") {
     return number * 96 / 25.4;
   }
   return number;
+}
+
+function isTransparent(value) {
+  return ["", "none", "transparent"].includes(String(value || "").trim().toLowerCase());
 }

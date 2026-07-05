@@ -93,6 +93,11 @@ export function createToolbar({ container, onCommand }) {
     }
   });
   container.addEventListener("change", (event) => {
+    const bandInput = event.target.closest("[data-active-band]");
+    if (bandInput) {
+      onCommand("activeBand", { bandId: bandInput.value });
+      return;
+    }
     const input = event.target.closest("[data-canvas-setting]");
     if (!input) {
       return;
@@ -110,7 +115,9 @@ export function createToolbar({ container, onCommand }) {
       selectionCount = hasSelection ? 1 : 0,
       canvasSettings,
       canUndo = false,
-      canRedo = false
+      canRedo = false,
+      activeBandId = "detail",
+      bands = []
     }) {
       for (const command of ["duplicate", "delete"]) {
         const button = container.querySelector(`[data-command="${command}"]`);
@@ -158,6 +165,18 @@ export function createToolbar({ container, onCommand }) {
           checkbox.checked = Boolean(canvasSettings?.[key]);
         }
       }
+      const bandSelect = container.querySelector("[data-active-band]");
+      if (bandSelect) {
+        const current = bandSelect.value;
+        bandSelect.innerHTML = "";
+        for (const band of bands) {
+          const option = document.createElement("option");
+          option.value = band.id;
+          option.textContent = band.name || band.id;
+          bandSelect.appendChild(option);
+        }
+        bandSelect.value = activeBandId || current || "detail";
+      }
     }
   };
 }
@@ -176,6 +195,7 @@ function canvasControls() {
   group.className = "toolbar-group canvas-controls";
   group.setAttribute("aria-label", "Canvas controls");
   group.append(
+    bandSelector(),
     commandButton("zoomOut", "Zoom out", "zoom-out"),
     zoomDisplay(),
     commandButton("zoomIn", "Zoom in", "zoom-in"),
@@ -186,6 +206,18 @@ function canvasControls() {
     checkboxControl("snap_to_grid", "Snap to grid", "Snap")
   );
   return group;
+}
+
+function bandSelector() {
+  const label = document.createElement("label");
+  label.className = "toolbar-field";
+  label.title = "Active band";
+  label.append(document.createTextNode("Band"));
+  const select = document.createElement("select");
+  select.dataset.activeBand = "true";
+  select.setAttribute("aria-label", "Active band");
+  label.appendChild(select);
+  return label;
 }
 
 function commandButton(command, label, iconName) {
