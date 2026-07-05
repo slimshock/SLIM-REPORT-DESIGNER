@@ -280,3 +280,17 @@ button {
   color: var(--muted);
   font-size: 12px;
 }
+
+.page-canvas {
+  touch-action: none;
+}
+
+.report-object {
+  cursor: move;
+  touch-action: none;
+}
+
+.resize-handle {
+  cursor: nwse-resize;
+  pointer-events: auto;
+}

@@ -5,79 +5,162 @@ export function createCanvasController({ canvas, getTemplate, getSelectedId, onS
 
   canvas.addEventListener("pointerdown", (event) => {
     const objectElement = event.target.closest(".report-object");
+
     if (!objectElement) {
       onSelect(null);
       return;
     }
 
-    const object = findObject(getTemplate(), objectElement.dataset.objectId);
+    const objectId = objectElement.dataset.objectId;
+    const object = findObject(getTemplate(), objectId);
+
     if (!object) {
       return;
     }
 
+    event.preventDefault();
+    event.stopPropagation();
+
+    const resizing = Boolean(event.target.closest(".resize-handle"));
+
     onSelect(object.id);
 
-    const resizing = event.target.classList.contains("resize-handle");
+    const currentObject = findObject(getTemplate(), objectId);
+
+    if (!currentObject) {
+      return;
+    }
+
     dragState = {
-      object,
+      objectId,
       pointerId: event.pointerId,
       startClientX: event.clientX,
       startClientY: event.clientY,
-      startX: Number(object.x) || 0,
-      startY: Number(object.y) || 0,
-      startWidth: Number(object.width) || 0,
-      startHeight: Number(object.height) || 0,
-      resizing
+      startX: Number(currentObject.x) || 0,
+      startY: Number(currentObject.y) || 0,
+      startWidth: Number(currentObject.width) || 0,
+      startHeight: Number(currentObject.height) || 0,
+      resizing,
     };
-    objectElement.setPointerCapture(event.pointerId);
-    event.preventDefault();
   });
 
-  canvas.addEventListener("pointermove", (event) => {
-    if (!dragState || event.pointerId !== dragState.pointerId) {
+  document.addEventListener("pointermove", (event) => {
+    if (!dragState) {
       return;
     }
+
+    if (
+      event.pointerId !== undefined &&
+      dragState.pointerId !== undefined &&
+      event.pointerId !== dragState.pointerId
+    ) {
+      return;
+    }
+
+    const object = findObject(getTemplate(), dragState.objectId);
+
+    if (!object) {
+      dragState = null;
+      return;
+    }
+
+    event.preventDefault();
+
     const dx = event.clientX - dragState.startClientX;
     const dy = event.clientY - dragState.startClientY;
 
     if (dragState.resizing) {
-      dragState.object.width = Math.max(8, Math.round(dragState.startWidth + dx));
-      dragState.object.height = Math.max(
-        dragState.object.type === "line" ? 0 : 8,
+      object.width = Math.max(8, Math.round(dragState.startWidth + dx));
+      object.height = Math.max(
+        object.type === "line" ? 0 : 8,
         Math.round(dragState.startHeight + dy)
       );
     } else {
-      dragState.object.x = Math.round(dragState.startX + dx);
-      dragState.object.y = Math.round(dragState.startY + dy);
+      object.x = Math.round(dragState.startX + dx);
+      object.y = Math.round(dragState.startY + dy);
     }
+
+    clampObjectToPage(object, getTemplate());
     onChange();
   });
 
-  canvas.addEventListener("pointerup", (event) => {
-    if (dragState && event.pointerId === dragState.pointerId) {
-      dragState = null;
+  document.addEventListener("pointerup", (event) => {
+    if (!dragState) {
+      return;
     }
+
+    if (
+      event.pointerId !== undefined &&
+      dragState.pointerId !== undefined &&
+      event.pointerId !== dragState.pointerId
+    ) {
+      return;
+    }
+
+    dragState = null;
   });
 
-  canvas.addEventListener("keydown", (event) => {
+  document.addEventListener("pointercancel", () => {
+    dragState = null;
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (isEditingText(event.target)) {
+      return;
+    }
+
+    const selectedId = getSelectedId();
+
+    if (!selectedId) {
+      return;
+    }
+
+    const object = findObject(getTemplate(), selectedId);
+
+    if (!object) {
+      return;
+    }
+
     if (event.key === "Delete" || event.key === "Backspace") {
-      const selectedId = getSelectedId();
-      if (selectedId) {
-        event.preventDefault();
-        onSelect(selectedId, { deleteSelected: true });
-      }
+      event.preventDefault();
+      onSelect(selectedId, { deleteSelected: true });
+      return;
+    }
+
+    const step = event.shiftKey ? 10 : 1;
+    let changed = false;
+
+    if (event.key === "ArrowLeft") {
+      object.x = Math.round((Number(object.x) || 0) - step);
+      changed = true;
+    } else if (event.key === "ArrowRight") {
+      object.x = Math.round((Number(object.x) || 0) + step);
+      changed = true;
+    } else if (event.key === "ArrowUp") {
+      object.y = Math.round((Number(object.y) || 0) - step);
+      changed = true;
+    } else if (event.key === "ArrowDown") {
+      object.y = Math.round((Number(object.y) || 0) + step);
+      changed = true;
+    }
+
+    if (changed) {
+      event.preventDefault();
+      clampObjectToPage(object, getTemplate());
+      onChange();
     }
   });
 
   return {
     render() {
       renderCanvas(canvas, getTemplate(), getSelectedId());
-    }
+    },
   };
 }
 
 export function renderCanvas(canvas, template, selectedId) {
   const page = template.page || {};
+
   canvas.style.width = `${page.width || 595}px`;
   canvas.style.height = `${page.height || 842}px`;
   canvas.innerHTML = "";
@@ -89,18 +172,23 @@ export function renderCanvas(canvas, template, selectedId) {
 
 function renderObject(object, selectedId) {
   const element = document.createElement("div");
+
   element.className = "report-object";
+
   if (object.id === selectedId) {
     element.classList.add("selected");
   }
+
   element.dataset.objectId = object.id;
   element.dataset.type = object.type;
+
   element.style.left = `${Number(object.x) || 0}px`;
   element.style.top = `${Number(object.y) || 0}px`;
   element.style.width = `${Number(object.width) || 0}px`;
   element.style.height = `${Math.max(Number(object.height) || 0, object.type === "line" ? 6 : 8)}px`;
 
   const style = objectStyle(object);
+
   element.style.fontSize = `${Number(style.font_size) || 12}px`;
   element.style.fontWeight = style.bold ? "700" : "400";
   element.style.color = style.color || "#111827";
@@ -127,9 +215,39 @@ function renderObject(object, selectedId) {
     handle.className = "resize-handle";
     element.appendChild(handle);
   }
+
   return element;
 }
 
 function findObject(template, objectId) {
   return (template.objects || []).find((object) => object.id === objectId);
+}
+
+function clampObjectToPage(object, template) {
+  const page = template.page || {};
+  const pageWidth = Number(page.width) || 595;
+  const pageHeight = Number(page.height) || 842;
+
+  object.width = Math.max(8, Math.round(Number(object.width) || 8));
+
+  if (object.type === "line") {
+    object.height = Math.max(0, Math.round(Number(object.height) || 0));
+  } else {
+    object.height = Math.max(8, Math.round(Number(object.height) || 8));
+  }
+
+  object.x = Math.max(0, Math.round(Number(object.x) || 0));
+  object.y = Math.max(0, Math.round(Number(object.y) || 0));
+
+  if (object.x + object.width > pageWidth) {
+    object.x = Math.max(0, pageWidth - object.width);
+  }
+
+  if (object.y + object.height > pageHeight) {
+    object.y = Math.max(0, pageHeight - object.height);
+  }
+}
+
+function isEditingText(target) {
+  return target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
 }

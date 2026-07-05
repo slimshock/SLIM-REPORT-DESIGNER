@@ -16,101 +16,102 @@
     }
   },
   "page": {
-    "width": 651,
-    "height": 842,
+    "width": 651.0,
+    "height": 842.0,
     "unit": "in",
     "orientation": "portrait",
     "margin_top": 0.5,
     "margin_right": 0.5,
     "margin_bottom": 0.5,
     "margin_left": 0.5,
-    "id": "page_1"
+    "id": "page_1",
+    "size": "A4"
   },
   "objects": [
     {
       "id": "cerebro_logo",
       "type": "text",
-      "x": 16,
-      "y": 26,
-      "width": 150,
-      "height": 30,
+      "x": 16.0,
+      "y": 26.0,
+      "width": 150.0,
+      "height": 30.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "CEREBRO",
         "page_id": "page_1",
         "style": {
-          "font_size": 27,
-          "color": "#0B79C9"
-        }
+          "color": "#0B79C9",
+          "font_size": 27
+        },
+        "text": "CEREBRO"
       },
       "text": "CEREBRO",
       "style": {
-        "font_size": 27,
-        "color": "#0B79C9"
+        "color": "#0B79C9",
+        "font_size": 27
       }
     },
     {
       "id": "cerebro_subtitle",
       "type": "text",
-      "x": 18,
-      "y": 56,
-      "width": 150,
-      "height": 16,
+      "x": 18.0,
+      "y": 56.0,
+      "width": 150.0,
+      "height": 16.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "DIAGNOSTIC SYSTEM",
         "page_id": "page_1",
         "style": {
-          "font_size": 10,
-          "color": "#E53935"
-        }
+          "color": "#E53935",
+          "font_size": 10
+        },
+        "text": "DIAGNOSTIC SYSTEM"
       },
       "text": "DIAGNOSTIC SYSTEM",
       "style": {
-        "font_size": 10,
-        "color": "#E53935"
+        "color": "#E53935",
+        "font_size": 10
       }
     },
     {
       "id": "clinic_name",
       "type": "text",
-      "x": 170,
-      "y": 4,
-      "width": 360,
-      "height": 30,
+      "x": 170.0,
+      "y": 4.0,
+      "width": 360.0,
+      "height": 30.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Cerebro Diagnostic System",
         "page_id": "page_1",
         "style": {
-          "font_size": 26,
-          "bold": true
-        }
+          "bold": true,
+          "font_size": 26
+        },
+        "text": "Cerebro Diagnostic System"
       },
       "text": "Cerebro Diagnostic System",
       "style": {
-        "font_size": 26,
-        "bold": true
+        "bold": true,
+        "font_size": 26
       }
     },
     {
       "id": "clinic_address",
       "type": "text",
-      "x": 171,
-      "y": 35,
-      "width": 390,
-      "height": 12,
+      "x": 171.0,
+      "y": 35.0,
+      "width": 390.0,
+      "height": 12.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Alwana Business Park, Zone 4 Cugman, Cagayan de Oro City",
         "page_id": "page_1",
         "style": {
           "font_size": 10
-        }
+        },
+        "text": "Alwana Business Park, Zone 4 Cugman, Cagayan de Oro City"
       },
       "text": "Alwana Business Park, Zone 4 Cugman, Cagayan de Oro City",
       "style": {
@@ -120,18 +121,18 @@
     {
       "id": "clinic_contact",
       "type": "text",
-      "x": 171,
-      "y": 61,
-      "width": 360,
-      "height": 12,
+      "x": 171.0,
+      "y": 61.0,
+      "width": 360.0,
+      "height": 12.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Contact No.: +639 260 235 049, +639 222 979 774",
         "page_id": "page_1",
         "style": {
           "font_size": 10
-        }
+        },
+        "text": "Contact No.: +639 260 235 049, +639 222 979 774"
       },
       "text": "Contact No.: +639 260 235 049, +639 222 979 774",
       "style": {
@@ -141,18 +142,18 @@
     {
       "id": "clinic_email",
       "type": "text",
-      "x": 171,
-      "y": 74,
-      "width": 300,
-      "height": 12,
+      "x": 171.0,
+      "y": 74.0,
+      "width": 300.0,
+      "height": 12.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Email Address: cerebro.info@gmail.com",
         "page_id": "page_1",
         "style": {
           "font_size": 10
-        }
+        },
+        "text": "Email Address: cerebro.info@gmail.com"
       },
       "text": "Email Address: cerebro.info@gmail.com",
       "style": {
@@ -162,9 +163,9 @@
     {
       "id": "header_rule",
       "type": "line",
-      "x": 14,
-      "y": 90,
-      "width": 624,
+      "x": 14.0,
+      "y": 90.0,
+      "width": 624.0,
       "height": 0.0,
       "z_index": 0,
       "visible": true,
@@ -181,18 +182,18 @@
     {
       "id": "patient_name_label",
       "type": "text",
-      "x": 14,
-      "y": 98,
-      "width": 96,
-      "height": 12,
+      "x": 14.0,
+      "y": 98.0,
+      "width": 96.0,
+      "height": 12.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Patient Name:",
         "page_id": "page_1",
         "style": {
           "font_size": 10
-        }
+        },
+        "text": "Patient Name:"
       },
       "text": "Patient Name:",
       "style": {
@@ -202,41 +203,41 @@
     {
       "id": "patient_name_value",
       "type": "field",
-      "x": 110,
-      "y": 98,
-      "width": 180,
-      "height": 12,
+      "x": 110.0,
+      "y": 98.0,
+      "width": 180.0,
+      "height": 12.0,
       "z_index": 0,
       "visible": true,
       "properties": {
         "binding": "patient.name",
         "page_id": "page_1",
         "style": {
-          "font_size": 10,
-          "bold": true
+          "bold": true,
+          "font_size": 10
         }
       },
       "binding": "patient.name",
       "style": {
-        "font_size": 10,
-        "bold": true
+        "bold": true,
+        "font_size": 10
       }
     },
     {
       "id": "age_label",
       "type": "text",
-      "x": 14,
-      "y": 111,
-      "width": 96,
-      "height": 12,
+      "x": 14.0,
+      "y": 111.0,
+      "width": 96.0,
+      "height": 12.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Age:",
         "page_id": "page_1",
         "style": {
           "font_size": 10
-        }
+        },
+        "text": "Age:"
       },
       "text": "Age:",
       "style": {
@@ -246,41 +247,41 @@
     {
       "id": "age_value",
       "type": "field",
-      "x": 110,
-      "y": 111,
-      "width": 180,
-      "height": 12,
+      "x": 110.0,
+      "y": 111.0,
+      "width": 180.0,
+      "height": 12.0,
       "z_index": 0,
       "visible": true,
       "properties": {
         "binding": "patient.age",
         "page_id": "page_1",
         "style": {
-          "font_size": 10,
-          "bold": true
+          "bold": true,
+          "font_size": 10
         }
       },
       "binding": "patient.age",
       "style": {
-        "font_size": 10,
-        "bold": true
+        "bold": true,
+        "font_size": 10
       }
     },
     {
       "id": "dob_label",
       "type": "text",
-      "x": 14,
-      "y": 124,
-      "width": 96,
-      "height": 12,
+      "x": 14.0,
+      "y": 124.0,
+      "width": 96.0,
+      "height": 12.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "DOB:",
         "page_id": "page_1",
         "style": {
           "font_size": 10
-        }
+        },
+        "text": "DOB:"
       },
       "text": "DOB:",
       "style": {
@@ -290,41 +291,41 @@
     {
       "id": "dob_value",
       "type": "field",
-      "x": 110,
-      "y": 124,
-      "width": 180,
-      "height": 12,
+      "x": 110.0,
+      "y": 124.0,
+      "width": 180.0,
+      "height": 12.0,
       "z_index": 0,
       "visible": true,
       "properties": {
         "binding": "patient.dob",
         "page_id": "page_1",
         "style": {
-          "font_size": 10,
-          "bold": true
+          "bold": true,
+          "font_size": 10
         }
       },
       "binding": "patient.dob",
       "style": {
-        "font_size": 10,
-        "bold": true
+        "bold": true,
+        "font_size": 10
       }
     },
     {
       "id": "sex_label",
       "type": "text",
-      "x": 14,
-      "y": 137,
-      "width": 96,
-      "height": 12,
+      "x": 14.0,
+      "y": 137.0,
+      "width": 96.0,
+      "height": 12.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Sex:",
         "page_id": "page_1",
         "style": {
           "font_size": 10
-        }
+        },
+        "text": "Sex:"
       },
       "text": "Sex:",
       "style": {
@@ -334,41 +335,41 @@
     {
       "id": "sex_value",
       "type": "field",
-      "x": 110,
-      "y": 137,
-      "width": 180,
-      "height": 12,
+      "x": 110.0,
+      "y": 137.0,
+      "width": 180.0,
+      "height": 12.0,
       "z_index": 0,
       "visible": true,
       "properties": {
         "binding": "patient.sex",
         "page_id": "page_1",
         "style": {
-          "font_size": 10,
-          "bold": true
+          "bold": true,
+          "font_size": 10
         }
       },
       "binding": "patient.sex",
       "style": {
-        "font_size": 10,
-        "bold": true
+        "bold": true,
+        "font_size": 10
       }
     },
     {
       "id": "order_no_label",
       "type": "text",
-      "x": 330,
-      "y": 98,
-      "width": 98,
-      "height": 12,
+      "x": 330.0,
+      "y": 98.0,
+      "width": 98.0,
+      "height": 12.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Order No.:",
         "page_id": "page_1",
         "style": {
           "font_size": 10
-        }
+        },
+        "text": "Order No.:"
       },
       "text": "Order No.:",
       "style": {
@@ -378,41 +379,41 @@
     {
       "id": "order_no_value",
       "type": "field",
-      "x": 428,
-      "y": 98,
-      "width": 185,
-      "height": 12,
+      "x": 428.0,
+      "y": 98.0,
+      "width": 185.0,
+      "height": 12.0,
       "z_index": 0,
       "visible": true,
       "properties": {
         "binding": "order.id",
         "page_id": "page_1",
         "style": {
-          "font_size": 10,
-          "bold": true
+          "bold": true,
+          "font_size": 10
         }
       },
       "binding": "order.id",
       "style": {
-        "font_size": 10,
-        "bold": true
+        "bold": true,
+        "font_size": 10
       }
     },
     {
       "id": "source_label",
       "type": "text",
-      "x": 330,
-      "y": 111,
-      "width": 98,
-      "height": 12,
+      "x": 330.0,
+      "y": 111.0,
+      "width": 98.0,
+      "height": 12.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Source:",
         "page_id": "page_1",
         "style": {
           "font_size": 10
-        }
+        },
+        "text": "Source:"
       },
       "text": "Source:",
       "style": {
@@ -422,41 +423,41 @@
     {
       "id": "source_value",
       "type": "field",
-      "x": 428,
-      "y": 111,
-      "width": 185,
-      "height": 12,
+      "x": 428.0,
+      "y": 111.0,
+      "width": 185.0,
+      "height": 12.0,
       "z_index": 0,
       "visible": true,
       "properties": {
         "binding": "order.source",
         "page_id": "page_1",
         "style": {
-          "font_size": 10,
-          "bold": true
+          "bold": true,
+          "font_size": 10
         }
       },
       "binding": "order.source",
       "style": {
-        "font_size": 10,
-        "bold": true
+        "bold": true,
+        "font_size": 10
       }
     },
     {
       "id": "date_received_label",
       "type": "text",
-      "x": 330,
-      "y": 137,
-      "width": 98,
-      "height": 12,
+      "x": 330.0,
+      "y": 137.0,
+      "width": 98.0,
+      "height": 12.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Date Received:",
         "page_id": "page_1",
         "style": {
           "font_size": 10
-        }
+        },
+        "text": "Date Received:"
       },
       "text": "Date Received:",
       "style": {
@@ -466,41 +467,41 @@
     {
       "id": "date_received_value",
       "type": "field",
-      "x": 428,
-      "y": 137,
-      "width": 185,
-      "height": 12,
+      "x": 428.0,
+      "y": 137.0,
+      "width": 185.0,
+      "height": 12.0,
       "z_index": 0,
       "visible": true,
       "properties": {
         "binding": "order.received",
         "page_id": "page_1",
         "style": {
-          "font_size": 10,
-          "bold": true
+          "bold": true,
+          "font_size": 10
         }
       },
       "binding": "order.received",
       "style": {
-        "font_size": 10,
-        "bold": true
+        "bold": true,
+        "font_size": 10
       }
     },
     {
       "id": "date_printed_label",
       "type": "text",
-      "x": 330,
-      "y": 176,
-      "width": 98,
-      "height": 12,
+      "x": 330.0,
+      "y": 176.0,
+      "width": 98.0,
+      "height": 12.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Date Printed:",
         "page_id": "page_1",
         "style": {
           "font_size": 10
-        }
+        },
+        "text": "Date Printed:"
       },
       "text": "Date Printed:",
       "style": {
@@ -510,231 +511,231 @@
     {
       "id": "date_printed_value",
       "type": "field",
-      "x": 428,
-      "y": 176,
-      "width": 185,
-      "height": 12,
+      "x": 428.0,
+      "y": 176.0,
+      "width": 185.0,
+      "height": 12.0,
       "z_index": 0,
       "visible": true,
       "properties": {
         "binding": "order.printed",
         "page_id": "page_1",
         "style": {
-          "font_size": 10,
-          "bold": true
+          "bold": true,
+          "font_size": 10
         }
       },
       "binding": "order.printed",
       "style": {
-        "font_size": 10,
-        "bold": true
+        "bold": true,
+        "font_size": 10
       }
     },
     {
       "id": "section",
       "type": "text",
-      "x": 0,
-      "y": 198,
-      "width": 651,
-      "height": 16,
+      "x": 0.0,
+      "y": 198.0,
+      "width": 651.0,
+      "height": 16.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "HEMATOLOGY",
         "page_id": "page_1",
         "style": {
-          "font_size": 12,
+          "align": "center",
           "bold": true,
           "color": "#9AA0A6",
-          "align": "center"
-        }
+          "font_size": 12
+        },
+        "text": "HEMATOLOGY"
       },
       "text": "HEMATOLOGY",
       "style": {
-        "font_size": 12,
+        "align": "center",
         "bold": true,
         "color": "#9AA0A6",
-        "align": "center"
+        "font_size": 12
       }
     },
     {
       "id": "test_header",
       "type": "text",
-      "x": 16,
-      "y": 232,
-      "width": 150,
-      "height": 14,
+      "x": 16.0,
+      "y": 232.0,
+      "width": 150.0,
+      "height": 14.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "TEST NAME",
         "page_id": "page_1",
         "style": {
-          "font_size": 10,
-          "bold": true
-        }
+          "bold": true,
+          "font_size": 10
+        },
+        "text": "TEST NAME"
       },
       "text": "TEST NAME",
       "style": {
-        "font_size": 10,
-        "bold": true
+        "bold": true,
+        "font_size": 10
       }
     },
     {
       "id": "result_header",
       "type": "text",
-      "x": 226,
-      "y": 232,
-      "width": 54,
-      "height": 14,
+      "x": 226.0,
+      "y": 232.0,
+      "width": 54.0,
+      "height": 14.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "RESULT",
         "page_id": "page_1",
         "style": {
-          "font_size": 10,
-          "bold": true
-        }
+          "bold": true,
+          "font_size": 10
+        },
+        "text": "RESULT"
       },
       "text": "RESULT",
       "style": {
-        "font_size": 10,
-        "bold": true
+        "bold": true,
+        "font_size": 10
       }
     },
     {
       "id": "unit_header",
       "type": "text",
-      "x": 315,
-      "y": 232,
-      "width": 58,
-      "height": 14,
+      "x": 315.0,
+      "y": 232.0,
+      "width": 58.0,
+      "height": 14.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "UNIT",
         "page_id": "page_1",
         "style": {
-          "font_size": 10,
-          "bold": true
-        }
+          "bold": true,
+          "font_size": 10
+        },
+        "text": "UNIT"
       },
       "text": "UNIT",
       "style": {
-        "font_size": 10,
-        "bold": true
+        "bold": true,
+        "font_size": 10
       }
     },
     {
       "id": "range_header",
       "type": "text",
-      "x": 378,
-      "y": 232,
-      "width": 130,
-      "height": 14,
+      "x": 378.0,
+      "y": 232.0,
+      "width": 130.0,
+      "height": 14.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "REFERENCE RANGE",
         "page_id": "page_1",
         "style": {
-          "font_size": 10,
-          "bold": true
-        }
+          "bold": true,
+          "font_size": 10
+        },
+        "text": "REFERENCE RANGE"
       },
       "text": "REFERENCE RANGE",
       "style": {
-        "font_size": 10,
-        "bold": true
+        "bold": true,
+        "font_size": 10
       }
     },
     {
       "id": "flag_header",
       "type": "text",
-      "x": 570,
-      "y": 232,
-      "width": 54,
-      "height": 14,
+      "x": 570.0,
+      "y": 232.0,
+      "width": 54.0,
+      "height": 14.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "FLAGS",
         "page_id": "page_1",
         "style": {
-          "font_size": 10,
-          "bold": true
-        }
+          "bold": true,
+          "font_size": 10
+        },
+        "text": "FLAGS"
       },
       "text": "FLAGS",
       "style": {
-        "font_size": 10,
-        "bold": true
+        "bold": true,
+        "font_size": 10
       }
     },
     {
       "id": "result_0_test",
       "type": "text",
-      "x": 16,
-      "y": 248,
-      "width": 190,
-      "height": 13,
+      "x": 16.0,
+      "y": 248.0,
+      "width": 190.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "White Blood Cell Count",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": false
-        }
+          "bold": false,
+          "font_size": 9
+        },
+        "text": "White Blood Cell Count"
       },
       "text": "White Blood Cell Count",
       "style": {
-        "font_size": 9,
-        "bold": false
+        "bold": false,
+        "font_size": 9
       }
     },
     {
       "id": "result_0_value",
       "type": "field",
-      "x": 226,
-      "y": 248,
-      "width": 54,
-      "height": 13,
+      "x": 226.0,
+      "y": 248.0,
+      "width": 54.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
         "binding": "results.wbc",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "align": "center",
           "color": "#FF0000",
-          "align": "center"
+          "font_size": 9
         }
       },
       "binding": "results.wbc",
       "style": {
-        "font_size": 9,
+        "align": "center",
         "color": "#FF0000",
-        "align": "center"
+        "font_size": 9
       }
     },
     {
       "id": "result_0_unit",
       "type": "text",
-      "x": 312,
-      "y": 248,
-      "width": 58,
-      "height": 13,
+      "x": 312.0,
+      "y": 248.0,
+      "width": 58.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "x10^9/L",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "x10^9/L"
       },
       "text": "x10^9/L",
       "style": {
@@ -744,18 +745,18 @@
     {
       "id": "result_0_range",
       "type": "text",
-      "x": 378,
-      "y": 248,
-      "width": 120,
-      "height": 13,
+      "x": 378.0,
+      "y": 248.0,
+      "width": 120.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "5-14.5",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "5-14.5"
       },
       "text": "5-14.5",
       "style": {
@@ -765,91 +766,91 @@
     {
       "id": "result_0_flag",
       "type": "text",
-      "x": 592,
-      "y": 248,
-      "width": 40,
-      "height": 13,
+      "x": 592.0,
+      "y": 248.0,
+      "width": 40.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "HIGH",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": true,
           "color": "#FF0000",
-          "bold": true
-        }
+          "font_size": 9
+        },
+        "text": "HIGH"
       },
       "text": "HIGH",
       "style": {
-        "font_size": 9,
+        "bold": true,
         "color": "#FF0000",
-        "bold": true
+        "font_size": 9
       }
     },
     {
       "id": "result_1_test",
       "type": "text",
-      "x": 16,
-      "y": 264,
-      "width": 190,
-      "height": 13,
+      "x": 16.0,
+      "y": 264.0,
+      "width": 190.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Red Blood Cell Count",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": false
-        }
+          "bold": false,
+          "font_size": 9
+        },
+        "text": "Red Blood Cell Count"
       },
       "text": "Red Blood Cell Count",
       "style": {
-        "font_size": 9,
-        "bold": false
+        "bold": false,
+        "font_size": 9
       }
     },
     {
       "id": "result_1_value",
       "type": "field",
-      "x": 226,
-      "y": 264,
-      "width": 54,
-      "height": 13,
+      "x": 226.0,
+      "y": 264.0,
+      "width": 54.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
         "binding": "results.rbc",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "align": "center",
           "color": "#000000",
-          "align": "center"
+          "font_size": 9
         }
       },
       "binding": "results.rbc",
       "style": {
-        "font_size": 9,
+        "align": "center",
         "color": "#000000",
-        "align": "center"
+        "font_size": 9
       }
     },
     {
       "id": "result_1_unit",
       "type": "text",
-      "x": 312,
-      "y": 264,
-      "width": 58,
-      "height": 13,
+      "x": 312.0,
+      "y": 264.0,
+      "width": 58.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "x10^12/L",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "x10^12/L"
       },
       "text": "x10^12/L",
       "style": {
@@ -859,18 +860,18 @@
     {
       "id": "result_1_range",
       "type": "text",
-      "x": 378,
-      "y": 264,
-      "width": 120,
-      "height": 13,
+      "x": 378.0,
+      "y": 264.0,
+      "width": 120.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "3.9 - 5.3",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "3.9 - 5.3"
       },
       "text": "3.9 - 5.3",
       "style": {
@@ -880,90 +881,90 @@
     {
       "id": "result_1_flag",
       "type": "text",
-      "x": 592,
-      "y": 264,
-      "width": 40,
-      "height": 13,
+      "x": 592.0,
+      "y": 264.0,
+      "width": 40.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": false,
           "color": "#000000",
-          "bold": false
-        }
+          "font_size": 9
+        },
+        "text": ""
       },
       "style": {
-        "font_size": 9,
+        "bold": false,
         "color": "#000000",
-        "bold": false
+        "font_size": 9
       }
     },
     {
       "id": "result_2_test",
       "type": "text",
-      "x": 16,
-      "y": 280,
-      "width": 190,
-      "height": 13,
+      "x": 16.0,
+      "y": 280.0,
+      "width": 190.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Hemoglobin",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": false
-        }
+          "bold": false,
+          "font_size": 9
+        },
+        "text": "Hemoglobin"
       },
       "text": "Hemoglobin",
       "style": {
-        "font_size": 9,
-        "bold": false
+        "bold": false,
+        "font_size": 9
       }
     },
     {
       "id": "result_2_value",
       "type": "field",
-      "x": 226,
-      "y": 280,
-      "width": 54,
-      "height": 13,
+      "x": 226.0,
+      "y": 280.0,
+      "width": 54.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
         "binding": "results.hgb",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "align": "center",
           "color": "#003BFF",
-          "align": "center"
+          "font_size": 9
         }
       },
       "binding": "results.hgb",
       "style": {
-        "font_size": 9,
+        "align": "center",
         "color": "#003BFF",
-        "align": "center"
+        "font_size": 9
       }
     },
     {
       "id": "result_2_unit",
       "type": "text",
-      "x": 312,
-      "y": 280,
-      "width": 58,
-      "height": 13,
+      "x": 312.0,
+      "y": 280.0,
+      "width": 58.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "g/dL",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "g/dL"
       },
       "text": "g/dL",
       "style": {
@@ -973,18 +974,18 @@
     {
       "id": "result_2_range",
       "type": "text",
-      "x": 378,
-      "y": 280,
-      "width": 120,
-      "height": 13,
+      "x": 378.0,
+      "y": 280.0,
+      "width": 120.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "11.5 - 13.5",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "11.5 - 13.5"
       },
       "text": "11.5 - 13.5",
       "style": {
@@ -994,91 +995,91 @@
     {
       "id": "result_2_flag",
       "type": "text",
-      "x": 592,
-      "y": 280,
-      "width": 40,
-      "height": 13,
+      "x": 592.0,
+      "y": 280.0,
+      "width": 40.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "LOW",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": true,
           "color": "#003BFF",
-          "bold": true
-        }
+          "font_size": 9
+        },
+        "text": "LOW"
       },
       "text": "LOW",
       "style": {
-        "font_size": 9,
+        "bold": true,
         "color": "#003BFF",
-        "bold": true
+        "font_size": 9
       }
     },
     {
       "id": "result_3_test",
       "type": "text",
-      "x": 16,
-      "y": 296,
-      "width": 190,
-      "height": 13,
+      "x": 16.0,
+      "y": 296.0,
+      "width": 190.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Hematocrit",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": false
-        }
+          "bold": false,
+          "font_size": 9
+        },
+        "text": "Hematocrit"
       },
       "text": "Hematocrit",
       "style": {
-        "font_size": 9,
-        "bold": false
+        "bold": false,
+        "font_size": 9
       }
     },
     {
       "id": "result_3_value",
       "type": "field",
-      "x": 226,
-      "y": 296,
-      "width": 54,
-      "height": 13,
+      "x": 226.0,
+      "y": 296.0,
+      "width": 54.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
         "binding": "results.hct",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "align": "center",
           "color": "#003BFF",
-          "align": "center"
+          "font_size": 9
         }
       },
       "binding": "results.hct",
       "style": {
-        "font_size": 9,
+        "align": "center",
         "color": "#003BFF",
-        "align": "center"
+        "font_size": 9
       }
     },
     {
       "id": "result_3_unit",
       "type": "text",
-      "x": 312,
-      "y": 296,
-      "width": 58,
-      "height": 13,
+      "x": 312.0,
+      "y": 296.0,
+      "width": 58.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "%",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "%"
       },
       "text": "%",
       "style": {
@@ -1088,18 +1089,18 @@
     {
       "id": "result_3_range",
       "type": "text",
-      "x": 378,
-      "y": 296,
-      "width": 120,
-      "height": 13,
+      "x": 378.0,
+      "y": 296.0,
+      "width": 120.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "34 - 40",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "34 - 40"
       },
       "text": "34 - 40",
       "style": {
@@ -1109,91 +1110,91 @@
     {
       "id": "result_3_flag",
       "type": "text",
-      "x": 592,
-      "y": 296,
-      "width": 40,
-      "height": 13,
+      "x": 592.0,
+      "y": 296.0,
+      "width": 40.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "LOW",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": true,
           "color": "#003BFF",
-          "bold": true
-        }
+          "font_size": 9
+        },
+        "text": "LOW"
       },
       "text": "LOW",
       "style": {
-        "font_size": 9,
+        "bold": true,
         "color": "#003BFF",
-        "bold": true
+        "font_size": 9
       }
     },
     {
       "id": "result_4_test",
       "type": "text",
-      "x": 16,
-      "y": 312,
-      "width": 190,
-      "height": 13,
+      "x": 16.0,
+      "y": 312.0,
+      "width": 190.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "MCV",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": false
-        }
+          "bold": false,
+          "font_size": 9
+        },
+        "text": "MCV"
       },
       "text": "MCV",
       "style": {
-        "font_size": 9,
-        "bold": false
+        "bold": false,
+        "font_size": 9
       }
     },
     {
       "id": "result_4_value",
       "type": "field",
-      "x": 226,
-      "y": 312,
-      "width": 54,
-      "height": 13,
+      "x": 226.0,
+      "y": 312.0,
+      "width": 54.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
         "binding": "results.mcv",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "align": "center",
           "color": "#000000",
-          "align": "center"
+          "font_size": 9
         }
       },
       "binding": "results.mcv",
       "style": {
-        "font_size": 9,
+        "align": "center",
         "color": "#000000",
-        "align": "center"
+        "font_size": 9
       }
     },
     {
       "id": "result_4_unit",
       "type": "text",
-      "x": 312,
-      "y": 312,
-      "width": 58,
-      "height": 13,
+      "x": 312.0,
+      "y": 312.0,
+      "width": 58.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "c.u.",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "c.u."
       },
       "text": "c.u.",
       "style": {
@@ -1203,18 +1204,18 @@
     {
       "id": "result_4_range",
       "type": "text",
-      "x": 378,
-      "y": 312,
-      "width": 120,
-      "height": 13,
+      "x": 378.0,
+      "y": 312.0,
+      "width": 120.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "75 - 87",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "75 - 87"
       },
       "text": "75 - 87",
       "style": {
@@ -1224,90 +1225,90 @@
     {
       "id": "result_4_flag",
       "type": "text",
-      "x": 592,
-      "y": 312,
-      "width": 40,
-      "height": 13,
+      "x": 592.0,
+      "y": 312.0,
+      "width": 40.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": false,
           "color": "#000000",
-          "bold": false
-        }
+          "font_size": 9
+        },
+        "text": ""
       },
       "style": {
-        "font_size": 9,
+        "bold": false,
         "color": "#000000",
-        "bold": false
+        "font_size": 9
       }
     },
     {
       "id": "result_5_test",
       "type": "text",
-      "x": 16,
-      "y": 328,
-      "width": 190,
-      "height": 13,
+      "x": 16.0,
+      "y": 328.0,
+      "width": 190.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "MCH",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": false
-        }
+          "bold": false,
+          "font_size": 9
+        },
+        "text": "MCH"
       },
       "text": "MCH",
       "style": {
-        "font_size": 9,
-        "bold": false
+        "bold": false,
+        "font_size": 9
       }
     },
     {
       "id": "result_5_value",
       "type": "field",
-      "x": 226,
-      "y": 328,
-      "width": 54,
-      "height": 13,
+      "x": 226.0,
+      "y": 328.0,
+      "width": 54.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
         "binding": "results.mch",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "align": "center",
           "color": "#000000",
-          "align": "center"
+          "font_size": 9
         }
       },
       "binding": "results.mch",
       "style": {
-        "font_size": 9,
+        "align": "center",
         "color": "#000000",
-        "align": "center"
+        "font_size": 9
       }
     },
     {
       "id": "result_5_unit",
       "type": "text",
-      "x": 312,
-      "y": 328,
-      "width": 58,
-      "height": 13,
+      "x": 312.0,
+      "y": 328.0,
+      "width": 58.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "uug",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "uug"
       },
       "text": "uug",
       "style": {
@@ -1317,18 +1318,18 @@
     {
       "id": "result_5_range",
       "type": "text",
-      "x": 378,
-      "y": 328,
-      "width": 120,
-      "height": 13,
+      "x": 378.0,
+      "y": 328.0,
+      "width": 120.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "24 - 30",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "24 - 30"
       },
       "text": "24 - 30",
       "style": {
@@ -1338,90 +1339,90 @@
     {
       "id": "result_5_flag",
       "type": "text",
-      "x": 592,
-      "y": 328,
-      "width": 40,
-      "height": 13,
+      "x": 592.0,
+      "y": 328.0,
+      "width": 40.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": false,
           "color": "#000000",
-          "bold": false
-        }
+          "font_size": 9
+        },
+        "text": ""
       },
       "style": {
-        "font_size": 9,
+        "bold": false,
         "color": "#000000",
-        "bold": false
+        "font_size": 9
       }
     },
     {
       "id": "result_6_test",
       "type": "text",
-      "x": 16,
-      "y": 344,
-      "width": 190,
-      "height": 13,
+      "x": 16.0,
+      "y": 344.0,
+      "width": 190.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "MCHC",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": false
-        }
+          "bold": false,
+          "font_size": 9
+        },
+        "text": "MCHC"
       },
       "text": "MCHC",
       "style": {
-        "font_size": 9,
-        "bold": false
+        "bold": false,
+        "font_size": 9
       }
     },
     {
       "id": "result_6_value",
       "type": "field",
-      "x": 226,
-      "y": 344,
-      "width": 54,
-      "height": 13,
+      "x": 226.0,
+      "y": 344.0,
+      "width": 54.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
         "binding": "results.mchc",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "align": "center",
           "color": "#000000",
-          "align": "center"
+          "font_size": 9
         }
       },
       "binding": "results.mchc",
       "style": {
-        "font_size": 9,
+        "align": "center",
         "color": "#000000",
-        "align": "center"
+        "font_size": 9
       }
     },
     {
       "id": "result_6_unit",
       "type": "text",
-      "x": 312,
-      "y": 344,
-      "width": 58,
-      "height": 13,
+      "x": 312.0,
+      "y": 344.0,
+      "width": 58.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "g/dL",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "g/dL"
       },
       "text": "g/dL",
       "style": {
@@ -1431,18 +1432,18 @@
     {
       "id": "result_6_range",
       "type": "text",
-      "x": 378,
-      "y": 344,
-      "width": 120,
-      "height": 13,
+      "x": 378.0,
+      "y": 344.0,
+      "width": 120.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "31-37",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "31-37"
       },
       "text": "31-37",
       "style": {
@@ -1452,90 +1453,90 @@
     {
       "id": "result_6_flag",
       "type": "text",
-      "x": 592,
-      "y": 344,
-      "width": 40,
-      "height": 13,
+      "x": 592.0,
+      "y": 344.0,
+      "width": 40.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": false,
           "color": "#000000",
-          "bold": false
-        }
+          "font_size": 9
+        },
+        "text": ""
       },
       "style": {
-        "font_size": 9,
+        "bold": false,
         "color": "#000000",
-        "bold": false
+        "font_size": 9
       }
     },
     {
       "id": "result_7_test",
       "type": "text",
-      "x": 16,
-      "y": 360,
-      "width": 190,
-      "height": 13,
+      "x": 16.0,
+      "y": 360.0,
+      "width": 190.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "RDW",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": false
-        }
+          "bold": false,
+          "font_size": 9
+        },
+        "text": "RDW"
       },
       "text": "RDW",
       "style": {
-        "font_size": 9,
-        "bold": false
+        "bold": false,
+        "font_size": 9
       }
     },
     {
       "id": "result_7_value",
       "type": "field",
-      "x": 226,
-      "y": 360,
-      "width": 54,
-      "height": 13,
+      "x": 226.0,
+      "y": 360.0,
+      "width": 54.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
         "binding": "results.rdw",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "align": "center",
           "color": "#000000",
-          "align": "center"
+          "font_size": 9
         }
       },
       "binding": "results.rdw",
       "style": {
-        "font_size": 9,
+        "align": "center",
         "color": "#000000",
-        "align": "center"
+        "font_size": 9
       }
     },
     {
       "id": "result_7_unit",
       "type": "text",
-      "x": 312,
-      "y": 360,
-      "width": 58,
-      "height": 13,
+      "x": 312.0,
+      "y": 360.0,
+      "width": 58.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "%",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "%"
       },
       "text": "%",
       "style": {
@@ -1545,18 +1546,18 @@
     {
       "id": "result_7_range",
       "type": "text",
-      "x": 378,
-      "y": 360,
-      "width": 120,
-      "height": 13,
+      "x": 378.0,
+      "y": 360.0,
+      "width": 120.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "11 - 16",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "11 - 16"
       },
       "text": "11 - 16",
       "style": {
@@ -1566,65 +1567,65 @@
     {
       "id": "result_7_flag",
       "type": "text",
-      "x": 592,
-      "y": 360,
-      "width": 40,
-      "height": 13,
+      "x": 592.0,
+      "y": 360.0,
+      "width": 40.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": false,
           "color": "#000000",
-          "bold": false
-        }
+          "font_size": 9
+        },
+        "text": ""
       },
       "style": {
-        "font_size": 9,
+        "bold": false,
         "color": "#000000",
-        "bold": false
+        "font_size": 9
       }
     },
     {
       "id": "result_8_test",
       "type": "text",
-      "x": 16,
-      "y": 376,
-      "width": 190,
-      "height": 13,
+      "x": 16.0,
+      "y": 376.0,
+      "width": 190.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Differential Count",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": true
-        }
+          "bold": true,
+          "font_size": 9
+        },
+        "text": "Differential Count"
       },
       "text": "Differential Count",
       "style": {
-        "font_size": 9,
-        "bold": true
+        "bold": true,
+        "font_size": 9
       }
     },
     {
       "id": "result_8_unit",
       "type": "text",
-      "x": 312,
-      "y": 376,
-      "width": 58,
-      "height": 13,
+      "x": 312.0,
+      "y": 376.0,
+      "width": 58.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": ""
       },
       "style": {
         "font_size": 9
@@ -1633,18 +1634,18 @@
     {
       "id": "result_8_range",
       "type": "text",
-      "x": 378,
-      "y": 376,
-      "width": 120,
-      "height": 13,
+      "x": 378.0,
+      "y": 376.0,
+      "width": 120.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": ""
       },
       "style": {
         "font_size": 9
@@ -1653,90 +1654,90 @@
     {
       "id": "result_8_flag",
       "type": "text",
-      "x": 592,
-      "y": 376,
-      "width": 40,
-      "height": 13,
+      "x": 592.0,
+      "y": 376.0,
+      "width": 40.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": false,
           "color": "#000000",
-          "bold": false
-        }
+          "font_size": 9
+        },
+        "text": ""
       },
       "style": {
-        "font_size": 9,
+        "bold": false,
         "color": "#000000",
-        "bold": false
+        "font_size": 9
       }
     },
     {
       "id": "result_9_test",
       "type": "text",
-      "x": 16,
-      "y": 392,
-      "width": 190,
-      "height": 13,
+      "x": 16.0,
+      "y": 392.0,
+      "width": 190.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Neutrophils",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": false
-        }
+          "bold": false,
+          "font_size": 9
+        },
+        "text": "Neutrophils"
       },
       "text": "Neutrophils",
       "style": {
-        "font_size": 9,
-        "bold": false
+        "bold": false,
+        "font_size": 9
       }
     },
     {
       "id": "result_9_value",
       "type": "field",
-      "x": 226,
-      "y": 392,
-      "width": 54,
-      "height": 13,
+      "x": 226.0,
+      "y": 392.0,
+      "width": 54.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
         "binding": "results.neutrophils",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "align": "center",
           "color": "#000000",
-          "align": "center"
+          "font_size": 9
         }
       },
       "binding": "results.neutrophils",
       "style": {
-        "font_size": 9,
+        "align": "center",
         "color": "#000000",
-        "align": "center"
+        "font_size": 9
       }
     },
     {
       "id": "result_9_unit",
       "type": "text",
-      "x": 312,
-      "y": 392,
-      "width": 58,
-      "height": 13,
+      "x": 312.0,
+      "y": 392.0,
+      "width": 58.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "%",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "%"
       },
       "text": "%",
       "style": {
@@ -1746,18 +1747,18 @@
     {
       "id": "result_9_range",
       "type": "text",
-      "x": 378,
-      "y": 392,
-      "width": 120,
-      "height": 13,
+      "x": 378.0,
+      "y": 392.0,
+      "width": 120.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "50 - 70",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "50 - 70"
       },
       "text": "50 - 70",
       "style": {
@@ -1767,90 +1768,90 @@
     {
       "id": "result_9_flag",
       "type": "text",
-      "x": 592,
-      "y": 392,
-      "width": 40,
-      "height": 13,
+      "x": 592.0,
+      "y": 392.0,
+      "width": 40.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": false,
           "color": "#000000",
-          "bold": false
-        }
+          "font_size": 9
+        },
+        "text": ""
       },
       "style": {
-        "font_size": 9,
+        "bold": false,
         "color": "#000000",
-        "bold": false
+        "font_size": 9
       }
     },
     {
       "id": "result_10_test",
       "type": "text",
-      "x": 16,
-      "y": 408,
-      "width": 190,
-      "height": 13,
+      "x": 16.0,
+      "y": 408.0,
+      "width": 190.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Lymphocytes",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": false
-        }
+          "bold": false,
+          "font_size": 9
+        },
+        "text": "Lymphocytes"
       },
       "text": "Lymphocytes",
       "style": {
-        "font_size": 9,
-        "bold": false
+        "bold": false,
+        "font_size": 9
       }
     },
     {
       "id": "result_10_value",
       "type": "field",
-      "x": 226,
-      "y": 408,
-      "width": 54,
-      "height": 13,
+      "x": 226.0,
+      "y": 408.0,
+      "width": 54.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
         "binding": "results.lymphocytes",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "align": "center",
           "color": "#000000",
-          "align": "center"
+          "font_size": 9
         }
       },
       "binding": "results.lymphocytes",
       "style": {
-        "font_size": 9,
+        "align": "center",
         "color": "#000000",
-        "align": "center"
+        "font_size": 9
       }
     },
     {
       "id": "result_10_unit",
       "type": "text",
-      "x": 312,
-      "y": 408,
-      "width": 58,
-      "height": 13,
+      "x": 312.0,
+      "y": 408.0,
+      "width": 58.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "%",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "%"
       },
       "text": "%",
       "style": {
@@ -1860,18 +1861,18 @@
     {
       "id": "result_10_range",
       "type": "text",
-      "x": 378,
-      "y": 408,
-      "width": 120,
-      "height": 13,
+      "x": 378.0,
+      "y": 408.0,
+      "width": 120.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "20 - 40",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "20 - 40"
       },
       "text": "20 - 40",
       "style": {
@@ -1881,90 +1882,90 @@
     {
       "id": "result_10_flag",
       "type": "text",
-      "x": 592,
-      "y": 408,
-      "width": 40,
-      "height": 13,
+      "x": 592.0,
+      "y": 408.0,
+      "width": 40.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": false,
           "color": "#000000",
-          "bold": false
-        }
+          "font_size": 9
+        },
+        "text": ""
       },
       "style": {
-        "font_size": 9,
+        "bold": false,
         "color": "#000000",
-        "bold": false
+        "font_size": 9
       }
     },
     {
       "id": "result_11_test",
       "type": "text",
-      "x": 16,
-      "y": 424,
-      "width": 190,
-      "height": 13,
+      "x": 16.0,
+      "y": 424.0,
+      "width": 190.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Monocytes",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": false
-        }
+          "bold": false,
+          "font_size": 9
+        },
+        "text": "Monocytes"
       },
       "text": "Monocytes",
       "style": {
-        "font_size": 9,
-        "bold": false
+        "bold": false,
+        "font_size": 9
       }
     },
     {
       "id": "result_11_value",
       "type": "field",
-      "x": 226,
-      "y": 424,
-      "width": 54,
-      "height": 13,
+      "x": 226.0,
+      "y": 424.0,
+      "width": 54.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
         "binding": "results.monocytes",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "align": "center",
           "color": "#000000",
-          "align": "center"
+          "font_size": 9
         }
       },
       "binding": "results.monocytes",
       "style": {
-        "font_size": 9,
+        "align": "center",
         "color": "#000000",
-        "align": "center"
+        "font_size": 9
       }
     },
     {
       "id": "result_11_unit",
       "type": "text",
-      "x": 312,
-      "y": 424,
-      "width": 58,
-      "height": 13,
+      "x": 312.0,
+      "y": 424.0,
+      "width": 58.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "%",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "%"
       },
       "text": "%",
       "style": {
@@ -1974,18 +1975,18 @@
     {
       "id": "result_11_range",
       "type": "text",
-      "x": 378,
-      "y": 424,
-      "width": 120,
-      "height": 13,
+      "x": 378.0,
+      "y": 424.0,
+      "width": 120.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "3 - 9",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "3 - 9"
       },
       "text": "3 - 9",
       "style": {
@@ -1995,90 +1996,90 @@
     {
       "id": "result_11_flag",
       "type": "text",
-      "x": 592,
-      "y": 424,
-      "width": 40,
-      "height": 13,
+      "x": 592.0,
+      "y": 424.0,
+      "width": 40.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": false,
           "color": "#000000",
-          "bold": false
-        }
+          "font_size": 9
+        },
+        "text": ""
       },
       "style": {
-        "font_size": 9,
+        "bold": false,
         "color": "#000000",
-        "bold": false
+        "font_size": 9
       }
     },
     {
       "id": "result_12_test",
       "type": "text",
-      "x": 16,
-      "y": 440,
-      "width": 190,
-      "height": 13,
+      "x": 16.0,
+      "y": 440.0,
+      "width": 190.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Basophils",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": false
-        }
+          "bold": false,
+          "font_size": 9
+        },
+        "text": "Basophils"
       },
       "text": "Basophils",
       "style": {
-        "font_size": 9,
-        "bold": false
+        "bold": false,
+        "font_size": 9
       }
     },
     {
       "id": "result_12_value",
       "type": "field",
-      "x": 226,
-      "y": 440,
-      "width": 54,
-      "height": 13,
+      "x": 226.0,
+      "y": 440.0,
+      "width": 54.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
         "binding": "results.basophils",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "align": "center",
           "color": "#000000",
-          "align": "center"
+          "font_size": 9
         }
       },
       "binding": "results.basophils",
       "style": {
-        "font_size": 9,
+        "align": "center",
         "color": "#000000",
-        "align": "center"
+        "font_size": 9
       }
     },
     {
       "id": "result_12_unit",
       "type": "text",
-      "x": 312,
-      "y": 440,
-      "width": 58,
-      "height": 13,
+      "x": 312.0,
+      "y": 440.0,
+      "width": 58.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "%",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "%"
       },
       "text": "%",
       "style": {
@@ -2088,18 +2089,18 @@
     {
       "id": "result_12_range",
       "type": "text",
-      "x": 378,
-      "y": 440,
-      "width": 120,
-      "height": 13,
+      "x": 378.0,
+      "y": 440.0,
+      "width": 120.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "0 - 0.5",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "0 - 0.5"
       },
       "text": "0 - 0.5",
       "style": {
@@ -2109,90 +2110,90 @@
     {
       "id": "result_12_flag",
       "type": "text",
-      "x": 592,
-      "y": 440,
-      "width": 40,
-      "height": 13,
+      "x": 592.0,
+      "y": 440.0,
+      "width": 40.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": false,
           "color": "#000000",
-          "bold": false
-        }
+          "font_size": 9
+        },
+        "text": ""
       },
       "style": {
-        "font_size": 9,
+        "bold": false,
         "color": "#000000",
-        "bold": false
+        "font_size": 9
       }
     },
     {
       "id": "result_13_test",
       "type": "text",
-      "x": 16,
-      "y": 456,
-      "width": 190,
-      "height": 13,
+      "x": 16.0,
+      "y": 456.0,
+      "width": 190.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Total (%)",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": false
-        }
+          "bold": false,
+          "font_size": 9
+        },
+        "text": "Total (%)"
       },
       "text": "Total (%)",
       "style": {
-        "font_size": 9,
-        "bold": false
+        "bold": false,
+        "font_size": 9
       }
     },
     {
       "id": "result_13_value",
       "type": "field",
-      "x": 226,
-      "y": 456,
-      "width": 54,
-      "height": 13,
+      "x": 226.0,
+      "y": 456.0,
+      "width": 54.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
         "binding": "results.total",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "align": "center",
           "color": "#000000",
-          "align": "center"
+          "font_size": 9
         }
       },
       "binding": "results.total",
       "style": {
-        "font_size": 9,
+        "align": "center",
         "color": "#000000",
-        "align": "center"
+        "font_size": 9
       }
     },
     {
       "id": "result_13_unit",
       "type": "text",
-      "x": 312,
-      "y": 456,
-      "width": 58,
-      "height": 13,
+      "x": 312.0,
+      "y": 456.0,
+      "width": 58.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": ""
       },
       "style": {
         "font_size": 9
@@ -2201,18 +2202,18 @@
     {
       "id": "result_13_range",
       "type": "text",
-      "x": 378,
-      "y": 456,
-      "width": 120,
-      "height": 13,
+      "x": 378.0,
+      "y": 456.0,
+      "width": 120.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": ""
       },
       "style": {
         "font_size": 9
@@ -2221,90 +2222,90 @@
     {
       "id": "result_13_flag",
       "type": "text",
-      "x": 592,
-      "y": 456,
-      "width": 40,
-      "height": 13,
+      "x": 592.0,
+      "y": 456.0,
+      "width": 40.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": false,
           "color": "#000000",
-          "bold": false
-        }
+          "font_size": 9
+        },
+        "text": ""
       },
       "style": {
-        "font_size": 9,
+        "bold": false,
         "color": "#000000",
-        "bold": false
+        "font_size": 9
       }
     },
     {
       "id": "result_14_test",
       "type": "text",
-      "x": 16,
-      "y": 472,
-      "width": 190,
-      "height": 13,
+      "x": 16.0,
+      "y": 472.0,
+      "width": 190.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Platelet Count",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": false
-        }
+          "bold": false,
+          "font_size": 9
+        },
+        "text": "Platelet Count"
       },
       "text": "Platelet Count",
       "style": {
-        "font_size": 9,
-        "bold": false
+        "bold": false,
+        "font_size": 9
       }
     },
     {
       "id": "result_14_value",
       "type": "field",
-      "x": 226,
-      "y": 472,
-      "width": 54,
-      "height": 13,
+      "x": 226.0,
+      "y": 472.0,
+      "width": 54.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
         "binding": "results.platelet",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "align": "center",
           "color": "#000000",
-          "align": "center"
+          "font_size": 9
         }
       },
       "binding": "results.platelet",
       "style": {
-        "font_size": 9,
+        "align": "center",
         "color": "#000000",
-        "align": "center"
+        "font_size": 9
       }
     },
     {
       "id": "result_14_unit",
       "type": "text",
-      "x": 312,
-      "y": 472,
-      "width": 58,
-      "height": 13,
+      "x": 312.0,
+      "y": 472.0,
+      "width": 58.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "x10^9/L",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "x10^9/L"
       },
       "text": "x10^9/L",
       "style": {
@@ -2314,18 +2315,18 @@
     {
       "id": "result_14_range",
       "type": "text",
-      "x": 378,
-      "y": 472,
-      "width": 120,
-      "height": 13,
+      "x": 378.0,
+      "y": 472.0,
+      "width": 120.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "150 - 450",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "150 - 450"
       },
       "text": "150 - 450",
       "style": {
@@ -2335,58 +2336,58 @@
     {
       "id": "result_14_flag",
       "type": "text",
-      "x": 592,
-      "y": 472,
-      "width": 40,
-      "height": 13,
+      "x": 592.0,
+      "y": 472.0,
+      "width": 40.0,
+      "height": 13.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": false,
           "color": "#000000",
-          "bold": false
-        }
+          "font_size": 9
+        },
+        "text": ""
       },
       "style": {
-        "font_size": 9,
+        "bold": false,
         "color": "#000000",
-        "bold": false
+        "font_size": 9
       }
     },
     {
       "id": "performed_name",
       "type": "text",
-      "x": 52,
-      "y": 672,
-      "width": 150,
-      "height": 12,
+      "x": 52.0,
+      "y": 672.0,
+      "width": 150.0,
+      "height": 12.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Cerebro Diagnostic System",
         "page_id": "page_1",
         "style": {
-          "font_size": 7,
+          "align": "center",
           "bold": true,
-          "align": "center"
-        }
+          "font_size": 7
+        },
+        "text": "Cerebro Diagnostic System"
       },
       "text": "Cerebro Diagnostic System",
       "style": {
-        "font_size": 7,
+        "align": "center",
         "bold": true,
-        "align": "center"
+        "font_size": 7
       }
     },
     {
       "id": "performed_line",
       "type": "line",
-      "x": 14,
-      "y": 693,
-      "width": 193,
+      "x": 14.0,
+      "y": 693.0,
+      "width": 193.0,
       "height": 0.0,
       "z_index": 0,
       "visible": true,
@@ -2403,34 +2404,34 @@
     {
       "id": "validator",
       "type": "text",
-      "x": 276,
-      "y": 672,
-      "width": 130,
-      "height": 12,
+      "x": 276.0,
+      "y": 672.0,
+      "width": 130.0,
+      "height": 12.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Dummy LAB_ENCODER",
         "page_id": "page_1",
         "style": {
-          "font_size": 7,
+          "align": "center",
           "bold": true,
-          "align": "center"
-        }
+          "font_size": 7
+        },
+        "text": "Dummy LAB_ENCODER"
       },
       "text": "Dummy LAB_ENCODER",
       "style": {
-        "font_size": 7,
+        "align": "center",
         "bold": true,
-        "align": "center"
+        "font_size": 7
       }
     },
     {
       "id": "validated_line",
       "type": "line",
-      "x": 232,
-      "y": 693,
-      "width": 192,
+      "x": 232.0,
+      "y": 693.0,
+      "width": 192.0,
       "height": 0.0,
       "z_index": 0,
       "visible": true,
@@ -2447,34 +2448,34 @@
     {
       "id": "pathologist",
       "type": "text",
-      "x": 473,
-      "y": 672,
-      "width": 150,
-      "height": 12,
+      "x": 473.0,
+      "y": 672.0,
+      "width": 150.0,
+      "height": 12.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "MARY ANN R. TORREGOSA, M.D.",
         "page_id": "page_1",
         "style": {
-          "font_size": 7,
+          "align": "center",
           "bold": true,
-          "align": "center"
-        }
+          "font_size": 7
+        },
+        "text": "MARY ANN R. TORREGOSA, M.D."
       },
       "text": "MARY ANN R. TORREGOSA, M.D.",
       "style": {
-        "font_size": 7,
+        "align": "center",
         "bold": true,
-        "align": "center"
+        "font_size": 7
       }
     },
     {
       "id": "pathologist_line",
       "type": "line",
-      "x": 448,
-      "y": 693,
-      "width": 193,
+      "x": 448.0,
+      "y": 693.0,
+      "width": 193.0,
       "height": 0.0,
       "z_index": 0,
       "visible": true,
@@ -2491,24 +2492,24 @@
     {
       "id": "page_count",
       "type": "text",
-      "x": 614,
-      "y": 738,
-      "width": 30,
-      "height": 11,
+      "x": 614.0,
+      "y": 738.0,
+      "width": 30.0,
+      "height": 11.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "1 of 1",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": true
-        }
+          "bold": true,
+          "font_size": 9
+        },
+        "text": "1 of 1"
       },
       "text": "1 of 1",
       "style": {
-        "font_size": 9,
-        "bold": true
+        "bold": true,
+        "font_size": 9
       }
     }
   ],
