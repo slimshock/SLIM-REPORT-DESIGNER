@@ -41,7 +41,9 @@ export function createCanvasController({ canvas, getTemplate, getSelectedId, onS
       startWidth: Number(currentObject.width) || 0,
       startHeight: Number(currentObject.height) || 0,
       resizing,
+      captureElement: objectElement,
     };
+    safeSetPointerCapture(objectElement, event);
   });
 
   document.addEventListener("pointermove", (event) => {
@@ -97,10 +99,14 @@ export function createCanvasController({ canvas, getTemplate, getSelectedId, onS
       return;
     }
 
+    safeReleasePointerCapture(dragState.captureElement, event);
     dragState = null;
   });
 
-  document.addEventListener("pointercancel", () => {
+  document.addEventListener("pointercancel", (event) => {
+    if (dragState) {
+      safeReleasePointerCapture(dragState.captureElement, event);
+    }
     dragState = null;
   });
 
@@ -156,6 +162,34 @@ export function createCanvasController({ canvas, getTemplate, getSelectedId, onS
       renderCanvas(canvas, getTemplate(), getSelectedId());
     },
   };
+}
+
+function safeSetPointerCapture(element, event) {
+  if (!element || !event || event.pointerId === undefined || event.pointerId === null) {
+    return;
+  }
+  if (typeof element.setPointerCapture !== "function") {
+    return;
+  }
+  try {
+    element.setPointerCapture(event.pointerId);
+  } catch (err) {
+    // Pointer capture is optional. Dragging must still work without it.
+  }
+}
+
+function safeReleasePointerCapture(element, event) {
+  if (!element || !event || event.pointerId === undefined || event.pointerId === null) {
+    return;
+  }
+  if (typeof element.releasePointerCapture !== "function") {
+    return;
+  }
+  try {
+    element.releasePointerCapture(event.pointerId);
+  } catch (err) {
+    // Ignore; document-level pointerup fallback handles cleanup.
+  }
 }
 
 export function renderCanvas(canvas, template, selectedId) {

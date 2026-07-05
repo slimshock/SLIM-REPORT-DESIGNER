@@ -77,12 +77,15 @@ def _render_line(obj: RenderObject, context: RenderContext) -> str:
     style = obj.style
     stroke_width = float(style.get("stroke_width", style.get("line_width", 1)))
     color = escape(str(style.get("color", style.get("border_color", "#000000"))), quote=True)
+    rendered_height = max(height, stroke_width)
+    y1 = rendered_height / 2 if height == 0 else 0
+    y2 = rendered_height / 2 if height == 0 else height
     return (
         f'<svg class="slim-report-object" data-slim-object="{escape(obj.id, quote=True)}" '
-        f'style="{_position_style(x, y, width, height)}" '
-        f'width="{width}" height="{max(height, stroke_width)}" '
-        f'viewBox="0 0 {width} {height}" xmlns="http://www.w3.org/2000/svg">'
-        f'<line x1="0" y1="0" x2="{width}" y2="{height}" '
+        f'style="{_position_style(x, y, width, rendered_height)}" '
+        f'width="{width}" height="{rendered_height}" '
+        f'viewBox="0 0 {width} {rendered_height}" xmlns="http://www.w3.org/2000/svg">'
+        f'<line x1="0" y1="{y1}" x2="{width}" y2="{y2}" '
         f'stroke="{color}" stroke-width="{stroke_width}" />'
         "</svg>"
     )

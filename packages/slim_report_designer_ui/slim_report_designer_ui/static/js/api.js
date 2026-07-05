@@ -108,12 +108,12 @@ function localObjectHtml(object) {
   const value = object.type === "field"
     ? `{{ ${object.binding || object.properties?.binding || ""} }}`
     : object.text || object.properties?.text || "";
-  const box = `position:absolute;left:${object.x}px;top:${object.y}px;width:${object.width}px;height:${Math.max(object.height, 8)}px;font-size:${style.font_size || 12}px;font-weight:${style.bold ? 700 : 400};color:${style.color || "#111827"};overflow:hidden`;
+  const box = `position:absolute;box-sizing:border-box;left:${object.x}px;top:${object.y}px;width:${object.width}px;height:${Math.max(object.height, 8)}px;font-size:${style.font_size || 12}px;font-weight:${style.bold ? 700 : 400};color:${style.color || "#111827"};text-align:${style.align || "left"};overflow:hidden`;
   if (object.type === "line") {
-    return `<div style="${box};border-top:${style.stroke_width || 1}px solid #111827"></div>`;
+    return `<div style="${box};border-top:${style.stroke_width || 1}px solid ${style.color || style.border_color || "#111827"}"></div>`;
   }
   if (object.type === "rectangle") {
-    return `<div style="${box};border:${style.border_width || 1}px solid #111827"></div>`;
+    return `<div style="${box};border:${style.border_width || 1}px solid ${style.border_color || style.color || "#111827"};background:${style.fill_color || "transparent"}"></div>`;
   }
   return `<div style="${box}">${escapeHtml(value)}</div>`;
 }

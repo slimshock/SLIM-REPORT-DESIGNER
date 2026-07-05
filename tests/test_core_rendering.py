@@ -26,6 +26,19 @@ def test_html_rendering_contains_expected_patient_name() -> None:
     assert "height: 1056.0px" in html
 
 
+def test_html_rendering_keeps_horizontal_lines_visible() -> None:
+    report = load_report()
+
+    html = render_html(report, sample_data())
+
+    assert 'data-slim-object="line1"' in html
+    assert "top: 130.0px; width: 500.0px; height: 1.0px" in html
+    assert 'viewBox="0 0 500.0 1.0"' in html
+    assert 'y1="0.5" x2="500.0" y2="0.5"' in html
+    assert 'data-slim-object="box1"' in html
+    assert "border: 1.0px solid #000000" in html
+
+
 def test_pdf_rendering_returns_pdf_bytes() -> None:
     report = load_report()
 

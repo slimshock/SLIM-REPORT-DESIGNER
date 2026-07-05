@@ -188,6 +188,7 @@ def create_cerebro_cbc_report() -> Report:
     page = report.page()
     page.width = 651
     page.height = 842
+    page.unit = "px"
 
     page.text(
         "CEREBRO",

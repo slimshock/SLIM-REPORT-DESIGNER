@@ -33,6 +33,7 @@ export function normalizeTemplate(template) {
     height: 842,
     ...(source.page || {})
   };
+  source.page.unit = "px";
   source.objects = Array.isArray(source.objects) ? source.objects.map(normalizeObject) : [];
   source.bands = Array.isArray(source.bands) ? source.bands : [];
   source.assets = Array.isArray(source.assets) ? source.assets : [];

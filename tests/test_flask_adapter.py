@@ -81,8 +81,7 @@ def test_flask_adapter_serves_framework_agnostic_designer_ui(tmp_path: Path) -> 
     assert response.mimetype == "text/html"
     html = response.get_data(as_text=True)
     assert "Slim Report Designer" in html
-    assert "window.SLIM_REPORT_API_BASE" in html
-    assert "/report-designer/api" in html
+    assert 'window.SLIM_REPORT_API_BASE = "/report-designer/api";' in html
     assert script_response.status_code == 200
     assert script_response.mimetype in {"application/javascript", "text/javascript"}
     assert "createCanvasController" in script_response.get_data(as_text=True)
@@ -123,7 +122,13 @@ def test_flask_designer_api_previews_and_exports_posted_json(tmp_path: Path) -> 
     payload = {
         "version": "0.1",
         "metadata": {"name": "API Preview"},
-        "page": {"size": "A4", "orientation": "portrait", "width": 595, "height": 842},
+        "page": {
+            "size": "A4",
+            "orientation": "portrait",
+            "width": 595,
+            "height": 842,
+            "unit": "in",
+        },
         "objects": [
             {
                 "id": "title",
@@ -145,7 +150,9 @@ def test_flask_designer_api_previews_and_exports_posted_json(tmp_path: Path) -> 
 
     assert preview_response.status_code == 200
     assert preview_response.mimetype == "text/html"
-    assert "Canvas Preview" in preview_response.get_data(as_text=True)
+    preview_html = preview_response.get_data(as_text=True)
+    assert "Canvas Preview" in preview_html
+    assert "left: 40.0px" in preview_html
     assert pdf_response.status_code == 200
     assert pdf_response.mimetype == "application/pdf"
     assert pdf_response.get_data().startswith(b"%PDF")

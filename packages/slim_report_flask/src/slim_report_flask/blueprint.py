@@ -79,8 +79,8 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         )[0]
         config = (
             f'<base href="{asset_base}/">\n'
-            "<script>"
-            f"window.SLIM_REPORT_API_BASE = {json.dumps(api_base)};"
+            "<script>\n"
+            f"window.SLIM_REPORT_API_BASE = {json.dumps(api_base)};\n"
             "</script>"
         )
         html = html.replace("<head>\n", f"<head>\n{config}\n", 1)
@@ -206,6 +206,8 @@ def normalize_template_payload(payload: dict[str, Any]) -> dict[str, Any]:
     normalized["metadata"] = metadata
     normalized.setdefault("version", "0.1")
     normalized.setdefault("page", {"size": "A4", "orientation": "portrait"})
+    normalized["page"] = dict(normalized["page"])
+    normalized["page"]["unit"] = "px"
     normalized.setdefault("objects", [])
     normalized.setdefault("bands", [])
     normalized.setdefault("assets", [])
