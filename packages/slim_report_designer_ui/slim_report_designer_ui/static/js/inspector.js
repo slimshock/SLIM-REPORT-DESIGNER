@@ -13,7 +13,13 @@ import {
   setPageValue
 } from "./objects.js";
 
-export function createInspector({ form, getTemplate, getSelectedObject, onChange }) {
+export function createInspector({
+  form,
+  getTemplate,
+  getSelectedObject,
+  onBeforeChange = () => {},
+  onChange
+}) {
   form.addEventListener("input", (event) => {
     const input = event.target;
     if (!input.name) {
@@ -23,13 +29,14 @@ export function createInspector({ form, getTemplate, getSelectedObject, onChange
       return;
     }
     const object = getSelectedObject();
+    onBeforeChange("Edit properties");
     if (!object) {
       applyPageInput(getTemplate(), input);
-      onChange();
+      onChange({ preserveInspector: shouldPreserveInspectorFocus(input) });
       return;
     }
     applyInput(object, input);
-    onChange();
+    onChange({ preserveInspector: shouldPreserveInspectorFocus(input) });
   });
   form.addEventListener("change", async (event) => {
     const input = event.target;
@@ -41,6 +48,7 @@ export function createInspector({ form, getTemplate, getSelectedObject, onChange
     if (!object || object.type !== "image" || !file) {
       return;
     }
+    onBeforeChange("Upload image");
     setObjectSource(object, await readFileAsDataUrl(file));
     input.value = "";
     onChange();
@@ -55,6 +63,7 @@ export function createInspector({ form, getTemplate, getSelectedObject, onChange
       const template = getTemplate();
       if (button.dataset.pageKey) {
         event.preventDefault();
+        onBeforeChange("Edit page background");
         setPageValue(template, button.dataset.pageKey, button.dataset.styleValue);
         if (button.dataset.pageKey === "background_color") {
           setPageValue(template, "transparent", true);
@@ -64,6 +73,7 @@ export function createInspector({ form, getTemplate, getSelectedObject, onChange
       return;
     }
     event.preventDefault();
+    onBeforeChange("Edit style");
     setObjectStyleValue(object, button.dataset.styleKey, button.dataset.styleValue);
     onChange();
   });
@@ -283,6 +293,13 @@ function inputValue(input, value) {
     return Boolean(value);
   }
   return value;
+}
+
+function shouldPreserveInspectorFocus(input) {
+  if (!(input instanceof HTMLInputElement)) {
+    return false;
+  }
+  return ["number", "text", "url"].includes(input.type);
 }
 
 function styleField(name, object, type, options = {}) {

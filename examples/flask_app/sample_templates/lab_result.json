@@ -22,6 +22,8 @@
     "margin_right": 0.5,
     "margin_bottom": 0.5,
     "margin_left": 0.5,
+    "background_color": "#ffffff",
+    "transparent": false,
     "size": "A4"
   },
   "objects": [
@@ -36,15 +38,15 @@
       "visible": true,
       "properties": {
         "style": {
-          "font_size": 22,
-          "bold": true
+          "bold": true,
+          "font_size": 22
         },
         "text": "LABORATORY RESULT slim"
       },
       "text": "LABORATORY RESULT slim",
       "style": {
-        "font_size": 22,
-        "bold": true
+        "bold": true,
+        "font_size": 22
       }
     },
     {
@@ -59,14 +61,14 @@
       "properties": {
         "binding": "patient.name",
         "style": {
-          "font_size": 13,
-          "bold": true
+          "bold": true,
+          "font_size": 13
         }
       },
       "binding": "patient.name",
       "style": {
-        "font_size": 13,
-        "bold": true
+        "bold": true,
+        "font_size": 13
       }
     },
     {
@@ -150,8 +152,8 @@
     {
       "id": "result_box",
       "type": "rectangle",
-      "x": 50.0,
-      "y": 200.0,
+      "x": 86.0,
+      "y": 188.0,
       "width": 500.0,
       "height": 130.0,
       "z_index": 0,
@@ -176,17 +178,17 @@
       "visible": true,
       "properties": {
         "style": {
-          "font_size": 12,
           "bold": true,
-          "color": "#3e4f75"
+          "color": "#3e4f75",
+          "font_size": 12
         },
         "text": "HGB"
       },
       "text": "HGB",
       "style": {
-        "font_size": 12,
         "bold": true,
-        "color": "#3e4f75"
+        "color": "#3e4f75",
+        "font_size": 12
       }
     },
     {
@@ -220,15 +222,15 @@
       "visible": true,
       "properties": {
         "style": {
-          "font_size": 12,
-          "bold": true
+          "bold": true,
+          "font_size": 12
         },
         "text": "WBC"
       },
       "text": "WBC",
       "style": {
-        "font_size": 12,
-        "bold": true
+        "bold": true,
+        "font_size": 12
       }
     },
     {
@@ -262,15 +264,15 @@
       "visible": true,
       "properties": {
         "style": {
-          "font_size": 12,
-          "bold": true
+          "bold": true,
+          "font_size": 12
         },
         "text": "PLT"
       },
       "text": "PLT",
       "style": {
-        "font_size": 12,
-        "bold": true
+        "bold": true,
+        "font_size": 12
       }
     },
     {

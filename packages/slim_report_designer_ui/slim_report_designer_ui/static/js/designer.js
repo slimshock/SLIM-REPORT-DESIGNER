@@ -1,4 +1,11 @@
-import { createCanvasController } from "./canvas.js";
+import { createCanvasController, placeObjectOnCanvas } from "./canvas.js";
+import {
+  loadCanvasSettings,
+  normalizeCanvasSettings,
+  saveCanvasSettings,
+  zoomIn,
+  zoomOut
+} from "./canvas_settings.js";
 import { createInspector } from "./inspector.js";
 import {
   createObject,
@@ -23,15 +30,21 @@ import {
 import { applyIcon } from "./icons.js";
 import { createToolbar } from "./toolbar.js";
 
+const HISTORY_LIMIT = 50;
+
 const state = {
   template: null,
   selectedId: null,
+  canvasSettings: loadCanvasSettings(),
+  undoStack: [],
+  redoStack: [],
   dirty: false,
   statusMessage: "Ready"
 };
 
 const elements = {
   canvas: document.querySelector("#page-canvas"),
+  canvasScroller: document.querySelector(".canvas-scroller"),
   toolbox: document.querySelector(".toolbox"),
   inspectorForm: document.querySelector("#inspector-form"),
   toolbar: document.querySelector("#toolbar-actions"),
@@ -52,14 +65,18 @@ const canvasController = createCanvasController({
   canvas: elements.canvas,
   getTemplate: () => state.template,
   getSelectedId: () => state.selectedId,
+  getCanvasSettings: () => state.canvasSettings,
   onSelect: handleCanvasSelect,
-  onChange: markDirty
+  onChange: markDirty,
+  onCaptureHistory: captureHistorySnapshot,
+  onCommitHistory: commitHistorySnapshot
 });
 
 const inspector = createInspector({
   form: elements.inspectorForm,
   getTemplate: () => state.template,
   getSelectedObject,
+  onBeforeChange: recordUndo,
   onChange: markDirty,
   onSelect: selectObject
 });
@@ -77,7 +94,9 @@ elements.toolbox.addEventListener("click", (event) => {
   if (!button) {
     return;
   }
+  recordUndo(`Add ${button.dataset.tool}`);
   const object = createObject(button.dataset.tool, state.template);
+  placeObjectOnCanvas(object, state.template, state.canvasSettings, elements.canvasScroller);
   state.template.objects.push(object);
   selectObject(object.id);
   showActiveTool(button);
@@ -92,6 +111,7 @@ elements.importFile.addEventListener("change", async () => {
   try {
     if (state.template) {
       createVersion(currentTemplateId(), state.template, "Before import");
+      recordUndo("Import JSON");
     }
     const payload = JSON.parse(await file.text());
     state.template = normalizeTemplate(payload);
@@ -111,6 +131,20 @@ document.addEventListener("keydown", (event) => {
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "d") {
     event.preventDefault();
     duplicateSelected();
+    return;
+  }
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
+    event.preventDefault();
+    if (event.shiftKey) {
+      redo();
+    } else {
+      undo();
+    }
+    return;
+  }
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "y") {
+    event.preventDefault();
+    redo();
   }
 });
 
@@ -127,7 +161,7 @@ async function initialize() {
   render();
 }
 
-async function handleCommand(command) {
+async function handleCommand(command, payload = {}) {
   try {
     if (command === "save") {
       state.template = normalizeTemplate(await saveTemplate(state.template));
@@ -146,16 +180,55 @@ async function handleCommand(command) {
       elements.importFile.click();
     } else if (command === "copyJson") {
       await copyJson();
+    } else if (command === "undo") {
+      undo();
+    } else if (command === "redo") {
+      redo();
     } else if (command === "duplicate") {
       duplicateSelected();
     } else if (command === "delete") {
       deleteSelected();
     } else if (command === "history") {
       openHistory();
+    } else if (command === "zoomIn") {
+      updateCanvasSettings({ zoom: zoomIn(state.canvasSettings.zoom) });
+    } else if (command === "zoomOut") {
+      updateCanvasSettings({ zoom: zoomOut(state.canvasSettings.zoom) });
+    } else if (command === "resetZoom") {
+      updateCanvasSettings({ zoom: 1 });
+    } else if (command === "fitPage") {
+      fitPage();
+    } else if (command === "canvasSetting") {
+      updateCanvasSettings({ [payload.key]: payload.value });
     }
   } catch (error) {
     setStatus(error.message);
   }
+}
+
+function updateCanvasSettings(patch) {
+  state.canvasSettings = normalizeCanvasSettings({
+    ...state.canvasSettings,
+    ...patch
+  });
+  saveCanvasSettings(state.canvasSettings);
+  setStatus("Canvas settings updated");
+  render();
+}
+
+function fitPage() {
+  const page = state.template?.page || {};
+  const scroller = elements.canvasScroller;
+  if (!scroller) {
+    updateCanvasSettings({ zoom: 1 });
+    return;
+  }
+  const pageWidth = unitToPx(page.width || 595, page.unit);
+  const pageHeight = unitToPx(page.height || 842, page.unit);
+  const availableWidth = Math.max(scroller.clientWidth - 96, 100);
+  const availableHeight = Math.max(scroller.clientHeight - 96, 100);
+  const zoom = Math.min(availableWidth / pageWidth, availableHeight / pageHeight, 2);
+  updateCanvasSettings({ zoom: Math.max(0.25, zoom) });
 }
 
 function handleCanvasSelect(objectId, options = {}) {
@@ -184,6 +257,7 @@ function duplicateSelected() {
     setStatus("No object selected");
     return;
   }
+  recordUndo(`Duplicate ${selected.id}`);
   const clone = duplicateObject(selected, state.template);
   state.template.objects.push(clone);
   state.selectedId = clone.id;
@@ -197,6 +271,7 @@ function deleteSelected() {
   }
   const index = state.template.objects.findIndex((object) => object.id === state.selectedId);
   if (index >= 0) {
+    recordUndo(`Delete ${state.selectedId}`);
     const [removed] = state.template.objects.splice(index, 1);
     state.selectedId = null;
     markDirty(`Deleted ${removed.id}`);
@@ -341,6 +416,7 @@ function restoreHistoricalVersion(versionId) {
     return;
   }
   createVersion(templateId, state.template, "Before restore");
+  recordUndo("Restore version");
   state.template = normalizeTemplate(restored);
   state.selectedId = null;
   markDirty(`Restored version from ${formatDate(version?.created_at)}`);
@@ -356,17 +432,24 @@ function formatDate(value) {
   return value ? new Date(value).toLocaleString() : "unknown date";
 }
 
-function render() {
+function render(options = {}) {
   if (!state.template) {
     return;
   }
   state.template = normalizeTemplate(state.template);
   canvasController.render();
-  inspector.render();
-  toolbar.render({ hasSelection: Boolean(getSelectedObject()) });
+  if (!options.preserveInspector) {
+    inspector.render();
+  }
+  toolbar.render({
+    hasSelection: Boolean(getSelectedObject()),
+    canvasSettings: state.canvasSettings,
+    canUndo: state.undoStack.length > 0,
+    canRedo: state.redoStack.length > 0
+  });
   elements.templateTitle.textContent = templateTitle(state.template);
   const count = state.template.objects.length;
-  elements.objectCount.textContent = `${count} ${count === 1 ? "object" : "objects"}`;
+  elements.objectCount.textContent = `${count} ${count === 1 ? "object" : "objects"} | ${canvasInfoLabel()}`;
   elements.selectedObject.textContent = selectedObjectLabel();
   elements.status.textContent = statusLabel();
 }
@@ -376,10 +459,93 @@ function setStatus(message) {
   elements.status.textContent = statusLabel();
 }
 
-function markDirty(message = "Unsaved changes") {
+function markDirty(message = "Unsaved changes", options = {}) {
+  if (typeof message === "object" && message !== null) {
+    options = message;
+    message = "Unsaved changes";
+  }
   state.dirty = true;
   state.statusMessage = message;
+  render(options);
+}
+
+function captureHistorySnapshot() {
+  return state.template ? structuredClone(state.template) : null;
+}
+
+function commitHistorySnapshot(snapshot, label = "Edit") {
+  if (!snapshot || !state.template || templatesEqual(snapshot, state.template)) {
+    return;
+  }
+  pushUndoSnapshot(snapshot, label);
+  state.redoStack = [];
   render();
+}
+
+function recordUndo(label = "Edit") {
+  const snapshot = captureHistorySnapshot();
+  if (!snapshot) {
+    return;
+  }
+  pushUndoSnapshot(snapshot, label);
+  state.redoStack = [];
+}
+
+function pushUndoSnapshot(snapshot, label) {
+  const previous = state.undoStack[state.undoStack.length - 1];
+  if (previous && templatesEqual(previous.template, snapshot)) {
+    previous.label = label;
+    return;
+  }
+  state.undoStack.push({ label, template: snapshot });
+  if (state.undoStack.length > HISTORY_LIMIT) {
+    state.undoStack.shift();
+  }
+}
+
+function undo() {
+  const entry = state.undoStack.pop();
+  if (!entry) {
+    setStatus("Nothing to undo");
+    render();
+    return;
+  }
+  state.redoStack.push({
+    label: "Redo",
+    template: captureHistorySnapshot()
+  });
+  restoreTemplateSnapshot(entry.template);
+  state.dirty = true;
+  state.statusMessage = `Undid ${entry.label}`;
+  render();
+}
+
+function redo() {
+  const entry = state.redoStack.pop();
+  if (!entry) {
+    setStatus("Nothing to redo");
+    render();
+    return;
+  }
+  state.undoStack.push({
+    label: "Undo redo",
+    template: captureHistorySnapshot()
+  });
+  restoreTemplateSnapshot(entry.template);
+  state.dirty = true;
+  state.statusMessage = "Redid change";
+  render();
+}
+
+function restoreTemplateSnapshot(snapshot) {
+  state.template = normalizeTemplate(structuredClone(snapshot));
+  if (state.selectedId && !state.template.objects.some((object) => object.id === state.selectedId)) {
+    state.selectedId = null;
+  }
+}
+
+function templatesEqual(left, right) {
+  return JSON.stringify(left) === JSON.stringify(right);
 }
 
 function statusLabel() {
@@ -400,6 +566,11 @@ function selectedObjectLabel() {
   return `Selected: ${selected.type} ${selected.id}`;
 }
 
+function canvasInfoLabel() {
+  const settings = state.canvasSettings;
+  return `Grid: ${settings.grid_size}px | Zoom: ${Math.round(settings.zoom * 100)}% | Snap: ${settings.snap_to_grid ? "On" : "Off"}`;
+}
+
 function showActiveTool(button) {
   for (const item of elements.toolbox.querySelectorAll(".tool-button.is-active")) {
     item.classList.remove("is-active");
@@ -410,4 +581,15 @@ function showActiveTool(button) {
 
 function isEditingText(target) {
   return target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
+}
+
+function unitToPx(value, unit = "px") {
+  const number = Number(value) || 0;
+  if (unit === "in") {
+    return number * 96;
+  }
+  if (unit === "mm") {
+    return number * 96 / 25.4;
+  }
+  return number;
 }

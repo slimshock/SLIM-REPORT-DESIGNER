@@ -1,4 +1,5 @@
 import { icon } from "./icons.js";
+import { zoomPercent } from "./canvas_settings.js";
 
 export function createToolbar({ container, onCommand }) {
   const groups = [
@@ -26,6 +27,8 @@ export function createToolbar({ container, onCommand }) {
     {
       label: "Object",
       actions: [
+        ["undo", "Undo", "icon-action", "Undo last change", "", "undo"],
+        ["redo", "Redo", "icon-action", "Redo last undone change", "", "redo"],
         ["duplicate", "Duplicate", "icon-action", "Duplicate selected object", "", "duplicate"],
         ["delete", "Delete", "danger icon-action", "Delete selected object", "", "delete"]
       ]
@@ -57,6 +60,7 @@ export function createToolbar({ container, onCommand }) {
 
     container.appendChild(groupElement);
   }
+  container.appendChild(canvasControls());
 
   container.addEventListener("click", (event) => {
     const button = event.target.closest("button[data-command]");
@@ -64,15 +68,112 @@ export function createToolbar({ container, onCommand }) {
       onCommand(button.dataset.command);
     }
   });
+  container.addEventListener("change", (event) => {
+    const input = event.target.closest("[data-canvas-setting]");
+    if (!input) {
+      return;
+    }
+    const value = input.type === "checkbox" ? input.checked : input.value;
+    onCommand("canvasSetting", {
+      key: input.dataset.canvasSetting,
+      value
+    });
+  });
 
   return {
-    render({ hasSelection }) {
+    render({ hasSelection, canvasSettings, canUndo = false, canRedo = false }) {
       for (const command of ["duplicate", "delete"]) {
         const button = container.querySelector(`[data-command="${command}"]`);
         if (button) {
           button.disabled = !hasSelection;
         }
       }
+      for (const [command, enabled] of [["undo", canUndo], ["redo", canRedo]]) {
+        const button = container.querySelector(`[data-command="${command}"]`);
+        if (button) {
+          button.disabled = !enabled;
+        }
+      }
+      const zoomDisplay = container.querySelector("[data-zoom-display]");
+      if (zoomDisplay) {
+        zoomDisplay.textContent = zoomPercent(canvasSettings?.zoom || 1);
+      }
+      const gridInput = container.querySelector('[data-canvas-setting="grid_size"]');
+      if (gridInput) {
+        gridInput.value = String(canvasSettings?.grid_size || 10);
+      }
+      for (const key of ["show_grid", "snap_to_grid"]) {
+        const checkbox = container.querySelector(`[data-canvas-setting="${key}"]`);
+        if (checkbox) {
+          checkbox.checked = Boolean(canvasSettings?.[key]);
+        }
+      }
     }
   };
+}
+
+function canvasControls() {
+  const group = document.createElement("div");
+  group.className = "toolbar-group canvas-controls";
+  group.setAttribute("aria-label", "Canvas controls");
+  group.append(
+    commandButton("zoomOut", "Zoom out", "zoom-out"),
+    zoomDisplay(),
+    commandButton("zoomIn", "Zoom in", "zoom-in"),
+    commandButton("resetZoom", "Reset zoom to 100%", "zoom-reset"),
+    commandButton("fitPage", "Fit page", "fit-page"),
+    gridSizeControl(),
+    checkboxControl("show_grid", "Show grid", "Grid"),
+    checkboxControl("snap_to_grid", "Snap to grid", "Snap")
+  );
+  return group;
+}
+
+function commandButton(command, label, iconName) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "toolbar-button icon-action";
+  button.dataset.command = command;
+  button.title = label;
+  button.setAttribute("aria-label", label);
+  button.innerHTML = `${icon(iconName)}<span class="sr-only">${label}</span>`;
+  return button;
+}
+
+function zoomDisplay() {
+  const output = document.createElement("span");
+  output.className = "zoom-display";
+  output.dataset.zoomDisplay = "true";
+  output.textContent = "100%";
+  return output;
+}
+
+function gridSizeControl() {
+  const label = document.createElement("label");
+  label.className = "toolbar-field";
+  label.title = "Grid size";
+  label.append(document.createTextNode("Grid"));
+  const select = document.createElement("select");
+  select.dataset.canvasSetting = "grid_size";
+  select.setAttribute("aria-label", "Grid size");
+  for (const value of [5, 10, 20, 25, 50]) {
+    const option = document.createElement("option");
+    option.value = String(value);
+    option.textContent = String(value);
+    select.appendChild(option);
+  }
+  label.appendChild(select);
+  return label;
+}
+
+function checkboxControl(key, label, text) {
+  const wrapper = document.createElement("label");
+  wrapper.className = "toolbar-toggle";
+  wrapper.title = label;
+  const input = document.createElement("input");
+  input.type = "checkbox";
+  input.dataset.canvasSetting = key;
+  input.setAttribute("aria-label", label);
+  wrapper.append(input, document.createTextNode(text));
+  return wrapper;
 }
