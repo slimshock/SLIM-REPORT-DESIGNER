@@ -1,4 +1,4 @@
-import { normalizeDataMetadata } from "./data_fields.js";
+import { ensureTemplateData } from "./data_fields.js";
 
 export function createDefaultTemplate() {
   return normalizeTemplate({
@@ -46,12 +46,7 @@ export function normalizeTemplate(template) {
     assignObjectBand(source, object);
   }
   source.assets = Array.isArray(source.assets) ? source.assets : [];
-  const data = normalizeDataMetadata(source.data);
-  if (data) {
-    source.data = data;
-  } else {
-    delete source.data;
-  }
+  ensureTemplateData(source);
   return source;
 }
 
@@ -84,6 +79,10 @@ export function normalizeObject(object) {
   if (object.binding !== undefined) {
     normalized.binding = String(object.binding);
     normalized.properties.binding = normalized.binding;
+  }
+  if (object.source_path !== undefined || object.properties?.source_path !== undefined) {
+    normalized.source_path = String(object.source_path ?? object.properties?.source_path ?? "");
+    normalized.properties.source_path = normalized.source_path;
   }
   const source = object.src ?? object.source ?? object.properties?.src ?? object.properties?.source;
   if (type === "image") {
@@ -238,6 +237,17 @@ export function setBandValue(template, bandId, key, value) {
   if (key === "name" || key === "background_color") {
     band[key] = String(value);
   }
+}
+
+export function setBandRepeatValue(template, bandId, key, value) {
+  const band = getBandById(template, bandId);
+  if (!band || band.id !== "detail") {
+    return;
+  }
+  band.repeat = normalizeBandRepeat({
+    ...(band.repeat || {}),
+    [key]: value
+  });
 }
 
 export function clampObjectToBand(template, object) {
@@ -437,7 +447,7 @@ function normalizeBand(band, page, index) {
     detail: "Detail",
     page_footer: "Page Footer"
   };
-  return bandRecord(
+  const normalized = bandRecord(
     id,
     type,
     String(band.name || names[type] || id),
@@ -449,6 +459,24 @@ function normalizeBand(band, page, index) {
       locked: Boolean(band.locked ?? band.properties?.locked ?? false)
     }
   );
+  const repeat = normalizeBandRepeat(band.repeat || band.properties?.repeat);
+  if (id === "detail" && repeat) {
+    normalized.repeat = repeat;
+  }
+  return normalized;
+}
+
+function normalizeBandRepeat(repeat) {
+  if (!repeat || typeof repeat !== "object" || Array.isArray(repeat)) {
+    return null;
+  }
+  return {
+    enabled: Boolean(repeat.enabled),
+    data_path: String(repeat.data_path || ""),
+    row_height: Math.max(8, Math.round(Number(repeat.row_height) || 22)),
+    preview_rows: Math.min(100, Math.max(1, Math.round(Number(repeat.preview_rows) || 10))),
+    empty_message: String(repeat.empty_message || "No records")
+  };
 }
 
 function recalculateStandardBands(template) {

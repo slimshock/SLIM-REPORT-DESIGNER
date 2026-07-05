@@ -7,7 +7,8 @@ export function defaultCanvasSettings() {
     grid_size: 10,
     show_grid: true,
     snap_to_grid: true,
-    show_sample_data: false
+    show_sample_data: false,
+    show_repeated_rows: false
   };
 }
 
@@ -34,7 +35,10 @@ export function normalizeCanvasSettings(settings) {
       : Boolean(settings.snap_to_grid),
     show_sample_data: settings?.show_sample_data === undefined
       ? defaults.show_sample_data
-      : Boolean(settings.show_sample_data)
+      : Boolean(settings.show_sample_data),
+    show_repeated_rows: settings?.show_repeated_rows === undefined
+      ? defaults.show_repeated_rows
+      : Boolean(settings.show_repeated_rows)
   };
 }
 

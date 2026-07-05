@@ -58,6 +58,38 @@ def test_html_rendering_applies_extended_style_fields() -> None:
     assert "object-fit: contain" in html
 
 
+def test_html_rendering_expands_repeating_detail_rows() -> None:
+    report = repeating_report()
+
+    html = render_html(report, repeating_data())
+
+    assert "WBC" in html
+    assert "7.10" in html
+    assert "HGB" in html
+    assert "14.20" in html
+    assert "top: 152.0px" in html
+    assert "top: 176.0px" in html
+    assert "LAB RESULT" in html
+    assert html.count("LAB RESULT") == 1
+
+
+def test_html_rendering_empty_repeating_detail_does_not_crash() -> None:
+    report = repeating_report()
+
+    html = render_html(report, {"results": []})
+
+    assert "No results" in html
+
+
+def test_pdf_rendering_expands_repeating_detail_rows() -> None:
+    report = repeating_report()
+
+    pdf = render_pdf(report, repeating_data())
+
+    assert pdf.startswith(b"%PDF")
+    assert len(pdf) > 1000
+
+
 def test_render_context_applies_shared_style_defaults() -> None:
     report = JSONSerializer().load_mapping(
         {
@@ -320,3 +352,83 @@ def sample_template() -> dict:
         "bands": [],
         "assets": [],
     }
+
+
+def repeating_data() -> dict:
+    return {
+        "results": [
+            {"test": "WBC", "result": "7.10", "value": "7.1"},
+            {"test": "HGB", "result": "14.20", "value": "13.2"},
+        ]
+    }
+
+
+def repeating_report() -> Report:
+    return JSONSerializer().load_mapping(
+        {
+            "version": "1.0",
+            "metadata": {"title": "Repeating"},
+            "page": {"width": 595, "height": 842, "unit": "px"},
+            "objects": [
+                {
+                    "id": "title",
+                    "type": "text",
+                    "x": 40,
+                    "y": 40,
+                    "width": 200,
+                    "height": 20,
+                    "text": "LAB RESULT",
+                    "band": "page_header",
+                },
+                {
+                    "id": "row_test",
+                    "type": "field",
+                    "x": 40,
+                    "y": 152,
+                    "width": 100,
+                    "height": 18,
+                    "binding": "test",
+                    "band": "detail",
+                },
+                {
+                    "id": "row_value",
+                    "type": "field",
+                    "x": 160,
+                    "y": 152,
+                    "width": 100,
+                    "height": 18,
+                    "binding": "results[].value",
+                    "band": "detail",
+                },
+                {
+                    "id": "row_result",
+                    "type": "field",
+                    "x": 280,
+                    "y": 152,
+                    "width": 100,
+                    "height": 18,
+                    "binding": "result",
+                    "band": "detail",
+                },
+            ],
+            "bands": [
+                {"id": "page_header", "type": "page_header", "name": "Page Header", "y": 0, "height": 100},
+                {
+                    "id": "detail",
+                    "type": "detail",
+                    "name": "Detail",
+                    "y": 100,
+                    "height": 680,
+                    "repeat": {
+                        "enabled": True,
+                        "data_path": "results",
+                        "row_height": 24,
+                        "preview_rows": 10,
+                        "empty_message": "No results",
+                    },
+                },
+                {"id": "page_footer", "type": "page_footer", "name": "Page Footer", "y": 780, "height": 62},
+            ],
+            "assets": [],
+        }
+    )

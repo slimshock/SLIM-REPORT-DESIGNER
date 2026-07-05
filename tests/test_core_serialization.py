@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 from slim_report_core import DEFAULT_REPORT_VERSION, Band, Object, Page, Report, Style
@@ -144,10 +145,62 @@ def test_json_serializer_round_trips_optional_data_metadata() -> None:
     assert dumped["data"] == payload["data"]
 
 
+def test_repeating_lab_result_sample_template_preserves_data_metadata(tmp_path: Path) -> None:
+    sample_path = (
+        Path(__file__).resolve().parents[1]
+        / "examples/flask_app/sample_templates/repeating_lab_result.json"
+    )
+    payload = json.loads(sample_path.read_text(encoding="utf-8"))
+    serializer = JSONSerializer()
+
+    report = serializer.load_mapping(payload)
+    saved_path = tmp_path / "repeating_lab_result.json"
+    serializer.save(report, saved_path)
+    loaded = serializer.load(saved_path)
+    dumped = serializer.dump_mapping(loaded)
+
+    assert loaded.data["sample"]["results"][0]["test"] == "WBC"
+    assert loaded.data["sample"]["results"][1]["test"] == "RBC"
+    assert loaded.data["fields"][0]["path"] == "laboratory.name"
+    assert dumped["data"]["sample"] == payload["data"]["sample"]
+    assert dumped["data"]["fields"] == payload["data"]["fields"]
+
+
 def test_json_serializer_omits_data_for_old_templates_without_data() -> None:
     dumped = JSONSerializer().dump_mapping(JSONSerializer().load_mapping(sample_template()))
 
     assert "data" not in dumped
+
+
+def test_json_serializer_round_trips_detail_repeat_settings() -> None:
+    payload = sample_template()
+    payload["bands"] = [
+        {
+            "id": "detail",
+            "type": "detail",
+            "name": "Detail",
+            "y": 100,
+            "height": 500,
+            "repeat": {
+                "enabled": True,
+                "data_path": "results",
+                "row_height": 3,
+                "preview_rows": 500,
+                "empty_message": "No results",
+            },
+        }
+    ]
+
+    report = JSONSerializer().load_mapping(payload)
+    dumped = JSONSerializer().dump_mapping(report)
+
+    assert dumped["bands"][0]["repeat"] == {
+        "enabled": True,
+        "data_path": "results",
+        "row_height": 8,
+        "preview_rows": 100,
+        "empty_message": "No results",
+    }
 
 
 def sample_template() -> dict:

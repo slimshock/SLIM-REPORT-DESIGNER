@@ -1,0 +1,662 @@
+{
+  "version": "0.1",
+  "metadata": {
+    "name": "Repeating Laboratory Result"
+  },
+  "page": {
+    "size": "A4",
+    "orientation": "portrait",
+    "unit": "px",
+    "width": 595,
+    "height": 842,
+    "margin_top": 24,
+    "margin_right": 24,
+    "margin_bottom": 24,
+    "margin_left": 24,
+    "background_color": "#ffffff",
+    "transparent": false
+  },
+  "bands": [
+    {
+      "id": "page_header",
+      "type": "page_header",
+      "name": "Page Header",
+      "y": 0,
+      "height": 150,
+      "background_color": "#ffffff",
+      "visible": true,
+      "locked": false
+    },
+    {
+      "id": "detail",
+      "type": "detail",
+      "name": "Detail",
+      "y": 150,
+      "height": 620,
+      "background_color": "#ffffff",
+      "visible": true,
+      "locked": false,
+      "repeat": {
+        "enabled": true,
+        "data_path": "results",
+        "row_height": 24,
+        "preview_rows": 20,
+        "empty_message": "No laboratory results found"
+      }
+    },
+    {
+      "id": "page_footer",
+      "type": "page_footer",
+      "name": "Page Footer",
+      "y": 770,
+      "height": 72,
+      "background_color": "#ffffff",
+      "visible": true,
+      "locked": false
+    }
+  ],
+  "data": {
+    "sample": {
+      "laboratory": {
+        "name": "Cerebro Diagnostic System",
+        "address": "Cagayan de Oro City, Philippines"
+      },
+      "patient": {
+        "name": "JUAN DELA CRUZ",
+        "patient_no": "P-00001234",
+        "age": "34",
+        "sex": "Male",
+        "dob": "1992-04-18"
+      },
+      "order": {
+        "id": "ORD-2026-0001",
+        "date": "2026-07-06",
+        "physician": "Dr. Maria Santos",
+        "section": "Hematology"
+      },
+      "results": [
+        {
+          "test": "WBC",
+          "result": "7.10",
+          "unit": "10^9/L",
+          "reference": "4.00 - 10.00",
+          "flag": "N"
+        },
+        {
+          "test": "RBC",
+          "result": "5.02",
+          "unit": "10^12/L",
+          "reference": "4.50 - 5.90",
+          "flag": "N"
+        },
+        {
+          "test": "HGB",
+          "result": "14.20",
+          "unit": "g/dL",
+          "reference": "13.00 - 17.00",
+          "flag": "N"
+        },
+        {
+          "test": "HCT",
+          "result": "42.80",
+          "unit": "%",
+          "reference": "40.00 - 50.00",
+          "flag": "N"
+        },
+        {
+          "test": "MCV",
+          "result": "85.30",
+          "unit": "fL",
+          "reference": "80.00 - 100.00",
+          "flag": "N"
+        },
+        {
+          "test": "MCH",
+          "result": "28.30",
+          "unit": "pg",
+          "reference": "27.00 - 32.00",
+          "flag": "N"
+        },
+        {
+          "test": "MCHC",
+          "result": "33.20",
+          "unit": "g/dL",
+          "reference": "32.00 - 36.00",
+          "flag": "N"
+        },
+        {
+          "test": "PLT",
+          "result": "265",
+          "unit": "10^9/L",
+          "reference": "150 - 400",
+          "flag": "N"
+        }
+      ]
+    },
+    "fields": [
+      {
+        "path": "laboratory.name",
+        "label": "Laboratory Name",
+        "type": "string",
+        "sample": "Cerebro Diagnostic System"
+      },
+      {
+        "path": "patient.name",
+        "label": "Patient Name",
+        "type": "string",
+        "sample": "JUAN DELA CRUZ"
+      },
+      {
+        "path": "patient.patient_no",
+        "label": "Patient No.",
+        "type": "string",
+        "sample": "P-00001234"
+      },
+      {
+        "path": "patient.age",
+        "label": "Age",
+        "type": "string",
+        "sample": "34"
+      },
+      {
+        "path": "patient.sex",
+        "label": "Sex",
+        "type": "string",
+        "sample": "Male"
+      },
+      {
+        "path": "order.id",
+        "label": "Order ID",
+        "type": "string",
+        "sample": "ORD-2026-0001"
+      },
+      {
+        "path": "order.date",
+        "label": "Order Date",
+        "type": "string",
+        "sample": "2026-07-06"
+      },
+      {
+        "path": "order.physician",
+        "label": "Physician",
+        "type": "string",
+        "sample": "Dr. Maria Santos"
+      },
+      {
+        "path": "results[]",
+        "label": "Results",
+        "type": "array",
+        "sample": "8 rows"
+      },
+      {
+        "path": "results[].test",
+        "label": "Test",
+        "type": "string",
+        "sample": "WBC"
+      },
+      {
+        "path": "results[].result",
+        "label": "Result",
+        "type": "string",
+        "sample": "7.10"
+      },
+      {
+        "path": "results[].unit",
+        "label": "Unit",
+        "type": "string",
+        "sample": "10^9/L"
+      },
+      {
+        "path": "results[].reference",
+        "label": "Reference Range",
+        "type": "string",
+        "sample": "4.00 - 10.00"
+      },
+      {
+        "path": "results[].flag",
+        "label": "Flag",
+        "type": "string",
+        "sample": "N"
+      }
+    ]
+  },
+  "objects": [
+    {
+      "id": "lab_name",
+      "type": "field",
+      "band": "page_header",
+      "x": 40,
+      "y": 24,
+      "width": 360,
+      "height": 24,
+      "binding": "laboratory.name",
+      "style": {
+        "font_family": "Arial",
+        "font_size": 18,
+        "bold": true,
+        "italic": false,
+        "underline": false,
+        "color": "#111827",
+        "background_color": "transparent",
+        "align": "left"
+      }
+    },
+    {
+      "id": "report_title",
+      "type": "text",
+      "band": "page_header",
+      "x": 40,
+      "y": 58,
+      "width": 300,
+      "height": 22,
+      "text": "Laboratory Result",
+      "style": {
+        "font_family": "Arial",
+        "font_size": 15,
+        "bold": true,
+        "italic": false,
+        "underline": false,
+        "color": "#2563eb",
+        "background_color": "transparent",
+        "align": "left"
+      }
+    },
+    {
+      "id": "patient_label",
+      "type": "text",
+      "band": "page_header",
+      "x": 40,
+      "y": 95,
+      "width": 80,
+      "height": 18,
+      "text": "Patient:",
+      "style": {
+        "font_size": 11,
+        "bold": true,
+        "color": "#111827"
+      }
+    },
+    {
+      "id": "patient_name",
+      "type": "field",
+      "band": "page_header",
+      "x": 120,
+      "y": 95,
+      "width": 250,
+      "height": 18,
+      "binding": "patient.name",
+      "style": {
+        "font_size": 11,
+        "bold": false,
+        "color": "#111827"
+      }
+    },
+    {
+      "id": "order_label",
+      "type": "text",
+      "band": "page_header",
+      "x": 390,
+      "y": 95,
+      "width": 65,
+      "height": 18,
+      "text": "Order:",
+      "style": {
+        "font_size": 11,
+        "bold": true,
+        "color": "#111827"
+      }
+    },
+    {
+      "id": "order_id",
+      "type": "field",
+      "band": "page_header",
+      "x": 455,
+      "y": 95,
+      "width": 110,
+      "height": 18,
+      "binding": "order.id",
+      "style": {
+        "font_size": 11,
+        "bold": false,
+        "color": "#111827"
+      }
+    },
+    {
+      "id": "age_label",
+      "type": "text",
+      "band": "page_header",
+      "x": 40,
+      "y": 116,
+      "width": 40,
+      "height": 18,
+      "text": "Age:",
+      "style": {
+        "font_size": 11,
+        "bold": true
+      }
+    },
+    {
+      "id": "age_value",
+      "type": "field",
+      "band": "page_header",
+      "x": 80,
+      "y": 116,
+      "width": 60,
+      "height": 18,
+      "binding": "patient.age",
+      "style": {
+        "font_size": 11
+      }
+    },
+    {
+      "id": "sex_label",
+      "type": "text",
+      "band": "page_header",
+      "x": 150,
+      "y": 116,
+      "width": 35,
+      "height": 18,
+      "text": "Sex:",
+      "style": {
+        "font_size": 11,
+        "bold": true
+      }
+    },
+    {
+      "id": "sex_value",
+      "type": "field",
+      "band": "page_header",
+      "x": 185,
+      "y": 116,
+      "width": 80,
+      "height": 18,
+      "binding": "patient.sex",
+      "style": {
+        "font_size": 11
+      }
+    },
+    {
+      "id": "date_label",
+      "type": "text",
+      "band": "page_header",
+      "x": 390,
+      "y": 116,
+      "width": 65,
+      "height": 18,
+      "text": "Date:",
+      "style": {
+        "font_size": 11,
+        "bold": true
+      }
+    },
+    {
+      "id": "date_value",
+      "type": "field",
+      "band": "page_header",
+      "x": 455,
+      "y": 116,
+      "width": 110,
+      "height": 18,
+      "binding": "order.date",
+      "style": {
+        "font_size": 11
+      }
+    },
+    {
+      "id": "header_line",
+      "type": "line",
+      "band": "page_header",
+      "x": 40,
+      "y": 144,
+      "width": 515,
+      "height": 1,
+      "style": {
+        "stroke_width": 1,
+        "stroke_color": "#111827"
+      }
+    },
+    {
+      "id": "table_header_bg",
+      "type": "rectangle",
+      "band": "detail",
+      "x": 40,
+      "y": 158,
+      "width": 515,
+      "height": 24,
+      "style": {
+        "border_width": 1,
+        "border_color": "#111827",
+        "background_color": "#e5e7eb"
+      }
+    },
+    {
+      "id": "col_test",
+      "type": "text",
+      "band": "detail",
+      "x": 48,
+      "y": 164,
+      "width": 130,
+      "height": 16,
+      "text": "Test",
+      "style": {
+        "font_size": 10,
+        "bold": true,
+        "align": "left"
+      }
+    },
+    {
+      "id": "col_result",
+      "type": "text",
+      "band": "detail",
+      "x": 190,
+      "y": 164,
+      "width": 90,
+      "height": 16,
+      "text": "Result",
+      "style": {
+        "font_size": 10,
+        "bold": true,
+        "align": "center"
+      }
+    },
+    {
+      "id": "col_unit",
+      "type": "text",
+      "band": "detail",
+      "x": 290,
+      "y": 164,
+      "width": 80,
+      "height": 16,
+      "text": "Unit",
+      "style": {
+        "font_size": 10,
+        "bold": true,
+        "align": "left"
+      }
+    },
+    {
+      "id": "col_reference",
+      "type": "text",
+      "band": "detail",
+      "x": 375,
+      "y": 164,
+      "width": 120,
+      "height": 16,
+      "text": "Reference",
+      "style": {
+        "font_size": 10,
+        "bold": true,
+        "align": "left"
+      }
+    },
+    {
+      "id": "col_flag",
+      "type": "text",
+      "band": "detail",
+      "x": 510,
+      "y": 164,
+      "width": 35,
+      "height": 16,
+      "text": "Flag",
+      "style": {
+        "font_size": 10,
+        "bold": true,
+        "align": "center"
+      }
+    },
+    {
+      "id": "row_separator",
+      "type": "line",
+      "band": "detail",
+      "x": 40,
+      "y": 206,
+      "width": 515,
+      "height": 1,
+      "style": {
+        "stroke_width": 1,
+        "stroke_color": "#d1d5db"
+      }
+    },
+    {
+      "id": "result_test",
+      "type": "field",
+      "band": "detail",
+      "x": 48,
+      "y": 188,
+      "width": 130,
+      "height": 18,
+      "binding": "test",
+      "source_path": "results[].test",
+      "style": {
+        "font_size": 10,
+        "bold": false,
+        "color": "#111827",
+        "align": "left"
+      }
+    },
+    {
+      "id": "result_value",
+      "type": "field",
+      "band": "detail",
+      "x": 190,
+      "y": 188,
+      "width": 90,
+      "height": 18,
+      "binding": "result",
+      "source_path": "results[].result",
+      "style": {
+        "font_size": 10,
+        "bold": true,
+        "color": "#111827",
+        "align": "center"
+      }
+    },
+    {
+      "id": "result_unit",
+      "type": "field",
+      "band": "detail",
+      "x": 290,
+      "y": 188,
+      "width": 80,
+      "height": 18,
+      "binding": "unit",
+      "source_path": "results[].unit",
+      "style": {
+        "font_size": 10,
+        "color": "#374151",
+        "align": "left"
+      }
+    },
+    {
+      "id": "result_reference",
+      "type": "field",
+      "band": "detail",
+      "x": 375,
+      "y": 188,
+      "width": 120,
+      "height": 18,
+      "binding": "reference",
+      "source_path": "results[].reference",
+      "style": {
+        "font_size": 10,
+        "color": "#374151",
+        "align": "left"
+      }
+    },
+    {
+      "id": "result_flag",
+      "type": "field",
+      "band": "detail",
+      "x": 510,
+      "y": 188,
+      "width": 35,
+      "height": 18,
+      "binding": "flag",
+      "source_path": "results[].flag",
+      "style": {
+        "font_size": 10,
+        "bold": true,
+        "color": "#111827",
+        "align": "center"
+      }
+    },
+    {
+      "id": "footer_line",
+      "type": "line",
+      "band": "page_footer",
+      "x": 40,
+      "y": 780,
+      "width": 515,
+      "height": 1,
+      "style": {
+        "stroke_width": 1,
+        "stroke_color": "#d1d5db"
+      }
+    },
+    {
+      "id": "prepared_by_label",
+      "type": "text",
+      "band": "page_footer",
+      "x": 40,
+      "y": 795,
+      "width": 120,
+      "height": 16,
+      "text": "Prepared by:",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      }
+    },
+    {
+      "id": "verified_by_label",
+      "type": "text",
+      "band": "page_footer",
+      "x": 360,
+      "y": 795,
+      "width": 120,
+      "height": 16,
+      "text": "Verified by:",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      }
+    },
+    {
+      "id": "footer_note",
+      "type": "text",
+      "band": "page_footer",
+      "x": 40,
+      "y": 822,
+      "width": 515,
+      "height": 14,
+      "text": "This is a sample repeating detail report generated by Slim Report Designer.",
+      "style": {
+        "font_size": 8,
+        "italic": true,
+        "color": "#6b7280",
+        "align": "center"
+      }
+    }
+  ],
+  "assets": []
+}

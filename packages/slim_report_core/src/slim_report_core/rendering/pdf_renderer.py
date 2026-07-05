@@ -13,8 +13,10 @@ from .context import (
     RenderObject,
     convert_unit,
     create_render_context,
+    get_array_by_path,
     object_pt,
     resolve_object_value,
+    resolve_repeated_object_value,
 )
 
 
@@ -31,8 +33,8 @@ def render_pdf(report: Report, data: dict[str, Any] | None = None) -> bytes:
     for band in context.bands:
         _render_band(canvas, band, context)
 
-    for obj in context.objects:
-        render_pdf_object(canvas, obj, context)
+    for obj, object_context in pdf_render_objects(context):
+        render_pdf_object(canvas, obj, object_context)
 
     canvas.showPage()
     canvas.save()
@@ -61,6 +63,37 @@ def render_pdf_object(canvas: Any, obj: RenderObject, context: RenderContext) ->
     raise ReportValidationError(f"Unsupported report object type: {obj.type}.")
 
 
+def pdf_render_objects(context: RenderContext) -> list[tuple[RenderObject, RenderContext]]:
+    repeat = _detail_repeat(context)
+    if not repeat:
+        return [(obj, context) for obj in context.objects]
+    data_path = str(repeat.get("data_path", ""))
+    rows = get_array_by_path(context.data, data_path)
+    detail_objects = [obj for obj in context.objects if obj.band == "detail"]
+    rendered = [(obj, context) for obj in context.objects if obj.band != "detail"]
+    if not rows:
+        return rendered
+    row_height = float(repeat.get("row_height", 22) or 22)
+    for row_index, row in enumerate(rows):
+        row_data = row if isinstance(row, dict) else {}
+        row_context = context_with_row(context, row_data, data_path)
+        for obj in detail_objects:
+            repeated = RenderObject(**{**obj.__dict__, "id": f"{obj.id}__row_{row_index}", "y": obj.y + (row_index * row_height)})
+            rendered.append((repeated, row_context))
+    return rendered
+
+
+def context_with_row(context: RenderContext, row: dict[str, Any], data_path: str) -> RenderContext:
+    return RenderContext(
+        report=context.report,
+        data={**dict(context.data), "__slim_row__": row, "__slim_repeat_path__": data_path},
+        page=context.page,
+        bands=context.bands,
+        objects=context.objects,
+        title=context.title,
+    )
+
+
 def _render_band(canvas: Any, band: Any, context: RenderContext) -> None:
     if not getattr(band, "visible", True):
         return
@@ -78,7 +111,13 @@ def _render_text(canvas: Any, obj: RenderObject, context: RenderContext) -> None
 
 
 def _render_field(canvas: Any, obj: RenderObject, context: RenderContext) -> None:
-    _draw_text(canvas, obj, context, resolve_object_value(obj, context.data))
+    row = context.data.get("__slim_row__") if isinstance(context.data, dict) else None
+    repeat_path = context.data.get("__slim_repeat_path__", "") if isinstance(context.data, dict) else ""
+    if isinstance(row, dict):
+        value = resolve_repeated_object_value(obj, context.data, row, str(repeat_path))
+    else:
+        value = resolve_object_value(obj, context.data)
+    _draw_text(canvas, obj, context, value)
 
 
 def _render_line(canvas: Any, obj: RenderObject, context: RenderContext) -> None:
@@ -317,3 +356,10 @@ def _load_canvas() -> Any:
             "PDF export requires ReportLab. Install reportlab or reinstall slim-report-core."
         ) from exc
     return Canvas
+
+
+def _detail_repeat(context: RenderContext) -> dict[str, Any] | None:
+    detail = next((band for band in context.bands if band.id == "detail"), None)
+    if not detail or not detail.repeat.get("enabled") or not detail.repeat.get("data_path"):
+        return None
+    return detail.repeat

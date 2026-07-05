@@ -159,7 +159,7 @@ export function createToolbar({ container, onCommand }) {
       if (gridInput) {
         gridInput.value = String(canvasSettings?.grid_size || 10);
       }
-      for (const key of ["show_grid", "snap_to_grid", "show_sample_data"]) {
+      for (const key of ["show_grid", "snap_to_grid", "show_sample_data", "show_repeated_rows"]) {
         const checkbox = container.querySelector(`[data-canvas-setting="${key}"]`);
         if (checkbox) {
           checkbox.checked = Boolean(canvasSettings?.[key]);
@@ -204,7 +204,8 @@ function canvasControls() {
     gridSizeControl(),
     checkboxControl("show_grid", "Show grid", "Grid"),
     checkboxControl("snap_to_grid", "Snap to grid", "Snap"),
-    checkboxControl("show_sample_data", "Show sample data", "Sample")
+    checkboxControl("show_sample_data", "Show sample data", "Sample"),
+    checkboxControl("show_repeated_rows", "Show repeated sample rows", "Rows")
   );
   return group;
 }

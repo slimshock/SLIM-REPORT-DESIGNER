@@ -131,6 +131,22 @@ def test_flask_designer_api_loads_and_saves_templates(tmp_path: Path) -> None:
     assert designer.get_report("lab-template").metadata.title == "Canvas Lab Result"
 
 
+def test_flask_designer_api_save_preserves_repeating_template_data(tmp_path: Path) -> None:
+    app, designer = create_app(tmp_path)
+    designer.create_template(repeating_template_payload())
+    client = app.test_client()
+
+    payload = client.get("/report-designer/api/templates/repeating").get_json()
+    payload["metadata"]["title"] = "Saved Repeating"
+    response = client.post("/report-designer/api/templates/repeating", json=payload)
+    loaded = JSONSerializer().dump_mapping(designer.get_report("repeating"))
+
+    assert response.status_code == 200
+    assert response.get_json()["data"]["sample"]["results"][1]["test"] == "HGB"
+    assert loaded["data"]["sample"] == payload["data"]["sample"]
+    assert loaded["data"]["fields"] == payload["data"]["fields"]
+
+
 def test_flask_designer_api_previews_and_exports_posted_json(tmp_path: Path) -> None:
     app, _designer = create_app(tmp_path)
     payload = {
@@ -241,6 +257,41 @@ def test_flask_designer_api_uses_posted_template_sample_data(tmp_path: Path) -> 
 
     assert response.status_code == 200
     assert "Sample Patient" in response.get_data(as_text=True)
+
+
+def test_flask_designer_api_preview_and_export_use_explicit_data_payload(tmp_path: Path) -> None:
+    app, _designer = create_app(tmp_path)
+    template = repeating_template_payload()
+    template["data"]["sample"] = {"results": [{"test": "WRONG", "result": "0.00"}]}
+    data = {
+        "results": [
+            {"test": "WBC", "result": "7.10"},
+            {"test": "HGB", "result": "14.20"},
+        ]
+    }
+    request_payload = {
+        "template_id": "repeating",
+        "template": template,
+        "data": data,
+    }
+    client = app.test_client()
+
+    preview_response = client.post("/report-designer/api/preview", json=request_payload)
+    pdf_response = client.post("/report-designer/api/export/pdf", json=request_payload)
+
+    assert preview_response.status_code == 200
+    html = preview_response.get_data(as_text=True)
+    assert "WBC" in html
+    assert "7.10" in html
+    assert "HGB" in html
+    assert "14.20" in html
+    assert "WRONG" not in html
+    assert preview_response.headers["X-Slim-Report-Has-Data-Sample"] == "true"
+    assert preview_response.headers["X-Slim-Report-Repeat-Data-Path"] == "results"
+    assert preview_response.headers["X-Slim-Report-Repeat-Row-Count"] == "2"
+    assert pdf_response.status_code == 200
+    assert pdf_response.get_data().startswith(b"%PDF")
+    assert pdf_response.headers["X-Slim-Report-Repeat-Row-Count"] == "2"
 
 
 def test_flask_designer_api_missing_render_data_does_not_crash(tmp_path: Path) -> None:
@@ -439,6 +490,35 @@ def test_flask_adapter_uses_template_provider_mapping(tmp_path: Path) -> None:
     assert "Mapped 77" in response.get_data(as_text=True)
 
 
+def test_flask_preview_and_pdf_support_repeating_detail_template(tmp_path: Path) -> None:
+    app, designer = create_app(tmp_path)
+    payload = {
+        "version": "1.0",
+        "metadata": {"title": "Repeating", "custom": {"id": "repeating"}},
+        "page": {"width": 595, "height": 842, "unit": "px"},
+        "objects": [
+            {"id": "test", "type": "field", "x": 40, "y": 140, "width": 100, "height": 18, "binding": "test", "band": "detail"},
+            {"id": "value", "type": "field", "x": 160, "y": 140, "width": 100, "height": 18, "binding": "results[].value", "band": "detail"},
+        ],
+        "bands": [
+            {"id": "detail", "type": "detail", "name": "Detail", "y": 100, "height": 700, "repeat": {"enabled": True, "data_path": "results", "row_height": 24, "preview_rows": 10, "empty_message": "No results"}}
+        ],
+        "data": {"sample": {"results": [{"test": "WBC", "value": "7.1"}, {"test": "HGB", "value": "13.2"}]}},
+        "assets": [],
+    }
+    designer.create_template(payload)
+    client = app.test_client()
+
+    preview_response = client.get("/report-designer/templates/repeating/preview/sample")
+    pdf_response = client.get("/report-designer/templates/repeating/export/pdf/sample")
+
+    assert preview_response.status_code == 200
+    assert "WBC" in preview_response.get_data(as_text=True)
+    assert "HGB" in preview_response.get_data(as_text=True)
+    assert pdf_response.status_code == 200
+    assert pdf_response.get_data().startswith(b"%PDF")
+
+
 def test_flask_adapter_returns_404_for_missing_template(tmp_path: Path) -> None:
     app, _designer = create_app(tmp_path)
 
@@ -490,6 +570,66 @@ def template_payload(provider: str | None = "lab_result") -> dict[str, Any]:
         )
     )
     return JSONSerializer().dump_mapping(report)
+
+
+def repeating_template_payload() -> dict[str, Any]:
+    return {
+        "version": "1.0",
+        "metadata": {"title": "Repeating", "custom": {"id": "repeating"}},
+        "page": {"width": 595, "height": 842, "unit": "px"},
+        "objects": [
+            {
+                "id": "test",
+                "type": "field",
+                "x": 40,
+                "y": 140,
+                "width": 100,
+                "height": 18,
+                "binding": "test",
+                "band": "detail",
+            },
+            {
+                "id": "result",
+                "type": "field",
+                "x": 160,
+                "y": 140,
+                "width": 100,
+                "height": 18,
+                "binding": "result",
+                "band": "detail",
+            },
+        ],
+        "bands": [
+            {
+                "id": "detail",
+                "type": "detail",
+                "name": "Detail",
+                "y": 100,
+                "height": 700,
+                "repeat": {
+                    "enabled": True,
+                    "data_path": "results",
+                    "row_height": 24,
+                    "preview_rows": 10,
+                    "empty_message": "No results",
+                },
+            }
+        ],
+        "data": {
+            "sample": {
+                "results": [
+                    {"test": "WBC", "result": "7.10"},
+                    {"test": "HGB", "result": "14.20"},
+                ]
+            },
+            "fields": [
+                {"path": "results[]", "label": "Results", "type": "array", "sample": "2 rows"},
+                {"path": "results[].test", "label": "Test", "type": "string", "sample": "WBC"},
+                {"path": "results[].result", "label": "Result", "type": "string", "sample": "7.10"},
+            ],
+        },
+        "assets": [],
+    }
 
 
 if __name__ == "__main__":

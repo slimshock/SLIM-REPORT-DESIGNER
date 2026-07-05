@@ -528,6 +528,24 @@ button {
   opacity: 0.72;
 }
 
+.report-object.repeat-preview-copy {
+  opacity: 0.62;
+  pointer-events: none;
+}
+
+.repeat-empty-message {
+  position: absolute;
+  z-index: 2;
+  border: 1px dashed var(--panel-border-strong);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.82);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 8px;
+  pointer-events: none;
+}
+
 .selection-bounds {
   position: absolute;
   border: 1px dashed var(--selection);

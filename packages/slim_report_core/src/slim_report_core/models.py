@@ -1312,6 +1312,7 @@ class Band:
     background_color: str = "transparent"
     visible: bool = True
     locked: bool = False
+    repeat: dict[str, Any] = field(default_factory=dict)
     properties: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
@@ -1328,6 +1329,7 @@ class Band:
             background_color=str(mapping.get("background_color", properties.get("background_color", "transparent"))),
             visible=bool(mapping.get("visible", True)),
             locked=bool(mapping.get("locked", False)),
+            repeat=_normalize_repeat(mapping.get("repeat", properties.get("repeat"))),
             properties=dict(properties),
         )
 
@@ -1335,6 +1337,8 @@ class Band:
         data = asdict(self)
         if self.name is None:
             data.pop("name", None)
+        if not self.repeat:
+            data.pop("repeat", None)
         return data
 
     def clone(self, *, new_ids: bool = True) -> Band:
@@ -1348,6 +1352,7 @@ class Band:
             background_color=self.background_color,
             visible=self.visible,
             locked=self.locked,
+            repeat=copy.deepcopy(self.repeat),
             properties=copy.deepcopy(self.properties),
         )
 
@@ -1508,6 +1513,18 @@ def _page_margin(mapping: Mapping[str, Any]) -> Margin:
         bottom=float(mapping.get("margin_bottom", DEFAULT_MARGIN_BOTTOM)),
         left=float(mapping.get("margin_left", DEFAULT_MARGIN_LEFT)),
     )
+
+
+def _normalize_repeat(value: Any) -> dict[str, Any]:
+    if not isinstance(value, Mapping):
+        return {}
+    return {
+        "enabled": bool(value.get("enabled", False)),
+        "data_path": str(value.get("data_path", "")),
+        "row_height": max(8, int(float(value.get("row_height", 22) or 22))),
+        "preview_rows": min(100, max(1, int(float(value.get("preview_rows", 10) or 10)))),
+        "empty_message": str(value.get("empty_message", "No records")),
+    }
 
 
 def _style_parent(value: Any) -> Style | None:

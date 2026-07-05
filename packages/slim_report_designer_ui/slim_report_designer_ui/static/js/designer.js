@@ -21,6 +21,7 @@ import {
   getFieldValue,
   getTemplateFields,
   inferFieldsFromSample,
+  normalizeArrayFieldPath,
   normalizeFieldPath
 } from "./data_fields.js";
 import {
@@ -579,7 +580,9 @@ function toJson() {
 }
 
 function addFieldObject(path, position = null) {
-  const binding = normalizeFieldPath(path);
+  const originalPath = normalizeFieldPath(path);
+  const repeat = activeRepeatForBand(state.activeBandId);
+  const binding = repeat ? rowRelativeBinding(originalPath, repeat.data_path) : originalPath;
   if (!binding) {
     setStatus("Binding not found");
     return;
@@ -589,12 +592,22 @@ function addFieldObject(path, position = null) {
   object.width = 140;
   object.height = 20;
   setObjectBinding(object, binding);
+  if (repeat && binding !== originalPath) {
+    object.source_path = originalPath;
+    object.properties.source_path = originalPath;
+  }
   assignObjectBand(state.template, object, state.activeBandId);
   if (position) {
     object.x = position.x;
     object.y = position.y;
   } else {
     placeObjectOnCanvas(object, state.template, state.canvasSettings, elements.canvasScroller);
+  }
+  if (repeat) {
+    const band = getBandById(state.template, "detail");
+    const rowTop = Number(band?.y) || 0;
+    const rowBottom = rowTop + (Number(repeat.row_height) || 22);
+    object.y = Math.max(rowTop, Math.min(Number(object.y) || rowTop, rowBottom - object.height));
   }
   clampObjectToBand(state.template, object);
   state.template.objects.push(object);
@@ -1033,7 +1046,11 @@ function selectedObjectLabel() {
 
 function canvasInfoLabel() {
   const settings = state.canvasSettings;
-  return `Band: ${bandLabel(state.activeBandId)} | Grid: ${settings.grid_size}px | Zoom: ${Math.round(settings.zoom * 100)}% | Snap: ${settings.snap_to_grid ? "On" : "Off"}`;
+  const repeat = activeRepeatForBand("detail");
+  const repeatLabel = repeat?.enabled
+    ? ` | Repeat: On | Data: ${repeat.data_path || "missing"} | Rows: ${repeat.preview_rows || 10}`
+    : " | Repeat: Off";
+  return `Band: ${bandLabel(state.activeBandId)} | Grid: ${settings.grid_size}px | Zoom: ${Math.round(settings.zoom * 100)}% | Snap: ${settings.snap_to_grid ? "On" : "Off"}${repeatLabel}`;
 }
 
 function ensureActiveBand() {
@@ -1071,4 +1088,22 @@ function unitToPx(value, unit = "px") {
     return number * 96 / 25.4;
   }
   return number;
+}
+
+function activeRepeatForBand(bandId) {
+  const band = getBandById(state.template, bandId);
+  return band?.id === "detail" && band.repeat?.enabled ? band.repeat : null;
+}
+
+function rowRelativeBinding(path, repeatDataPath) {
+  const normalized = normalizeFieldPath(path);
+  const repeatPath = normalizeArrayFieldPath(repeatDataPath);
+  if (!repeatPath) {
+    return normalized;
+  }
+  const arrayPrefix = `${repeatPath}[].`;
+  if (normalized.startsWith(arrayPrefix)) {
+    return normalized.slice(arrayPrefix.length);
+  }
+  return normalized;
 }

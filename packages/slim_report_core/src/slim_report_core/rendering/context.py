@@ -128,6 +128,7 @@ class RenderBand:
     background_color: str = "transparent"
     visible: bool = True
     locked: bool = False
+    repeat: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -289,6 +290,7 @@ def _normalize_band(band: Band, page: RenderPage) -> RenderBand:
         background_color=str(getattr(band, "background_color", "transparent") or "transparent"),
         visible=bool(getattr(band, "visible", True)),
         locked=bool(getattr(band, "locked", False)),
+        repeat=dict(getattr(band, "repeat", {}) or {}),
     )
 
 
@@ -359,6 +361,60 @@ def resolve_object_value(obj: RenderObject, data: Mapping[str, Any]) -> str:
     return ""
 
 
+def resolve_repeated_object_value(
+    obj: RenderObject,
+    data: Mapping[str, Any],
+    row: Mapping[str, Any],
+    repeat_data_path: str,
+) -> str:
+    """Resolve display text for a repeated-row render object."""
+    if obj.type == "text":
+        return str(resolve_text(obj.text, {**dict(data), **dict(row)}))
+    if obj.type != "field":
+        return ""
+    row_value = get_row_value(row, obj.binding, repeat_data_path)
+    if row_value not in ("", None):
+        return str(row_value)
+    return str(resolve_expression(obj.binding, data))
+
+
+def get_value_by_path(data: Any, path: str) -> Any:
+    """Return a nested value from dict/list data using dot and [] path syntax."""
+    value = data
+    for token in _path_tokens(path):
+        if value is None:
+            return None
+        if token == "[]":
+            value = value[0] if isinstance(value, list) and value else None
+        elif token.startswith("[") and token.endswith("]"):
+            try:
+                index = int(token[1:-1])
+            except ValueError:
+                return None
+            value = value[index] if isinstance(value, list) and index < len(value) else None
+        elif isinstance(value, Mapping):
+            value = value.get(token)
+        else:
+            value = getattr(value, token, None)
+    return value
+
+
+def get_array_by_path(data: Any, path: str) -> list[Any]:
+    """Return an array at path, or an empty list."""
+    value = get_value_by_path(data, path)
+    return value if isinstance(value, list) else []
+
+
+def get_row_value(row: Mapping[str, Any], binding: str, repeat_data_path: str = "") -> Any:
+    """Resolve row-relative or matching array-child binding against one row."""
+    path = str(binding or "").strip()
+    repeat_path = str(repeat_data_path or "").strip()
+    if repeat_path and path.startswith(f"{repeat_path}[]."):
+        path = path[len(f"{repeat_path}[].") :]
+    value = get_value_by_path(row, path)
+    return "" if value is None else value
+
+
 def _style(obj: Any, properties: Mapping[str, Any]) -> dict[str, Any]:
     object_type = str(getattr(obj, "type", "text") or "text")
     style = default_style_for_type(object_type)
@@ -387,6 +443,24 @@ def _style(obj: Any, properties: Mapping[str, Any]) -> dict[str, Any]:
     style["italic"] = _bool(style.get("italic", False))
     style["underline"] = _bool(style.get("underline", False))
     return style
+
+
+def _path_tokens(path: str) -> list[str]:
+    tokens: list[str] = []
+    for part in str(path or "").strip().split("."):
+        name = part
+        indexes: list[str] = []
+        while "[" in name and "]" in name:
+            before, after = name.split("[", 1)
+            index, rest = after.split("]", 1)
+            if before:
+                tokens.append(before)
+            tokens.append("[]" if index == "" else f"[{index}]")
+            name = rest
+            indexes.append(index)
+        if name:
+            tokens.append(name)
+    return tokens
 
 
 def default_style_for_type(object_type: str) -> dict[str, Any]:

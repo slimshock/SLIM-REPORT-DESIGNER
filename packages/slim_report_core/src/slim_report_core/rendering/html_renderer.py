@@ -11,8 +11,10 @@ from .context import (
     RenderContext,
     RenderObject,
     create_render_context,
+    get_array_by_path,
     object_px,
     resolve_object_value,
+    resolve_repeated_object_value,
 )
 
 
@@ -20,7 +22,7 @@ def render_html(report: Report, data: dict[str, Any] | None = None) -> str:
     """Render a report domain model and data as a full HTML document."""
     context = create_render_context(report, data)
     bands = "\n      ".join(render_html_band(band) for band in context.bands)
-    objects = "\n      ".join(render_html_object(obj, context) for obj in context.objects)
+    objects = "\n      ".join(render_html_objects(context))
     page = context.page
     title = escape(context.title)
     page_background = "#fff" if page.transparent else escape(page.background_color, quote=True)
@@ -83,12 +85,49 @@ def render_html_object(obj: RenderObject, context: RenderContext) -> str:
     raise ReportValidationError(f"Unsupported report object type: {obj.type}.")
 
 
+def render_html_objects(context: RenderContext) -> list[str]:
+    repeat = _detail_repeat(context)
+    if not repeat:
+        return [render_html_object(obj, context) for obj in context.objects]
+    data_path = str(repeat.get("data_path", ""))
+    rows = get_array_by_path(context.data, data_path)
+    detail_objects = [obj for obj in context.objects if obj.band == "detail"]
+    rendered = [render_html_object(obj, context) for obj in context.objects if obj.band != "detail"]
+    if not rows:
+        rendered.append(_empty_message_html(context, repeat))
+        return rendered
+    row_height = float(repeat.get("row_height", 22) or 22)
+    for row_index, row in enumerate(rows):
+        row_data = row if isinstance(row, dict) else {}
+        for obj in detail_objects:
+            repeated = RenderObject(**{**obj.__dict__, "id": f"{obj.id}__row_{row_index}", "y": obj.y + (row_index * row_height)})
+            rendered.append(render_html_object(repeated, context_with_row(context, row_data, data_path)))
+    return rendered
+
+
+def context_with_row(context: RenderContext, row: dict[str, Any], data_path: str) -> RenderContext:
+    return RenderContext(
+        report=context.report,
+        data={**dict(context.data), "__slim_row__": row, "__slim_repeat_path__": data_path},
+        page=context.page,
+        bands=context.bands,
+        objects=context.objects,
+        title=context.title,
+    )
+
+
 def _render_text(obj: RenderObject, context: RenderContext) -> str:
     return _html_box(obj, context, escape(resolve_object_value(obj, context.data)))
 
 
 def _render_field(obj: RenderObject, context: RenderContext) -> str:
-    return _html_box(obj, context, escape(resolve_object_value(obj, context.data)))
+    row = context.data.get("__slim_row__") if isinstance(context.data, dict) else None
+    repeat_path = context.data.get("__slim_repeat_path__", "") if isinstance(context.data, dict) else ""
+    if isinstance(row, dict):
+        value = resolve_repeated_object_value(obj, context.data, row, str(repeat_path))
+    else:
+        value = resolve_object_value(obj, context.data)
+    return _html_box(obj, context, escape(value))
 
 
 def _render_line(obj: RenderObject, context: RenderContext) -> str:
@@ -201,6 +240,25 @@ def _horizontal_flex_align(value: str) -> str:
     if value == "right":
         return "flex-end"
     return "flex-start"
+
+
+def _detail_repeat(context: RenderContext) -> dict[str, Any] | None:
+    detail = next((band for band in context.bands if band.id == "detail"), None)
+    if not detail or not detail.repeat.get("enabled") or not detail.repeat.get("data_path"):
+        return None
+    return detail.repeat
+
+
+def _empty_message_html(context: RenderContext, repeat: dict[str, Any]) -> str:
+    detail = next((band for band in context.bands if band.id == "detail"), None)
+    top = float(getattr(detail, "y", 0) or 0) + 8
+    message = escape(str(repeat.get("empty_message", "No records")))
+    return (
+        '<div class="slim-report-object" '
+        f'style="left: 12px; top: {top}px; width: 240px; height: 18px; '
+        'color: #64748b; font: 700 12px Arial, sans-serif;">'
+        f"{message}</div>"
+    )
 
 
 def _vertical_flex_align(value: str) -> str:

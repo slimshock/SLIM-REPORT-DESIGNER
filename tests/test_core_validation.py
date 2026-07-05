@@ -55,6 +55,18 @@ def test_report_validate_checks_objects_unique_ids_and_bindings() -> None:
     assert "binding.expression.unsupported_function" in codes
 
 
+def test_report_validate_accepts_repeating_array_bindings() -> None:
+    report = Report()
+    report.objects = [
+        Object(id="row_test", type="field", binding="results[].test"),
+        Object(id="row_value", type="field", binding="results[0].value"),
+    ]
+
+    errors = report.validate().errors
+
+    assert [error for error in errors if error.path.endswith(".binding")] == []
+
+
 def test_report_validate_checks_styles_and_assets() -> None:
     report = Report(styles={"heading": Style({"font_size": -1, "bold": "yes"})})
     report.assets = [

@@ -44,13 +44,17 @@
           "color": "#0B79C9",
           "font_size": 27
         },
-        "text": "CEREBRO"
+        "text": "CEREBRO",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "CEREBRO",
       "style": {
         "color": "#0B79C9",
         "font_size": 27
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "cerebro_subtitle",
@@ -67,13 +71,17 @@
           "color": "#E53935",
           "font_size": 10
         },
-        "text": "DIAGNOSTIC SYSTEM"
+        "text": "DIAGNOSTIC SYSTEM",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "DIAGNOSTIC SYSTEM",
       "style": {
         "color": "#E53935",
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "clinic_name",
@@ -90,13 +98,17 @@
           "bold": true,
           "font_size": 26
         },
-        "text": "Cerebro Diagnostic System"
+        "text": "Cerebro Diagnostic System",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Cerebro Diagnostic System",
       "style": {
         "bold": true,
         "font_size": 26
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "clinic_address",
@@ -112,12 +124,16 @@
         "style": {
           "font_size": 10
         },
-        "text": "Alwana Business Park, Zone 4 Cugman, Cagayan de Oro City"
+        "text": "Alwana Business Park, Zone 4 Cugman, Cagayan de Oro City",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Alwana Business Park, Zone 4 Cugman, Cagayan de Oro City",
       "style": {
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "clinic_contact",
@@ -133,12 +149,16 @@
         "style": {
           "font_size": 10
         },
-        "text": "Contact No.: +639 260 235 049, +639 222 979 774"
+        "text": "Contact No.: +639 260 235 049, +639 222 979 774",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Contact No.: +639 260 235 049, +639 222 979 774",
       "style": {
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "clinic_email",
@@ -154,12 +174,16 @@
         "style": {
           "font_size": 10
         },
-        "text": "Email Address: cerebro.info@gmail.com"
+        "text": "Email Address: cerebro.info@gmail.com",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Email Address: cerebro.info@gmail.com",
       "style": {
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "header_rule",
@@ -174,17 +198,21 @@
         "page_id": "page_1",
         "style": {
           "stroke_width": 1
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
         "stroke_width": 1
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "patient_name_label",
       "type": "text",
-      "x": 14.0,
-      "y": 98.0,
+      "x": 20.0,
+      "y": 100.0,
       "width": 96.0,
       "height": 12.0,
       "z_index": 0,
@@ -194,18 +222,22 @@
         "style": {
           "font_size": 10
         },
-        "text": "Patient Name:"
+        "text": "Patient Name:",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Patient Name:",
       "style": {
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "patient_name_value",
       "type": "field",
-      "x": 110.0,
-      "y": 98.0,
+      "x": 100.0,
+      "y": 100.0,
       "width": 180.0,
       "height": 12.0,
       "z_index": 0,
@@ -216,19 +248,23 @@
         "style": {
           "bold": true,
           "font_size": 10
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "patient.name",
       "style": {
         "bold": true,
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "age_label",
       "type": "text",
-      "x": 14.0,
-      "y": 111.0,
+      "x": 20.0,
+      "y": 110.0,
       "width": 96.0,
       "height": 12.0,
       "z_index": 0,
@@ -238,18 +274,22 @@
         "style": {
           "font_size": 10
         },
-        "text": "Age:"
+        "text": "Age:",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Age:",
       "style": {
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "age_value",
       "type": "field",
-      "x": 110.0,
-      "y": 111.0,
+      "x": 100.0,
+      "y": 110.0,
       "width": 180.0,
       "height": 12.0,
       "z_index": 0,
@@ -260,19 +300,23 @@
         "style": {
           "bold": true,
           "font_size": 10
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "patient.age",
       "style": {
         "bold": true,
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "dob_label",
       "type": "text",
-      "x": 14.0,
-      "y": 124.0,
+      "x": 20.0,
+      "y": 120.0,
       "width": 96.0,
       "height": 12.0,
       "z_index": 0,
@@ -282,18 +326,22 @@
         "style": {
           "font_size": 10
         },
-        "text": "DOB:"
+        "text": "DOB:",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "DOB:",
       "style": {
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "dob_value",
       "type": "field",
-      "x": 110.0,
-      "y": 124.0,
+      "x": 100.0,
+      "y": 120.0,
       "width": 180.0,
       "height": 12.0,
       "z_index": 0,
@@ -304,19 +352,23 @@
         "style": {
           "bold": true,
           "font_size": 10
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "patient.dob",
       "style": {
         "bold": true,
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "sex_label",
       "type": "text",
-      "x": 26.0,
-      "y": 176.0,
+      "x": 20.0,
+      "y": 130.0,
       "width": 96.0,
       "height": 12.0,
       "z_index": 0,
@@ -326,18 +378,22 @@
         "style": {
           "font_size": 10
         },
-        "text": "Sex:"
+        "text": "Sex:",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Sex:",
       "style": {
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "sex_value",
       "type": "field",
-      "x": 110.0,
-      "y": 137.0,
+      "x": 100.0,
+      "y": 130.0,
       "width": 180.0,
       "height": 12.0,
       "z_index": 0,
@@ -348,13 +404,17 @@
         "style": {
           "bold": true,
           "font_size": 10
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "patient.sex",
       "style": {
         "bold": true,
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "order_no_label",
@@ -370,12 +430,16 @@
         "style": {
           "font_size": 10
         },
-        "text": "Order No.:"
+        "text": "Order No.:",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Order No.:",
       "style": {
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "order_no_value",
@@ -392,13 +456,17 @@
         "style": {
           "bold": true,
           "font_size": 10
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "order.id",
       "style": {
         "bold": true,
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "source_label",
@@ -414,12 +482,16 @@
         "style": {
           "font_size": 10
         },
-        "text": "Source:"
+        "text": "Source:",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Source:",
       "style": {
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "source_value",
@@ -436,13 +508,17 @@
         "style": {
           "bold": true,
           "font_size": 10
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "order.source",
       "style": {
         "bold": true,
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "date_received_label",
@@ -458,12 +534,16 @@
         "style": {
           "font_size": 10
         },
-        "text": "Date Received:"
+        "text": "Date Received:",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Date Received:",
       "style": {
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "date_received_value",
@@ -480,13 +560,17 @@
         "style": {
           "bold": true,
           "font_size": 10
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "order.received",
       "style": {
         "bold": true,
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "date_printed_label",
@@ -502,12 +586,16 @@
         "style": {
           "font_size": 10
         },
-        "text": "Date Printed:"
+        "text": "Date Printed:",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Date Printed:",
       "style": {
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "date_printed_value",
@@ -524,13 +612,17 @@
         "style": {
           "bold": true,
           "font_size": 10
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "order.printed",
       "style": {
         "bold": true,
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "section",
@@ -549,7 +641,10 @@
           "color": "#9AA0A6",
           "font_size": 12
         },
-        "text": "HEMATOLOGY"
+        "text": "HEMATOLOGY",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "HEMATOLOGY",
       "style": {
@@ -557,7 +652,8 @@
         "bold": true,
         "color": "#9AA0A6",
         "font_size": 12
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "test_header",
@@ -574,13 +670,17 @@
           "bold": true,
           "font_size": 10
         },
-        "text": "TEST NAME"
+        "text": "TEST NAME",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "TEST NAME",
       "style": {
         "bold": true,
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_header",
@@ -597,13 +697,17 @@
           "bold": true,
           "font_size": 10
         },
-        "text": "RESULT"
+        "text": "RESULT",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "RESULT",
       "style": {
         "bold": true,
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "unit_header",
@@ -620,13 +724,17 @@
           "bold": true,
           "font_size": 10
         },
-        "text": "UNIT"
+        "text": "UNIT",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "UNIT",
       "style": {
         "bold": true,
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "range_header",
@@ -643,13 +751,17 @@
           "bold": true,
           "font_size": 10
         },
-        "text": "REFERENCE RANGE"
+        "text": "REFERENCE RANGE",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "REFERENCE RANGE",
       "style": {
         "bold": true,
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "flag_header",
@@ -666,13 +778,17 @@
           "bold": true,
           "font_size": 10
         },
-        "text": "FLAGS"
+        "text": "FLAGS",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "FLAGS",
       "style": {
         "bold": true,
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_0_test",
@@ -689,13 +805,17 @@
           "bold": false,
           "font_size": 9
         },
-        "text": "White Blood Cell Count"
+        "text": "White Blood Cell Count",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "White Blood Cell Count",
       "style": {
         "bold": false,
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_0_value",
@@ -713,14 +833,18 @@
           "align": "center",
           "color": "#FF0000",
           "font_size": 9
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "results.wbc",
       "style": {
         "align": "center",
         "color": "#FF0000",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_0_unit",
@@ -736,12 +860,16 @@
         "style": {
           "font_size": 9
         },
-        "text": "x10^9/L"
+        "text": "x10^9/L",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "x10^9/L",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_0_range",
@@ -757,12 +885,16 @@
         "style": {
           "font_size": 9
         },
-        "text": "5-14.5"
+        "text": "5-14.5",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "5-14.5",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_0_flag",
@@ -780,14 +912,18 @@
           "color": "#FF0000",
           "font_size": 9
         },
-        "text": "HIGH"
+        "text": "HIGH",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "HIGH",
       "style": {
         "bold": true,
         "color": "#FF0000",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_1_test",
@@ -804,13 +940,17 @@
           "bold": false,
           "font_size": 9
         },
-        "text": "Red Blood Cell Count"
+        "text": "Red Blood Cell Count",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Red Blood Cell Count",
       "style": {
         "bold": false,
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_1_value",
@@ -828,14 +968,18 @@
           "align": "center",
           "color": "#000000",
           "font_size": 9
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "results.rbc",
       "style": {
         "align": "center",
         "color": "#000000",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_1_unit",
@@ -851,12 +995,16 @@
         "style": {
           "font_size": 9
         },
-        "text": "x10^12/L"
+        "text": "x10^12/L",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "x10^12/L",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_1_range",
@@ -872,12 +1020,16 @@
         "style": {
           "font_size": 9
         },
-        "text": "3.9 - 5.3"
+        "text": "3.9 - 5.3",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "3.9 - 5.3",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_1_flag",
@@ -895,13 +1047,17 @@
           "color": "#000000",
           "font_size": 9
         },
-        "text": ""
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
         "bold": false,
         "color": "#000000",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_2_test",
@@ -918,13 +1074,17 @@
           "bold": false,
           "font_size": 9
         },
-        "text": "Hemoglobin"
+        "text": "Hemoglobin",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Hemoglobin",
       "style": {
         "bold": false,
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_2_value",
@@ -942,14 +1102,18 @@
           "align": "center",
           "color": "#003BFF",
           "font_size": 9
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "results.hgb",
       "style": {
         "align": "center",
         "color": "#003BFF",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_2_unit",
@@ -965,12 +1129,16 @@
         "style": {
           "font_size": 9
         },
-        "text": "g/dL"
+        "text": "g/dL",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "g/dL",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_2_range",
@@ -986,12 +1154,16 @@
         "style": {
           "font_size": 9
         },
-        "text": "11.5 - 13.5"
+        "text": "11.5 - 13.5",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "11.5 - 13.5",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_2_flag",
@@ -1009,14 +1181,18 @@
           "color": "#003BFF",
           "font_size": 9
         },
-        "text": "LOW"
+        "text": "LOW",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "LOW",
       "style": {
         "bold": true,
         "color": "#003BFF",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_3_test",
@@ -1033,13 +1209,17 @@
           "bold": false,
           "font_size": 9
         },
-        "text": "Hematocrit"
+        "text": "Hematocrit",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Hematocrit",
       "style": {
         "bold": false,
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_3_value",
@@ -1057,14 +1237,18 @@
           "align": "center",
           "color": "#003BFF",
           "font_size": 9
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "results.hct",
       "style": {
         "align": "center",
         "color": "#003BFF",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_3_unit",
@@ -1080,12 +1264,16 @@
         "style": {
           "font_size": 9
         },
-        "text": "%"
+        "text": "%",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "%",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_3_range",
@@ -1101,12 +1289,16 @@
         "style": {
           "font_size": 9
         },
-        "text": "34 - 40"
+        "text": "34 - 40",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "34 - 40",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_3_flag",
@@ -1124,14 +1316,18 @@
           "color": "#003BFF",
           "font_size": 9
         },
-        "text": "LOW"
+        "text": "LOW",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "LOW",
       "style": {
         "bold": true,
         "color": "#003BFF",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_4_test",
@@ -1148,13 +1344,17 @@
           "bold": false,
           "font_size": 9
         },
-        "text": "MCV"
+        "text": "MCV",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "MCV",
       "style": {
         "bold": false,
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_4_value",
@@ -1172,14 +1372,18 @@
           "align": "center",
           "color": "#000000",
           "font_size": 9
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "results.mcv",
       "style": {
         "align": "center",
         "color": "#000000",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_4_unit",
@@ -1195,12 +1399,16 @@
         "style": {
           "font_size": 9
         },
-        "text": "c.u."
+        "text": "c.u.",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "c.u.",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_4_range",
@@ -1216,12 +1424,16 @@
         "style": {
           "font_size": 9
         },
-        "text": "75 - 87"
+        "text": "75 - 87",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "75 - 87",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_4_flag",
@@ -1239,13 +1451,17 @@
           "color": "#000000",
           "font_size": 9
         },
-        "text": ""
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
         "bold": false,
         "color": "#000000",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_5_test",
@@ -1262,13 +1478,17 @@
           "bold": false,
           "font_size": 9
         },
-        "text": "MCH"
+        "text": "MCH",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "MCH",
       "style": {
         "bold": false,
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_5_value",
@@ -1286,14 +1506,18 @@
           "align": "center",
           "color": "#000000",
           "font_size": 9
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "results.mch",
       "style": {
         "align": "center",
         "color": "#000000",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_5_unit",
@@ -1309,12 +1533,16 @@
         "style": {
           "font_size": 9
         },
-        "text": "uug"
+        "text": "uug",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "uug",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_5_range",
@@ -1330,12 +1558,16 @@
         "style": {
           "font_size": 9
         },
-        "text": "24 - 30"
+        "text": "24 - 30",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "24 - 30",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_5_flag",
@@ -1353,13 +1585,17 @@
           "color": "#000000",
           "font_size": 9
         },
-        "text": ""
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
         "bold": false,
         "color": "#000000",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_6_test",
@@ -1376,13 +1612,17 @@
           "bold": false,
           "font_size": 9
         },
-        "text": "MCHC"
+        "text": "MCHC",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "MCHC",
       "style": {
         "bold": false,
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_6_value",
@@ -1400,14 +1640,18 @@
           "align": "center",
           "color": "#000000",
           "font_size": 9
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "results.mchc",
       "style": {
         "align": "center",
         "color": "#000000",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_6_unit",
@@ -1423,12 +1667,16 @@
         "style": {
           "font_size": 9
         },
-        "text": "g/dL"
+        "text": "g/dL",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "g/dL",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_6_range",
@@ -1444,12 +1692,16 @@
         "style": {
           "font_size": 9
         },
-        "text": "31-37"
+        "text": "31-37",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "31-37",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_6_flag",
@@ -1467,13 +1719,17 @@
           "color": "#000000",
           "font_size": 9
         },
-        "text": ""
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
         "bold": false,
         "color": "#000000",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_7_test",
@@ -1490,13 +1746,17 @@
           "bold": false,
           "font_size": 9
         },
-        "text": "RDW"
+        "text": "RDW",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "RDW",
       "style": {
         "bold": false,
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_7_value",
@@ -1514,14 +1774,18 @@
           "align": "center",
           "color": "#000000",
           "font_size": 9
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "results.rdw",
       "style": {
         "align": "center",
         "color": "#000000",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_7_unit",
@@ -1537,12 +1801,16 @@
         "style": {
           "font_size": 9
         },
-        "text": "%"
+        "text": "%",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "%",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_7_range",
@@ -1558,12 +1826,16 @@
         "style": {
           "font_size": 9
         },
-        "text": "11 - 16"
+        "text": "11 - 16",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "11 - 16",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_7_flag",
@@ -1581,13 +1853,17 @@
           "color": "#000000",
           "font_size": 9
         },
-        "text": ""
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
         "bold": false,
         "color": "#000000",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_8_test",
@@ -1604,13 +1880,17 @@
           "bold": true,
           "font_size": 9
         },
-        "text": "Differential Count"
+        "text": "Differential Count",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Differential Count",
       "style": {
         "bold": true,
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_8_unit",
@@ -1626,11 +1906,15 @@
         "style": {
           "font_size": 9
         },
-        "text": ""
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_8_range",
@@ -1646,11 +1930,15 @@
         "style": {
           "font_size": 9
         },
-        "text": ""
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_8_flag",
@@ -1668,13 +1956,17 @@
           "color": "#000000",
           "font_size": 9
         },
-        "text": ""
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
         "bold": false,
         "color": "#000000",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_9_test",
@@ -1691,13 +1983,17 @@
           "bold": false,
           "font_size": 9
         },
-        "text": "Neutrophils"
+        "text": "Neutrophils",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Neutrophils",
       "style": {
         "bold": false,
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_9_value",
@@ -1715,14 +2011,18 @@
           "align": "center",
           "color": "#000000",
           "font_size": 9
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "results.neutrophils",
       "style": {
         "align": "center",
         "color": "#000000",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_9_unit",
@@ -1738,12 +2038,16 @@
         "style": {
           "font_size": 9
         },
-        "text": "%"
+        "text": "%",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "%",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_9_range",
@@ -1759,12 +2063,16 @@
         "style": {
           "font_size": 9
         },
-        "text": "50 - 70"
+        "text": "50 - 70",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "50 - 70",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_9_flag",
@@ -1782,13 +2090,17 @@
           "color": "#000000",
           "font_size": 9
         },
-        "text": ""
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
         "bold": false,
         "color": "#000000",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_10_test",
@@ -1805,13 +2117,17 @@
           "bold": false,
           "font_size": 9
         },
-        "text": "Lymphocytes"
+        "text": "Lymphocytes",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Lymphocytes",
       "style": {
         "bold": false,
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_10_value",
@@ -1829,14 +2145,18 @@
           "align": "center",
           "color": "#000000",
           "font_size": 9
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "results.lymphocytes",
       "style": {
         "align": "center",
         "color": "#000000",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_10_unit",
@@ -1852,12 +2172,16 @@
         "style": {
           "font_size": 9
         },
-        "text": "%"
+        "text": "%",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "%",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_10_range",
@@ -1873,12 +2197,16 @@
         "style": {
           "font_size": 9
         },
-        "text": "20 - 40"
+        "text": "20 - 40",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "20 - 40",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_10_flag",
@@ -1896,13 +2224,17 @@
           "color": "#000000",
           "font_size": 9
         },
-        "text": ""
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
         "bold": false,
         "color": "#000000",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_11_test",
@@ -1919,13 +2251,17 @@
           "bold": false,
           "font_size": 9
         },
-        "text": "Monocytes"
+        "text": "Monocytes",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Monocytes",
       "style": {
         "bold": false,
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_11_value",
@@ -1943,14 +2279,18 @@
           "align": "center",
           "color": "#000000",
           "font_size": 9
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "results.monocytes",
       "style": {
         "align": "center",
         "color": "#000000",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_11_unit",
@@ -1966,12 +2306,16 @@
         "style": {
           "font_size": 9
         },
-        "text": "%"
+        "text": "%",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "%",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_11_range",
@@ -1987,12 +2331,16 @@
         "style": {
           "font_size": 9
         },
-        "text": "3 - 9"
+        "text": "3 - 9",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "3 - 9",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_11_flag",
@@ -2010,13 +2358,17 @@
           "color": "#000000",
           "font_size": 9
         },
-        "text": ""
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
         "bold": false,
         "color": "#000000",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_12_test",
@@ -2033,13 +2385,17 @@
           "bold": false,
           "font_size": 9
         },
-        "text": "Basophils"
+        "text": "Basophils",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Basophils",
       "style": {
         "bold": false,
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_12_value",
@@ -2057,14 +2413,18 @@
           "align": "center",
           "color": "#000000",
           "font_size": 9
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "results.basophils",
       "style": {
         "align": "center",
         "color": "#000000",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_12_unit",
@@ -2080,12 +2440,16 @@
         "style": {
           "font_size": 9
         },
-        "text": "%"
+        "text": "%",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "%",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_12_range",
@@ -2101,12 +2465,16 @@
         "style": {
           "font_size": 9
         },
-        "text": "0 - 0.5"
+        "text": "0 - 0.5",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "0 - 0.5",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_12_flag",
@@ -2124,13 +2492,17 @@
           "color": "#000000",
           "font_size": 9
         },
-        "text": ""
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
         "bold": false,
         "color": "#000000",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_13_test",
@@ -2147,13 +2519,17 @@
           "bold": false,
           "font_size": 9
         },
-        "text": "Total (%)"
+        "text": "Total (%)",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Total (%)",
       "style": {
         "bold": false,
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_13_value",
@@ -2171,14 +2547,18 @@
           "align": "center",
           "color": "#000000",
           "font_size": 9
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "results.total",
       "style": {
         "align": "center",
         "color": "#000000",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_13_unit",
@@ -2194,11 +2574,15 @@
         "style": {
           "font_size": 9
         },
-        "text": ""
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_13_range",
@@ -2214,11 +2598,15 @@
         "style": {
           "font_size": 9
         },
-        "text": ""
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_13_flag",
@@ -2236,13 +2624,17 @@
           "color": "#000000",
           "font_size": 9
         },
-        "text": ""
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
         "bold": false,
         "color": "#000000",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_14_test",
@@ -2259,13 +2651,17 @@
           "bold": false,
           "font_size": 9
         },
-        "text": "Platelet Count"
+        "text": "Platelet Count",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Platelet Count",
       "style": {
         "bold": false,
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_14_value",
@@ -2283,14 +2679,18 @@
           "align": "center",
           "color": "#000000",
           "font_size": 9
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "results.platelet",
       "style": {
         "align": "center",
         "color": "#000000",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_14_unit",
@@ -2306,12 +2706,16 @@
         "style": {
           "font_size": 9
         },
-        "text": "x10^9/L"
+        "text": "x10^9/L",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "x10^9/L",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_14_range",
@@ -2327,12 +2731,16 @@
         "style": {
           "font_size": 9
         },
-        "text": "150 - 450"
+        "text": "150 - 450",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "150 - 450",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_14_flag",
@@ -2350,13 +2758,17 @@
           "color": "#000000",
           "font_size": 9
         },
-        "text": ""
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
         "bold": false,
         "color": "#000000",
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "performed_name",
@@ -2374,14 +2786,18 @@
           "bold": true,
           "font_size": 7
         },
-        "text": "Cerebro Diagnostic System"
+        "text": "Cerebro Diagnostic System",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Cerebro Diagnostic System",
       "style": {
         "align": "center",
         "bold": true,
         "font_size": 7
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "performed_line",
@@ -2396,11 +2812,15 @@
         "page_id": "page_1",
         "style": {
           "stroke_width": 1
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
         "stroke_width": 1
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "validator",
@@ -2418,14 +2838,18 @@
           "bold": true,
           "font_size": 7
         },
-        "text": "Dummy LAB_ENCODER"
+        "text": "Dummy LAB_ENCODER",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Dummy LAB_ENCODER",
       "style": {
         "align": "center",
         "bold": true,
         "font_size": 7
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "validated_line",
@@ -2440,11 +2864,15 @@
         "page_id": "page_1",
         "style": {
           "stroke_width": 1
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
         "stroke_width": 1
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "pathologist",
@@ -2462,14 +2890,18 @@
           "bold": true,
           "font_size": 7
         },
-        "text": "MARY ANN R. TORREGOSA, M.D."
+        "text": "MARY ANN R. TORREGOSA, M.D.",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "MARY ANN R. TORREGOSA, M.D.",
       "style": {
         "align": "center",
         "bold": true,
         "font_size": 7
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "pathologist_line",
@@ -2484,11 +2916,15 @@
         "page_id": "page_1",
         "style": {
           "stroke_width": 1
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
         "stroke_width": 1
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "page_count",
@@ -2505,52 +2941,26 @@
           "bold": true,
           "font_size": 9
         },
-        "text": "1 of 1"
+        "text": "1 of 1",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "1 of 1",
       "style": {
         "bold": true,
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     }
   ],
-  "data": {
-    "sample": {
-      "patient": {
-        "name": "dhab W. cabrera",
-        "age": "1",
-        "dob": "09/18/2024",
-        "sex": "FEMALE",
-        "physician": "",
-        "clinical_diagnosis": ""
-      },
-      "order": {
-        "id": "ORDER-1001",
-        "source": "OPD",
-        "room_no": "",
-        "received": "06/29/2026, 11:04:55 AM",
-        "checked_in": "06/29/2026, 11:04:59 AM",
-        "released": "06/29/2026, 11:05:43 AM",
-        "printed": "07/05/2026, 06:45:49 PM"
-      },
-      "results": {
-        "wbc": "50",
-        "rbc": "5",
-        "hgb": "5",
-        "hct": "5",
-        "mcv": "",
-        "mch": "",
-        "mchc": "",
-        "rdw": "",
-        "neutrophils": "",
-        "lymphocytes": "",
-        "monocytes": "",
-        "basophils": "",
-        "total": "",
-        "platelet": ""
-      }
+  "bands": [
+    {
+      "id": "detail",
+      "type": "detail",
+      "height": 842.0,
+      "properties": {}
     }
-  },
-  "bands": [],
+  ],
   "assets": []
 }

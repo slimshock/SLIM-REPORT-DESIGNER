@@ -31,6 +31,19 @@ def test_resolve_expression_supports_nested_dictionaries() -> None:
     assert resolve_expression("{{ result.HGB }}", data) == 13.7
 
 
+def test_resolve_expression_supports_array_path_segments() -> None:
+    data = {
+        "results": [
+            {"test": "WBC", "value": "7.1"},
+            {"test": "HGB", "value": "13.2"},
+        ]
+    }
+
+    assert resolve_expression("results[0].test", data) == "WBC"
+    assert resolve_expression("results[].value", data) == "7.1"
+    assert resolve_expression("results[1].value", data) == "13.2"
+
+
 def test_resolve_expression_supports_object_attributes() -> None:
     data = {"patient": Patient(name="Juan Dela Cruz")}
 
@@ -107,4 +120,3 @@ def test_data_provider_registry_validates_provider_registration() -> None:
 
     with pytest.raises(ReportValidationError):
         registry.resolve("missing")
-

@@ -442,7 +442,35 @@ def _id_set(items: Iterable[Any]) -> set[str]:
 
 
 def _is_safe_path_part(part: str) -> bool:
-    return bool(part) and not part.startswith("_") and part.replace("_", "").isalnum()
+    name, valid = _split_path_part(part)
+    return valid and (bool(name) or "[" in part)
+
+
+def _split_path_part(part: str) -> tuple[str, bool]:
+    if not part:
+        return "", False
+    name = ""
+    seen_index = False
+    cursor = 0
+    while cursor < len(part):
+        char = part[cursor]
+        if char == "[":
+            seen_index = True
+            close = part.find("]", cursor + 1)
+            if close == -1:
+                return "", False
+            raw_index = part[cursor + 1:close]
+            if raw_index and not raw_index.isdigit():
+                return "", False
+            cursor = close + 1
+            continue
+        if seen_index:
+            return "", False
+        name += char
+        cursor += 1
+    if name and (name.startswith("_") or not name.replace("_", "").isalnum()):
+        return "", False
+    return name, True
 
 
 def _has_text(value: Any) -> bool:

@@ -17,7 +17,7 @@ for package_src in (
     if str(package_src) not in sys.path:
         sys.path.insert(0, str(package_src))
 
-from slim_report_core import Report  # noqa: E402
+from slim_report_core import Band, Report  # noqa: E402
 from slim_report_core.serialization import JSONSerializer  # noqa: E402
 from slim_report_flask import SlimReportDesigner  # noqa: E402
 
@@ -89,6 +89,39 @@ def cerebro_cbc(record_id: str) -> dict[str, dict[str, str]]:
     }
 
 
+@designer.provider("repeating_lab_result")
+def repeating_lab_result(record_id: str) -> dict[str, object]:
+    return {
+        "laboratory": {
+            "name": "Cerebro Diagnostic System",
+            "address": "Cagayan de Oro City, Philippines",
+        },
+        "patient": {
+            "name": "JUAN DELA CRUZ",
+            "patient_no": "P-00001234",
+            "age": "34",
+            "sex": "Male",
+            "dob": "1992-04-18",
+        },
+        "order": {
+            "id": record_id,
+            "date": "2026-07-06",
+            "physician": "Dr. Maria Santos",
+            "section": "Hematology",
+        },
+        "results": [
+            {"test": "WBC", "result": "7.10", "value": "7.10", "unit": "10^9/L", "reference": "4.00 - 10.00", "flag": "N"},
+            {"test": "RBC", "result": "5.02", "value": "5.02", "unit": "10^12/L", "reference": "4.50 - 5.90", "flag": "N"},
+            {"test": "HGB", "result": "14.20", "value": "14.20", "unit": "g/dL", "reference": "13.00 - 17.00", "flag": "N"},
+            {"test": "HCT", "result": "42.80", "value": "42.80", "unit": "%", "reference": "40.00 - 50.00", "flag": "N"},
+            {"test": "MCV", "result": "85.30", "value": "85.30", "unit": "fL", "reference": "80.00 - 100.00", "flag": "N"},
+            {"test": "MCH", "result": "28.30", "value": "28.30", "unit": "pg", "reference": "27.00 - 32.00", "flag": "N"},
+            {"test": "MCHC", "result": "33.20", "value": "33.20", "unit": "g/dL", "reference": "32.00 - 36.00", "flag": "N"},
+            {"test": "PLT", "result": "265", "value": "265", "unit": "10^9/L", "reference": "150 - 400", "flag": "N"},
+        ],
+    }
+
+
 @app.get("/")
 def index():
     return redirect("/report-designer/templates/lab_result/preview/ORDER-1001")
@@ -119,6 +152,7 @@ def direct_template_export_pdf(template_id: str, record_id: str) -> Response:
 def ensure_sample_templates() -> None:
     ensure_report_template("lab_result", create_lab_result_report)
     ensure_report_template("cerebro_cbc", create_cerebro_cbc_report)
+    ensure_report_template("repeating_lab_result", create_repeating_lab_result_report)
 
 
 def ensure_sample_template() -> None:
@@ -372,6 +406,79 @@ def create_cerebro_cbc_report() -> Report:
     return report
 
 
+def create_repeating_lab_result_report() -> Report:
+    report = Report("Repeating Laboratory Result")
+    report.metadata(
+        description="Laboratory result template with repeating detail rows.",
+        author="Slim Report Designer",
+        tags=["demo", "lab", "repeat"],
+        id="repeating_lab_result",
+        provider="repeating_lab_result",
+    )
+    page = report.page()
+    page.width = 595
+    page.height = 842
+    page.unit = "px"
+    report.bands = [
+        Band.from_dict({
+            "id": "page_header",
+            "type": "page_header",
+            "name": "Page Header",
+            "y": 0,
+            "height": 120,
+        }),
+        Band.from_dict({
+            "id": "detail",
+            "type": "detail",
+            "name": "Detail",
+            "y": 120,
+            "height": 660,
+            "repeat": {
+                "enabled": True,
+                "data_path": "results",
+                "row_height": 24,
+                "preview_rows": 10,
+                "empty_message": "No results",
+            },
+        }),
+        Band.from_dict({
+            "id": "page_footer",
+            "type": "page_footer",
+            "name": "Page Footer",
+            "y": 780,
+            "height": 62,
+        }),
+    ]
+    page.text("LABORATORY RESULT", x=40, y=30, width=280, height=28, id="title", font_size=20, bold=True, band="page_header")
+    page.field("patient.name", x=40, y=72, width=220, height=18, id="patient_name", font_size=12, bold=True, band="page_header")
+    page.field("order.id", x=360, y=72, width=160, height=18, id="order_id", font_size=12, band="page_header")
+    page.text("TEST", x=42, y=126, width=160, height=18, id="test_header", font_size=11, bold=True, band="detail")
+    page.text("VALUE", x=220, y=126, width=90, height=18, id="value_header", font_size=11, bold=True, band="detail")
+    page.text("UNIT", x=330, y=126, width=90, height=18, id="unit_header", font_size=11, bold=True, band="detail")
+    page.text("FLAG", x=450, y=126, width=70, height=18, id="flag_header", font_size=11, bold=True, band="detail")
+    page.field("test", x=42, y=152, width=160, height=18, id="row_test", font_size=11, band="detail")
+    page.field("value", x=220, y=152, width=90, height=18, id="row_value", font_size=11, band="detail")
+    page.field("unit", x=330, y=152, width=90, height=18, id="row_unit", font_size=11, band="detail")
+    page.field("flag", x=450, y=152, width=70, height=18, id="row_flag", font_size=11, band="detail")
+    page.line(x=40, y=174, width=480, id="row_rule", stroke_width=1, band="detail")
+    page.text("Generated by Slim Report Designer", x=40, y=802, width=240, height=16, id="footer", font_size=10, band="page_footer")
+    for obj in report.objects:
+        if obj.id in {"title", "patient_name", "order_id"}:
+            obj.band_id = "page_header"
+            obj.properties["band"] = "page_header"
+            obj.properties["band_id"] = "page_header"
+        elif obj.id == "footer":
+            obj.band_id = "page_footer"
+            obj.properties["band"] = "page_footer"
+            obj.properties["band_id"] = "page_footer"
+        else:
+            obj.band_id = "detail"
+            obj.properties["band"] = "detail"
+            obj.properties["band_id"] = "detail"
+    report.data = {"sample": repeating_lab_result("ORDER-1001")}
+    return report
+
+
 def add_label_field(
     page: object,
     label: str,
@@ -447,4 +554,4 @@ def add_result_row(
 
 if __name__ == "__main__":
     ensure_sample_templates()
-    app.run(debug=True)
+    app.run(debug=True, use_reloader=False)

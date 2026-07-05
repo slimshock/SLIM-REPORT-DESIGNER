@@ -1,6 +1,6 @@
 import { clampObjectToBand, getBandForObject, objectStyle } from "./objects.js";
 import { gridSizeForUnit, maybeSnap, screenDeltaToRealDelta } from "./canvas_settings.js";
-import { getFieldValue } from "./data_fields.js";
+import { getArrayByPath, getFieldValue, getRowValue } from "./data_fields.js";
 
 export function createCanvasController({
   canvas,
@@ -311,13 +311,21 @@ export function renderCanvas(
   canvas.innerHTML = "";
 
   for (const band of template.bands || []) {
-    canvas.appendChild(renderBand(band, page.unit, activeBandId));
+    canvas.appendChild(renderBand(band, page.unit, activeBandId, settings));
   }
+  const repeat = activeRepeat(template);
+  const repeatRows = repeat ? getArrayByPath(template.data?.sample || {}, repeat.data_path) : [];
   for (const object of template.objects || []) {
+    const objectRepeat = repeat && objectBandId(object) === "detail";
     canvas.appendChild(renderObject(object, selectedIds, primarySelectedId, page.unit, {
       sampleData: template.data?.sample || {},
-      showSampleData: Boolean(settings.show_sample_data)
+      showSampleData: Boolean(settings.show_sample_data),
+      rowData: objectRepeat ? repeatRows[0] : null,
+      repeatDataPath: objectRepeat ? repeat.data_path : ""
     }));
+  }
+  if (repeat && settings.show_sample_data && settings.show_repeated_rows) {
+    renderRepeatedPreviewCopies(canvas, template, selectedIds, primarySelectedId, page.unit, repeat, repeatRows);
   }
   if (selectedIds.length > 1) {
     const selectedObjects = (template.objects || []).filter((object) => selectedIds.includes(object.id));
@@ -334,7 +342,7 @@ export function renderCanvas(
   }
 }
 
-function renderBand(band, unit = "px", activeBandId = "detail") {
+function renderBand(band, unit = "px", activeBandId = "detail", settings = {}) {
   const element = document.createElement("div");
   element.className = "report-band";
   if (band.id === activeBandId) {
@@ -354,6 +362,10 @@ function renderBand(band, unit = "px", activeBandId = "detail") {
   const label = document.createElement("span");
   label.className = "report-band-label";
   label.textContent = `${band.name || band.id}${band.locked ? " · Locked" : ""}`;
+  const repeatText = band.id === "detail" && band.repeat?.enabled && settings.show_repeated_rows
+    ? ` - Repeating Detail: ${band.repeat.data_path || "missing data path"}`
+    : "";
+  label.textContent = `${band.name || band.id}${band.locked ? " - Locked" : ""}${repeatText}`;
   element.appendChild(label);
   return element;
 }
@@ -362,18 +374,23 @@ function renderObject(object, selectedIds = [], primarySelectedId = null, unit =
   const element = document.createElement("div");
 
   element.className = "report-object";
+  if (options.previewCopy) {
+    element.classList.add("repeat-preview-copy");
+  }
 
-  if (selectedIds.includes(object.id)) {
+  if (!options.previewCopy && selectedIds.includes(object.id)) {
     element.classList.add("selected");
   }
-  if (object.id === primarySelectedId) {
+  if (!options.previewCopy && object.id === primarySelectedId) {
     element.classList.add("primary-selected");
   }
   if (object.locked) {
     element.classList.add("locked");
   }
 
-  element.dataset.objectId = object.id;
+  if (!options.previewCopy) {
+    element.dataset.objectId = object.id;
+  }
   element.dataset.type = object.type;
 
   element.style.left = `${unitToPx(Number(object.x) || 0, unit)}px`;
@@ -400,7 +417,11 @@ function renderObject(object, selectedIds = [], primarySelectedId = null, unit =
     element.textContent = object.text || object.properties?.text || "Text";
   } else if (object.type === "field") {
     const binding = object.binding || object.properties?.binding || "";
-    const sampleValue = options.showSampleData ? getFieldValue(options.sampleData, binding) : undefined;
+    const sampleValue = options.showSampleData
+      ? options.rowData
+        ? repeatedFieldValue(options.rowData, binding, options.repeatDataPath, options.sampleData)
+        : getFieldValue(options.sampleData, binding)
+      : undefined;
     if (options.showSampleData && sampleValue !== undefined && sampleValue !== null && sampleValue !== "") {
       element.textContent = String(sampleValue);
     } else {
@@ -451,13 +472,69 @@ function renderObject(object, selectedIds = [], primarySelectedId = null, unit =
     element.appendChild(lock);
   }
 
-  if (object.id === primarySelectedId && !object.locked) {
+  if (!options.previewCopy && object.id === primarySelectedId && !object.locked) {
     const handle = document.createElement("div");
     handle.className = "resize-handle";
     element.appendChild(handle);
   }
 
   return element;
+}
+
+function repeatedFieldValue(rowData, binding, repeatDataPath, sampleData) {
+  const rowValue = getRowValue(rowData, binding, repeatDataPath);
+  if (rowValue !== "") {
+    return rowValue;
+  }
+  return getFieldValue(sampleData, binding);
+}
+
+function renderRepeatedPreviewCopies(canvas, template, selectedIds, primarySelectedId, unit, repeat, rows) {
+  const objects = (template.objects || []).filter((object) => objectBandId(object) === "detail");
+  const rowHeight = Number(repeat.row_height) || 22;
+  const count = Math.min(rows.length, Number(repeat.preview_rows) || 10);
+  if (count === 0) {
+    canvas.appendChild(emptyRepeatMessage(template, repeat, unit));
+    return;
+  }
+  for (let rowIndex = 1; rowIndex < count; rowIndex += 1) {
+    for (const object of objects) {
+      const copy = {
+        ...object,
+        id: `${object.id}__repeat_${rowIndex}`,
+        y: (Number(object.y) || 0) + (rowIndex * rowHeight)
+      };
+      canvas.appendChild(renderObject(copy, selectedIds, primarySelectedId, unit, {
+        previewCopy: true,
+        sampleData: template.data?.sample || {},
+        showSampleData: true,
+        rowData: rows[rowIndex],
+        repeatDataPath: repeat.data_path
+      }));
+    }
+  }
+}
+
+function emptyRepeatMessage(template, repeat, unit) {
+  const band = (template.bands || []).find((item) => item.id === "detail") || {};
+  const element = document.createElement("div");
+  element.className = "repeat-empty-message";
+  element.style.left = "12px";
+  element.style.top = `${unitToPx((Number(band.y) || 0) + 8, unit)}px`;
+  element.textContent = repeat.empty_message || "No records";
+  return element;
+}
+
+function activeRepeat(template) {
+  const detail = (template.bands || []).find((band) => band.id === "detail");
+  if (!detail?.repeat?.enabled || !detail.repeat.data_path) {
+    return null;
+  }
+  return detail.repeat;
+}
+
+function objectBandId(object) {
+  return object?.band || object?.band_id || object?.properties?.band || "detail";
 }
 
 function objectBounds(objects, unit = "px") {

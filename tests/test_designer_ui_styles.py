@@ -111,6 +111,8 @@ import {
   fieldExists,
   flattenDataPaths,
   getFieldValue,
+  getArrayByPath,
+  getRowValue,
   inferFieldsFromSample,
   normalizeFieldPath
 } from '__MODULE_PATH__';
@@ -123,9 +125,12 @@ const sample = {
 
 const paths = flattenDataPaths(sample);
 for (const path of ['patient.name', 'patient.age', 'order.id', 'results[0].name', 'results[].value']) {
-  if (!paths.includes(path)) {
+if (!paths.includes(path)) {
     throw new Error(`missing path ${path}`);
   }
+}
+if (!paths.includes('results[]')) {
+  throw new Error('array root path missing');
 }
 
 const fields = inferFieldsFromSample(sample);
@@ -134,6 +139,12 @@ if (!fields.some((field) => field.path === 'patient.name' && field.sample === 'J
 }
 if (getFieldValue(sample, 'results[].value') !== '13.2') {
   throw new Error('array field lookup failed');
+}
+if (getArrayByPath(sample, 'results').length !== 1) {
+  throw new Error('array path lookup failed');
+}
+if (getRowValue(sample.results[0], 'results[].value', 'results') !== '13.2') {
+  throw new Error('row value lookup failed');
 }
 if (getFieldValue(sample, 'patient.missing') !== undefined) {
   throw new Error('missing path should be undefined');
@@ -145,6 +156,76 @@ if (!fieldExists({ data: { fields } }, 'patient.name')) {
   throw new Error('field existence check failed');
 }
 """.replace("__MODULE_PATH__", module_path)
+
+    result = subprocess.run(
+        ["node", "--input-type=module", "-e", script],
+        cwd=Path(__file__).resolve().parents[1],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
+def test_designer_normalization_and_save_preserve_template_data() -> None:
+    objects_module_path = (
+        "./packages/slim_report_designer_ui/"
+        "slim_report_designer_ui/static/js/objects.js"
+    )
+    api_module_path = (
+        "./packages/slim_report_designer_ui/"
+        "slim_report_designer_ui/static/js/api.js"
+    )
+    script = """
+import { normalizeTemplate } from '__OBJECTS_MODULE_PATH__';
+import { previewTemplate, saveTemplate } from '__API_MODULE_PATH__';
+
+const template = normalizeTemplate({
+  version: '0.1',
+  metadata: { name: 'Repeating' },
+  page: { width: 595, height: 842, unit: 'px' },
+  bands: [{ id: 'detail', type: 'detail', repeat: { enabled: true, data_path: 'results', row_height: 24 } }],
+  objects: [{ id: 'result_test', type: 'field', binding: 'test', band: 'detail' }],
+  data: { sample: { results: [{ test: 'WBC', result: '7.10' }] } },
+  assets: []
+});
+
+if (!template.data.sample.results || !template.data.fields.some((field) => field.path === 'results[].test')) {
+  throw new Error('normalizeTemplate did not preserve or infer data metadata');
+}
+
+global.window = {
+  SLIM_REPORT_API_BASE: '/report-designer/api',
+  SLIM_REPORT_TEMPLATE_ID: 'repeating_lab_result',
+  location: { search: '?template=repeating_lab_result' },
+  open: () => {}
+};
+global.URL = { createObjectURL: () => 'blob:preview', revokeObjectURL: () => {} };
+
+let savedBody = null;
+global.fetch = async (_url, options) => {
+  savedBody = JSON.parse(options.body);
+  return { ok: true, json: async () => ({ ok: true }) };
+};
+const saved = await saveTemplate(template);
+if (!saved.data.sample.results || saved.data.fields.length === 0) {
+  throw new Error('saveTemplate replaced current template with partial response');
+}
+if (!savedBody.data.sample.results) {
+  throw new Error('saveTemplate did not post data metadata');
+}
+
+let previewBody = null;
+global.fetch = async (_url, options) => {
+  previewBody = JSON.parse(options.body);
+  return { ok: true, text: async () => '<!doctype html>' };
+};
+await previewTemplate(template);
+if (!previewBody.template.data.sample.results || previewBody.data.results[0].test !== 'WBC') {
+  throw new Error('previewTemplate did not post full template and render data');
+}
+""".replace("__OBJECTS_MODULE_PATH__", objects_module_path).replace("__API_MODULE_PATH__", api_module_path)
 
     result = subprocess.run(
         ["node", "--input-type=module", "-e", script],

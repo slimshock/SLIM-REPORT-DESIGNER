@@ -26,11 +26,15 @@ export function inferFieldsFromSample(sampleData) {
 }
 
 export function getFieldValue(sampleData, path) {
+  return getValueByPath(sampleData, path);
+}
+
+export function getValueByPath(data, path) {
   const normalized = normalizeFieldPath(path);
   if (!normalized) {
     return undefined;
   }
-  let value = sampleData;
+  let value = data;
   for (const token of pathTokens(normalized)) {
     if (value === undefined || value === null) {
       return undefined;
@@ -45,6 +49,36 @@ export function getFieldValue(sampleData, path) {
     }
   }
   return value;
+}
+
+export function getArrayByPath(data, path) {
+  const value = getValueByPath(data, normalizeArrayFieldPath(path));
+  return Array.isArray(value) ? value : [];
+}
+
+export function getRowValue(row, binding, repeatDataPath = "") {
+  const normalized = normalizeFieldPath(binding);
+  if (!normalized) {
+    return "";
+  }
+  const repeatPath = normalizeArrayFieldPath(repeatDataPath);
+  let rowPath = normalized;
+  const arrayPrefix = repeatPath ? `${repeatPath}[]` : "";
+  if (arrayPrefix && normalized.startsWith(`${arrayPrefix}.`)) {
+    rowPath = normalized.slice(arrayPrefix.length + 1);
+  } else if (repeatPath && normalized.startsWith(`${repeatPath}[].`)) {
+    rowPath = normalized.slice(`${repeatPath}[].`.length);
+  }
+  const value = getValueByPath(row, rowPath);
+  return value === undefined || value === null ? "" : value;
+}
+
+export function normalizeArrayFieldPath(path) {
+  return normalizeFieldPath(path).replace(/\[(?:\d+)?\]/g, "");
+}
+
+export function isArrayFieldPath(path) {
+  return /\[(?:\d*)\]/.test(normalizeFieldPath(path));
 }
 
 export function fieldExists(template, path) {
@@ -67,6 +101,28 @@ export function getTemplateFields(template) {
     return inferFieldsFromSample(data.sample);
   }
   return [];
+}
+
+export function ensureTemplateData(template, existingData = null) {
+  if (!template || typeof template !== "object") {
+    return template;
+  }
+  const current = normalizeDataMetadata(template.data);
+  const fallback = normalizeDataMetadata(existingData);
+  const data = current || fallback || {};
+
+  if (!data.sample && fallback?.sample) {
+    data.sample = structuredClone(fallback.sample);
+  }
+  if (!Array.isArray(data.fields) && Array.isArray(fallback?.fields)) {
+    data.fields = structuredClone(fallback.fields);
+  }
+  if (!Array.isArray(data.fields) && data.sample && typeof data.sample === "object") {
+    data.fields = inferFieldsFromSample(data.sample);
+  }
+
+  template.data = data;
+  return template;
 }
 
 export function normalizeDataMetadata(data) {
@@ -101,8 +157,8 @@ function walkValue(value, prefix, paths) {
       value.slice(0, 1).forEach((item) => walkValue(item, "", paths));
       return;
     }
+    paths.push(`${prefix}[]`);
     if (value.length === 0) {
-      paths.push(`${prefix}[]`);
       return;
     }
     const first = value[0];

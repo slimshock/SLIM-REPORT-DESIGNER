@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 from flask import Blueprint, Response, jsonify, request, url_for
 
 from slim_report_core import ExporterError, Report, SlimReportError, create_default_template
-from slim_report_core.rendering.context import RenderContext, create_render_context
+from slim_report_core.rendering.context import RenderContext, create_render_context, get_array_by_path
 from slim_report_core.serialization import JSONSerializer
 from slim_report_designer_ui import static_file
 
@@ -126,7 +126,7 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         return Response(
             report.render_html(data),
             mimetype="text/html",
-            headers=render_debug_headers(context),
+            headers=render_debug_headers(context, data),
         )
 
     @blueprint.post("/api/export/pdf")
@@ -141,7 +141,7 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
             mimetype="application/pdf",
             headers={
                 "Content-Disposition": 'attachment; filename="report-template.pdf"',
-                **render_debug_headers(context),
+                **render_debug_headers(context, data),
             },
         )
 
@@ -199,13 +199,26 @@ def validate_api_report(report: Report) -> RenderContext:
     return context
 
 
-def render_debug_headers(context: RenderContext) -> dict[str, str]:
+def render_debug_headers(context: RenderContext, data: Any | None = None) -> dict[str, str]:
     """Return lightweight debug headers for preview/export fidelity checks."""
+    repeat = next(
+        (
+            band.repeat
+            for band in context.bands
+            if band.id == "detail" and band.repeat.get("enabled") and band.repeat.get("data_path")
+        ),
+        {},
+    )
+    repeat_data_path = str(repeat.get("data_path", ""))
+    repeat_rows = get_array_by_path(data or {}, repeat_data_path) if repeat_data_path else []
     return {
         "X-Slim-Report-Object-Count": str(len(context.objects)),
         "X-Slim-Report-Page-Unit": context.page.unit,
         "X-Slim-Report-Page-Width": str(context.page.width_px),
         "X-Slim-Report-Page-Height": str(context.page.height_px),
+        "X-Slim-Report-Has-Data-Sample": "true" if isinstance(data, dict) and bool(data) else "false",
+        "X-Slim-Report-Repeat-Data-Path": repeat_data_path,
+        "X-Slim-Report-Repeat-Row-Count": str(len(repeat_rows)),
     }
 
 
@@ -228,12 +241,9 @@ def request_template_data(
     """Return optional render data from the current JSON request."""
     if payload is None:
         payload = request.get_json(silent=True)
-    if (
-        isinstance(payload, dict)
-        and isinstance(payload.get("template"), dict)
-        and isinstance(payload.get("data"), dict)
-    ):
-        return payload["data"]
+    if isinstance(payload, dict) and isinstance(payload.get("template"), dict):
+        if isinstance(payload.get("data"), dict):
+            return payload["data"]
     data_metadata = template.get("data") if isinstance(template, dict) else None
     if isinstance(data_metadata, dict) and isinstance(data_metadata.get("sample"), dict):
         return data_metadata["sample"]

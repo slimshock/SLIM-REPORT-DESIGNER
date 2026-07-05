@@ -1,9 +1,10 @@
 import { icon } from "./icons.js";
-import { fieldExists, getFieldValue, normalizeFieldPath } from "./data_fields.js";
+import { fieldExists, getFieldValue, getRowValue, normalizeArrayFieldPath, normalizeFieldPath } from "./data_fields.js";
 import {
   objectStyle,
   getBandById,
   setBandValue,
+  setBandRepeatValue,
   setObjectAlt,
   setObjectBand,
   setObjectBinding,
@@ -128,7 +129,7 @@ export function renderInspector(
     return;
   }
   if (!object) {
-    form.appendChild(renderPageInspector(template, activeBandId));
+    form.appendChild(renderPageInspector(template, activeBandId, fields));
     return;
   }
 
@@ -258,7 +259,7 @@ function commandGrid(commands) {
   return row;
 }
 
-function renderPageInspector(template, activeBandId = "detail") {
+function renderPageInspector(template, activeBandId = "detail", fields = []) {
   const page = template.page || {};
   const fragment = document.createDocumentFragment();
   fragment.appendChild(section("Page Properties", [
@@ -300,13 +301,14 @@ function renderPageInspector(template, activeBandId = "detail") {
       name: "page.transparent"
     })
   ]));
-  fragment.appendChild(renderBandInspector(template, activeBandId));
+  fragment.appendChild(renderBandInspector(template, activeBandId, fields));
   return fragment;
 }
 
-function renderBandInspector(template, activeBandId = "detail") {
+function renderBandInspector(template, activeBandId = "detail", fields = []) {
   const band = getBandById(template, activeBandId) || template.bands?.[0] || {};
-  return section("Band Properties", [
+  const fragment = document.createDocumentFragment();
+  fragment.appendChild(section("Band Properties", [
     fieldRow("active band", band.id || activeBandId, {
       type: "select",
       name: "active_band",
@@ -329,7 +331,11 @@ function renderBandInspector(template, activeBandId = "detail") {
       type: "checkbox",
       name: "band.locked"
     })
-  ]);
+  ]));
+  if (band.id === "detail") {
+    fragment.appendChild(section("Repeating Detail", repeatFields(band, fields)));
+  }
+  return fragment;
 }
 
 function textStyleFields(object) {
@@ -357,12 +363,14 @@ function textStyleFields(object) {
 
 function fieldContentFields(object, template, fields, sampleData) {
   const binding = normalizeFieldPath(object.binding || object.properties?.binding || "");
+  const repeat = repeatForObject(template, object);
+  const row = repeat?.array?.[0] || {};
   const rows = [
     fieldRow("binding", binding),
     fieldPickerRow(binding, fields),
     commandGrid([["chooseField", "Choose Field"]])
   ];
-  const sampleValue = getFieldValue(sampleData, binding);
+  const sampleValue = repeat ? getRowValue(row, binding, repeat.dataPath) : getFieldValue(sampleData, binding);
   const sample = document.createElement("p");
   sample.className = "field-sample-preview";
   sample.textContent = `Sample: ${
@@ -371,13 +379,60 @@ function fieldContentFields(object, template, fields, sampleData) {
       : String(sampleValue)
   }`;
   rows.push(sample);
-  if (binding && !fieldExists(template, binding)) {
+  if (repeat) {
+    const note = document.createElement("p");
+    note.className = "field-sample-preview";
+    note.textContent = "This field is resolved per repeated row.";
+    rows.push(note);
+  }
+  if (binding && !fieldExists(template, binding) && (!repeat || getRowValue(row, binding, repeat.dataPath) === "")) {
     const warning = document.createElement("p");
     warning.className = "field-warning";
     warning.textContent = "Binding not found in available fields.";
     rows.push(warning);
   }
   return rows;
+}
+
+function repeatFields(band, fields) {
+  const repeat = band.repeat || {};
+  return [
+    fieldRow("repeat enabled", Boolean(repeat.enabled), {
+      type: "checkbox",
+      name: "band.repeat.enabled"
+    }),
+    fieldRow("data path", repeat.data_path || "", {
+      type: "select",
+      name: "band.repeat.data_path",
+      options: arrayPathOptions(fields, repeat.data_path)
+    }),
+    fieldRow("row height", repeat.row_height || 22, {
+      type: "number",
+      name: "band.repeat.row_height",
+      min: "8"
+    }),
+    fieldRow("preview rows", repeat.preview_rows || 10, {
+      type: "number",
+      name: "band.repeat.preview_rows",
+      min: "1",
+      max: "100"
+    }),
+    fieldRow("empty message", repeat.empty_message || "No records", {
+      name: "band.repeat.empty_message"
+    })
+  ];
+}
+
+function arrayPathOptions(fields, current = "") {
+  const paths = fields
+    .map((field) => String(field.path || ""))
+    .filter((path) => path.endsWith("[]"))
+    .map(normalizeArrayFieldPath);
+  const options = ["", ...new Set(paths)];
+  if (current && !options.includes(current)) {
+    options.push(current);
+  }
+  return options;
 }
 
 function fieldPickerRow(currentBinding, fields) {
@@ -448,6 +503,11 @@ function applyInput(template, object, input) {
 
 function applyPageInput(template, input, activeBandId = "detail") {
   const value = inputValue(input, input.type === "checkbox" ? input.checked : input.value);
+  if (input.name.startsWith("band.repeat.")) {
+    const key = input.name.slice("band.repeat.".length);
+    setBandRepeatValue(template, activeBandId, key, value);
+    return;
+  }
   if (input.name.startsWith("band.")) {
     setBandValue(template, activeBandId, input.name.slice("band.".length), value);
     return;
@@ -698,4 +758,17 @@ function bandOptions(template) {
     return ["detail"];
   }
   return bands.map((band) => band.id);
+}
+
+function repeatForObject(template, object) {
+  const band = getBandById(template, object.band || object.band_id || "detail");
+  const repeat = band?.id === "detail" && band.repeat?.enabled && band.repeat?.data_path ? band.repeat : null;
+  if (!repeat) {
+    return null;
+  }
+  const array = getFieldValue(template.data?.sample || {}, repeat.data_path);
+  return {
+    dataPath: repeat.data_path,
+    array: Array.isArray(array) ? array : []
+  };
 }

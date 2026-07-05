@@ -1,5 +1,5 @@
 import { createDefaultTemplate, normalizeTemplate, objectStyle } from "./objects.js";
-import { getFieldValue } from "./data_fields.js";
+import { ensureTemplateData, getArrayByPath, getFieldValue, getRowValue } from "./data_fields.js";
 
 export async function loadTemplate() {
   if (!apiBase()) {
@@ -31,7 +31,15 @@ export async function saveTemplate(template) {
   if (!response.ok) {
     throw new Error(await errorMessage(response, "Template save failed"));
   }
-  return normalizeTemplate(await response.json());
+  const payload = await response.json().catch(() => ({}));
+  const saved = templateFromSaveResponse(payload);
+  if (!saved) {
+    return normalized;
+  }
+  if (!hasTemplateData(saved) && hasTemplateData(normalized)) {
+    ensureTemplateData(saved, normalized.data);
+  }
+  return normalizeTemplate(saved);
 }
 
 export async function previewTemplate(template) {
@@ -42,7 +50,7 @@ export async function previewTemplate(template) {
   const response = await fetch(`${apiBase()}/preview`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(template)
+    body: JSON.stringify(templateRequestPayload(template))
   });
   if (!response.ok) {
     throw new Error(await errorMessage(response, "Preview failed"));
@@ -58,7 +66,7 @@ export async function exportPdf(template) {
   const response = await fetch(`${apiBase()}/export/pdf`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(template)
+    body: JSON.stringify(templateRequestPayload(template))
   });
   if (!response.ok) {
     throw new Error(await errorMessage(response, "PDF export failed"));
@@ -74,6 +82,43 @@ function apiBase() {
 function currentTemplateId() {
   const params = new URLSearchParams(window.location.search);
   return params.get("template") || window.SLIM_REPORT_TEMPLATE_ID || "";
+}
+
+function templateRequestPayload(template) {
+  const normalized = normalizeTemplate(template);
+  const payload = {
+    template_id: currentTemplateId() || normalized.metadata?.custom?.id || "",
+    template: normalized
+  };
+  if (normalized.data?.sample && typeof normalized.data.sample === "object") {
+    payload.data = normalized.data.sample;
+  }
+  return payload;
+}
+
+function templateFromSaveResponse(payload) {
+  if (isFullTemplate(payload)) {
+    return payload;
+  }
+  if (isFullTemplate(payload?.template)) {
+    return payload.template;
+  }
+  return null;
+}
+
+function isFullTemplate(value) {
+  return Boolean(
+    value
+      && typeof value === "object"
+      && value.metadata
+      && value.page
+      && Array.isArray(value.objects)
+      && Array.isArray(value.bands)
+  );
+}
+
+function hasTemplateData(template) {
+  return Boolean(template?.data?.sample || (Array.isArray(template?.data?.fields) && template.data.fields.length > 0));
 }
 
 function loadLocalTemplate() {
@@ -94,7 +139,7 @@ function openHtmlPreview(html) {
 function localPreviewHtml(template) {
   const page = template.page || {};
   const bands = (template.bands || []).map((band) => localBandHtml(band, page.unit)).join("\n");
-  const objects = (template.objects || []).map((object) => localObjectHtml(object, page.unit, template.data?.sample || {})).join("\n");
+  const objects = localObjectsHtml(template, page.unit);
   const background = page.transparent ? "#fff" : page.background_color || "#fff";
   return `<!doctype html>
 <html lang="en">
@@ -114,10 +159,37 @@ function localBandHtml(band, unit = "px") {
   return `<div style="position:absolute;box-sizing:border-box;left:0;top:${unitToPx(band.y, unit)}px;width:100%;height:${unitToPx(band.height, unit)}px;background:${escapeHtml(band.background_color)}"></div>`;
 }
 
-function localObjectHtml(object, unit = "px", sampleData = {}) {
+function localObjectsHtml(template, unit = "px") {
+  const sampleData = template.data?.sample || {};
+  const repeat = (template.bands || []).find((band) => band.id === "detail")?.repeat;
+  if (!repeat?.enabled || !repeat.data_path) {
+    return (template.objects || []).map((object) => localObjectHtml(object, unit, sampleData)).join("\n");
+  }
+  const rows = getArrayByPath(sampleData, repeat.data_path);
+  const rowHeight = Number(repeat.row_height) || 22;
+  const detailObjects = (template.objects || []).filter((object) => objectBandId(object) === "detail");
+  const outsideObjects = (template.objects || []).filter((object) => objectBandId(object) !== "detail");
+  const rendered = outsideObjects.map((object) => localObjectHtml(object, unit, sampleData));
+  if (rows.length === 0) {
+    rendered.push(localEmptyMessageHtml(template, repeat, unit));
+  }
+  rows.forEach((row, rowIndex) => {
+    for (const object of detailObjects) {
+      rendered.push(localObjectHtml({
+        ...object,
+        y: (Number(object.y) || 0) + (rowIndex * rowHeight)
+      }, unit, sampleData, row, repeat.data_path));
+    }
+  });
+  return rendered.join("\n");
+}
+
+function localObjectHtml(object, unit = "px", sampleData = {}, rowData = null, repeatDataPath = "") {
   const style = objectStyle(object);
   const fieldValue = object.type === "field"
-    ? getFieldValue(sampleData, object.binding || object.properties?.binding || "")
+    ? rowData
+      ? repeatedFieldValue(rowData, object.binding || object.properties?.binding || "", repeatDataPath, sampleData)
+      : getFieldValue(sampleData, object.binding || object.properties?.binding || "")
     : undefined;
   const value = object.type === "field"
     ? fieldValue === undefined || fieldValue === null ? `{{ ${object.binding || object.properties?.binding || ""} }}` : String(fieldValue)
@@ -140,6 +212,20 @@ function localObjectHtml(object, unit = "px", sampleData = {}) {
     return `<div style="${imageBox}"><img src="${escapeHtml(src)}" alt="${escapeHtml(object.alt || object.properties?.alt || "")}" style="width:100%;height:100%;object-fit:${style.object_fit || "contain"};display:block"></div>`;
   }
   return `<div style="${box}">${escapeHtml(value)}</div>`;
+}
+
+function repeatedFieldValue(rowData, binding, repeatDataPath, sampleData) {
+  const rowValue = getRowValue(rowData, binding, repeatDataPath);
+  if (rowValue !== "") {
+    return rowValue;
+  }
+  return getFieldValue(sampleData, binding);
+}
+
+function localEmptyMessageHtml(template, repeat, unit = "px") {
+  const detail = (template.bands || []).find((band) => band.id === "detail") || {};
+  const top = unitToPx((Number(detail.y) || 0) + 8, unit);
+  return `<div style="position:absolute;left:12px;top:${top}px;color:#64748b;font:700 12px Arial,sans-serif">${escapeHtml(repeat.empty_message || "No records")}</div>`;
 }
 
 function downloadBlob(blob, filename) {
@@ -203,4 +289,8 @@ function unitToPx(value, unit = "px") {
 
 function isTransparent(value) {
   return ["", "none", "transparent"].includes(String(value || "").trim().toLowerCase());
+}
+
+function objectBandId(object) {
+  return object?.band || object?.band_id || object?.properties?.band || "detail";
 }
