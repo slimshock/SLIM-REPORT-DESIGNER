@@ -22,19 +22,19 @@
       <div class="panel-title">Toolbox</div>
       <p class="panel-help">Click a tool to add it to the page.</p>
       <button class="tool-button" type="button" data-tool="text" title="Add text object">
-        <span class="tool-icon">T</span>
+        <span class="tool-icon" data-icon="text">T</span>
         <span>Text</span>
       </button>
       <button class="tool-button" type="button" data-tool="field" title="Add data field object">
-        <span class="tool-icon">{ }</span>
+        <span class="tool-icon" data-icon="field">{ }</span>
         <span>Field</span>
       </button>
       <button class="tool-button" type="button" data-tool="line" title="Add line object">
-        <span class="tool-icon">-</span>
+        <span class="tool-icon" data-icon="line">-</span>
         <span>Line</span>
       </button>
       <button class="tool-button" type="button" data-tool="rectangle" title="Add rectangle object">
-        <span class="tool-icon">[]</span>
+        <span class="tool-icon" data-icon="rectangle">[]</span>
         <span>Rectangle</span>
       </button>
     </aside>
@@ -58,6 +58,23 @@
       <span id="object-count">0 objects</span>
     </footer>
   </main>
+
+  <div id="history-modal" class="modal-backdrop" hidden>
+    <section class="history-modal" role="dialog" aria-modal="true" aria-labelledby="history-title">
+      <header class="history-header">
+        <div>
+          <h2 id="history-title">Version History</h2>
+          <p id="history-key" class="history-subtitle">Local versions</p>
+        </div>
+        <button id="history-close" class="modal-icon-button" type="button" title="Close version history" aria-label="Close version history"></button>
+      </header>
+      <div class="history-actions">
+        <button id="history-create" class="toolbar-button primary" type="button" title="Create manual version">Create Version</button>
+        <button id="history-clear" class="toolbar-button danger" type="button" title="Clear local version history">Clear History</button>
+      </div>
+      <div id="history-list" class="history-list"></div>
+    </section>
+  </div>
 
   <input id="import-file" type="file" accept="application/json,.json" hidden>
   <script type="module" src="./js/designer.js"></script>

@@ -41,13 +41,14 @@ export function normalizeTemplate(template) {
 }
 
 export function normalizeObject(object) {
+  const type = object.type || "text";
   const normalized = {
-    id: object.id || uniqueId(object.type || "object", []),
-    type: object.type || "text",
+    id: object.id || uniqueId(type, []),
+    type,
     x: numberValue(object.x, 40),
     y: numberValue(object.y, 40),
     width: numberValue(object.width, 160),
-    height: numberValue(object.height, object.type === "line" ? 0 : 32),
+    height: numberValue(object.height, type === "line" ? 0 : 32),
     properties: {
       ...(object.properties || {})
     }
@@ -61,16 +62,12 @@ export function normalizeObject(object) {
     normalized.binding = String(object.binding);
     normalized.properties.binding = normalized.binding;
   }
-  if (object.style || object.properties?.style) {
-    normalized.style = {
-      ...(object.properties?.style || {}),
-      ...(object.style || {})
-    };
-    normalized.properties.style = normalized.style;
-  }
-  if (!normalized.style) {
-    normalized.style = {};
-    normalized.properties.style = normalized.style;
+  const style = explicitStyle(object);
+  if (Object.keys(style).length > 0) {
+    normalized.style = style;
+    normalized.properties.style = style;
+  } else if (normalized.properties.style) {
+    delete normalized.properties.style;
   }
   return normalized;
 }
@@ -92,11 +89,11 @@ export function createObject(type, template) {
   if (type === "text") {
     base.text = "Text";
     base.properties.text = base.text;
-    base.properties.style = { font_size: 14, bold: false };
+    base.properties.style = { font_size: 14 };
   } else if (type === "field") {
     base.binding = "patient.name";
     base.properties.binding = base.binding;
-    base.properties.style = { font_size: 14, bold: false };
+    base.properties.style = { font_size: 14 };
   } else if (type === "line") {
     base.width = 220;
     base.height = 0;
@@ -119,10 +116,47 @@ export function duplicateObject(object, template) {
 }
 
 export function objectStyle(object) {
+  return {
+    ...defaultStyleForType(object?.type),
+    ...explicitStyle(object || {})
+  };
+}
+
+export function setObjectStyleValue(object, key, value) {
   object.properties = object.properties || {};
   object.properties.style = object.properties.style || {};
-  object.style = object.properties.style;
-  return object.properties.style;
+  object.properties.style[key] = value;
+  object.style = {
+    ...(object.style || {}),
+    [key]: value
+  };
+}
+
+export function defaultStyleForType(type) {
+  if (type === "rectangle") {
+    return {
+      border_width: 1,
+      border_color: "#111827",
+      background_color: "transparent"
+    };
+  }
+  if (type === "line") {
+    return {
+      stroke_width: 1,
+      stroke_color: "#111827"
+    };
+  }
+  return {
+    font_family: "Arial",
+    font_size: 12,
+    bold: false,
+    italic: false,
+    underline: false,
+    color: "#111827",
+    background_color: "transparent",
+    align: "left",
+    vertical_align: "top"
+  };
 }
 
 export function setObjectText(object, value) {
@@ -155,4 +189,45 @@ export function uniqueId(prefix, existingIds) {
 function numberValue(value, fallback) {
   const number = Number(value);
   return Number.isFinite(number) ? number : fallback;
+}
+
+function explicitStyle(object) {
+  const properties = object.properties || {};
+  const style = {
+    ...(properties.style || {}),
+    ...(object.style || {})
+  };
+
+  for (const key of [
+    "align",
+    "background_color",
+    "bold",
+    "border_color",
+    "border_width",
+    "color",
+    "fill_color",
+    "font_family",
+    "font_size",
+    "italic",
+    "line_width",
+    "stroke_color",
+    "stroke_width",
+    "underline",
+    "vertical_align"
+  ]) {
+    if (properties[key] !== undefined && style[key] === undefined) {
+      style[key] = properties[key];
+    }
+  }
+
+  if (style.fill_color !== undefined && style.background_color === undefined) {
+    style.background_color = style.fill_color;
+  }
+  if (style.line_width !== undefined && style.stroke_width === undefined) {
+    style.stroke_width = style.line_width;
+  }
+  if (style.border_color !== undefined && style.stroke_color === undefined && object.type === "line") {
+    style.stroke_color = style.border_color;
+  }
+  return style;
 }

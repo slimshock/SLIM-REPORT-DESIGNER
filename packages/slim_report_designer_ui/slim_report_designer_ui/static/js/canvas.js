@@ -127,7 +127,7 @@ export function createCanvasController({ canvas, getTemplate, getSelectedId, onS
       return;
     }
 
-    if (event.key === "Delete" || event.key === "Backspace") {
+    if (event.key === "Delete") {
       event.preventDefault();
       onSelect(selectedId, { deleteSelected: true });
       return;
@@ -224,9 +224,16 @@ function renderObject(object, selectedId) {
   const style = objectStyle(object);
 
   element.style.fontSize = `${Number(style.font_size) || 12}px`;
+  element.style.fontFamily = style.font_family || "Arial";
   element.style.fontWeight = style.bold ? "700" : "400";
+  element.style.fontStyle = style.italic ? "italic" : "normal";
+  element.style.textDecoration = style.underline ? "underline" : "none";
   element.style.color = style.color || "#111827";
+  element.style.background = style.background_color || "transparent";
   element.style.textAlign = style.align || "left";
+  element.style.display = object.type === "text" || object.type === "field" ? "flex" : "";
+  element.style.justifyContent = horizontalFlexAlign(style.align);
+  element.style.alignItems = verticalFlexAlign(style.vertical_align);
 
   if (object.type === "text") {
     element.textContent = object.text || object.properties?.text || "Text";
@@ -236,11 +243,14 @@ function renderObject(object, selectedId) {
     const line = document.createElement("div");
     line.className = "line-preview";
     line.style.borderTopWidth = `${Number(style.stroke_width) || 1}px`;
+    line.style.borderTopColor = style.stroke_color || style.color || "#111827";
     element.appendChild(line);
   } else if (object.type === "rectangle") {
     const rectangle = document.createElement("div");
     rectangle.className = "rectangle-preview";
     rectangle.style.borderWidth = `${Number(style.border_width) || 1}px`;
+    rectangle.style.borderColor = style.border_color || "#111827";
+    rectangle.style.background = style.background_color || "transparent";
     element.appendChild(rectangle);
   }
 
@@ -284,4 +294,24 @@ function clampObjectToPage(object, template) {
 
 function isEditingText(target) {
   return target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement;
+}
+
+function horizontalFlexAlign(value) {
+  if (value === "center") {
+    return "center";
+  }
+  if (value === "right") {
+    return "flex-end";
+  }
+  return "flex-start";
+}
+
+function verticalFlexAlign(value) {
+  if (value === "middle") {
+    return "center";
+  }
+  if (value === "bottom") {
+    return "flex-end";
+  }
+  return "flex-start";
 }

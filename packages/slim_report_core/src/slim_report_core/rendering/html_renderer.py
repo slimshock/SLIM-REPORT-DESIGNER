@@ -76,7 +76,10 @@ def _render_line(obj: RenderObject, context: RenderContext) -> str:
     x, y, width, height = object_px(obj, context.page.unit)
     style = obj.style
     stroke_width = float(style.get("stroke_width", style.get("line_width", 1)))
-    color = escape(str(style.get("color", style.get("border_color", "#000000"))), quote=True)
+    color = escape(
+        str(style.get("stroke_color", style.get("color", style.get("border_color", "#000000")))),
+        quote=True,
+    )
     rendered_height = max(height, stroke_width)
     y1 = rendered_height / 2 if height == 0 else 0
     y2 = rendered_height / 2 if height == 0 else height
@@ -96,7 +99,10 @@ def _render_rectangle(obj: RenderObject, context: RenderContext) -> str:
     style = obj.style
     border_width = float(style.get("border_width", style.get("stroke_width", 1)))
     border_color = escape(str(style.get("border_color", "#000000")), quote=True)
-    fill_color = escape(str(style.get("fill_color", "transparent")), quote=True)
+    fill_color = escape(
+        str(style.get("background_color", style.get("fill_color", "transparent"))),
+        quote=True,
+    )
     return (
         f'<div class="slim-report-object" data-slim-object="{escape(obj.id, quote=True)}" '
         f'style="{_position_style(x, y, width, height)} border: {border_width}px solid '
@@ -110,12 +116,21 @@ def _html_box(obj: RenderObject, context: RenderContext, value: str) -> str:
     font_size = float(style.get("font_size", 12))
     font_family = escape(str(style.get("font_family", "Arial")), quote=True)
     color = escape(str(style.get("color", "#000000")), quote=True)
+    background_color = escape(str(style.get("background_color", "transparent")), quote=True)
     align = escape(str(style.get("align", "left")), quote=True)
+    vertical_align = str(style.get("vertical_align", "top"))
     weight = "700" if bool(style.get("bold", False)) else "400"
+    font_style = "italic" if bool(style.get("italic", False)) else "normal"
+    decoration = "underline" if bool(style.get("underline", False)) else "none"
     css = (
         f"{_position_style(x, y, width, height)} "
+        "display: flex; "
+        f"justify-content: {_horizontal_flex_align(align)}; "
+        f"align-items: {_vertical_flex_align(vertical_align)}; "
         f"font-family: {font_family}; font-size: {font_size}px; "
-        f"font-weight: {weight}; color: {color}; text-align: {align}; "
+        f"font-weight: {weight}; font-style: {font_style}; "
+        f"text-decoration: {decoration}; color: {color}; "
+        f"background: {background_color}; text-align: {align}; "
         "overflow: hidden; white-space: pre-wrap;"
     )
     return (
@@ -126,3 +141,19 @@ def _html_box(obj: RenderObject, context: RenderContext, value: str) -> str:
 
 def _position_style(x: float, y: float, width: float, height: float) -> str:
     return f"left: {x}px; top: {y}px; width: {width}px; height: {height}px;"
+
+
+def _horizontal_flex_align(value: str) -> str:
+    if value == "center":
+        return "center"
+    if value == "right":
+        return "flex-end"
+    return "flex-start"
+
+
+def _vertical_flex_align(value: str) -> str:
+    if value == "middle":
+        return "center"
+    if value == "bottom":
+        return "flex-end"
+    return "flex-start"

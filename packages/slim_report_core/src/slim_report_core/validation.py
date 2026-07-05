@@ -313,21 +313,33 @@ def _validate_style(style: Any, result: ReportValidationResult, path: str) -> No
                 key_path,
                 f"Style value {key!r} must be a positive number.",
             )
-        elif key in {"border_width", "line_width", "stroke_width"} and not _is_non_negative_number(
-            value
-        ):
+        elif key in {
+            "border_width",
+            "line_width",
+            "stroke_width",
+        } and not _is_non_negative_number(value):
             result.add_error(
                 "style.value.invalid",
                 key_path,
                 f"Style value {key!r} must be a non-negative number.",
             )
-        elif key == "bold" and not isinstance(value, bool):
-            result.add_error("style.value.invalid", key_path, "Style value 'bold' must be boolean.")
+        elif key in {"bold", "italic", "underline"} and not isinstance(value, bool):
+            result.add_error(
+                "style.value.invalid",
+                key_path,
+                f"Style value {key!r} must be boolean.",
+            )
         elif key == "align" and str(value) not in {"left", "center", "right", "justify"}:
             result.add_error(
                 "style.value.invalid",
                 key_path,
                 "Style value 'align' must be left, center, right, or justify.",
+            )
+        elif key == "vertical_align" and str(value) not in {"top", "middle", "bottom"}:
+            result.add_error(
+                "style.value.invalid",
+                key_path,
+                "Style value 'vertical_align' must be top, middle, or bottom.",
             )
 
 

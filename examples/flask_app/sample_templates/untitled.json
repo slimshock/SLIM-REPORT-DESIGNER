@@ -1,0 +1,24 @@
+{
+  "version": "0.1",
+  "metadata": {
+    "title": "Untitled Report",
+    "description": null,
+    "author": null,
+    "tags": [],
+    "custom": {}
+  },
+  "page": {
+    "width": 595.0,
+    "height": 842.0,
+    "unit": "px",
+    "orientation": "portrait",
+    "margin_top": 0.5,
+    "margin_right": 0.5,
+    "margin_bottom": 0.5,
+    "margin_left": 0.5,
+    "size": "A4"
+  },
+  "objects": [],
+  "bands": [],
+  "assets": []
+}

@@ -227,6 +227,7 @@ def _style(obj: Any, properties: Mapping[str, Any]) -> dict[str, Any]:
 
     for key in (
         "align",
+        "background_color",
         "bold",
         "border_color",
         "border_width",
@@ -234,8 +235,12 @@ def _style(obj: Any, properties: Mapping[str, Any]) -> dict[str, Any]:
         "fill_color",
         "font_family",
         "font_size",
+        "italic",
         "line_width",
+        "stroke_color",
         "stroke_width",
+        "underline",
+        "vertical_align",
     ):
         if key in properties and key not in style:
             style[key] = properties[key]

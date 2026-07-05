@@ -36,7 +36,21 @@ def test_html_rendering_keeps_horizontal_lines_visible() -> None:
     assert 'viewBox="0 0 500.0 1.0"' in html
     assert 'y1="0.5" x2="500.0" y2="0.5"' in html
     assert 'data-slim-object="box1"' in html
-    assert "border: 1.0px solid #000000" in html
+    assert "border: 2.0px solid #654321" in html
+
+
+def test_html_rendering_applies_extended_style_fields() -> None:
+    html = render_html(load_report(), sample_data())
+
+    assert "font-family: Courier" in html
+    assert "font-style: italic" in html
+    assert "text-decoration: underline" in html
+    assert "background: #ffeecc" in html
+    assert "text-align: center" in html
+    assert "align-items: center" in html
+    assert 'stroke="#123456"' in html
+    assert "border: 2.0px solid #654321" in html
+    assert "background: #eeeeee" in html
 
 
 def test_pdf_rendering_returns_pdf_bytes() -> None:
@@ -117,8 +131,15 @@ def sample_template() -> dict:
                 "height": 30,
                 "text": "Laboratory Result",
                 "style": {
+                    "font_family": "Courier",
                     "font_size": 18,
                     "bold": True,
+                    "italic": True,
+                    "underline": True,
+                    "color": "#005577",
+                    "background_color": "#ffeecc",
+                    "align": "center",
+                    "vertical_align": "middle",
                 },
             },
             {
@@ -142,6 +163,7 @@ def sample_template() -> dict:
                 "height": 0,
                 "style": {
                     "stroke_width": 1,
+                    "stroke_color": "#123456",
                 },
             },
             {
@@ -152,7 +174,9 @@ def sample_template() -> dict:
                 "width": 500,
                 "height": 100,
                 "style": {
-                    "border_width": 1,
+                    "border_width": 2,
+                    "border_color": "#654321",
+                    "background_color": "#eeeeee",
                 },
             },
         ],

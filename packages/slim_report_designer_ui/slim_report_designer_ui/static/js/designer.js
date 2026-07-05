@@ -12,6 +12,15 @@ import {
   previewTemplate,
   saveTemplate
 } from "./api.js";
+import {
+  clearVersions,
+  createVersion,
+  deleteVersion,
+  getHistoryKey,
+  listVersions,
+  restoreVersion
+} from "./history.js";
+import { applyIcon } from "./icons.js";
 import { createToolbar } from "./toolbar.js";
 
 const state = {
@@ -30,7 +39,13 @@ const elements = {
   selectedObject: document.querySelector("#selected-object"),
   objectCount: document.querySelector("#object-count"),
   importFile: document.querySelector("#import-file"),
-  templateTitle: document.querySelector("#template-title")
+  templateTitle: document.querySelector("#template-title"),
+  historyModal: document.querySelector("#history-modal"),
+  historyClose: document.querySelector("#history-close"),
+  historyCreate: document.querySelector("#history-create"),
+  historyClear: document.querySelector("#history-clear"),
+  historyList: document.querySelector("#history-list"),
+  historyKey: document.querySelector("#history-key")
 };
 
 const canvasController = createCanvasController({
@@ -53,6 +68,9 @@ const toolbar = createToolbar({
   onCommand: handleCommand
 });
 
+initializeToolboxIcons();
+initializeHistoryUi();
+
 elements.toolbox.addEventListener("click", (event) => {
   const button = event.target.closest("button[data-tool]");
   if (!button) {
@@ -71,6 +89,9 @@ elements.importFile.addEventListener("change", async () => {
     return;
   }
   try {
+    if (state.template) {
+      createVersion(currentTemplateId(), state.template, "Before import");
+    }
     const payload = JSON.parse(await file.text());
     state.template = normalizeTemplate(payload);
     state.selectedId = null;
@@ -110,6 +131,7 @@ async function handleCommand(command) {
     if (command === "save") {
       state.template = normalizeTemplate(await saveTemplate(state.template));
       state.dirty = false;
+      createVersion(currentTemplateId(), state.template, "Saved");
       setStatus("Saved");
     } else if (command === "preview") {
       await previewTemplate(state.template);
@@ -127,6 +149,8 @@ async function handleCommand(command) {
       duplicateSelected();
     } else if (command === "delete") {
       deleteSelected();
+    } else if (command === "history") {
+      openHistory();
     }
   } catch (error) {
     setStatus(error.message);
@@ -196,6 +220,139 @@ async function copyJson() {
 
 function toJson() {
   return `${JSON.stringify(state.template, null, 2)}\n`;
+}
+
+function initializeToolboxIcons() {
+  for (const item of elements.toolbox.querySelectorAll("[data-icon]")) {
+    applyIcon(item, item.dataset.icon);
+  }
+}
+
+function initializeHistoryUi() {
+  applyIcon(elements.historyClose, "close");
+  elements.historyClose.addEventListener("click", closeHistory);
+  elements.historyModal.addEventListener("click", (event) => {
+    if (event.target === elements.historyModal) {
+      closeHistory();
+    }
+  });
+  elements.historyCreate.addEventListener("click", () => {
+    createVersion(currentTemplateId(), state.template, "Manual version");
+    setStatus("Version created");
+    renderHistory();
+  });
+  elements.historyClear.addEventListener("click", () => {
+    if (!confirm("Clear local version history for this template?")) {
+      return;
+    }
+    clearVersions(currentTemplateId());
+    setStatus("Version history cleared");
+    renderHistory();
+  });
+  elements.historyList.addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-version-command]");
+    if (!button) {
+      return;
+    }
+    const versionId = button.closest("[data-version-id]")?.dataset.versionId;
+    if (!versionId) {
+      return;
+    }
+    if (button.dataset.versionCommand === "restore") {
+      restoreHistoricalVersion(versionId);
+    } else if (button.dataset.versionCommand === "delete") {
+      deleteVersion(currentTemplateId(), versionId);
+      setStatus("Version deleted");
+      renderHistory();
+    }
+  });
+}
+
+function openHistory() {
+  renderHistory();
+  elements.historyModal.hidden = false;
+}
+
+function closeHistory() {
+  elements.historyModal.hidden = true;
+}
+
+function renderHistory() {
+  const templateId = currentTemplateId();
+  const versions = listVersions(templateId);
+  elements.historyKey.textContent = getHistoryKey(templateId);
+  elements.historyList.innerHTML = "";
+  if (versions.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.textContent = "No local versions for this template yet.";
+    elements.historyList.appendChild(empty);
+    return;
+  }
+  for (const version of versions) {
+    elements.historyList.appendChild(historyItem(version));
+  }
+}
+
+function historyItem(version) {
+  const item = document.createElement("article");
+  item.className = "history-item";
+  item.dataset.versionId = version.id;
+
+  const details = document.createElement("div");
+  details.className = "history-item-details";
+
+  const label = document.createElement("strong");
+  label.textContent = version.label || "Version";
+
+  const meta = document.createElement("span");
+  meta.textContent = `${formatDate(version.created_at)} - ${version.object_count} ${version.object_count === 1 ? "object" : "objects"}`;
+
+  details.append(label, meta);
+
+  const actions = document.createElement("div");
+  actions.className = "history-item-actions";
+  actions.append(
+    historyButton("restore", "Restore", "Restore version"),
+    historyButton("delete", "Delete", "Delete version", "danger")
+  );
+
+  item.append(details, actions);
+  return item;
+}
+
+function historyButton(command, label, title, variant = "") {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = `toolbar-button ${variant}`.trim();
+  button.dataset.versionCommand = command;
+  button.title = title;
+  button.textContent = label;
+  return button;
+}
+
+function restoreHistoricalVersion(versionId) {
+  const templateId = currentTemplateId();
+  const version = listVersions(templateId).find((item) => item.id === versionId);
+  const restored = restoreVersion(templateId, versionId);
+  if (!restored) {
+    setStatus("Version not found");
+    return;
+  }
+  createVersion(templateId, state.template, "Before restore");
+  state.template = normalizeTemplate(restored);
+  state.selectedId = null;
+  markDirty(`Restored version from ${formatDate(version?.created_at)}`);
+  renderHistory();
+}
+
+function currentTemplateId() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("template") || state.template?.metadata?.custom?.id || state.template?.metadata?.name || "default";
+}
+
+function formatDate(value) {
+  return value ? new Date(value).toLocaleString() : "unknown date";
 }
 
 function render() {

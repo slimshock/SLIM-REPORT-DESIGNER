@@ -63,7 +63,10 @@ def _render_line(canvas: Any, obj: RenderObject, context: RenderContext) -> None
     style = obj.style
     stroke_width = float(style.get("stroke_width", style.get("line_width", 1)))
     canvas.setLineWidth(stroke_width)
-    _set_stroke_color(canvas, style.get("color", style.get("border_color", "#000000")))
+    _set_stroke_color(
+        canvas,
+        style.get("stroke_color", style.get("color", style.get("border_color", "#000000"))),
+    )
     canvas.line(x, _pdf_y(context, y), x + width, _pdf_y(context, y + height))
 
 
@@ -72,21 +75,75 @@ def _render_rectangle(canvas: Any, obj: RenderObject, context: RenderContext) ->
     style = obj.style
     canvas.setLineWidth(float(style.get("border_width", style.get("stroke_width", 1))))
     _set_stroke_color(canvas, style.get("border_color", "#000000"))
-    fill = _set_fill_color(canvas, style.get("fill_color", "transparent"))
+    fill = _set_fill_color(
+        canvas,
+        style.get("background_color", style.get("fill_color", "transparent")),
+    )
     canvas.rect(x, _pdf_y(context, y + height), width, height, stroke=1, fill=int(fill))
 
 
 def _draw_text(canvas: Any, obj: RenderObject, context: RenderContext, value: str) -> None:
-    x, y, _width, _height = object_pt(obj, context.page.unit)
+    x, y, width, height = object_pt(obj, context.page.unit)
     style = obj.style
     font_size = float(style.get("font_size", 12))
-    font_family = str(style.get("font_family", "Helvetica"))
-    if bool(style.get("bold", False)) and font_family == "Helvetica":
-        font_family = "Helvetica-Bold"
+    font_family = _font_name(
+        str(style.get("font_family", "Helvetica")),
+        bold=bool(style.get("bold", False)),
+        italic=bool(style.get("italic", False)),
+    )
+
+    background = style.get("background_color", "transparent")
+    if not _is_transparent(background):
+        _set_fill_color(canvas, background)
+        canvas.rect(x, _pdf_y(context, y + height), width, height, stroke=0, fill=1)
 
     canvas.setFont(font_family, font_size)
     _set_fill_color(canvas, style.get("color", "#000000"))
-    canvas.drawString(x, _pdf_y(context, y) - font_size, value)
+    text_width = canvas.stringWidth(value, font_family, font_size)
+    align = str(style.get("align", "left"))
+    text_x = x
+    if align == "center":
+        text_x = x + max((width - text_width) / 2, 0)
+    elif align == "right":
+        text_x = x + max(width - text_width, 0)
+    baseline = _pdf_y(context, y) - font_size
+    vertical_align = str(style.get("vertical_align", "top"))
+    if vertical_align == "middle":
+        baseline = _pdf_y(context, y + (height / 2) - (font_size / 2))
+    elif vertical_align == "bottom":
+        baseline = _pdf_y(context, y + height)
+    canvas.drawString(text_x, baseline, value)
+    if bool(style.get("underline", False)):
+        canvas.setLineWidth(max(font_size / 16, 0.5))
+        _set_stroke_color(canvas, style.get("color", "#000000"))
+        canvas.line(text_x, baseline - 1, text_x + text_width, baseline - 1)
+
+
+def _font_name(font_family: str, *, bold: bool, italic: bool) -> str:
+    base = font_family if font_family in {"Helvetica", "Times-Roman", "Courier"} else "Helvetica"
+    if base == "Times-Roman":
+        if bold and italic:
+            return "Times-BoldItalic"
+        if bold:
+            return "Times-Bold"
+        if italic:
+            return "Times-Italic"
+        return base
+    if base == "Courier":
+        if bold and italic:
+            return "Courier-BoldOblique"
+        if bold:
+            return "Courier-Bold"
+        if italic:
+            return "Courier-Oblique"
+        return base
+    if bold and italic:
+        return "Helvetica-BoldOblique"
+    if bold:
+        return "Helvetica-Bold"
+    if italic:
+        return "Helvetica-Oblique"
+    return base
 
 
 def _pdf_y(context: RenderContext, top_y: float) -> float:

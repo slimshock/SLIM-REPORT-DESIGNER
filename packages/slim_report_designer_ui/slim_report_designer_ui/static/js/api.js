@@ -108,12 +108,14 @@ function localObjectHtml(object) {
   const value = object.type === "field"
     ? `{{ ${object.binding || object.properties?.binding || ""} }}`
     : object.text || object.properties?.text || "";
-  const box = `position:absolute;box-sizing:border-box;left:${object.x}px;top:${object.y}px;width:${object.width}px;height:${Math.max(object.height, 8)}px;font-size:${style.font_size || 12}px;font-weight:${style.bold ? 700 : 400};color:${style.color || "#111827"};text-align:${style.align || "left"};overflow:hidden`;
+  const textDecoration = style.underline ? "underline" : "none";
+  const display = object.type === "text" || object.type === "field" ? "flex" : "block";
+  const box = `position:absolute;box-sizing:border-box;left:${object.x}px;top:${object.y}px;width:${object.width}px;height:${Math.max(object.height, 8)}px;display:${display};justify-content:${horizontalFlexAlign(style.align)};align-items:${verticalFlexAlign(style.vertical_align)};font-family:${style.font_family || "Arial"};font-size:${style.font_size || 12}px;font-weight:${style.bold ? 700 : 400};font-style:${style.italic ? "italic" : "normal"};text-decoration:${textDecoration};color:${style.color || "#111827"};background:${style.background_color || "transparent"};text-align:${style.align || "left"};overflow:hidden`;
   if (object.type === "line") {
-    return `<div style="${box};border-top:${style.stroke_width || 1}px solid ${style.color || style.border_color || "#111827"}"></div>`;
+    return `<div style="${box};border-top:${style.stroke_width || 1}px solid ${style.stroke_color || style.color || "#111827"}"></div>`;
   }
   if (object.type === "rectangle") {
-    return `<div style="${box};border:${style.border_width || 1}px solid ${style.border_color || style.color || "#111827"};background:${style.fill_color || "transparent"}"></div>`;
+    return `<div style="${box};border:${style.border_width || 1}px solid ${style.border_color || "#111827"};background:${style.background_color || style.fill_color || "transparent"}"></div>`;
   }
   return `<div style="${box}">${escapeHtml(value)}</div>`;
 }
@@ -144,4 +146,24 @@ function escapeHtml(value) {
     "\"": "&quot;",
     "'": "&#39;"
   })[char]);
+}
+
+function horizontalFlexAlign(value) {
+  if (value === "center") {
+    return "center";
+  }
+  if (value === "right") {
+    return "flex-end";
+  }
+  return "flex-start";
+}
+
+function verticalFlexAlign(value) {
+  if (value === "middle") {
+    return "center";
+  }
+  if (value === "bottom") {
+    return "flex-end";
+  }
+  return "flex-start";
 }

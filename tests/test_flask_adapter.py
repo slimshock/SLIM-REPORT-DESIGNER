@@ -76,6 +76,8 @@ def test_flask_adapter_serves_framework_agnostic_designer_ui(tmp_path: Path) -> 
     response = client.get("/report-designer/designer?template=lab-template")
     script_response = client.get("/report-designer/designer-ui/js/designer.js")
     toolbar_response = client.get("/report-designer/designer-ui/js/toolbar.js")
+    icons_response = client.get("/report-designer/designer-ui/js/icons.js")
+    history_response = client.get("/report-designer/designer-ui/js/history.js")
     css_response = client.get("/report-designer/designer-ui/css/designer.css")
 
     assert response.status_code == 200
@@ -92,6 +94,10 @@ def test_flask_adapter_serves_framework_agnostic_designer_ui(tmp_path: Path) -> 
     toolbar_js = toolbar_response.get_data(as_text=True)
     assert "icon-action" in toolbar_js
     assert "Export report as PDF" in toolbar_js
+    assert icons_response.status_code == 200
+    assert "export function icon" in icons_response.get_data(as_text=True)
+    assert history_response.status_code == 200
+    assert "createVersion" in history_response.get_data(as_text=True)
     assert css_response.status_code == 200
     assert css_response.mimetype == "text/css"
     assert ".inspector-section" in css_response.get_data(as_text=True)
@@ -146,6 +152,15 @@ def test_flask_designer_api_previews_and_exports_posted_json(tmp_path: Path) -> 
                 "width": 240,
                 "height": 24,
                 "text": "Canvas Preview",
+                "style": {
+                    "font_size": 16,
+                    "bold": True,
+                    "italic": True,
+                    "underline": True,
+                    "color": "#005577",
+                    "background_color": "#ffeecc",
+                    "align": "center",
+                },
             }
         ],
         "bands": [],
@@ -161,6 +176,9 @@ def test_flask_designer_api_previews_and_exports_posted_json(tmp_path: Path) -> 
     preview_html = preview_response.get_data(as_text=True)
     assert "Canvas Preview" in preview_html
     assert "left: 40.0px" in preview_html
+    assert "font-style: italic" in preview_html
+    assert "text-decoration: underline" in preview_html
+    assert "background: #ffeecc" in preview_html
     assert pdf_response.status_code == 200
     assert pdf_response.mimetype == "application/pdf"
     assert pdf_response.get_data().startswith(b"%PDF")

@@ -1836,3 +1836,486 @@ Acceptance criteria:
 - No build step is added.
 - Static mode still works.
 - Flask mode still works.
+
+
+Sprint 5.2 — Style Inspector and Appearance Properties
+
+Current status:
+- Framework-agnostic designer UI works.
+- Static designer works.
+- Flask designer works.
+- Drag/drop works.
+- Resize works.
+- Inspector works.
+- UI polish from Sprint 5.1 is implemented.
+- Flask preview/export PDF works.
+- cerebro_cbc and lab_result templates work.
+
+Goal:
+Add more useful appearance/style properties to the designer inspector and make them update:
+1. The canvas immediately
+2. The template JSON
+3. Flask preview/export PDF output as much as the current renderer supports
+
+Important architecture rules:
+- Do not introduce React, Vue, TypeScript, npm, Tailwind, Bootstrap, or build steps.
+- Use plain HTML, CSS, and vanilla JavaScript modules only.
+- Keep the designer UI framework-agnostic.
+- Do not break static mode.
+- Do not break Flask mode.
+- Do not break existing templates.
+- Keep backward compatibility with templates that do not have the new style fields.
+- Store appearance values in each object style/properties dictionary using simple JSON values.
+
+Files to inspect:
+- packages/slim_report_designer_ui/slim_report_designer_ui/static/js/inspector.js
+- packages/slim_report_designer_ui/slim_report_designer_ui/static/js/objects.js
+- packages/slim_report_designer_ui/slim_report_designer_ui/static/js/canvas.js
+- packages/slim_report_designer_ui/slim_report_designer_ui/static/js/designer.js
+- packages/slim_report_designer_ui/slim_report_designer_ui/static/css/designer.css
+- packages/slim_report_core/src/slim_report_core
+- packages/slim_report_flask/src/slim_report_flask/blueprint.py
+- examples/flask_app/sample_templates/lab_result.json
+- examples/flask_app/sample_templates/cerebro_cbc.json
+
+Tasks:
+
+1. Normalize object style model
+
+Support these style fields where applicable:
+
+Common text/field style:
+- font_family
+- font_size
+- bold
+- italic
+- underline
+- color
+- background_color
+- align
+
+Rectangle style:
+- border_width
+- border_color
+- background_color
+
+Line style:
+- stroke_width
+- stroke_color
+
+Default values:
+- font_family: Arial
+- font_size: 12
+- bold: false
+- italic: false
+- underline: false
+- color: #111827
+- background_color: transparent
+- align: left
+- border_width: 1
+- border_color: #111827
+- stroke_width: 1
+- stroke_color: #111827
+
+2. Update objects.js
+
+Ensure objectStyle(object) returns normalized style values without mutating unexpectedly.
+
+It should support both old and new templates.
+
+If an object has style fields directly in object.style, use them.
+If old templates use object.properties for some style fields, preserve compatibility.
+
+3. Update inspector.js
+
+Improve the Style section.
+
+For text objects:
+- font_family input/select
+- font_size number input
+- bold checkbox
+- italic checkbox
+- underline checkbox
+- text color picker
+- background color picker
+- align select: left, center, right
+
+For field objects:
+- font_family input/select
+- font_size number input
+- bold checkbox
+- italic checkbox
+- underline checkbox
+- text color picker
+- background color picker
+- align select: left, center, right
+
+For rectangle objects:
+- border_width number input
+- border_color color picker
+- background_color color picker
+
+For line objects:
+- stroke_width number input
+- stroke_color color picker
+
+Use simple native inputs:
+- input type="color" for colors
+- input type="number" for numeric values
+- select for alignment
+- checkbox for boolean values
+
+When inspector values change:
+- update the selected object JSON
+- update the canvas immediately
+- mark the template dirty/unsaved
+- keep existing x/y/width/height/content behavior working
+
+4. Update canvas rendering
+
+Text and field objects should visually apply:
+- font family
+- font size
+- bold
+- italic
+- underline
+- color
+- background color
+- text alignment
+
+Rectangle objects should visually apply:
+- border width
+- border color
+- background color
+
+Line objects should visually apply:
+- stroke width
+- stroke color
+
+Do not break selection outline or resize handle.
+
+Selection outline should remain visible even if object border/background colors change.
+
+5. Update JSON import/export
+
+Exported JSON should include the new style properties only where needed.
+
+Imported JSON should preserve style properties.
+
+Old JSON files without these fields should still load with defaults.
+
+6. Update sample templates carefully
+
+Do not rewrite the whole sample JSON unnecessarily.
+
+If needed, add only minimal style fields to sample objects to demonstrate:
+- colored text
+- bold text
+- centered text
+- line color
+- rectangle border color
+
+Keep cerebro_cbc visually close to the current design.
+
+7. Update preview/export path
+
+Ensure Flask preview/export receives and preserves the new style fields.
+
+If the core renderer already supports these styles, map them correctly.
+
+If the core renderer does not yet support a style field, add minimal support for:
+- text color
+- bold
+- italic
+- underline
+- font size
+- text align
+- background color
+- rectangle border color
+- rectangle background color
+- line stroke color
+- line stroke width
+
+Keep changes small and backward-compatible.
+
+8. UI polish for color inputs
+
+Make color controls compact and readable.
+
+Recommended layout:
+- label
+- color input
+- optional text hex value if simple
+
+Do not over-engineer a color palette yet.
+
+9. Manual testing
+
+Test in static mode:
+python examples/designer_static_server/serve.py
+
+Confirm:
+- Add Text
+- Change text color
+- Change background color
+- Change alignment
+- Bold/italic/underline
+- Export JSON
+- Import JSON
+- Style persists
+
+Test in Flask mode:
+python examples/flask_app/app.py
+
+Open:
+http://127.0.0.1:5000/report-designer/designer?template=cerebro_cbc
+
+Confirm:
+- Existing CBC template still loads
+- Change selected text color
+- Change field color
+- Change alignment
+- Preview shows style changes
+- Export PDF shows style changes where supported
+
+Also test:
+http://127.0.0.1:5000/report-designer/designer?template=lab_result
+
+Confirm lab_result still works.
+
+10. Tests
+
+Add or update tests where practical:
+- objectStyle returns defaults
+- objectStyle preserves explicit style values
+- imported template with style fields round-trips
+- Flask preview/export accepts templates with new style fields
+- Existing lab_result and cerebro_cbc templates still load
+
+Acceptance criteria:
+- Inspector has useful appearance controls.
+- Canvas updates immediately when style fields change.
+- Exported JSON preserves styles.
+- Imported JSON restores styles.
+- Flask preview/export does not go blank.
+- Existing templates still work.
+- Static mode still works without backend.
+- No new frontend framework or build step is added.
+
+
+
+
+Sprint 5.2b — Designer Icons and Lightweight Version History
+
+Current status:
+- Framework-agnostic designer UI works.
+- Static designer works.
+- Flask designer works.
+- Drag/drop works.
+- Resize works.
+- Inspector works.
+- UI polish is implemented.
+- Preview/export PDF works in Flask.
+- Style inspector work may already be in progress or partially implemented.
+
+Goal:
+Add simple built-in icons and lightweight version history to the designer UI without adding frontend dependencies.
+
+Important rules:
+- Do not introduce React, Vue, TypeScript, npm, Tailwind, Bootstrap, FontAwesome, CDN icons, or build steps.
+- Use plain HTML, CSS, and vanilla JavaScript modules only.
+- Keep designer UI framework-agnostic.
+- Static mode must work.
+- Flask mode must work.
+- No database required.
+- Do not break existing toolbar actions.
+- Do not break existing import/export/preview/pdf behavior.
+
+Files to inspect:
+- packages/slim_report_designer_ui/slim_report_designer_ui/static/index.html
+- packages/slim_report_designer_ui/slim_report_designer_ui/static/css/designer.css
+- packages/slim_report_designer_ui/slim_report_designer_ui/static/js/designer.js
+- packages/slim_report_designer_ui/slim_report_designer_ui/static/js/toolbar.js
+- packages/slim_report_designer_ui/slim_report_designer_ui/static/js/api.js
+- packages/slim_report_designer_ui/slim_report_designer_ui/static/js/inspector.js
+
+Part A — Icons
+
+1. Add a new JS module:
+   packages/slim_report_designer_ui/slim_report_designer_ui/static/js/icons.js
+
+2. icons.js should export simple inline SVG icon strings or helper functions for:
+   - save
+   - preview/eye
+   - pdf/file
+   - download/export
+   - upload/import
+   - copy
+   - duplicate
+   - delete/trash
+   - text
+   - field
+   - line
+   - rectangle
+   - history
+   - restore
+   - close
+
+3. Use inline SVG only.
+   No external icon packages.
+   No CDN.
+   No build step.
+
+4. Update toolbar buttons to show icon + accessible label.
+   On narrow toolbar space, icons may be shown with short labels or title attributes.
+
+5. Update toolbox buttons to include icons:
+   - Text
+   - Field
+   - Line
+   - Rectangle
+
+6. Add CSS for icons:
+   - consistent size
+   - aligned with button text
+   - color follows button text color
+   - delete icon should be visually destructive/red
+
+7. All buttons must still have title attributes and accessible text.
+
+Part B — Version History
+
+8. Add a new JS module:
+   packages/slim_report_designer_ui/slim_report_designer_ui/static/js/history.js
+
+9. Implement localStorage-backed version history.
+
+10. Use a storage key based on template id/name:
+   Example:
+   slim_report_designer.history.default
+   slim_report_designer.history.cerebro_cbc
+
+11. Add functions:
+   - getHistoryKey(templateId)
+   - listVersions(templateId)
+   - createVersion(templateId, template, label)
+   - restoreVersion(templateId, versionId)
+   - deleteVersion(templateId, versionId)
+   - clearVersions(templateId)
+
+12. A version item should contain:
+   - id
+   - created_at
+   - label
+   - object_count
+   - template
+
+13. Limit local history to the latest 20 versions per template.
+
+14. Create a snapshot when:
+   - Save succeeds
+   - User imports JSON, before replacing current template
+   - User clicks Create Version manually
+
+15. Do not create snapshots on every drag/drop/resize/property edit.
+
+Part C — Version History UI
+
+16. Add a toolbar button:
+   - Version History
+   - icon: history
+   - title: View Version History
+
+17. Add a simple modal or side panel for version history.
+
+18. Version History UI should show:
+   - created date/time
+   - label
+   - object count
+   - Restore button
+   - Delete button
+
+19. Add button:
+   - Create Version
+   This stores the current template immediately with label "Manual version".
+
+20. Add button:
+   - Clear History
+   This asks for confirm() before clearing local history.
+
+21. Restore behavior:
+   - Before restoring, create a snapshot of the current template labeled "Before restore".
+   - Replace current designer template with selected historical version.
+   - Re-render canvas and inspector.
+   - Mark template as unsaved.
+   - Show status message: "Restored version from <date>"
+
+22. Delete version behavior:
+   - Remove selected version from local history.
+   - Refresh history UI.
+   - Do not affect current template.
+
+23. Clear history behavior:
+   - Clear local history for current template only.
+   - Refresh history UI.
+   - Show status message.
+
+Part D — Template id awareness
+
+24. Determine template id from:
+   - URL query parameter ?template=cerebro_cbc
+   - fallback to template.metadata.name
+   - fallback to "default"
+
+25. Use this template id for version history key.
+
+26. Do not require backend support for version history yet.
+
+Part E — Flask compatibility
+
+27. Flask designer should still work.
+28. Static designer should still work.
+29. Version history must work in both modes because it is localStorage-based.
+30. Preview and Export PDF behavior should not change.
+
+Part F — Manual test
+
+Test static mode:
+python examples/designer_static_server/serve.py
+
+Confirm:
+- Icons appear in toolbar/toolbox
+- Add Text works
+- Drag works
+- Resize works
+- Inspector works
+- Create Version works
+- View Version History works
+- Restore version works
+- Delete version works
+- Clear history works
+- Import JSON creates "Before import" version
+- Export JSON still works
+- Copy JSON still works
+
+Test Flask mode:
+python examples/flask_app/app.py
+
+Open:
+http://127.0.0.1:5000/report-designer/designer?template=cerebro_cbc
+
+Confirm:
+- Icons appear
+- Existing CBC template loads
+- Version history key is based on cerebro_cbc
+- Create Version works
+- Restore works
+- Preview still works
+- Export PDF still works
+
+Acceptance criteria:
+- Designer UI has built-in icons without external dependencies.
+- Version history works locally in static and Flask mode.
+- Existing designer actions still work.
+- No new frontend framework is added.
+- No build step is added.

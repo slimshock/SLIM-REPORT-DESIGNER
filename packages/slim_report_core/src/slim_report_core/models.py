@@ -25,6 +25,7 @@ from .utils import ensure_mapping
 
 _STYLE_KEYS = (
     "align",
+    "background_color",
     "bold",
     "border_color",
     "border_width",
@@ -32,8 +33,12 @@ _STYLE_KEYS = (
     "fill_color",
     "font_family",
     "font_size",
+    "italic",
     "line_width",
+    "stroke_color",
     "stroke_width",
+    "underline",
+    "vertical_align",
 )
 
 if TYPE_CHECKING:
