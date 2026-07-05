@@ -26,9 +26,13 @@ Current implementation notes:
 
 - Rendering lives in `slim_report_core.rendering`.
 - `Report` is the primary daily developer API.
+- Beginners, AI tools, designers, Flask, and CLI should all target `Report` directly.
 - Drawable elements share one `ReportObject` inheritance model.
 - `ObjectFactory` is the shared construction point for report objects.
 - Serialization lives in `slim_report_core.serialization`.
+- JSON is the first built-in serializer, not a required runtime model.
+- YAML can be added as another serializer, and XML can live as a serializer plugin.
+- Database storage may serialize or decompose `Report`, but load operations should return `Report`.
 - Domain validation lives on `Report.validate()`.
 - Deep cloning lives on domain models through `clone()`.
 - Object querying lives on `Report` and its callable `objects` collection.

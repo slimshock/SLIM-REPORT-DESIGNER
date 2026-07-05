@@ -18,12 +18,26 @@ Serializers convert external formats to and from `Report`:
 
 ```text
 external format -> Serializer -> Report
-Report -> Serializer -> external format
+Report ---------> Serializer -> external format
 ```
 
 Storage providers may use serializers internally, but storage must still return `Report` to framework adapters and tools.
 
+```text
+File storage ----+
+Database storage +----> Storage provider ----> Report
+Object storage --+              |
+REST storage ----+              v
+                         Serializer when needed
+```
+
 JSON remains a built-in serializer. YAML can be added as another serializer. XML should be allowed as a plugin serializer. Database storage can store serialized documents, relational rows, or custom records, as long as loading returns `Report`.
+
+Database storage has three valid implementation shapes:
+
+- Store serializer output as a document column and deserialize to `Report` on load.
+- Decompose `Report` into relational tables and rehydrate the domain model on load.
+- Use a custom serializer/storage pair for application-specific persistence.
 
 ## Consequences
 

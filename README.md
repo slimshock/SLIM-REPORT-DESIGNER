@@ -55,6 +55,22 @@ Builder code creates `Report` domain objects directly. It does not know about JS
 
 For everyday development, `Report` is the primary API. Builders are optional convenience helpers.
 
+The architecture is intentionally simple:
+
+```text
+Python API / AI / Designer / Flask / CLI / Serializer
+                         |
+                         v
+                       Report
+                         |
+              +----------+----------+
+              v                     v
+         validate()           render HTML/PDF
+                         |
+                         v
+              serialize only when saving
+```
+
 ## Packages
 
 - `slim_report_core`: report models, expression resolution, rendering, widgets, exporters, and pure Python API
@@ -81,6 +97,8 @@ page.rectangle(x=40, y=150, width=520, height=120)
 result = report.validate()
 html = report.render_html(data)
 pdf_bytes = report.render_pdf(data)
+report.save_html("cbc.html", data)
+report.save_pdf("cbc.pdf", data)
 ```
 
 Missing fields render as an empty string.
@@ -98,6 +116,9 @@ loaded = serializer.load("template.json")
 ```
 
 JSON is optional once a `Report` exists. Future serializers can support YAML, XML plugins, database records, REST payloads, or binary packages without changing renderers.
+
+Database-backed applications should follow the same rule: load or rehydrate a `Report`, work with
+that domain object in memory, then serialize or decompose it only when saving.
 
 ## Existing JSON Templates
 
@@ -189,6 +210,15 @@ page.field("result.HGB", x=50, y=140)
 
 When AI needs a storage format, it can generate JSON for `JSONSerializer`, but downstream code should still validate and render the resulting `Report`.
 
+An AI-generated report should be checked the same way as a human-written report:
+
+```python
+result = report.validate()
+if not result.is_valid:
+    for error in result.errors:
+        print(error.path, error.message)
+```
+
 ## Validation
 
 ```python
@@ -245,6 +275,14 @@ http://127.0.0.1:5000/report-designer/templates/lab_result/export/pdf/sample
 
 The demo provider is defined in `examples/flask_app/app.py`, and the sample template is in `examples/flask_app/sample_templates/lab_result.json`.
 
+Inside the adapter, templates are loaded into `Report` before preview or export:
+
+```python
+report = template_store.load_report("lab_result")
+html = report.render_html(data)
+pdf_bytes = report.render_pdf(data)
+```
+
 ## CLI
 
 ```bash
@@ -253,6 +291,9 @@ slim-report inspect examples/flask_app/sample_templates/lab_result.json
 slim-report render examples/flask_app/sample_templates/lab_result.json data.json output.html --format html
 slim-report render examples/flask_app/sample_templates/lab_result.json data.json output.pdf
 ```
+
+The current CLI accepts JSON files as input, but commands deserialize to `Report` before validation,
+inspection, or rendering.
 
 ## Development
 

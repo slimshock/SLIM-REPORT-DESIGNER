@@ -1,3 +1,9 @@
+# Prompt Archive
+
+This file is historical prompt material. It records earlier planning requests and may contain old
+JSON-first examples such as `Report.load_json()` or `to_json()`. Current architecture is
+Report-first: use `docs/architecture.md`, `docs/public-api.md`, and ADR-0007 as the source of truth.
+
 VS Code Codex one-by-one.
 
 VS Code Codex Prompt 1 — Create Project Foundation

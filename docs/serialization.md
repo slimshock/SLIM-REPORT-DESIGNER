@@ -48,6 +48,18 @@ Each serializer should own format-specific validation, loading, and saving. It s
 JSON can become optional for applications that create reports directly with Python, load reports
 from a database, or install another serializer. The required boundary is `Report`, not JSON.
 
+## Storage Boundary
+
+Storage may call a serializer, but storage is not the domain model:
+
+```text
+Storage backend -> serializer/rehydrator -> Report
+Report ---------> serializer/decomposer -> Storage backend
+```
+
+Database storage can store `Report` as a JSON document, YAML document, relational rows, or a custom
+record shape. The adapter-facing load method should still return `Report`.
+
 ## Rendering Boundary
 
 Renderers in `slim_report_core.rendering` expect `Report` only.

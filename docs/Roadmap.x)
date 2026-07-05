@@ -36,3 +36,13 @@ Architecture checkpoint after Sprint 4:
     Renderers receive Report only.
     Flask, CLI, Designer, AI, and future adapters should target Report.
     YAML, XML plugins, REST, binary, and database storage belong at the serializer/storage boundary.
+
+Sprint 4 review answers:
+
+    Beginners can build reports with Report and page helpers before learning JSON.
+    AI should generate the same Report API that humans use, or serializer input at the boundary.
+    Designer, Flask, and CLI can manipulate Report directly.
+    JSON can become optional once storage and serializers are cleanly separated.
+    YAML can be added later as a serializer.
+    XML can live as a plugin serializer.
+    Database storage can serialize or decompose Report, but loading must return Report.

@@ -34,3 +34,12 @@ They should not use `Report.load_json()`, `Report.load_from_dict()`, `report.to_
 
 Future Builder, Designer, Flask, CLI, AI, YAML, XML, and database integrations should target
 `Report` directly. Persistence formats and storage mechanisms remain replaceable boundary layers.
+
+The direct manipulation rule is intentional:
+
+```text
+Designer/AI/Flask/CLI -> Report -> validate/render/serialize
+```
+
+These integrations may load or save through a serializer, but their in-memory working model should
+be `Report`, not JSON dictionaries or renderer-specific structures.

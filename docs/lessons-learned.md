@@ -19,6 +19,22 @@ page.field("patient.name")
 That path is now the architectural baseline. Builders, serializers, designers, CLI commands,
 framework adapters, and AI integrations should converge on the same `Report` object model.
 
+The beginner API does not need to expose the storage format first. The first useful lesson for a new
+developer is "make a report, add a page object, render it." JSON, YAML, XML, and database storage can
+wait until the developer needs persistence.
+
+## Direct Manipulation Beats Format Editing
+
+The Designer, Flask adapter, CLI, and AI integrations can all manipulate `Report` directly.
+
+```text
+External input -> serializer/storage -> Report -> validate/render/mutate -> serializer/storage
+```
+
+The current JSON designer is acceptable as a temporary tool, but the long-term designer should not
+make JSON dictionaries its internal model. It should hydrate `Report`, mutate `Page` and
+`ReportObject` instances, use `ObjectFactory` for creation, and serialize only when saving.
+
 ## JSON Is Useful, Not Central
 
 JSON is valuable for examples, storage, browser editing, and AI generation, but it is no longer the
@@ -31,6 +47,26 @@ This means:
 - YAML can be added without renderer changes.
 - XML can live as a plugin serializer.
 - Database storage can load and save `Report` without pretending the database shape is the domain.
+
+JSON can become optional because the runtime boundary is `Report`, not a file extension. A database
+adapter may store JSON in one column, relational rows across many tables, or a custom binary payload;
+all are valid if loading returns `Report`.
+
+## AI Should Generate the Public API
+
+AI output is most useful when it targets the same public API a human would write:
+
+```python
+from slim_report_core import Report
+
+report = Report("Laboratory Result")
+page = report.page()
+page.text("LABORATORY RESULT", x=50, y=40)
+page.field("patient.name", x=50, y=90)
+```
+
+Generated JSON is still allowed at the serializer boundary, but generated Python has better
+discoverability, easier validation, and fewer chances to encode storage-specific assumptions.
 
 ## Factories Prevent Drift
 
