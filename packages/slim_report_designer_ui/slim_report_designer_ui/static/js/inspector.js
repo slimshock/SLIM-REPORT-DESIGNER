@@ -1,17 +1,48 @@
 import { icon } from "./icons.js";
-import { objectStyle, setObjectBinding, setObjectStyleValue, setObjectText } from "./objects.js";
+import {
+  objectStyle,
+  setObjectAlt,
+  setObjectBinding,
+  setObjectPropertyValue,
+  setObjectSource,
+  setObjectStyleValue,
+  setObjectText,
+  setPageOrientation,
+  setPageSize,
+  setPageUnit,
+  setPageValue
+} from "./objects.js";
 
-export function createInspector({ form, getSelectedObject, onChange }) {
+export function createInspector({ form, getTemplate, getSelectedObject, onChange }) {
   form.addEventListener("input", (event) => {
     const input = event.target;
     if (!input.name) {
       return;
     }
+    if (input instanceof HTMLInputElement && input.type === "file") {
+      return;
+    }
     const object = getSelectedObject();
     if (!object) {
+      applyPageInput(getTemplate(), input);
+      onChange();
       return;
     }
     applyInput(object, input);
+    onChange();
+  });
+  form.addEventListener("change", async (event) => {
+    const input = event.target;
+    if (!(input instanceof HTMLInputElement) || input.type !== "file" || input.name !== "image_upload") {
+      return;
+    }
+    const object = getSelectedObject();
+    const file = input.files?.[0];
+    if (!object || object.type !== "image" || !file) {
+      return;
+    }
+    setObjectSource(object, await readFileAsDataUrl(file));
+    input.value = "";
     onChange();
   });
   form.addEventListener("click", (event) => {
@@ -21,6 +52,15 @@ export function createInspector({ form, getSelectedObject, onChange }) {
     }
     const object = getSelectedObject();
     if (!object) {
+      const template = getTemplate();
+      if (button.dataset.pageKey) {
+        event.preventDefault();
+        setPageValue(template, button.dataset.pageKey, button.dataset.styleValue);
+        if (button.dataset.pageKey === "background_color") {
+          setPageValue(template, "transparent", true);
+        }
+        onChange();
+      }
       return;
     }
     event.preventDefault();
@@ -30,18 +70,15 @@ export function createInspector({ form, getSelectedObject, onChange }) {
 
   return {
     render() {
-      renderInspector(form, getSelectedObject());
+      renderInspector(form, getSelectedObject(), getTemplate());
     }
   };
 }
 
-export function renderInspector(form, object) {
+export function renderInspector(form, object, template = {}) {
   form.innerHTML = "";
   if (!object) {
-    const empty = document.createElement("div");
-    empty.className = "empty-state";
-    empty.textContent = "Select an object to edit its properties.";
-    form.appendChild(empty);
+    form.appendChild(renderPageInspector(template));
     return;
   }
 
@@ -79,7 +116,81 @@ export function renderInspector(form, object) {
       styleField("stroke_width", object, "number"),
       styleField("stroke_color", object, "color")
     ]));
+  } else if (object.type === "image") {
+    form.appendChild(section("Content", [
+      fieldRow("source_mode", object.properties?.source_mode || "url", {
+        type: "select",
+        options: ["url", "upload"],
+        name: "source_mode"
+      }),
+      fieldRow("Image URL", object.src || object.properties?.src || object.properties?.source || "", {
+        name: "src"
+      }),
+      fieldRow("Upload image", "", {
+        type: "file",
+        name: "image_upload",
+        accept: "image/png,image/jpeg,image/webp,image/svg+xml"
+      }),
+      fieldRow("Alt text", object.alt || object.properties?.alt || "", { name: "alt" })
+    ]));
+    form.appendChild(section("Style", [
+      styleField("object_fit", object, "select", { options: ["contain", "cover", "fill"] }),
+      styleField("opacity", object, "number", { step: "0.05", min: "0", max: "1" }),
+      styleField("border_radius", object, "number"),
+      styleField("border_width", object, "number"),
+      styleField("border_color", object, "color"),
+      styleField("background_color", object, "color", { label: "background", transparent: true }),
+      fieldRow("maintain_aspect_ratio", Boolean(object.properties?.maintain_aspect_ratio ?? true), {
+        type: "checkbox",
+        name: "maintain_aspect_ratio"
+      })
+    ]));
   }
+}
+
+function renderPageInspector(template) {
+  const page = template.page || {};
+  const fragment = document.createDocumentFragment();
+  fragment.appendChild(section("Page Properties", [
+    fieldRow("report name", template.metadata?.title || template.metadata?.name || "", { name: "report_name" }),
+    fieldRow("paper size", page.size || "A4", {
+      type: "select",
+      name: "page.size",
+      options: ["A4", "Letter", "Legal", "Custom"]
+    }),
+    fieldRow("orientation", page.orientation || "portrait", {
+      type: "select",
+      name: "page.orientation",
+      options: ["portrait", "landscape"]
+    }),
+    fieldRow("unit", page.unit || "px", {
+      type: "select",
+      name: "page.unit",
+      options: ["px", "mm", "in"]
+    })
+  ]));
+  fragment.appendChild(section("Page Size", [
+    fieldRow("width", page.width, { type: "number", name: "page.width" }),
+    fieldRow("height", page.height, { type: "number", name: "page.height" })
+  ], "field-grid"));
+  fragment.appendChild(section("Margins", [
+    fieldRow("top", page.margin_top, { type: "number", name: "page.margin_top" }),
+    fieldRow("right", page.margin_right, { type: "number", name: "page.margin_right" }),
+    fieldRow("bottom", page.margin_bottom, { type: "number", name: "page.margin_bottom" }),
+    fieldRow("left", page.margin_left, { type: "number", name: "page.margin_left" })
+  ], "field-grid"));
+  fragment.appendChild(section("Background", [
+    fieldRow("background", page.background_color || "#ffffff", {
+      type: "color",
+      name: "page.background_color",
+      transparent: true
+    }),
+    fieldRow("transparent", Boolean(page.transparent), {
+      type: "checkbox",
+      name: "page.transparent"
+    })
+  ]));
+  return fragment;
 }
 
 function textStyleFields(object) {
@@ -115,6 +226,18 @@ function applyInput(object, input) {
     setObjectStyleValue(object, input.dataset.styleKey, inputValue(input, value));
     return;
   }
+  if (input.name === "src") {
+    setObjectSource(object, String(value));
+    return;
+  }
+  if (input.name === "alt") {
+    setObjectAlt(object, String(value));
+    return;
+  }
+  if (input.name === "source_mode" || input.name === "maintain_aspect_ratio") {
+    setObjectPropertyValue(object, input.name, inputValue(input, value));
+    return;
+  }
   if (input.name === "text") {
     setObjectText(object, String(value));
     return;
@@ -124,6 +247,32 @@ function applyInput(object, input) {
     return;
   }
   object[input.name] = String(value);
+}
+
+function applyPageInput(template, input) {
+  const value = inputValue(input, input.type === "checkbox" ? input.checked : input.value);
+  if (input.name === "report_name") {
+    template.metadata = template.metadata || {};
+    template.metadata.name = String(value);
+    template.metadata.title = String(value);
+    return;
+  }
+  if (input.name === "page.size") {
+    setPageSize(template, String(value));
+    return;
+  }
+  if (input.name === "page.unit") {
+    setPageUnit(template, String(value));
+    return;
+  }
+  if (input.name === "page.orientation") {
+    setPageOrientation(template, String(value));
+    return;
+  }
+  if (input.name.startsWith("page.")) {
+    const key = input.name.slice("page.".length);
+    setPageValue(template, key, value);
+  }
 }
 
 function inputValue(input, value) {
@@ -143,7 +292,10 @@ function styleField(name, object, type, options = {}) {
     name,
     styleKey: name,
     options: options.options,
-    transparent: options.transparent
+    transparent: options.transparent,
+    step: options.step,
+    min: options.min,
+    max: options.max
   });
 }
 
@@ -201,6 +353,18 @@ function fieldRow(labelText, value, options = {}) {
   input.name = name;
   if (input instanceof HTMLInputElement) {
     input.type = options.type || "text";
+    if (options.accept) {
+      input.accept = options.accept;
+    }
+    if (options.step !== undefined) {
+      input.step = options.step;
+    }
+    if (options.min !== undefined) {
+      input.min = options.min;
+    }
+    if (options.max !== undefined) {
+      input.max = options.max;
+    }
   }
   input.disabled = Boolean(options.disabled);
   if (options.styleKey) {
@@ -230,6 +394,15 @@ function fieldRow(labelText, value, options = {}) {
     row.append(label, input);
   }
   return row;
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => resolve(String(reader.result || "")));
+    reader.addEventListener("error", () => reject(reader.error || new Error("Image upload failed")));
+    reader.readAsDataURL(file);
+  });
 }
 
 function section(title, rows, className = "") {
@@ -289,7 +462,12 @@ function transparentButton(name) {
   const button = document.createElement("button");
   button.type = "button";
   button.className = "transparent-button";
-  button.dataset.styleKey = name;
+  if (name.startsWith("page.")) {
+    button.dataset.styleKey = name;
+    button.dataset.pageKey = name.slice("page.".length);
+  } else {
+    button.dataset.styleKey = name;
+  }
   button.dataset.styleValue = "transparent";
   button.textContent = "transparent";
   button.title = "Use transparent background";

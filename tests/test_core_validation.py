@@ -27,7 +27,7 @@ def test_report_validate_returns_structured_errors_without_raising() -> None:
 
 
 def test_report_validate_checks_page_size_and_orientation() -> None:
-    report = Report(pages=[Page(size="legal", orientation="diagonal", unit="parsec", width=0)])
+    report = Report(pages=[Page(size="tabloid", orientation="diagonal", unit="parsec", width=0)])
 
     codes = {error.code for error in report.validate().errors}
 

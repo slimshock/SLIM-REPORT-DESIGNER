@@ -11,6 +11,7 @@ const ICONS = {
   field: '<path d="M8 7H5v10h3"/><path d="M16 7h3v10h-3"/><path d="M10 15l4-6"/>',
   line: '<path d="M4 12h16"/>',
   rectangle: '<rect x="4" y="6" width="16" height="12"/>',
+  image: '<rect x="4" y="5" width="16" height="14" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M4 16l4-4 3 3 2-2 7 6"/>',
   history: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v6h6"/><path d="M12 7v5l4 2"/>',
   restore: '<path d="M4 12a8 8 0 1 0 3-6.3"/><path d="M4 5v5h5"/><path d="M12 8v5h4"/>',
   close: '<path d="M6 6l12 12"/><path d="M18 6L6 18"/>',

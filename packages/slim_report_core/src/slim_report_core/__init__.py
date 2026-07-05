@@ -57,6 +57,7 @@ from .validation import ReportValidationIssue, ReportValidationResult
 from .widgets import (
     BaseWidget,
     FieldWidget,
+    ImageWidget,
     LineWidget,
     RectangleWidget,
     TextWidget,
@@ -83,6 +84,7 @@ __all__ = [
     "FieldWidget",
     "HTMLExporter",
     "ImageObject",
+    "ImageWidget",
     "JSONSerializer",
     "Layer",
     "LineObject",

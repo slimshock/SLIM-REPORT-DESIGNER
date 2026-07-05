@@ -35,6 +35,7 @@ class WidgetRegistry:
 def create_default_widget_registry() -> WidgetRegistry:
     """Create a widget registry with built-in widgets."""
     from .field import FieldWidget
+    from .image import ImageWidget
     from .line import LineWidget
     from .rectangle import RectangleWidget
     from .text import TextWidget
@@ -42,7 +43,7 @@ def create_default_widget_registry() -> WidgetRegistry:
     registry = WidgetRegistry()
     registry.register(TextWidget())
     registry.register(FieldWidget())
+    registry.register(ImageWidget())
     registry.register(LineWidget())
     registry.register(RectangleWidget())
     return registry
-

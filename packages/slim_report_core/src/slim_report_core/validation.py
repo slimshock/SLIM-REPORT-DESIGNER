@@ -9,7 +9,7 @@ from typing import Any
 
 from .models import Asset, Band, Layer, Object, Page, Style
 
-SUPPORTED_PAGE_SIZES = {"a4", "letter"}
+SUPPORTED_PAGE_SIZES = {"a4", "custom", "letter", "legal"}
 SUPPORTED_PAGE_UNITS = {"px", "pt", "in", "mm", "cm"}
 SUPPORTED_PAGE_ORIENTATIONS = {"portrait", "landscape"}
 SUPPORTED_OBJECT_TYPES = {
@@ -315,7 +315,9 @@ def _validate_style(style: Any, result: ReportValidationResult, path: str) -> No
             )
         elif key in {
             "border_width",
+            "border_radius",
             "line_width",
+            "opacity",
             "stroke_width",
         } and not _is_non_negative_number(value):
             result.add_error(

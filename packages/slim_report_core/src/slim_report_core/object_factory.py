@@ -372,7 +372,13 @@ class ObjectFactory:
         if target_class is RectangleObject:
             return self.create_rectangle(**common)
         if target_class is ImageObject:
-            return self.create_image(str(properties.get("source", "")), **common)
+            source = mapping.get(
+                "src",
+                mapping.get("source", properties.get("src", properties.get("source", ""))),
+            )
+            if source not in ("", None):
+                properties["src"] = str(source)
+            return self.create_image(str(source or ""), **common)
         if target_class is BarcodeObject:
             return self.create_barcode(
                 str(properties.get("value", "")),
@@ -472,6 +478,9 @@ _STYLE_KEYS = (
     "font_size",
     "italic",
     "line_width",
+    "object_fit",
+    "opacity",
+    "border_radius",
     "stroke_color",
     "stroke_width",
     "underline",

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 from io import BytesIO
 from typing import Any
 
@@ -22,6 +23,9 @@ def render_pdf(report: Report, data: dict[str, Any] | None = None) -> bytes:
     context = create_render_context(report, data)
     buffer = BytesIO()
     canvas = canvas_class(buffer, pagesize=(context.page.width_pt, context.page.height_pt))
+    if not context.page.transparent:
+        _set_fill_color(canvas, context.page.background_color)
+        canvas.rect(0, 0, context.page.width_pt, context.page.height_pt, stroke=0, fill=1)
 
     for obj in context.objects:
         render_pdf_object(canvas, obj, context)
@@ -46,6 +50,9 @@ def render_pdf_object(canvas: Any, obj: RenderObject, context: RenderContext) ->
         return
     if obj.type == "rectangle":
         _render_rectangle(canvas, obj, context)
+        return
+    if obj.type == "image":
+        _render_image(canvas, obj, context)
         return
     raise ReportValidationError(f"Unsupported report object type: {obj.type}.")
 
@@ -80,6 +87,76 @@ def _render_rectangle(canvas: Any, obj: RenderObject, context: RenderContext) ->
         style.get("background_color", style.get("fill_color", "transparent")),
     )
     canvas.rect(x, _pdf_y(context, y + height), width, height, stroke=1, fill=int(fill))
+
+
+def _render_image(canvas: Any, obj: RenderObject, context: RenderContext) -> None:
+    x, y, width, height = object_pt(obj, context.page.unit)
+    style = obj.style
+    background = style.get("background_color", "transparent")
+    if not _is_transparent(background):
+        _set_fill_color(canvas, background)
+        canvas.rect(x, _pdf_y(context, y + height), width, height, stroke=0, fill=1)
+
+    border_width = float(style.get("border_width", 0))
+    if border_width > 0:
+        canvas.setLineWidth(border_width)
+        _set_stroke_color(canvas, style.get("border_color", "#000000"))
+        canvas.rect(x, _pdf_y(context, y + height), width, height, stroke=1, fill=0)
+
+    source = str(obj.properties.get("src") or obj.properties.get("source") or "")
+    reader = _image_reader(source)
+    if reader is None:
+        _draw_image_placeholder(canvas, x, y, width, height, context)
+        return
+    try:
+        canvas.drawImage(
+            reader,
+            x,
+            _pdf_y(context, y + height),
+            width=width,
+            height=height,
+            preserveAspectRatio=str(style.get("object_fit", "contain")) == "contain",
+            mask="auto",
+        )
+    except Exception:
+        _draw_image_placeholder(canvas, x, y, width, height, context)
+
+
+def _draw_image_placeholder(
+    canvas: Any,
+    x: float,
+    y: float,
+    width: float,
+    height: float,
+    context: RenderContext,
+) -> None:
+    canvas.setLineWidth(1)
+    _set_stroke_color(canvas, "#94a3b8")
+    canvas.rect(x, _pdf_y(context, y + height), width, height, stroke=1, fill=0)
+    canvas.setFont("Helvetica", 9)
+    _set_fill_color(canvas, "#64748b")
+    canvas.drawString(x + 4, _pdf_y(context, y + (height / 2)), "Image")
+
+
+def _image_reader(source: str) -> Any | None:
+    if not source:
+        return None
+    if source.startswith(("http://", "https://")):
+        return None
+    try:
+        from reportlab.lib.utils import ImageReader
+    except ImportError:
+        return None
+    if source.startswith("data:image/"):
+        try:
+            _, encoded = source.split(",", 1)
+            return ImageReader(BytesIO(base64.b64decode(encoded)))
+        except Exception:
+            return None
+    try:
+        return ImageReader(source)
+    except Exception:
+        return None
 
 
 def _draw_text(canvas: Any, obj: RenderObject, context: RenderContext, value: str) -> None:

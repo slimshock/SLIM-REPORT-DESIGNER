@@ -8,8 +8,15 @@ export function createDefaultTemplate() {
     page: {
       size: "A4",
       orientation: "portrait",
+      unit: "px",
       width: 595,
-      height: 842
+      height: 842,
+      margin_top: 24,
+      margin_right: 24,
+      margin_bottom: 24,
+      margin_left: 24,
+      background_color: "#ffffff",
+      transparent: false
     },
     objects: [],
     bands: [],
@@ -26,14 +33,7 @@ export function normalizeTemplate(template) {
     name: source.metadata?.name || title,
     title
   };
-  source.page = {
-    size: "A4",
-    orientation: "portrait",
-    width: 595,
-    height: 842,
-    ...(source.page || {})
-  };
-  source.page.unit = "px";
+  source.page = normalizePage(source.page || {});
   source.objects = Array.isArray(source.objects) ? source.objects.map(normalizeObject) : [];
   source.bands = Array.isArray(source.bands) ? source.bands : [];
   source.assets = Array.isArray(source.assets) ? source.assets : [];
@@ -48,7 +48,7 @@ export function normalizeObject(object) {
     x: numberValue(object.x, 40),
     y: numberValue(object.y, 40),
     width: numberValue(object.width, 160),
-    height: numberValue(object.height, type === "line" ? 0 : 32),
+    height: numberValue(object.height, defaultHeightForType(type)),
     properties: {
       ...(object.properties || {})
     }
@@ -61,6 +61,17 @@ export function normalizeObject(object) {
   if (object.binding !== undefined) {
     normalized.binding = String(object.binding);
     normalized.properties.binding = normalized.binding;
+  }
+  const source = object.src ?? object.source ?? object.properties?.src ?? object.properties?.source;
+  if (type === "image") {
+    normalized.src = source === undefined ? "" : String(source);
+    normalized.alt = String(object.alt ?? object.properties?.alt ?? "");
+    normalized.properties.src = normalized.src;
+    normalized.properties.source = normalized.src;
+    normalized.properties.alt = normalized.alt;
+    normalized.properties.maintain_aspect_ratio = Boolean(
+      object.maintain_aspect_ratio ?? object.properties?.maintain_aspect_ratio ?? true
+    );
   }
   const style = explicitStyle(object);
   if (Object.keys(style).length > 0) {
@@ -102,6 +113,18 @@ export function createObject(type, template) {
     base.width = 180;
     base.height = 90;
     base.properties.style = { border_width: 1 };
+  } else if (type === "image") {
+    base.x = 40;
+    base.y = 40;
+    base.width = 120;
+    base.height = 80;
+    base.src = "";
+    base.alt = "";
+    base.properties.src = "";
+    base.properties.source = "";
+    base.properties.alt = "";
+    base.properties.maintain_aspect_ratio = true;
+    base.properties.style = defaultStyleForType("image");
   }
 
   return normalizeObject(base);
@@ -146,6 +169,16 @@ export function defaultStyleForType(type) {
       stroke_color: "#111827"
     };
   }
+  if (type === "image") {
+    return {
+      object_fit: "contain",
+      opacity: 1,
+      border_radius: 0,
+      border_width: 0,
+      border_color: "#000000",
+      background_color: "transparent"
+    };
+  }
   return {
     font_family: "Arial",
     font_size: 12,
@@ -171,6 +204,67 @@ export function setObjectBinding(object, value) {
   object.properties.binding = value;
 }
 
+export function setObjectSource(object, value) {
+  object.src = value;
+  object.properties = object.properties || {};
+  object.properties.src = value;
+  object.properties.source = value;
+}
+
+export function setObjectAlt(object, value) {
+  object.alt = value;
+  object.properties = object.properties || {};
+  object.properties.alt = value;
+}
+
+export function setObjectPropertyValue(object, key, value) {
+  object.properties = object.properties || {};
+  object.properties[key] = value;
+}
+
+export function setPageValue(template, key, value) {
+  template.page = normalizePage({
+    ...(template.page || {}),
+    [key]: value
+  });
+}
+
+export function setPageSize(template, size) {
+  const page = normalizePage({ ...(template.page || {}), size });
+  if (size !== "Custom") {
+    const dimensions = paperDimensions(size, page.unit, page.orientation);
+    page.width = dimensions.width;
+    page.height = dimensions.height;
+  }
+  template.page = page;
+}
+
+export function setPageUnit(template, unit) {
+  const current = normalizePage(template.page || {});
+  const page = normalizePage({ ...current, unit });
+  if (page.size !== "Custom") {
+    const dimensions = paperDimensions(page.size, unit, page.orientation);
+    page.width = dimensions.width;
+    page.height = dimensions.height;
+  }
+  template.page = page;
+}
+
+export function setPageOrientation(template, orientation) {
+  const page = normalizePage({ ...(template.page || {}), orientation });
+  if (page.size !== "Custom") {
+    const dimensions = paperDimensions(page.size, page.unit, orientation);
+    page.width = dimensions.width;
+    page.height = dimensions.height;
+  } else if (
+    (orientation === "landscape" && page.width < page.height) ||
+    (orientation === "portrait" && page.width > page.height)
+  ) {
+    [page.width, page.height] = [page.height, page.width];
+  }
+  template.page = page;
+}
+
 export function templateTitle(template) {
   return template.metadata?.title || template.metadata?.name || "Untitled Report";
 }
@@ -189,6 +283,55 @@ export function uniqueId(prefix, existingIds) {
 function numberValue(value, fallback) {
   const number = Number(value);
   return Number.isFinite(number) ? number : fallback;
+}
+
+export function normalizePage(page) {
+  const size = page.size || "A4";
+  const orientation = page.orientation === "landscape" ? "landscape" : "portrait";
+  const unit = ["px", "mm", "in"].includes(page.unit) ? page.unit : "px";
+  const fallback = paperDimensions(size, unit, orientation);
+  return {
+    size,
+    orientation,
+    unit,
+    width: numberValue(page.width, fallback.width),
+    height: numberValue(page.height, fallback.height),
+    margin_top: numberValue(page.margin_top ?? page.margin?.top, unit === "px" ? 24 : unit === "mm" ? 10 : 0.4),
+    margin_right: numberValue(page.margin_right ?? page.margin?.right, unit === "px" ? 24 : unit === "mm" ? 10 : 0.4),
+    margin_bottom: numberValue(page.margin_bottom ?? page.margin?.bottom, unit === "px" ? 24 : unit === "mm" ? 10 : 0.4),
+    margin_left: numberValue(page.margin_left ?? page.margin?.left, unit === "px" ? 24 : unit === "mm" ? 10 : 0.4),
+    background_color: String(page.background_color || "#ffffff"),
+    transparent: Boolean(page.transparent)
+  };
+}
+
+export function paperDimensions(size, unit, orientation) {
+  const key = String(size || "A4").toLowerCase();
+  const table = {
+    a4: { px: [595, 842], mm: [210, 297], in: [8.27, 11.69] },
+    letter: { px: [612, 792], mm: [215.9, 279.4], in: [8.5, 11] },
+    legal: { px: [612, 1008], mm: [215.9, 355.6], in: [8.5, 14] },
+    custom: { px: [595, 842], mm: [210, 297], in: [8.27, 11.69] }
+  };
+  const values = table[key]?.[unit] || table.a4.px;
+  let [width, height] = values;
+  if (orientation === "landscape" && width < height) {
+    [width, height] = [height, width];
+  }
+  if (orientation === "portrait" && width > height) {
+    [width, height] = [height, width];
+  }
+  return { width, height };
+}
+
+function defaultHeightForType(type) {
+  if (type === "line") {
+    return 0;
+  }
+  if (type === "image") {
+    return 80;
+  }
+  return 32;
 }
 
 function explicitStyle(object) {
@@ -210,6 +353,9 @@ function explicitStyle(object) {
     "font_size",
     "italic",
     "line_width",
+    "object_fit",
+    "opacity",
+    "border_radius",
     "stroke_color",
     "stroke_width",
     "underline",

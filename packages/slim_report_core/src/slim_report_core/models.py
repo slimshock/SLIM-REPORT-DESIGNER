@@ -35,6 +35,9 @@ _STYLE_KEYS = (
     "font_size",
     "italic",
     "line_width",
+    "object_fit",
+    "opacity",
+    "border_radius",
     "stroke_color",
     "stroke_width",
     "underline",
@@ -241,6 +244,8 @@ class Page:
     unit: str = DEFAULT_PAGE_UNIT
     orientation: str = DEFAULT_PAGE_ORIENTATION
     margin: Margin = field(default_factory=Margin)
+    background_color: str = "#ffffff"
+    transparent: bool = False
     id: str | None = None
     size: str | None = None
     _report: Any = field(default=None, init=False, repr=False, compare=False)
@@ -265,6 +270,8 @@ class Page:
             unit=unit,
             orientation=str(mapping.get("orientation", DEFAULT_PAGE_ORIENTATION)),
             margin=margin,
+            background_color=str(mapping.get("background_color", "#ffffff")),
+            transparent=bool(mapping.get("transparent", False)),
             id=_optional_str(mapping.get("id")),
             size=size,
         )
@@ -279,6 +286,8 @@ class Page:
             "margin_right": self.margin.right,
             "margin_bottom": self.margin.bottom,
             "margin_left": self.margin.left,
+            "background_color": self.background_color,
+            "transparent": self.transparent,
         }
         if self.id:
             data["id"] = self.id
@@ -298,6 +307,8 @@ class Page:
             unit=self.unit,
             orientation=self.orientation,
             margin=self.margin.clone(),
+            background_color=self.background_color,
+            transparent=self.transparent,
             id=_clone_id("page", self.id, new_ids=new_ids),
             size=self.size,
         )
@@ -1515,7 +1526,9 @@ def _page_size_dimensions(size: str, unit: str) -> tuple[float, float]:
     normalized_unit = unit.lower()
     sizes_in_inches = {
         "letter": (8.5, 11.0),
+        "legal": (8.5, 14.0),
         "a4": (210.0 / 25.4, 297.0 / 25.4),
+        "custom": (8.5, 11.0),
     }
     if normalized_size not in sizes_in_inches:
         raise ReportValidationError(f"Unsupported page size: {size}.")

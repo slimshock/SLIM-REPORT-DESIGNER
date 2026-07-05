@@ -58,6 +58,7 @@ const canvasController = createCanvasController({
 
 const inspector = createInspector({
   form: elements.inspectorForm,
+  getTemplate: () => state.template,
   getSelectedObject,
   onChange: markDirty,
   onSelect: selectObject

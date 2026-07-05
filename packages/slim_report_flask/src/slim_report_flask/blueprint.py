@@ -207,7 +207,7 @@ def normalize_template_payload(payload: dict[str, Any]) -> dict[str, Any]:
     normalized.setdefault("version", "0.1")
     normalized.setdefault("page", {"size": "A4", "orientation": "portrait"})
     normalized["page"] = dict(normalized["page"])
-    normalized["page"]["unit"] = "px"
+    normalized["page"].setdefault("unit", "px")
     normalized.setdefault("objects", [])
     normalized.setdefault("bands", [])
     normalized.setdefault("assets", [])

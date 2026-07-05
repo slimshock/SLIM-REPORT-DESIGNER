@@ -141,7 +141,9 @@ def test_flask_designer_api_previews_and_exports_posted_json(tmp_path: Path) -> 
             "orientation": "portrait",
             "width": 595,
             "height": 842,
-            "unit": "in",
+            "unit": "px",
+            "background_color": "#ffffff",
+            "transparent": False,
         },
         "objects": [
             {
@@ -161,6 +163,21 @@ def test_flask_designer_api_previews_and_exports_posted_json(tmp_path: Path) -> 
                     "background_color": "#ffeecc",
                     "align": "center",
                 },
+            },
+            {
+                "id": "logo",
+                "type": "image",
+                "x": 40,
+                "y": 80,
+                "width": 48,
+                "height": 48,
+                "src": "",
+                "alt": "Logo",
+                "style": {
+                    "object_fit": "contain",
+                    "border_width": 1,
+                    "border_color": "#000000",
+                },
             }
         ],
         "bands": [],
@@ -179,6 +196,8 @@ def test_flask_designer_api_previews_and_exports_posted_json(tmp_path: Path) -> 
     assert "font-style: italic" in preview_html
     assert "text-decoration: underline" in preview_html
     assert "background: #ffeecc" in preview_html
+    assert 'data-slim-object="logo"' in preview_html
+    assert "Image" in preview_html
     assert pdf_response.status_code == 200
     assert pdf_response.mimetype == "application/pdf"
     assert pdf_response.get_data().startswith(b"%PDF")

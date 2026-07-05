@@ -92,30 +92,39 @@ function openHtmlPreview(html) {
 
 function localPreviewHtml(template) {
   const page = template.page || {};
-  const objects = (template.objects || []).map(localObjectHtml).join("\n");
+  const objects = (template.objects || []).map((object) => localObjectHtml(object, page.unit)).join("\n");
+  const background = page.transparent ? "#fff" : page.background_color || "#fff";
   return `<!doctype html>
 <html lang="en">
 <head><meta charset="utf-8"><title>${escapeHtml(template.metadata?.title || "Preview")}</title></head>
 <body style="margin:0;background:#e5e7eb;padding:24px;font-family:Arial,sans-serif">
-<div style="position:relative;margin:0 auto;background:#fff;width:${page.width || 595}px;height:${page.height || 842}px">
+<div style="position:relative;margin:0 auto;background:${escapeHtml(background)};width:${unitToPx(page.width || 595, page.unit)}px;height:${unitToPx(page.height || 842, page.unit)}px">
 ${objects}
 </div>
 </body></html>`;
 }
 
-function localObjectHtml(object) {
+function localObjectHtml(object, unit = "px") {
   const style = object.style || object.properties?.style || {};
   const value = object.type === "field"
     ? `{{ ${object.binding || object.properties?.binding || ""} }}`
     : object.text || object.properties?.text || "";
   const textDecoration = style.underline ? "underline" : "none";
   const display = object.type === "text" || object.type === "field" ? "flex" : "block";
-  const box = `position:absolute;box-sizing:border-box;left:${object.x}px;top:${object.y}px;width:${object.width}px;height:${Math.max(object.height, 8)}px;display:${display};justify-content:${horizontalFlexAlign(style.align)};align-items:${verticalFlexAlign(style.vertical_align)};font-family:${style.font_family || "Arial"};font-size:${style.font_size || 12}px;font-weight:${style.bold ? 700 : 400};font-style:${style.italic ? "italic" : "normal"};text-decoration:${textDecoration};color:${style.color || "#111827"};background:${style.background_color || "transparent"};text-align:${style.align || "left"};overflow:hidden`;
+  const box = `position:absolute;box-sizing:border-box;left:${unitToPx(object.x, unit)}px;top:${unitToPx(object.y, unit)}px;width:${unitToPx(object.width, unit)}px;height:${unitToPx(Math.max(object.height, 8), unit)}px;display:${display};justify-content:${horizontalFlexAlign(style.align)};align-items:${verticalFlexAlign(style.vertical_align)};font-family:${style.font_family || "Arial"};font-size:${style.font_size || 12}px;font-weight:${style.bold ? 700 : 400};font-style:${style.italic ? "italic" : "normal"};text-decoration:${textDecoration};color:${style.color || "#111827"};background:${style.background_color || "transparent"};text-align:${style.align || "left"};overflow:hidden`;
   if (object.type === "line") {
     return `<div style="${box};border-top:${style.stroke_width || 1}px solid ${style.stroke_color || style.color || "#111827"}"></div>`;
   }
   if (object.type === "rectangle") {
     return `<div style="${box};border:${style.border_width || 1}px solid ${style.border_color || "#111827"};background:${style.background_color || style.fill_color || "transparent"}"></div>`;
+  }
+  if (object.type === "image") {
+    const src = object.src || object.properties?.src || object.properties?.source || "";
+    const imageBox = `${box};display:grid;place-items:center;border:${style.border_width || 0}px solid ${style.border_color || "#000000"};border-radius:${style.border_radius || 0}px;opacity:${style.opacity ?? 1}`;
+    if (!src) {
+      return `<div style="${imageBox};color:#64748b;background:#f8fafc">Image</div>`;
+    }
+    return `<div style="${imageBox}"><img src="${escapeHtml(src)}" alt="${escapeHtml(object.alt || object.properties?.alt || "")}" style="width:100%;height:100%;object-fit:${style.object_fit || "contain"};display:block"></div>`;
   }
   return `<div style="${box}">${escapeHtml(value)}</div>`;
 }
@@ -166,4 +175,15 @@ function verticalFlexAlign(value) {
     return "flex-end";
   }
   return "flex-start";
+}
+
+function unitToPx(value, unit = "px") {
+  const number = Number(value) || 0;
+  if (unit === "in") {
+    return number * 96;
+  }
+  if (unit === "mm") {
+    return number * 96 / 25.4;
+  }
+  return number;
 }

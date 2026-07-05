@@ -47,6 +47,8 @@ def _report_with_overrides(report: Any, page_size: str | None, orientation: str 
     if page_size is not None:
         page.size = page_size
         page.unit = page.unit or "px"
+        page.width = 0
+        page.height = 0
     if orientation is not None:
         page.orientation = orientation
     return prepared

@@ -51,6 +51,8 @@ def test_html_rendering_applies_extended_style_fields() -> None:
     assert 'stroke="#123456"' in html
     assert "border: 2.0px solid #654321" in html
     assert "background: #eeeeee" in html
+    assert 'data-slim-object="logo"' in html
+    assert "object-fit: contain" in html
 
 
 def test_pdf_rendering_returns_pdf_bytes() -> None:
@@ -107,6 +109,10 @@ def load_report() -> Report:
 
 
 def sample_template() -> dict:
+    svg_data_url = (
+        "data:image/svg+xml;base64,"
+        "PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjEiLz4="
+    )
     return {
         "version": "1.0",
         "metadata": {
@@ -120,6 +126,8 @@ def sample_template() -> dict:
             "size": "letter",
             "orientation": "portrait",
             "unit": "px",
+            "background_color": "#ffffff",
+            "transparent": False,
         },
         "objects": [
             {
@@ -177,6 +185,21 @@ def sample_template() -> dict:
                     "border_width": 2,
                     "border_color": "#654321",
                     "background_color": "#eeeeee",
+                },
+            },
+            {
+                "id": "logo",
+                "type": "image",
+                "x": 50,
+                "y": 270,
+                "width": 40,
+                "height": 40,
+                "src": svg_data_url,
+                "alt": "Logo",
+                "style": {
+                    "object_fit": "contain",
+                    "border_width": 1,
+                    "border_color": "#000000",
                 },
             },
         ],

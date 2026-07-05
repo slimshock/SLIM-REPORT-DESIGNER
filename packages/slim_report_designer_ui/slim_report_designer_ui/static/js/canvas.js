@@ -40,6 +40,9 @@ export function createCanvasController({ canvas, getTemplate, getSelectedId, onS
       startY: Number(currentObject.y) || 0,
       startWidth: Number(currentObject.width) || 0,
       startHeight: Number(currentObject.height) || 0,
+      startAspectRatio: Number(currentObject.width) && Number(currentObject.height)
+        ? Number(currentObject.width) / Number(currentObject.height)
+        : 1,
       resizing,
       captureElement: objectElement,
     };
@@ -77,6 +80,9 @@ export function createCanvasController({ canvas, getTemplate, getSelectedId, onS
         object.type === "line" ? 0 : 8,
         Math.round(dragState.startHeight + dy)
       );
+      if (object.type === "image" && object.properties?.maintain_aspect_ratio) {
+        object.height = Math.max(8, Math.round(object.width / dragState.startAspectRatio));
+      }
     } else {
       object.x = Math.round(dragState.startX + dx);
       object.y = Math.round(dragState.startY + dy);
@@ -195,16 +201,18 @@ function safeReleasePointerCapture(element, event) {
 export function renderCanvas(canvas, template, selectedId) {
   const page = template.page || {};
 
-  canvas.style.width = `${page.width || 595}px`;
-  canvas.style.height = `${page.height || 842}px`;
+  canvas.style.width = `${unitToPx(page.width || 595, page.unit)}px`;
+  canvas.style.height = `${unitToPx(page.height || 842, page.unit)}px`;
+  canvas.style.backgroundColor = page.transparent ? "#ffffff" : page.background_color || "#ffffff";
+  canvas.dataset.transparent = page.transparent ? "true" : "false";
   canvas.innerHTML = "";
 
   for (const object of template.objects || []) {
-    canvas.appendChild(renderObject(object, selectedId));
+    canvas.appendChild(renderObject(object, selectedId, page.unit));
   }
 }
 
-function renderObject(object, selectedId) {
+function renderObject(object, selectedId, unit = "px") {
   const element = document.createElement("div");
 
   element.className = "report-object";
@@ -216,10 +224,10 @@ function renderObject(object, selectedId) {
   element.dataset.objectId = object.id;
   element.dataset.type = object.type;
 
-  element.style.left = `${Number(object.x) || 0}px`;
-  element.style.top = `${Number(object.y) || 0}px`;
-  element.style.width = `${Number(object.width) || 0}px`;
-  element.style.height = `${Math.max(Number(object.height) || 0, object.type === "line" ? 6 : 8)}px`;
+  element.style.left = `${unitToPx(Number(object.x) || 0, unit)}px`;
+  element.style.top = `${unitToPx(Number(object.y) || 0, unit)}px`;
+  element.style.width = `${unitToPx(Number(object.width) || 0, unit)}px`;
+  element.style.height = `${unitToPx(Math.max(Number(object.height) || 0, object.type === "line" ? 6 : 8), unit)}px`;
 
   const style = objectStyle(object);
 
@@ -252,6 +260,25 @@ function renderObject(object, selectedId) {
     rectangle.style.borderColor = style.border_color || "#111827";
     rectangle.style.background = style.background_color || "transparent";
     element.appendChild(rectangle);
+  } else if (object.type === "image") {
+    element.classList.add("image-object");
+    element.style.background = style.background_color || "transparent";
+    element.style.border = `${Number(style.border_width) || 0}px solid ${style.border_color || "#000000"}`;
+    element.style.borderRadius = `${Number(style.border_radius) || 0}px`;
+    element.style.opacity = `${Number(style.opacity ?? 1)}`;
+    if (object.src || object.properties?.src || object.properties?.source) {
+      const image = document.createElement("img");
+      image.src = object.src || object.properties?.src || object.properties?.source;
+      image.alt = object.alt || object.properties?.alt || "";
+      image.draggable = false;
+      image.style.objectFit = style.object_fit || "contain";
+      element.appendChild(image);
+    } else {
+      const placeholder = document.createElement("div");
+      placeholder.className = "image-placeholder";
+      placeholder.textContent = "Image";
+      element.appendChild(placeholder);
+    }
   }
 
   if (object.id === selectedId) {
@@ -261,6 +288,17 @@ function renderObject(object, selectedId) {
   }
 
   return element;
+}
+
+function unitToPx(value, unit = "px") {
+  const number = Number(value) || 0;
+  if (unit === "in") {
+    return number * 96;
+  }
+  if (unit === "mm") {
+    return number * 96 / 25.4;
+  }
+  return number;
 }
 
 function findObject(template, objectId) {

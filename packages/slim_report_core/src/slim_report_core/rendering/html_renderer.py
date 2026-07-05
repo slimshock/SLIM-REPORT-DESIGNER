@@ -22,6 +22,7 @@ def render_html(report: Report, data: dict[str, Any] | None = None) -> str:
     objects = "\n      ".join(render_html_object(obj, context) for obj in context.objects)
     page = context.page
     title = escape(context.title)
+    page_background = "#fff" if page.transparent else escape(page.background_color, quote=True)
 
     return (
         "<!doctype html>\n"
@@ -40,7 +41,7 @@ def render_html(report: Report, data: dict[str, Any] | None = None) -> str:
         "<body>\n"
         '  <div class="slim-report-preview">\n'
         f'    <div class="slim-report-page" style="width: {page.width_px}px; '
-        f'height: {page.height_px}px;">\n'
+        f'height: {page.height_px}px; background: {page_background};">\n'
         f"      {objects}\n"
         "    </div>\n"
         "  </div>\n"
@@ -61,6 +62,8 @@ def render_html_object(obj: RenderObject, context: RenderContext) -> str:
         return _render_line(obj, context)
     if obj.type == "rectangle":
         return _render_rectangle(obj, context)
+    if obj.type == "image":
+        return _render_image(obj, context)
     raise ReportValidationError(f"Unsupported report object type: {obj.type}.")
 
 
@@ -107,6 +110,36 @@ def _render_rectangle(obj: RenderObject, context: RenderContext) -> str:
         f'<div class="slim-report-object" data-slim-object="{escape(obj.id, quote=True)}" '
         f'style="{_position_style(x, y, width, height)} border: {border_width}px solid '
         f"{border_color}; background: {fill_color};\"></div>"
+    )
+
+
+def _render_image(obj: RenderObject, context: RenderContext) -> str:
+    x, y, width, height = object_px(obj, context.page.unit)
+    style = obj.style
+    source = str(obj.properties.get("src") or obj.properties.get("source") or "")
+    border_width = float(style.get("border_width", 0))
+    border_color = escape(str(style.get("border_color", "#000000")), quote=True)
+    background_color = escape(str(style.get("background_color", "transparent")), quote=True)
+    border_radius = float(style.get("border_radius", 0))
+    opacity = float(style.get("opacity", 1))
+    object_fit = escape(str(style.get("object_fit", "contain")), quote=True)
+    css = (
+        f"{_position_style(x, y, width, height)} "
+        f"border: {border_width}px solid {border_color}; "
+        f"border-radius: {border_radius}px; "
+        f"background: {background_color}; opacity: {opacity}; "
+        "display: grid; place-items: center; overflow: hidden;"
+    )
+    if not source:
+        return (
+            f'<div class="slim-report-object" data-slim-object="{escape(obj.id, quote=True)}" '
+            f'style="{css}; color: #64748b;">Image</div>'
+        )
+    alt = escape(str(obj.properties.get("alt", "")), quote=True)
+    return (
+        f'<div class="slim-report-object" data-slim-object="{escape(obj.id, quote=True)}" '
+        f'style="{css}"><img src="{escape(source, quote=True)}" alt="{alt}" '
+        f'style="width: 100%; height: 100%; object-fit: {object_fit}; display: block;"></div>'
     )
 
 

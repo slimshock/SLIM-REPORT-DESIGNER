@@ -19,6 +19,10 @@ PAGE_SIZES = {
         "px": (8.5 * CSS_DPI, 11.0 * CSS_DPI),
         "pt": (8.5 * POINTS_PER_INCH, 11.0 * POINTS_PER_INCH),
     },
+    "legal": {
+        "px": (8.5 * CSS_DPI, 14.0 * CSS_DPI),
+        "pt": (8.5 * POINTS_PER_INCH, 14.0 * POINTS_PER_INCH),
+    },
     "a4": {
         "px": (210.0 * CSS_DPI / 25.4, 297.0 * CSS_DPI / 25.4),
         "pt": (210.0 * POINTS_PER_INCH / 25.4, 297.0 * POINTS_PER_INCH / 25.4),
@@ -53,6 +57,8 @@ class RenderPage:
     height_px: float
     width_pt: float
     height_pt: float
+    background_color: str
+    transparent: bool
 
 
 @dataclass(frozen=True)
@@ -70,6 +76,7 @@ class RenderObject:
     style: dict[str, Any] = field(default_factory=dict)
     z_index: int = 0
     visible: bool = True
+    properties: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -110,7 +117,14 @@ def resolve_page(page: Page) -> RenderPage:
     if orientation not in {"portrait", "landscape"}:
         raise ReportValidationError(f"Unsupported page orientation: {orientation}.")
 
-    if size:
+    width = float(getattr(page, "width", 0) or 0)
+    height = float(getattr(page, "height", 0) or 0)
+    if width > 0 and height > 0:
+        width_px = convert_unit(width, unit, "px")
+        height_px = convert_unit(height, unit, "px")
+        width_pt = convert_unit(width, unit, "pt")
+        height_pt = convert_unit(height, unit, "pt")
+    elif size:
         if size not in PAGE_SIZES:
             raise ReportValidationError(f"Unsupported page size: {size}.")
         width_px, height_px = PAGE_SIZES[size]["px"]
@@ -139,6 +153,8 @@ def resolve_page(page: Page) -> RenderPage:
         height_px=height_px,
         width_pt=width_pt,
         height_pt=height_pt,
+        background_color=str(getattr(page, "background_color", "#ffffff") or "#ffffff"),
+        transparent=bool(getattr(page, "transparent", False)),
     )
 
 
@@ -169,6 +185,7 @@ def normalize_object(obj: Object) -> RenderObject:
         style=style,
         z_index=int(getattr(obj, "z_index", 0)),
         visible=bool(getattr(obj, "visible", True)),
+        properties=dict(properties),
     )
 
 
@@ -237,6 +254,9 @@ def _style(obj: Any, properties: Mapping[str, Any]) -> dict[str, Any]:
         "font_size",
         "italic",
         "line_width",
+        "object_fit",
+        "opacity",
+        "border_radius",
         "stroke_color",
         "stroke_width",
         "underline",
