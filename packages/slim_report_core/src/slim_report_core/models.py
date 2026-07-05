@@ -34,6 +34,7 @@ _STYLE_KEYS = (
     "font_family",
     "font_size",
     "italic",
+    "line_height",
     "line_width",
     "object_fit",
     "opacity",
@@ -1524,6 +1525,12 @@ def _safe_id_prefix(value: str) -> str:
 def _page_size_dimensions(size: str, unit: str) -> tuple[float, float]:
     normalized_size = size.lower()
     normalized_unit = unit.lower()
+    sizes_in_px = {
+        "letter": (612.0, 792.0),
+        "legal": (612.0, 1008.0),
+        "a4": (595.0, 842.0),
+        "custom": (595.0, 842.0),
+    }
     sizes_in_inches = {
         "letter": (8.5, 11.0),
         "legal": (8.5, 14.0),
@@ -1533,11 +1540,12 @@ def _page_size_dimensions(size: str, unit: str) -> tuple[float, float]:
     if normalized_size not in sizes_in_inches:
         raise ReportValidationError(f"Unsupported page size: {size}.")
 
+    if normalized_unit == "px":
+        return sizes_in_px[normalized_size]
+
     width_in, height_in = sizes_in_inches[normalized_size]
     if normalized_unit == "in":
         return width_in, height_in
-    if normalized_unit == "px":
-        return width_in * 96.0, height_in * 96.0
     if normalized_unit == "pt":
         return width_in * 72.0, height_in * 72.0
     if normalized_unit == "mm":

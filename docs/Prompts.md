@@ -2576,3 +2576,323 @@ Acceptance criteria:
 - Static mode still works.
 - Flask mode still works.
 - Preview/export PDF still works.
+
+
+-----------------------------
+
+
+Sprint 5.6 — Canvas-to-PDF Fidelity
+
+Current status:
+- Framework-agnostic designer UI works.
+- Static designer works.
+- Flask designer works.
+- Drag/drop works.
+- Resize works.
+- Style inspector works.
+- Icons and local version history work.
+- Page properties work.
+- Image object support works.
+- Zoom, grid, snap, undo/redo work.
+- Multi-select, align, distribute, layer controls, and lock/unlock work.
+- Preview/export PDF works in Flask.
+
+Goal:
+Improve fidelity between the browser designer canvas, HTML preview, and exported PDF.
+
+The designer canvas should become the visual source of truth:
+- same page size
+- same object positions
+- same font size
+- same font family where possible
+- same bold/italic/underline
+- same text alignment
+- same vertical alignment where possible
+- same colors
+- same backgrounds
+- same rectangle borders
+- same line stroke width/color
+- same image placement and sizing
+
+Important rules:
+- Do not introduce React, Vue, TypeScript, npm, Tailwind, Bootstrap, CDN, or build steps.
+- Use plain HTML, CSS, and vanilla JavaScript modules only.
+- Keep designer UI framework-agnostic.
+- Static mode must work.
+- Flask mode must work.
+- Do not break existing templates.
+- Do not break import/export JSON.
+- Do not break preview/export PDF.
+- Keep changes backward-compatible.
+
+Files to inspect:
+- packages/slim_report_designer_ui/slim_report_designer_ui/static/js/canvas.js
+- packages/slim_report_designer_ui/slim_report_designer_ui/static/js/objects.js
+- packages/slim_report_designer_ui/slim_report_designer_ui/static/js/inspector.js
+- packages/slim_report_designer_ui/slim_report_designer_ui/static/css/designer.css
+- packages/slim_report_core/src/slim_report_core/
+- packages/slim_report_core/src/slim_report_core/rendering/
+- packages/slim_report_core/src/slim_report_core/widgets/
+- packages/slim_report_flask/src/slim_report_flask/blueprint.py
+- examples/flask_app/sample_templates/lab_result.json
+- examples/flask_app/sample_templates/cerebro_cbc.json
+
+Part A — Define shared style normalization
+
+1. Add or improve a shared normalization layer for report objects.
+
+Every object should normalize:
+- id
+- type
+- x
+- y
+- width
+- height
+- locked
+- style
+
+Text/field style:
+- font_family
+- font_size
+- bold
+- italic
+- underline
+- color
+- background_color
+- align
+- vertical_align
+- line_height
+
+Rectangle style:
+- border_width
+- border_color
+- background_color
+- border_radius
+
+Line style:
+- stroke_width
+- stroke_color
+
+Image style:
+- object_fit
+- opacity
+- border_radius
+- border_width
+- border_color
+- background_color
+
+2. Keep backward compatibility with older templates.
+
+3. Defaults should be consistent between:
+- designer canvas
+- preview renderer
+- PDF renderer
+
+Part B — Canvas rendering consistency
+
+4. Ensure canvas object rendering applies all supported style fields.
+
+Text and field:
+- font-family
+- font-size
+- font-weight
+- font-style
+- text-decoration
+- color
+- background-color
+- text-align
+- vertical-align / flex alignment where possible
+- line-height
+
+Rectangle:
+- border-width
+- border-color
+- background-color
+- border-radius
+
+Line:
+- stroke width/color
+- accurate y/height behavior
+
+Image:
+- object-fit
+- opacity
+- border
+- border-radius
+- background color
+
+5. Selection outlines and resize handles must remain visible even when objects have their own border/background.
+
+Part C — HTML preview consistency
+
+6. Inspect how Flask preview generates HTML.
+
+7. Ensure HTML preview uses the same coordinate system as the canvas:
+- page unit px should map directly to CSS px
+- x/y/width/height should use absolute positioning
+- page width/height should match template.page.width/height
+- page background should match template.page.background_color or transparent behavior
+
+8. Ensure preview renders:
+- text
+- field
+- line
+- rectangle
+- image
+
+9. Fields should resolve data bindings correctly.
+Example:
+- patient.name
+- order.id
+- results.hgb
+
+If no data is available, show a safe placeholder instead of crashing.
+
+Part D — PDF export consistency
+
+10. Inspect current PDF renderer.
+
+11. Ensure PDF export uses the same page unit conversion rules as preview.
+
+12. Pixel-based templates should export correctly:
+- cerebro_cbc should remain visible
+- lab_result should remain visible
+
+13. If renderer converts px to PDF points, use a clear conversion:
+- px to points should be consistent and documented
+- do not treat px values as inches
+
+14. Ensure PDF supports as much style as practical:
+- font size
+- bold
+- italic
+- underline if supported
+- text color
+- background color
+- alignment
+- rectangle border/background
+- line width/color
+- image placement
+
+15. If a style is unsupported in PDF, degrade gracefully.
+Do not crash or produce blank PDF.
+
+Part E — Preview/PDF debugging guard
+
+16. Add defensive errors:
+- If template has no objects, return HTTP 400 with clear JSON error.
+- If page width/height is invalid, return HTTP 400.
+- If object coordinates are invalid, return HTTP 400.
+
+17. Add optional debug info in preview/export response headers where practical:
+- object count
+- page width
+- page height
+- unit
+
+Example headers:
+- X-Slim-Report-Object-Count
+- X-Slim-Report-Page-Unit
+- X-Slim-Report-Page-Width
+- X-Slim-Report-Page-Height
+
+Part F — Visual comparison helper
+
+18. Add a simple debug tool or route if practical:
+- HTML preview should have a page wrapper with the same width/height as canvas.
+- Add a “Preview HTML” action if not already available.
+- Keep it simple.
+
+19. Do not implement screenshot diff testing yet unless already easy.
+
+Part G — Sample templates
+
+20. Use cerebro_cbc.json and lab_result.json as fidelity test templates.
+
+21. Do not rewrite large JSON files unnecessarily.
+
+22. Ensure both templates:
+- include explicit page.unit
+- include explicit width/height
+- include valid object style data
+- render in designer
+- render in HTML preview
+- render in PDF export
+
+Part H — Tests
+
+Add or update tests where practical:
+
+1. Style normalization:
+- missing style fields get defaults
+- explicit style fields are preserved
+
+2. HTML preview:
+- cerebro_cbc preview contains visible text
+- lab_result preview contains visible text
+- preview returns non-empty HTML
+- empty objects returns 400
+
+3. PDF export:
+- cerebro_cbc export returns application/pdf
+- lab_result export returns application/pdf
+- PDF byte size is non-trivial
+- empty objects returns 400
+
+4. Unit handling:
+- px templates do not render blank
+- custom page width/height is preserved
+
+5. Image handling:
+- image object with data URL does not crash preview/export
+- image object with missing src renders placeholder or skips safely
+
+Part I — Manual test
+
+Static mode:
+python examples/designer_static_server/serve.py
+
+Test:
+- Add text
+- Style text
+- Add rectangle
+- Add line
+- Add image
+- Export JSON
+- Import JSON
+- Visual canvas still looks correct
+
+Flask mode:
+python examples/flask_app/app.py
+
+Open:
+http://127.0.0.1:5000/report-designer/designer?template=cerebro_cbc
+
+Test:
+- Designer canvas looks correct
+- Preview looks close to canvas
+- Export PDF looks close to canvas
+- Text positions are close
+- Font sizes are close
+- Lines and rectangles appear
+- Images appear or degrade safely
+- No blank PDF
+
+Open:
+http://127.0.0.1:5000/report-designer/designer?template=lab_result
+
+Confirm:
+- Designer works
+- Preview works
+- PDF export works
+
+Acceptance criteria:
+- Canvas, HTML preview, and PDF export are visually closer.
+- cerebro_cbc preview/PDF is not blank.
+- lab_result preview/PDF still works.
+- Pixel-based page templates remain supported.
+- Style properties are preserved.
+- Unsupported PDF styles degrade gracefully.
+- Static mode still works.
+- Flask mode still works.
+- Tests pass.

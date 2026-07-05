@@ -1,4 +1,4 @@
-import { createDefaultTemplate, normalizeTemplate } from "./objects.js";
+import { createDefaultTemplate, normalizeTemplate, objectStyle } from "./objects.js";
 
 export async function loadTemplate() {
   if (!apiBase()) {
@@ -105,18 +105,18 @@ ${objects}
 }
 
 function localObjectHtml(object, unit = "px") {
-  const style = object.style || object.properties?.style || {};
+  const style = objectStyle(object);
   const value = object.type === "field"
     ? `{{ ${object.binding || object.properties?.binding || ""} }}`
     : object.text || object.properties?.text || "";
   const textDecoration = style.underline ? "underline" : "none";
   const display = object.type === "text" || object.type === "field" ? "flex" : "block";
-  const box = `position:absolute;box-sizing:border-box;left:${unitToPx(object.x, unit)}px;top:${unitToPx(object.y, unit)}px;width:${unitToPx(object.width, unit)}px;height:${unitToPx(Math.max(object.height, 8), unit)}px;display:${display};justify-content:${horizontalFlexAlign(style.align)};align-items:${verticalFlexAlign(style.vertical_align)};font-family:${style.font_family || "Arial"};font-size:${style.font_size || 12}px;font-weight:${style.bold ? 700 : 400};font-style:${style.italic ? "italic" : "normal"};text-decoration:${textDecoration};color:${style.color || "#111827"};background:${style.background_color || "transparent"};text-align:${style.align || "left"};overflow:hidden`;
+  const box = `position:absolute;box-sizing:border-box;left:${unitToPx(object.x, unit)}px;top:${unitToPx(object.y, unit)}px;width:${unitToPx(object.width, unit)}px;height:${unitToPx(Math.max(object.height, 8), unit)}px;display:${display};justify-content:${horizontalFlexAlign(style.align)};align-items:${verticalFlexAlign(style.vertical_align)};font-family:${style.font_family || "Arial"};font-size:${style.font_size || 12}px;line-height:${style.line_height || 1.2};font-weight:${style.bold ? 700 : 400};font-style:${style.italic ? "italic" : "normal"};text-decoration:${textDecoration};color:${style.color || "#111827"};background:${style.background_color || "transparent"};text-align:${style.align || "left"};overflow:hidden`;
   if (object.type === "line") {
     return `<div style="${box};border-top:${style.stroke_width || 1}px solid ${style.stroke_color || style.color || "#111827"}"></div>`;
   }
   if (object.type === "rectangle") {
-    return `<div style="${box};border:${style.border_width || 1}px solid ${style.border_color || "#111827"};background:${style.background_color || style.fill_color || "transparent"}"></div>`;
+    return `<div style="${box};border:${style.border_width || 1}px solid ${style.border_color || "#111827"};border-radius:${style.border_radius || 0}px;background:${style.background_color || style.fill_color || "transparent"}"></div>`;
   }
   if (object.type === "image") {
     const src = object.src || object.properties?.src || object.properties?.source || "";

@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING, Any
 from flask import Blueprint, Response, jsonify, request, url_for
 
 from slim_report_core import ExporterError, Report, SlimReportError, create_default_template
+from slim_report_core.rendering.context import RenderContext, create_render_context
 from slim_report_core.serialization import JSONSerializer
 from slim_report_designer_ui import static_file
 
@@ -120,17 +121,26 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         payload = request_template_payload()
         data = request_template_data()
         report = load_report_from_payload(normalize_template_payload(payload))
-        return Response(report.render_html(data), mimetype="text/html")
+        context = validate_api_report(report)
+        return Response(
+            report.render_html(data),
+            mimetype="text/html",
+            headers=render_debug_headers(context),
+        )
 
     @blueprint.post("/api/export/pdf")
     def api_export_pdf() -> Response:
         payload = request_template_payload()
         data = request_template_data()
         report = load_report_from_payload(normalize_template_payload(payload))
+        context = validate_api_report(report)
         return Response(
             report.render_pdf(data),
             mimetype="application/pdf",
-            headers={"Content-Disposition": 'attachment; filename="report-template.pdf"'},
+            headers={
+                "Content-Disposition": 'attachment; filename="report-template.pdf"',
+                **render_debug_headers(context),
+            },
         )
 
     @blueprint.get("/templates/<template_id>/preview/<record_id>")
@@ -175,6 +185,26 @@ def load_report_from_payload(payload: Any) -> Report:
     if not isinstance(payload, dict):
         raise ValueError("Template payload must be a JSON object.")
     return JSONSerializer().load_mapping(payload)
+
+
+def validate_api_report(report: Report) -> RenderContext:
+    """Validate a designer API report before preview/export rendering."""
+    context = create_render_context(report)
+    if not context.objects:
+        raise ValueError("Template must contain at least one object for preview or export.")
+    if context.page.width_px <= 0 or context.page.height_px <= 0:
+        raise ValueError("Template page width and height must be positive.")
+    return context
+
+
+def render_debug_headers(context: RenderContext) -> dict[str, str]:
+    """Return lightweight debug headers for preview/export fidelity checks."""
+    return {
+        "X-Slim-Report-Object-Count": str(len(context.objects)),
+        "X-Slim-Report-Page-Unit": context.page.unit,
+        "X-Slim-Report-Page-Width": str(context.page.width_px),
+        "X-Slim-Report-Page-Height": str(context.page.height_px),
+    }
 
 
 def request_template_payload() -> dict[str, Any]:

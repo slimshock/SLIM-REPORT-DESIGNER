@@ -190,6 +190,10 @@ def test_flask_designer_api_previews_and_exports_posted_json(tmp_path: Path) -> 
 
     assert preview_response.status_code == 200
     assert preview_response.mimetype == "text/html"
+    assert preview_response.headers["X-Slim-Report-Object-Count"] == "2"
+    assert preview_response.headers["X-Slim-Report-Page-Unit"] == "px"
+    assert preview_response.headers["X-Slim-Report-Page-Width"] == "595.0"
+    assert preview_response.headers["X-Slim-Report-Page-Height"] == "842.0"
     preview_html = preview_response.get_data(as_text=True)
     assert "Canvas Preview" in preview_html
     assert "left: 40.0px" in preview_html
@@ -200,7 +204,36 @@ def test_flask_designer_api_previews_and_exports_posted_json(tmp_path: Path) -> 
     assert "Image" in preview_html
     assert pdf_response.status_code == 200
     assert pdf_response.mimetype == "application/pdf"
+    assert pdf_response.headers["X-Slim-Report-Object-Count"] == "2"
+    assert pdf_response.headers["X-Slim-Report-Page-Unit"] == "px"
     assert pdf_response.get_data().startswith(b"%PDF")
+
+
+def test_flask_designer_api_rejects_empty_preview_and_export(tmp_path: Path) -> None:
+    app, _designer = create_app(tmp_path)
+    payload = {
+        "version": "0.1",
+        "metadata": {"name": "Empty"},
+        "page": {
+            "size": "A4",
+            "orientation": "portrait",
+            "width": 595,
+            "height": 842,
+            "unit": "px",
+        },
+        "objects": [],
+        "bands": [],
+        "assets": [],
+    }
+    client = app.test_client()
+
+    preview_response = client.post("/report-designer/api/preview", json=payload)
+    pdf_response = client.post("/report-designer/api/export/pdf", json=payload)
+
+    assert preview_response.status_code == 400
+    assert "at least one object" in preview_response.get_json()["error"]
+    assert pdf_response.status_code == 400
+    assert "at least one object" in pdf_response.get_json()["error"]
 
 
 def test_flask_designer_save_route_persists_template_json(tmp_path: Path) -> None:

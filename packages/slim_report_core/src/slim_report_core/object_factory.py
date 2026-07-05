@@ -477,6 +477,7 @@ _STYLE_KEYS = (
     "font_family",
     "font_size",
     "italic",
+    "line_height",
     "line_width",
     "object_fit",
     "opacity",

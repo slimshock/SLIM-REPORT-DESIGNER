@@ -131,6 +131,7 @@ export function renderInspector(form, object, template = {}, selectedObjects = [
     form.appendChild(section("Style", [
       styleField("border_width", object, "number"),
       styleField("border_color", object, "color"),
+      styleField("border_radius", object, "number"),
       styleField("background_color", object, "color", { label: "background", transparent: true })
     ]));
   } else if (object.type === "line") {
@@ -275,6 +276,7 @@ function textStyleFields(object) {
   return [
     styleField("font_family", object, "select", { options: fontFamilyOptions() }),
     styleField("font_size", object, "number"),
+    styleField("line_height", object, "number", { step: "0.1", min: "0.5" }),
     styleField("bold", object, "checkbox"),
     styleField("italic", object, "checkbox"),
     styleField("underline", object, "checkbox"),
@@ -517,6 +519,9 @@ function defaultStyleValue(name) {
   if (name === "font_size") {
     return 12;
   }
+  if (name === "line_height") {
+    return 1.2;
+  }
   if (name === "color" || name === "border_color" || name === "stroke_color") {
     return "#111827";
   }
@@ -528,6 +533,9 @@ function defaultStyleValue(name) {
   }
   if (name === "vertical_align") {
     return "top";
+  }
+  if (name === "border_radius") {
+    return 0;
   }
   if (name === "border_width" || name === "stroke_width") {
     return 1;

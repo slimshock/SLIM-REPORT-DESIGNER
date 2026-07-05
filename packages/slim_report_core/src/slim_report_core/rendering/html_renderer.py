@@ -102,6 +102,7 @@ def _render_rectangle(obj: RenderObject, context: RenderContext) -> str:
     style = obj.style
     border_width = float(style.get("border_width", style.get("stroke_width", 1)))
     border_color = escape(str(style.get("border_color", "#000000")), quote=True)
+    border_radius = float(style.get("border_radius", 0))
     fill_color = escape(
         str(style.get("background_color", style.get("fill_color", "transparent"))),
         quote=True,
@@ -109,7 +110,7 @@ def _render_rectangle(obj: RenderObject, context: RenderContext) -> str:
     return (
         f'<div class="slim-report-object" data-slim-object="{escape(obj.id, quote=True)}" '
         f'style="{_position_style(x, y, width, height)} border: {border_width}px solid '
-        f"{border_color}; background: {fill_color};\"></div>"
+        f"{border_color}; border-radius: {border_radius}px; background: {fill_color};\"></div>"
     )
 
 
@@ -148,6 +149,7 @@ def _html_box(obj: RenderObject, context: RenderContext, value: str) -> str:
     style = obj.style
     font_size = float(style.get("font_size", 12))
     font_family = escape(str(style.get("font_family", "Arial")), quote=True)
+    line_height = style.get("line_height", 1.2)
     color = escape(str(style.get("color", "#000000")), quote=True)
     background_color = escape(str(style.get("background_color", "transparent")), quote=True)
     align = escape(str(style.get("align", "left")), quote=True)
@@ -161,6 +163,7 @@ def _html_box(obj: RenderObject, context: RenderContext, value: str) -> str:
         f"justify-content: {_horizontal_flex_align(align)}; "
         f"align-items: {_vertical_flex_align(vertical_align)}; "
         f"font-family: {font_family}; font-size: {font_size}px; "
+        f"line-height: {line_height}; "
         f"font-weight: {weight}; font-style: {font_style}; "
         f"text-decoration: {decoration}; color: {color}; "
         f"background: {background_color}; text-align: {align}; "

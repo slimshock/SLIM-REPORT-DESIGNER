@@ -162,7 +162,8 @@ export function defaultStyleForType(type) {
     return {
       border_width: 1,
       border_color: "#111827",
-      background_color: "transparent"
+      background_color: "transparent",
+      border_radius: 0
     };
   }
   if (type === "line") {
@@ -190,7 +191,8 @@ export function defaultStyleForType(type) {
     color: "#111827",
     background_color: "transparent",
     align: "left",
-    vertical_align: "top"
+    vertical_align: "top",
+    line_height: 1.2
   };
 }
 
@@ -354,6 +356,7 @@ function explicitStyle(object) {
     "font_family",
     "font_size",
     "italic",
+    "line_height",
     "line_width",
     "object_fit",
     "opacity",

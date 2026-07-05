@@ -391,7 +391,6 @@ button {
   position: absolute;
   min-width: 8px;
   min-height: 8px;
-  border: 1px solid transparent;
   border-radius: 2px;
   overflow: hidden;
   white-space: pre-wrap;
@@ -401,11 +400,11 @@ button {
 }
 
 .report-object:hover {
-  border-color: rgba(37, 99, 235, 0.45);
+  outline: 1px solid rgba(37, 99, 235, 0.45);
+  outline-offset: 1px;
 }
 
 .report-object.selected {
-  border-color: var(--selection);
   outline: 2px solid var(--selection-soft);
   outline-offset: 1px;
 }

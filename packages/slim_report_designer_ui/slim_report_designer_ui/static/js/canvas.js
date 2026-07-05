@@ -335,6 +335,7 @@ function renderObject(object, selectedIds = [], primarySelectedId = null, unit =
   element.style.fontWeight = style.bold ? "700" : "400";
   element.style.fontStyle = style.italic ? "italic" : "normal";
   element.style.textDecoration = style.underline ? "underline" : "none";
+  element.style.lineHeight = `${Number(style.line_height) || 1.2}`;
   element.style.color = style.color || "#111827";
   element.style.background = style.background_color || "transparent";
   element.style.textAlign = style.align || "left";
@@ -357,6 +358,7 @@ function renderObject(object, selectedIds = [], primarySelectedId = null, unit =
     rectangle.className = "rectangle-preview";
     rectangle.style.borderWidth = `${Number(style.border_width) || 1}px`;
     rectangle.style.borderColor = style.border_color || "#111827";
+    rectangle.style.borderRadius = `${Number(style.border_radius) || 0}px`;
     rectangle.style.background = style.background_color || "transparent";
     element.appendChild(rectangle);
   } else if (object.type === "image") {

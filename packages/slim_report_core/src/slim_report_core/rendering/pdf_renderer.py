@@ -11,6 +11,7 @@ from ..report import Report
 from .context import (
     RenderContext,
     RenderObject,
+    convert_unit,
     create_render_context,
     object_pt,
     resolve_object_value,
@@ -68,7 +69,7 @@ def _render_field(canvas: Any, obj: RenderObject, context: RenderContext) -> Non
 def _render_line(canvas: Any, obj: RenderObject, context: RenderContext) -> None:
     x, y, width, height = object_pt(obj, context.page.unit)
     style = obj.style
-    stroke_width = float(style.get("stroke_width", style.get("line_width", 1)))
+    stroke_width = _style_length_pt(style.get("stroke_width", style.get("line_width", 1)), context)
     canvas.setLineWidth(stroke_width)
     _set_stroke_color(
         canvas,
@@ -80,13 +81,26 @@ def _render_line(canvas: Any, obj: RenderObject, context: RenderContext) -> None
 def _render_rectangle(canvas: Any, obj: RenderObject, context: RenderContext) -> None:
     x, y, width, height = object_pt(obj, context.page.unit)
     style = obj.style
-    canvas.setLineWidth(float(style.get("border_width", style.get("stroke_width", 1))))
+    border_width = _style_length_pt(style.get("border_width", style.get("stroke_width", 1)), context)
+    border_radius = _style_length_pt(style.get("border_radius", 0), context)
+    canvas.setLineWidth(border_width)
     _set_stroke_color(canvas, style.get("border_color", "#000000"))
     fill = _set_fill_color(
         canvas,
         style.get("background_color", style.get("fill_color", "transparent")),
     )
-    canvas.rect(x, _pdf_y(context, y + height), width, height, stroke=1, fill=int(fill))
+    if border_radius > 0:
+        canvas.roundRect(
+            x,
+            _pdf_y(context, y + height),
+            width,
+            height,
+            radius=border_radius,
+            stroke=1,
+            fill=int(fill),
+        )
+    else:
+        canvas.rect(x, _pdf_y(context, y + height), width, height, stroke=1, fill=int(fill))
 
 
 def _render_image(canvas: Any, obj: RenderObject, context: RenderContext) -> None:
@@ -97,7 +111,7 @@ def _render_image(canvas: Any, obj: RenderObject, context: RenderContext) -> Non
         _set_fill_color(canvas, background)
         canvas.rect(x, _pdf_y(context, y + height), width, height, stroke=0, fill=1)
 
-    border_width = float(style.get("border_width", 0))
+    border_width = _style_length_pt(style.get("border_width", 0), context)
     if border_width > 0:
         canvas.setLineWidth(border_width)
         _set_stroke_color(canvas, style.get("border_color", "#000000"))
@@ -109,6 +123,7 @@ def _render_image(canvas: Any, obj: RenderObject, context: RenderContext) -> Non
         _draw_image_placeholder(canvas, x, y, width, height, context)
         return
     try:
+        _set_alpha(canvas, float(style.get("opacity", 1)))
         canvas.drawImage(
             reader,
             x,
@@ -118,7 +133,9 @@ def _render_image(canvas: Any, obj: RenderObject, context: RenderContext) -> Non
             preserveAspectRatio=str(style.get("object_fit", "contain")) == "contain",
             mask="auto",
         )
+        _set_alpha(canvas, 1)
     except Exception:
+        _set_alpha(canvas, 1)
         _draw_image_placeholder(canvas, x, y, width, height, context)
 
 
@@ -162,7 +179,7 @@ def _image_reader(source: str) -> Any | None:
 def _draw_text(canvas: Any, obj: RenderObject, context: RenderContext, value: str) -> None:
     x, y, width, height = object_pt(obj, context.page.unit)
     style = obj.style
-    font_size = float(style.get("font_size", 12))
+    font_size = _font_size_pt(style.get("font_size", 12), context)
     font_family = _font_name(
         str(style.get("font_family", "Helvetica")),
         bold=bool(style.get("bold", False)),
@@ -244,13 +261,37 @@ def _set_stroke_color(canvas: Any, color: Any) -> bool:
 def _hex_color(color: Any) -> Any:
     from reportlab.lib.colors import HexColor
 
-    return HexColor(str(color))
+    try:
+        return HexColor(str(color))
+    except Exception:
+        return HexColor("#000000")
 
 
 def _is_transparent(color: Any) -> bool:
     if color is None:
         return True
     return str(color).strip().lower() in {"", "none", "transparent"}
+
+
+def _font_size_pt(value: Any, context: RenderContext) -> float:
+    size = float(value or 12)
+    if context.page.unit == "px":
+        return convert_unit(size, "px", "pt")
+    return size
+
+
+def _style_length_pt(value: Any, context: RenderContext) -> float:
+    length = float(value or 0)
+    if context.page.unit == "px":
+        return convert_unit(length, "px", "pt")
+    return length
+
+
+def _set_alpha(canvas: Any, value: float) -> None:
+    alpha = max(0.0, min(value, 1.0))
+    setter = getattr(canvas, "setFillAlpha", None)
+    if callable(setter):
+        setter(alpha)
 
 
 def _load_canvas() -> Any:

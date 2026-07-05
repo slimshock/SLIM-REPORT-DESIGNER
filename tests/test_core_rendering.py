@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from slim_report_core import Report, ReportValidationError, render_html, render_pdf
 from slim_report_core.expressions import resolve_expression
 from slim_report_core.rendering import render_html as render_report_html
+from slim_report_core.rendering.context import create_render_context
 from slim_report_core.serialization import JSONSerializer
 
 
@@ -22,8 +25,8 @@ def test_html_rendering_contains_expected_patient_name() -> None:
     assert "<!doctype html>" in html
     assert "slim-report-page" in html
     assert "Juan Dela Cruz" in html
-    assert "width: 816.0px" in html
-    assert "height: 1056.0px" in html
+    assert "width: 612.0px" in html
+    assert "height: 792.0px" in html
 
 
 def test_html_rendering_keeps_horizontal_lines_visible() -> None:
@@ -53,6 +56,64 @@ def test_html_rendering_applies_extended_style_fields() -> None:
     assert "background: #eeeeee" in html
     assert 'data-slim-object="logo"' in html
     assert "object-fit: contain" in html
+
+
+def test_render_context_applies_shared_style_defaults() -> None:
+    report = JSONSerializer().load_mapping(
+        {
+            "version": "1.0",
+            "metadata": {"title": "Defaults"},
+            "page": {"size": "A4", "orientation": "portrait", "unit": "px"},
+            "objects": [
+                {
+                    "id": "plain_text",
+                    "type": "text",
+                    "x": 10,
+                    "y": 10,
+                    "width": 100,
+                    "height": 20,
+                    "text": "Plain",
+                },
+                {
+                    "id": "plain_line",
+                    "type": "line",
+                    "x": 10,
+                    "y": 40,
+                    "width": 100,
+                    "height": 0,
+                },
+            ],
+            "bands": [],
+            "assets": [],
+        }
+    )
+
+    context = create_render_context(report)
+
+    assert context.page.width_px == 595.0
+    assert context.page.height_px == 842.0
+    text_style = context.objects[0].style
+    line_style = context.objects[1].style
+    assert text_style["font_family"] == "Arial"
+    assert text_style["font_size"] == 12
+    assert text_style["line_height"] == 1.2
+    assert text_style["color"] == "#111827"
+    assert line_style["stroke_width"] == 1
+    assert line_style["stroke_color"] == "#111827"
+
+
+def test_render_context_preserves_explicit_style_fields() -> None:
+    report = load_report()
+
+    context = create_render_context(report)
+
+    title_style = context.objects[0].style
+    assert title_style["font_family"] == "Courier"
+    assert title_style["font_size"] == 18
+    assert title_style["bold"] is True
+    assert title_style["italic"] is True
+    assert title_style["underline"] is True
+    assert title_style["align"] == "center"
 
 
 def test_pdf_rendering_returns_pdf_bytes() -> None:
@@ -86,6 +147,20 @@ def test_render_functions_accept_report_domain_model() -> None:
     assert render_pdf(report, sample_data()).startswith(b"%PDF")
 
 
+def test_sample_templates_render_html_and_pdf() -> None:
+    for template_name in ("cerebro_cbc", "lab_result"):
+        report = JSONSerializer().load(REPO_ROOT / f"examples/flask_app/sample_templates/{template_name}.json")
+
+        html = render_html(report, sample_data())
+        pdf = render_pdf(report, sample_data())
+
+        assert "<!doctype html>" in html
+        assert "slim-report-page" in html
+        assert len(html) > 1000
+        assert pdf.startswith(b"%PDF")
+        assert len(pdf) > 1000
+
+
 def test_public_renderer_rejects_json_mapping() -> None:
     with pytest.raises(ReportValidationError, match="Report domain model"):
         render_html(sample_template(), sample_data())  # type: ignore[arg-type]
@@ -102,6 +177,9 @@ def sample_data() -> dict[str, dict[str, str]]:
             "name": "Juan Dela Cruz",
         }
     }
+
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def load_report() -> Report:
