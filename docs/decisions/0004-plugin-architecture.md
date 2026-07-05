@@ -22,6 +22,7 @@ The following components will be extensible:
 * Exporters
 * Data Providers
 * Storage Providers
+* Serializers
 * Framework Adapters
 * Expression Functions
 * Future Designer Extensions
@@ -34,6 +35,7 @@ Example:
 WidgetRegistry.register(TextWidget())
 ExporterRegistry.register(PDFExporter())
 StorageRegistry.register(FileStorage())
+SerializerRegistry.register(XMLSerializer())
 ```
 
 ## Why

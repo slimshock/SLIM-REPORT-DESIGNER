@@ -739,3 +739,6 @@ No web assumptions.
 Everything else is adapter/plugin layer.
 
 That is how this becomes bigger than Flask, bro.
+# Architecture Vision
+
+> Historical planning document. The current implemented architecture is documented in `docs/architecture.md` and ADR-0005.

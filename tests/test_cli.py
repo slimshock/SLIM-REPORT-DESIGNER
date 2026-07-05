@@ -4,6 +4,7 @@ from pathlib import Path
 
 from slim_report_cli import main
 from slim_report_core import Report, ReportObject
+from slim_report_core.serialization import JSONSerializer
 
 
 def test_cli_validate_template(tmp_path: Path, capsys) -> None:
@@ -13,6 +14,20 @@ def test_cli_validate_template(tmp_path: Path, capsys) -> None:
 
     assert exit_code == 0
     assert "Valid report template" in capsys.readouterr().out
+
+
+def test_cli_validate_reports_domain_errors(tmp_path: Path, capsys) -> None:
+    report = Report()
+    report.objects = [ReportObject(id="missing_binding", type="field")]
+    template_path = tmp_path / "invalid-template.json"
+    JSONSerializer().save(report, template_path)
+
+    exit_code = main(["validate", str(template_path)])
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert "Invalid report template" in captured.err
+    assert "Field objects require a binding expression" in captured.err
 
 
 def test_cli_inspect_template(tmp_path: Path, capsys) -> None:
@@ -85,5 +100,5 @@ def write_template(tmp_path: Path) -> Path:
         )
     )
     template_path = tmp_path / "template.json"
-    report.save_json(template_path)
+    JSONSerializer().save(report, template_path)
     return template_path

@@ -8,6 +8,8 @@ from typing import Any
 
 from ..exceptions import ReportValidationError
 from ..expressions import resolve_expression, resolve_text
+from ..models import Object, Page
+from ..report import Report
 
 CSS_DPI = 96.0
 POINTS_PER_INCH = 72.0
@@ -74,50 +76,36 @@ class RenderObject:
 class RenderContext:
     """Normalized inputs for report rendering."""
 
-    template: Mapping[str, Any]
+    report: Report
     data: Mapping[str, Any]
     page: RenderPage
     objects: list[RenderObject]
     title: str
 
 
-def create_render_context(template: Any, data: Mapping[str, Any] | None = None) -> RenderContext:
-    """Normalize a report template and data into a render context."""
-    template_dict = normalize_template(template)
-    page = resolve_page(template_dict.get("page", {}))
-    objects = [
-        normalize_object(item)
-        for item in template_dict.get("objects", [])
-        if isinstance(item, Mapping)
-    ]
+def create_render_context(report: Report, data: Mapping[str, Any] | None = None) -> RenderContext:
+    """Normalize a report domain model and data into a render context."""
+    if not isinstance(report, Report):
+        raise ReportValidationError("Renderer expects a Report domain model.")
+
+    page = resolve_page(report.page)
+    objects = [normalize_object(item) for item in report.objects]
     objects.sort(key=lambda item: item.z_index)
 
     return RenderContext(
-        template=template_dict,
+        report=report,
         data=data or {},
         page=page,
         objects=objects,
-        title=resolve_title(template_dict),
+        title=resolve_title(report),
     )
 
 
-def normalize_template(template: Any) -> Mapping[str, Any]:
-    """Convert supported template inputs into a mapping."""
-    if isinstance(template, Mapping):
-        return template
-    if hasattr(template, "to_dict") and callable(template.to_dict):
-        return template.to_dict()
-    raise ReportValidationError(
-        "Renderer expects a report template mapping or object with to_dict()."
-    )
-
-
-def resolve_page(page: Any) -> RenderPage:
+def resolve_page(page: Page) -> RenderPage:
     """Resolve page size, orientation, and dimensions."""
-    page_mapping = page if isinstance(page, Mapping) else {}
-    size = str(page_mapping.get("size", "") or "").lower()
-    unit = str(page_mapping.get("unit", "px")).lower()
-    orientation = str(page_mapping.get("orientation", "portrait")).lower()
+    size = str(getattr(page, "size", "") or "").lower()
+    unit = str(getattr(page, "unit", "px")).lower()
+    orientation = str(getattr(page, "orientation", "portrait")).lower()
 
     if orientation not in {"portrait", "landscape"}:
         raise ReportValidationError(f"Unsupported page orientation: {orientation}.")
@@ -128,8 +116,8 @@ def resolve_page(page: Any) -> RenderPage:
         width_px, height_px = PAGE_SIZES[size]["px"]
         width_pt, height_pt = PAGE_SIZES[size]["pt"]
     else:
-        width = float(page_mapping.get("width", 8.5))
-        height = float(page_mapping.get("height", 11.0))
+        width = float(getattr(page, "width", 8.5))
+        height = float(getattr(page, "height", 11.0))
         width_px = convert_unit(width, unit, "px")
         height_px = convert_unit(height, unit, "px")
         width_pt = convert_unit(width, unit, "pt")
@@ -154,41 +142,39 @@ def resolve_page(page: Any) -> RenderPage:
     )
 
 
-def normalize_object(obj: Mapping[str, Any]) -> RenderObject:
-    """Normalize object shapes used by templates and dataclasses."""
-    properties = _mapping(obj.get("properties"))
+def normalize_object(obj: Object) -> RenderObject:
+    """Normalize a domain object for rendering."""
+    if not isinstance(obj, Object):
+        raise ReportValidationError("Renderer expects report objects from the Report model.")
+
+    properties = _mapping(getattr(obj, "properties", {}))
     style = _style(obj, properties)
-    object_type = _required_str(obj, "type", "Report object")
+    binding = getattr(obj, "binding", None)
+    binding_expression = getattr(binding, "expression", None)
+    if binding_expression is None:
+        binding_expression = properties.get(
+            "binding",
+            properties.get("field", properties.get("expression", "")),
+        )
 
     return RenderObject(
-        id=_required_str(obj, "id", "Report object"),
-        type=object_type,
-        x=float(obj.get("x", 0)),
-        y=float(obj.get("y", 0)),
-        width=float(obj.get("width", 0)),
-        height=float(obj.get("height", 0)),
-        text=str(obj.get("text", properties.get("text", ""))),
-        binding=str(
-            obj.get(
-                "binding",
-                properties.get(
-                    "binding",
-                    properties.get("field", properties.get("expression", "")),
-                ),
-            )
-        ),
+        id=_required_attr(obj, "id", "Report object"),
+        type=_required_attr(obj, "type", "Report object"),
+        x=float(getattr(obj, "x", 0)),
+        y=float(getattr(obj, "y", 0)),
+        width=float(getattr(obj, "width", 0)),
+        height=float(getattr(obj, "height", 0)),
+        text=str(getattr(obj, "text", "") or properties.get("text", "")),
+        binding=str(binding_expression or ""),
         style=style,
-        z_index=int(obj.get("z_index", 0)),
-        visible=bool(obj.get("visible", True)),
+        z_index=int(getattr(obj, "z_index", 0)),
+        visible=bool(getattr(obj, "visible", True)),
     )
 
 
-def resolve_title(template: Mapping[str, Any]) -> str:
-    """Resolve a report title from template metadata."""
-    metadata = template.get("metadata")
-    if isinstance(metadata, Mapping):
-        return str(metadata.get("title", "Untitled Report"))
-    return "Untitled Report"
+def resolve_title(report: Report) -> str:
+    """Resolve a report title from report metadata."""
+    return str(report.metadata.title)
 
 
 def convert_unit(value: float, source_unit: str, target_unit: str) -> float:
@@ -231,9 +217,13 @@ def resolve_object_value(obj: RenderObject, data: Mapping[str, Any]) -> str:
     return ""
 
 
-def _style(obj: Mapping[str, Any], properties: Mapping[str, Any]) -> dict[str, Any]:
+def _style(obj: Any, properties: Mapping[str, Any]) -> dict[str, Any]:
     style = dict(_mapping(properties.get("style")))
-    style.update(_mapping(obj.get("style")))
+    object_style = getattr(obj, "style", None)
+    if hasattr(object_style, "resolved_values"):
+        style.update(object_style.resolved_values())
+    else:
+        style.update(_mapping(getattr(object_style, "values", {})))
 
     for key in (
         "align",
@@ -258,8 +248,8 @@ def _mapping(value: Any) -> Mapping[str, Any]:
     return {}
 
 
-def _required_str(mapping: Mapping[str, Any], key: str, context: str) -> str:
-    value = mapping.get(key)
+def _required_attr(obj: Any, key: str, context: str) -> str:
+    value = getattr(obj, key, None)
     if value is None or str(value).strip() == "":
         raise ReportValidationError(f"{context} requires a non-empty {key}.")
     return str(value)

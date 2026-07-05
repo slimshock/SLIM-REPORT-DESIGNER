@@ -1,0 +1,38 @@
+Developer Preview (v0.1.x)
+
+    Sprint 1 - The Foundation                  done
+    Sprint 2 - Let It Breathe                  done
+    Sprint 3 - The Report                      done
+    Sprint 4 - The Developer Experience        done
+    Sprint 5 - Persistence                     next
+    Sprint 6 - The Canvas
+
+Alpha (v0.2.x)
+
+    Sprint 7 - Everything is a Widget
+    Sprint 8 - HTML and PDF Perfection
+    Sprint 9 - Flow (Bands and Pagination)
+    Sprint 10 - Tables
+
+Beta (v0.5.x)
+
+    Sprint 11 - Assets
+    Sprint 12 - Barcode and QR
+    Sprint 13 - Expressions
+    Sprint 14 - Variables
+    Sprint 15 - Marketplace
+
+Stable (v1.0)
+
+    Community
+    Performance
+    Plugins
+    Documentation
+
+Architecture checkpoint after Sprint 4:
+
+    Report is the domain model.
+    JSON is the first serializer, not the core model.
+    Renderers receive Report only.
+    Flask, CLI, Designer, AI, and future adapters should target Report.
+    YAML, XML plugins, REST, binary, and database storage belong at the serializer/storage boundary.

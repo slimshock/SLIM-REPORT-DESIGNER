@@ -63,21 +63,22 @@ APIs should be predictable.
 
 ---
 
-# 4. JSON Is the Language of Reports
+# 4. Report Is the Language of Reports
 
-Reports are data.
+Reports are domain objects first.
 
-Templates should be:
+The `Report` model should be:
 
 * human-readable
-* version-control friendly
-* mergeable
 * serializable
 * API-friendly
+* easy to inspect
+* easy to generate
+* easy to validate
 
-The report format is part of the public API.
+JSON is the first built-in persistence format, but it is not the domain model.
 
-It deserves long-term stability.
+The public `Report` API and serializer contracts deserve long-term stability.
 
 ---
 

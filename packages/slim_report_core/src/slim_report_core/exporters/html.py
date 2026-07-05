@@ -6,6 +6,7 @@ from typing import Any
 
 from ..exceptions import ExporterError, ReportValidationError
 from ..rendering import render_html
+from ..report import Report
 from .base import BaseExporter
 
 
@@ -14,27 +15,38 @@ class HTMLExporter(BaseExporter):
 
     def export(self, report: Any, data: Any = None, context: Any = None) -> str:
         try:
-            return render_html(
-                _template_with_overrides(report, self.page_size, self.orientation),
+            if isinstance(report, Report):
+                report.emit("before_export", exporter="html", data=data, context=context)
+            result = render_html(
+                _report_with_overrides(report, self.page_size, self.orientation),
                 data or {},
             )
+            if isinstance(report, Report):
+                report.emit(
+                    "after_export",
+                    exporter="html",
+                    data=data,
+                    context=context,
+                    result=result,
+                )
+            return result
         except ReportValidationError as exc:
             raise ExporterError(str(exc)) from exc
 
 
-def _template_with_overrides(report: Any, page_size: str | None, orientation: str | None) -> Any:
+def _report_with_overrides(report: Any, page_size: str | None, orientation: str | None) -> Report:
+    if isinstance(report, Report):
+        prepared = report.clone(new_ids=False)
+    else:
+        raise ExporterError("Exporter expects a Report domain model.")
+
     if page_size is None and orientation is None:
-        return report
+        return prepared
 
-    template = report.to_dict() if hasattr(report, "to_dict") else dict(report)
-    page = dict(template.get("page", {}))
+    page = prepared.page
     if page_size is not None:
-        page["size"] = page_size
-        page["unit"] = page.get("unit", "px")
-        page.pop("width", None)
-        page.pop("height", None)
+        page.size = page_size
+        page.unit = page.unit or "px"
     if orientation is not None:
-        page["orientation"] = orientation
-
-    template["page"] = page
-    return template
+        page.orientation = orientation
+    return prepared

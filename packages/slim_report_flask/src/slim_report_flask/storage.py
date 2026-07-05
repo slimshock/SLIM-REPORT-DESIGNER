@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from slim_report_core import Report
+from slim_report_core.serialization import JSONSerializer
 
 _SAFE_TEMPLATE_ID = re.compile(r"^[A-Za-z0-9_.-]+$")
 
@@ -32,6 +33,7 @@ class TemplateStore:
 
     def __init__(self, root: Path) -> None:
         self.root = root
+        self.serializer = JSONSerializer()
 
     def ensure(self) -> None:
         """Create the template storage directory if needed."""
@@ -44,8 +46,8 @@ class TemplateStore:
         for path in sorted(self.root.glob("*.json")):
             template_id = path.stem
             try:
-                report = Report.load_json(path)
-                title = report.template.metadata.title
+                report = self.serializer.load(path)
+                title = report.metadata.title
             except Exception:
                 title = template_id
             records.append(TemplateRecord(id=template_id, title=title, path=path))
@@ -56,25 +58,24 @@ class TemplateStore:
         path = self.path_for(template_id)
         if not path.exists():
             raise FileNotFoundError(f"Report template not found: {template_id}.")
-        report = Report.load_json(path)
-        return TemplateRecord(id=template_id, title=report.template.metadata.title, path=path)
+        report = self.serializer.load(path)
+        return TemplateRecord(id=template_id, title=report.metadata.title, path=path)
 
     def load_report(self, template_id: str) -> Report:
         """Load a report by id."""
         path = self.path_for(template_id)
         if not path.exists():
             raise FileNotFoundError(f"Report template not found: {template_id}.")
-        return Report.load_json(path)
+        return self.serializer.load(path)
 
     def save(self, template_id: str, report: Report) -> None:
         """Save a report template by id."""
         path = self.path_for(template_id)
         self.ensure()
-        report.save_json(path)
+        self.serializer.save(report, path)
 
     def path_for(self, template_id: str) -> Path:
         """Resolve a template id to a safe JSON path."""
         if not _SAFE_TEMPLATE_ID.fullmatch(template_id):
             raise ValueError(f"Invalid report template id: {template_id}.")
         return self.root / f"{template_id}.json"
-

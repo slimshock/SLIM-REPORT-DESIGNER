@@ -9,7 +9,10 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-from slim_report_core import ExporterError, Report, SlimReportError
+from slim_report_core import ExporterError, SlimReportError
+from slim_report_core.serialization import JSONSerializer
+
+serializer = JSONSerializer()
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -56,7 +59,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def render_command(args: argparse.Namespace) -> int:
     """Render a template with a JSON data file."""
-    report = Report.load_json(args.template)
+    report = serializer.load(args.template)
     data = load_data(args.data)
     output_path = Path(args.output)
     output_format = args.format or infer_format(output_path)
@@ -76,28 +79,34 @@ def render_command(args: argparse.Namespace) -> int:
 
 
 def validate_command(args: argparse.Namespace) -> int:
-    """Validate a template by loading it into the core report model."""
-    Report.load_json(args.template)
+    """Validate a template with the core report model."""
+    report = serializer.load(args.template)
+    result = report.validate()
+    if not result.is_valid:
+        print(f"Invalid report template: {args.template}", file=sys.stderr)
+        for error in result.errors:
+            print(f"- {error.path}: {error.message} [{error.code}]", file=sys.stderr)
+        return 1
+
     print(f"Valid report template: {args.template}")
     return 0
 
 
 def inspect_command(args: argparse.Namespace) -> int:
     """Print a compact report template summary."""
-    report = Report.load_json(args.template)
-    template = report.template
-    object_types = sorted({obj.type for obj in template.objects})
+    report = serializer.load(args.template)
+    object_types = sorted({obj.type for obj in report.objects})
 
-    print(f"Title: {template.metadata.title}")
-    print(f"Version: {template.version}")
+    print(f"Title: {report.metadata.title}")
+    print(f"Version: {report.version}")
     print(
         "Page: "
-        f"{template.page.width:g} x {template.page.height:g} "
-        f"{template.page.unit} {template.page.orientation}"
+        f"{report.page.width:g} x {report.page.height:g} "
+        f"{report.page.unit} {report.page.orientation}"
     )
-    print(f"Objects: {len(template.objects)}")
-    print(f"Bands: {len(template.bands)}")
-    print(f"Assets: {len(template.assets)}")
+    print(f"Objects: {len(report.objects)}")
+    print(f"Bands: {len(report.bands)}")
+    print(f"Assets: {len(report.assets)}")
     print(f"Object types: {', '.join(object_types) if object_types else 'none'}")
     return 0
 

@@ -3,8 +3,11 @@
 Prefer importing from ``slim_report_core``.
 """
 
+from .api import render_html, render_pdf
+from .builder import ObjectBuilder, PageBuilder, ReportBuilder, StyleBuilder
 from .constants import DEFAULT_REPORT_VERSION
 from .data import DataContext, DataProviderRegistry
+from .events import EventDispatcher, EventListener, ReportEvent
 from .exceptions import (
     ExporterError,
     ReportObjectNotFoundError,
@@ -22,15 +25,36 @@ from .exporters import (
 )
 from .expressions import resolve_expression, resolve_text
 from .models import (
+    Asset,
+    Band,
+    BarcodeObject,
+    Binding,
+    FieldObject,
+    ImageObject,
+    Layer,
+    LineObject,
+    Margin,
+    Metadata,
+    Object,
+    Page,
+    Position,
+    QRCodeObject,
+    RectangleObject,
     ReportAsset,
     ReportBand,
     ReportMetadata,
     ReportObject,
     ReportPage,
     ReportTemplate,
+    Size,
+    Style,
+    TableObject,
+    TextObject,
 )
-from .rendering import render_html, render_pdf
-from .report import Report, create_default_template
+from .object_factory import ObjectFactory
+from .report import Report, ReportObjectCollection, create_default_template
+from .serialization import BaseSerializer, JSONSerializer
+from .validation import ReportValidationIssue, ReportValidationResult
 from .widgets import (
     BaseWidget,
     FieldWidget,
@@ -43,28 +67,60 @@ from .widgets import (
 
 __all__ = [
     "DEFAULT_REPORT_VERSION",
+    "Asset",
+    "Band",
+    "BarcodeObject",
     "BaseExporter",
+    "BaseSerializer",
     "BaseWidget",
+    "Binding",
     "DataContext",
     "DataProviderRegistry",
+    "EventDispatcher",
+    "EventListener",
     "ExporterError",
     "ExporterRegistry",
+    "FieldObject",
     "FieldWidget",
     "HTMLExporter",
+    "ImageObject",
+    "JSONSerializer",
+    "Layer",
+    "LineObject",
     "LineWidget",
+    "Margin",
+    "Metadata",
+    "Object",
+    "ObjectBuilder",
+    "ObjectFactory",
     "PDFExporter",
+    "Page",
+    "PageBuilder",
+    "Position",
+    "QRCodeObject",
+    "RectangleObject",
     "RectangleWidget",
     "Report",
     "ReportAsset",
     "ReportBand",
+    "ReportBuilder",
+    "ReportEvent",
     "ReportMetadata",
     "ReportObject",
+    "ReportObjectCollection",
     "ReportObjectNotFoundError",
     "ReportPage",
     "ReportSerializationError",
     "ReportTemplate",
     "ReportValidationError",
+    "ReportValidationIssue",
+    "ReportValidationResult",
+    "Size",
     "SlimReportError",
+    "Style",
+    "StyleBuilder",
+    "TableObject",
+    "TextObject",
     "TextWidget",
     "WidgetRegistry",
     "WidgetValidationError",

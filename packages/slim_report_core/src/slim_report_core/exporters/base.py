@@ -7,7 +7,7 @@ from dataclasses import dataclass, field, replace
 from typing import Any
 
 from ..exceptions import ExporterError
-from ..models import ReportObject, ReportTemplate
+from ..models import ReportObject
 from ..report import Report
 from ..widgets import WidgetRegistry, create_default_widget_registry
 
@@ -45,7 +45,7 @@ class BaseExporter(ABC):
     orientation: str | None = None
 
     @abstractmethod
-    def export(self, report: Report | ReportTemplate, data: Any = None, context: Any = None) -> Any:
+    def export(self, report: Report, data: Any = None, context: Any = None) -> Any:
         """Export a report."""
 
     def get_widget(self, obj: ReportObject):
@@ -55,17 +55,9 @@ class BaseExporter(ABC):
             raise ExporterError(f"No widget registered for report object type: {obj.type}.")
         return widget
 
-    def normalize_template(self, report: Report | ReportTemplate) -> ReportTemplate:
-        """Normalize supported report inputs into a report template."""
-        if isinstance(report, Report):
-            return report.template
-        if isinstance(report, ReportTemplate):
-            return report
-        raise ExporterError("Exporter expects a Report or ReportTemplate.")
-
-    def resolve_page_layout(self, template: ReportTemplate) -> PageLayout:
+    def resolve_page_layout(self, report: Report) -> PageLayout:
         """Resolve page size and orientation to points."""
-        page = template.page
+        page = report.page
         width = page.width
         height = page.height
         source_unit = page.unit
@@ -135,4 +127,3 @@ def _page_size_values(page_size: str) -> tuple[float, float, str]:
     if key not in PAGE_SIZES:
         raise ExporterError(f"Unsupported page size: {page_size}.")
     return PAGE_SIZES[key]
-

@@ -17,7 +17,8 @@ Slim Report Designer will be developed as an open-source reporting platform for 
 The project will focus on:
 
 * A framework-agnostic reporting engine.
-* JSON-based report templates.
+* A Report-first Python domain model.
+* JSON as the first built-in persistence format.
 * Browser-based visual report designer.
 * Extensible plugin architecture.
 * Multiple rendering engines.
@@ -38,3 +39,9 @@ The project will prioritize long-term architecture over short-term feature devel
 Features that compromise extensibility or framework independence will be rejected, even if they simplify early implementation.
 
 The vision is to build infrastructure that other developers can rely on for years.
+
+## 2026-07-05 Architecture Update
+
+Sprint 4 clarified that `Report` is the domain model and JSON is a serializer boundary. The project
+still ships JSON support, but future YAML, XML plugin, database, REST, or binary persistence formats
+should convert to and from `Report` rather than changing the renderer or public domain model.

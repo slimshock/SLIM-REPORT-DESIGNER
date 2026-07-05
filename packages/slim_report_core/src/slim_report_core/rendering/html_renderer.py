@@ -6,6 +6,7 @@ from html import escape
 from typing import Any
 
 from ..exceptions import ReportValidationError
+from ..report import Report
 from .context import (
     RenderContext,
     RenderObject,
@@ -15,9 +16,9 @@ from .context import (
 )
 
 
-def render_html(template: Any, data: dict[str, Any] | None = None) -> str:
-    """Render a report template and data as a full HTML document."""
-    context = create_render_context(template, data)
+def render_html(report: Report, data: dict[str, Any] | None = None) -> str:
+    """Render a report domain model and data as a full HTML document."""
+    context = create_render_context(report, data)
     objects = "\n      ".join(render_html_object(obj, context) for obj in context.objects)
     page = context.page
     title = escape(context.title)

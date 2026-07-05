@@ -38,11 +38,13 @@ The core engine must never depend on a web framework.
 
 Frameworks are integrations—not foundations.
 
-### JSON First
+### Report First, JSON Supported
 
-Reports are data.
+Reports are domain objects first.
 
-Templates should be human-readable, version-controlled, mergeable, and easy to generate.
+Templates should be human-readable, version-controlled, mergeable, and easy to generate. JSON is
+the first built-in persistence format, but it should never be the only way to create or store a
+report.
 
 ### Plugins Everywhere
 

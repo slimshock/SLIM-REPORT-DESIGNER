@@ -6,6 +6,7 @@ from io import BytesIO
 from typing import Any
 
 from ..exceptions import ExporterError, ReportValidationError
+from ..report import Report
 from .context import (
     RenderContext,
     RenderObject,
@@ -15,10 +16,10 @@ from .context import (
 )
 
 
-def render_pdf(template: Any, data: dict[str, Any] | None = None) -> bytes:
-    """Render a report template and data as PDF bytes."""
+def render_pdf(report: Report, data: dict[str, Any] | None = None) -> bytes:
+    """Render a report domain model and data as PDF bytes."""
     canvas_class = _load_canvas()
-    context = create_render_context(template, data)
+    context = create_render_context(report, data)
     buffer = BytesIO()
     canvas = canvas_class(buffer, pagesize=(context.page.width_pt, context.page.height_pt))
 

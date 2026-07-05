@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 from flask import Blueprint, Response, jsonify, request, url_for
 
 from slim_report_core import ExporterError, Report, SlimReportError, create_default_template
+from slim_report_core.serialization import JSONSerializer
 
 from .designer import render_designer_page, template_for_designer
 
@@ -41,7 +42,7 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
     @blueprint.get("/templates/<template_id>/designer")
     def designer_template(template_id: str) -> Response:
         report = designer.get_report(template_id)
-        editable_template = template_for_designer(report.to_dict())
+        editable_template = template_for_designer(JSONSerializer().dump_mapping(report))
         html = render_designer_page(
             template_id=template_id,
             template=editable_template,
@@ -112,4 +113,4 @@ def load_report_from_payload(payload: Any) -> Report:
     """Validate and normalize a template payload into a report."""
     if not isinstance(payload, dict):
         raise ValueError("Template payload must be a JSON object.")
-    return Report.load_from_dict(payload)
+    return JSONSerializer().load_mapping(payload)

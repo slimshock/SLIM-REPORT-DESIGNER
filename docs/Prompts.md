@@ -639,3 +639,843 @@ This sprint is for stabilization only.
 ------------------------------------------------------
 
 
+
+
+Prompt 1 - The Report Domain Model
+
+------------------------------------------------------
+
+Sprint 3
+"The Report"
+
+Mission
+
+Transform Report into the heart of Slim Report Designer.
+
+Background
+
+At this point HTML preview and PDF rendering are working.
+
+However the Report model is still strongly coupled to JSON serialization.
+
+The objective of this sprint is to make Report the true domain model.
+
+JSON should become only one persistence format.
+
+Architecture Constraints
+
+The core package must remain framework agnostic.
+
+No Flask.
+
+No Django.
+
+No SQLAlchemy.
+
+No web assumptions.
+
+Objectives
+
+Create a clean Report object model.
+
+Review every existing model.
+
+Report
+
+Page
+
+Band
+
+Layer (if appropriate)
+
+Object
+
+Style
+
+Binding
+
+Margin
+
+Metadata
+
+Asset
+
+Report should expose a clean API.
+
+Example:
+
+report.pages
+
+report.metadata
+
+report.objects
+
+report.styles
+
+report.assets
+
+Create helper methods:
+
+add_page()
+
+remove_page()
+
+find_object()
+
+add_asset()
+
+clone()
+
+copy()
+
+Do NOT focus on rendering.
+
+Focus only on the domain model.
+
+Acceptance Criteria
+
+Report becomes the single source of truth.
+
+Renderer consumes Report.
+
+JSON serializer converts JSON ⇄ Report.
+
+Builder API can later target Report directly.
+
+Documentation
+
+Update architecture docs describing the new domain model.
+Prompt 2
+Serializer Layer
+Sprint 3
+
+Create a serialization layer.
+
+Current implementation loads JSON directly.
+
+Replace this with serializers.
+
+Create package:
+
+serialization/
+
+Implement:
+
+BaseSerializer
+
+JSONSerializer
+
+Responsibilities
+
+JSONSerializer
+
+JSON -> Report
+
+Report -> JSON
+
+Future serializers:
+
+YAML
+
+Database
+
+REST
+
+Binary
+
+The renderer should never know JSON exists.
+
+The renderer receives Report only.
+
+Add tests.
+
+Document serializer architecture.
+Prompt 3
+Rendering Refactor
+Sprint 3
+
+Refactor renderers.
+
+Current renderer may still receive dictionaries.
+
+Update architecture so:
+
+Report
+        ↓
+Renderer
+        ↓
+HTML
+
+Report
+        ↓
+Renderer
+        ↓
+PDF
+
+Renderers must never depend on JSON.
+
+Use the Report object exclusively.
+
+Update all tests.
+Prompt 4
+Report Validation
+Sprint 3
+
+Move validation from JSON into Report.
+
+Implement:
+
+Report.validate()
+
+Validation should check:
+
+page exists
+
+page size valid
+
+objects valid
+
+unique ids
+
+bindings
+
+styles
+
+assets
+
+Return structured validation errors.
+
+Validation should not throw exceptions for normal validation failures.
+
+Document validation API.
+Prompt 5
+Report Copy / Clone
+Sprint 3
+
+Implement deep cloning.
+
+Support:
+
+report.clone()
+
+page.clone()
+
+object.clone()
+
+style.clone()
+
+Assets should optionally support shared references.
+
+Clone should preserve IDs only when requested.
+
+Support:
+
+clone(new_ids=True)
+
+Document behavior.
+Prompt 6
+Report Query API
+Sprint 3
+
+Create developer-friendly query methods.
+
+Examples
+
+report.find(id)
+
+report.find_by_name()
+
+report.objects()
+
+report.text_objects()
+
+report.fields()
+
+report.images()
+
+report.tables()
+
+Support predicates.
+
+Example
+
+report.find(lambda o: o.type=="text")
+
+Document examples.
+Prompt 7
+Report Events
+Sprint 3
+
+Introduce event system.
+
+Events:
+
+before_render
+
+after_render
+
+before_export
+
+after_export
+
+object_added
+
+object_removed
+
+page_added
+
+page_removed
+
+Events should be framework independent.
+
+Use observer pattern.
+
+Document extension points.
+Prompt 8
+Architecture Cleanup
+Sprint 3
+
+Review entire architecture.
+
+Questions
+
+Does Report know JSON?
+
+If yes remove it.
+
+Does Renderer know JSON?
+
+If yes remove it.
+
+Can Builder API target Report?
+
+Can Designer target Report?
+
+Can Flask target Report?
+
+Can CLI target Report?
+
+Can AI target Report?
+
+Update architecture diagrams.
+
+Update ADRs if needed.
+
+
+
+
+
+
+-----------------------------------
+
+
+Sprint 4: The Builder
+Mission
+Create the most beautiful Python API for building reports.
+
+Philosophy
+JSON is now just serialization.
+
+The Builder creates Report objects.
+
+The Renderer consumes Report objects.
+
+Everything revolves around Report.
+
+Prompt 1: Builder Foundation
+Mission
+Create a fluent Builder API that constructs Report domain objects.
+
+Background
+Sprint 3 established Report as the domain model.
+
+This sprint introduces a Pythonic Builder API.
+
+Architecture Rules
+The Builder must not know Flask.
+
+The Builder must not know JSON.
+
+The Builder creates Report objects only.
+
+Objectives
+Create package: builder/
+
+Implement:
+
+ReportBuilder
+
+PageBuilder
+
+ObjectBuilder
+
+StyleBuilder
+
+Builder should internally produce Report objects.
+
+Example target API:
+
+Python
+builder = ReportBuilder("CBC Report")
+
+report = (
+    builder
+    .page("A4")
+    .text(
+        "Complete Blood Count",
+        x=50,
+        y=40
+    )
+    .field(
+        "patient.name",
+        x=50,
+        y=90
+    )
+    .line(
+        x=50,
+        y=120,
+        width=500
+    )
+    .build()
+)
+ReportBuilder.build() must return Report.
+
+Do not serialize JSON.
+
+Focus only on object creation.
+
+Document Builder architecture.
+
+Prompt 2: Fluent API
+Mission
+Improve the fluent API to support method chaining.
+
+Example:
+
+Python
+ReportBuilder("Invoice") \
+    .page("Letter") \
+    .text(...) \
+    .field(...) \
+    .rectangle(...) \
+    .line(...) \
+    .page_break() \
+    .page("Letter") \
+    .text(...) \
+    .build()
+Builder methods should return the appropriate builder object.
+
+Design for readability over minimal code.
+
+Review naming.
+
+Prefer explicit APIs.
+
+Prompt 3: Builder Convenience
+Mission
+Create convenience APIs to reduce boilerplate.
+
+Support:
+
+report.title()
+
+report.subtitle()
+
+report.header()
+
+report.footer()
+
+report.margin()
+
+report.landscape()
+
+report.portrait()
+
+report.metadata()
+
+Builder should automatically create a default page when appropriate.
+
+Document examples.
+
+Prompt 4: Styles
+Mission
+Introduce reusable Style objects.
+
+Example:
+
+Python
+title_style = Style(
+    font_size=18,
+    bold=True
+)
+
+builder.text(
+    "Laboratory Report",
+    style=title_style
+)
+Allow styles to be reused across objects.
+
+Support style inheritance.
+
+Document architecture.
+
+Prompt 5: Coordinates
+Mission
+Introduce Position and Size classes to replace raw x/y integers where appropriate.
+
+Example:
+
+Python
+Position(50,40)
+Size(300,40)
+
+Rectangle(
+    position=Position(...),
+    size=Size(...)
+)
+Improve readability.
+
+Avoid unnecessary complexity.
+
+Keep Report model clean.
+
+
+---- SPRINT 4 refactor ---
+
+Sprint 4 — The Developer Experience
+
+Mission
+
+Build an API so natural that developers don't need to read the documentation to get started.
+
+Prompt 1 — Developer Experience
+Sprint 4
+"The Developer Experience"
+
+Mission
+
+Design the public API that developers will use every day.
+
+The goal is to make Report itself the primary API.
+
+Do NOT introduce a mandatory ReportBuilder.
+
+Report is the framework.
+
+Architecture Rules
+
+Report is the domain object.
+
+Page belongs to Report.
+
+Objects belong to Page.
+
+Renderer consumes Report.
+
+Serializer converts Report ⇄ JSON.
+
+Flask, CLI, Designer and future adapters should all manipulate Report objects.
+
+Objectives
+
+Review all public classes.
+
+Improve naming.
+
+Improve discoverability.
+
+Reduce unnecessary boilerplate.
+
+Target API
+
+report = Report("Laboratory Report")
+
+page = report.page()
+
+page.text(
+    "Laboratory Result",
+    x=50,
+    y=30
+)
+
+page.field(
+    "patient.name",
+    x=50,
+    y=80
+)
+
+page.line(
+    x=50,
+    y=110,
+    width=500
+)
+
+page.rectangle(
+    x=40,
+    y=140,
+    width=520,
+    height=120
+)
+
+Developer should never need to understand internal models.
+
+Focus on readability.
+
+Document every public API.
+
+Acceptance Criteria
+
+The API feels natural to Python developers.
+
+Examples are concise.
+
+No Builder class is required.
+Prompt 2 — Convenience Methods
+Sprint 4
+
+Implement convenience methods on Report and Page.
+
+Report
+
+page()
+
+pages
+
+metadata()
+
+styles()
+
+assets()
+
+validate()
+
+clone()
+
+Page
+
+text()
+
+field()
+
+line()
+
+rectangle()
+
+image() (placeholder)
+
+barcode() (placeholder)
+
+qrcode() (placeholder)
+
+table() (placeholder)
+
+Internally these methods should create the appropriate report objects.
+
+Avoid duplicated logic.
+
+The convenience methods should simply construct objects and add them to the page.
+
+Document each method with examples.
+Prompt 3 — Unified Object Model
+Sprint 4
+
+Create a unified object model.
+
+Every drawable element should inherit from ReportObject.
+
+Examples
+
+TextObject
+
+FieldObject
+
+RectangleObject
+
+LineObject
+
+ImageObject
+
+BarcodeObject
+
+QRCodeObject
+
+TableObject
+
+The convenience methods should internally instantiate these objects.
+
+Example
+
+page.text(...)
+
+should internally become
+
+page.add(
+    TextObject(...)
+)
+
+This ensures the Designer, JSON serializer, AI integrations, and developer code all use the same domain objects.
+
+Document the architecture.
+Prompt 4 — Page API
+Sprint 4
+
+Improve the Page API.
+
+Support:
+
+page.objects
+
+page.find(id)
+
+page.remove(id)
+
+page.clear()
+
+page.add(object)
+
+page.clone()
+
+page.validate()
+
+Support iteration.
+
+Example
+
+for obj in page:
+
+    ...
+
+Pages should behave like Python collections where appropriate.
+
+Keep APIs explicit and readable.
+Prompt 5 — Styling System
+Sprint 4
+
+Refactor styles.
+
+Create reusable Style objects.
+
+Support inheritance.
+
+Example
+
+title = Style(
+    font_size=18,
+    bold=True
+)
+
+body = Style(
+    font_size=11
+)
+
+page.text(
+    "Title",
+    style=title
+)
+
+Objects should hold references to Style objects where practical.
+
+Support cloning.
+
+Support serialization.
+
+Document style architecture.
+Prompt 6 — Object Factory
+Sprint 4
+
+Create an ObjectFactory.
+
+Purpose
+
+Construct report objects consistently.
+
+Support:
+
+create_text()
+
+create_field()
+
+create_line()
+
+create_rectangle()
+
+Future:
+
+create_image()
+
+create_barcode()
+
+create_qrcode()
+
+create_table()
+
+The convenience methods should use ObjectFactory.
+
+The JSON serializer should also use ObjectFactory.
+
+This guarantees every object is created consistently regardless of source.
+
+Document the factory architecture.
+Prompt 7 — Public API Tests
+Sprint 4
+
+Write developer-focused API tests.
+
+Examples
+
+report = Report("Demo")
+
+page = report.page()
+
+page.text("Hello")
+
+page.field("patient.name")
+
+report.render_html(data)
+
+report.render_pdf(data)
+
+Serialize to JSON.
+
+Deserialize back.
+
+Verify equality.
+
+Verify convenience methods create the same objects as ObjectFactory.
+
+Verify no invalid report is created.
+
+Ensure the API remains intuitive.
+Prompt 8 — Architecture Review
+Sprint 4
+
+Review the complete architecture.
+
+Questions
+
+Can a beginner build a report without documentation?
+
+Can AI generate reports?
+
+Can the Designer manipulate Report directly?
+
+Can Flask use Report directly?
+
+Can CLI use Report directly?
+
+Can JSON become optional?
+
+Can YAML be added later?
+
+Can XML become a plugin?
+
+Can database storage serialize Report?
+
+Update diagrams.
+
+Update ADRs.
+
+Update README examples.
+
+Document lessons learned.
+

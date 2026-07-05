@@ -1,7 +1,11 @@
 from __future__ import annotations
 
-from slim_report_core import Report, render_html, render_pdf
+import pytest
+
+from slim_report_core import Report, ReportValidationError, render_html, render_pdf
 from slim_report_core.expressions import resolve_expression
+from slim_report_core.rendering import render_html as render_report_html
+from slim_report_core.serialization import JSONSerializer
 
 
 def test_field_value_resolving_from_nested_data() -> None:
@@ -11,7 +15,9 @@ def test_field_value_resolving_from_nested_data() -> None:
 
 
 def test_html_rendering_contains_expected_patient_name() -> None:
-    html = render_html(sample_template(), sample_data())
+    report = load_report()
+
+    html = render_html(report, sample_data())
 
     assert "<!doctype html>" in html
     assert "slim-report-page" in html
@@ -21,23 +27,44 @@ def test_html_rendering_contains_expected_patient_name() -> None:
 
 
 def test_pdf_rendering_returns_pdf_bytes() -> None:
-    pdf = render_pdf(sample_template(), sample_data())
+    report = load_report()
+
+    pdf = render_pdf(report, sample_data())
 
     assert pdf.startswith(b"%PDF")
 
 
 def test_missing_field_does_not_crash() -> None:
-    html = render_html(sample_template(), {"patient": {}})
+    report = load_report()
+
+    html = render_html(report, {"patient": {}})
 
     assert "Juan Dela Cruz" not in html
     assert "<!doctype html>" in html
 
 
 def test_report_render_html_and_render_pdf_methods() -> None:
-    report = Report.load_from_dict(sample_template())
+    report = load_report()
 
     assert "Juan Dela Cruz" in report.render_html(sample_data())
     assert report.render_pdf(sample_data()).startswith(b"%PDF")
+
+
+def test_render_functions_accept_report_domain_model() -> None:
+    report = load_report()
+
+    assert "Juan Dela Cruz" in render_html(report, sample_data())
+    assert render_pdf(report, sample_data()).startswith(b"%PDF")
+
+
+def test_public_renderer_rejects_json_mapping() -> None:
+    with pytest.raises(ReportValidationError, match="Report domain model"):
+        render_html(sample_template(), sample_data())  # type: ignore[arg-type]
+
+
+def test_low_level_renderer_rejects_json_mapping() -> None:
+    with pytest.raises(ReportValidationError, match="Report domain model"):
+        render_report_html(sample_template(), sample_data())
 
 
 def sample_data() -> dict[str, dict[str, str]]:
@@ -46,6 +73,10 @@ def sample_data() -> dict[str, dict[str, str]]:
             "name": "Juan Dela Cruz",
         }
     }
+
+
+def load_report() -> Report:
+    return JSONSerializer().load_mapping(sample_template())
 
 
 def sample_template() -> dict:

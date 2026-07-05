@@ -1,4 +1,4 @@
-# ADR-0002: JSON Instead of XML
+# ADR-0002: JSON as the First Built-In Persistence Format
 
 **Status:** Accepted
 
@@ -12,7 +12,9 @@ Although XML is expressive, it is often verbose, difficult to merge in version c
 
 ## Decision
 
-Slim Report Designer will store report templates using JSON.
+Slim Report Designer will ship JSON as the first built-in persistence format.
+
+JSON is a persistence format, not the core domain model. JSON templates are converted to and from `Report` by serializers.
 
 Example:
 
@@ -42,8 +44,13 @@ JSON also aligns naturally with JavaScript, which will power the browser-based d
 
 ## Consequences
 
-The JSON schema becomes a public API.
+The JSON schema becomes a public persistence API.
 
 Future versions must preserve backwards compatibility whenever possible.
 
 Breaking schema changes require migration tools and versioned schemas.
+
+The renderer and `Report` domain model must not depend on JSON-specific APIs.
+
+YAML may be added later as another serializer. XML may be implemented as a plugin serializer. These
+formats should not require changes to `Report` or renderers.

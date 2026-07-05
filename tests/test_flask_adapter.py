@@ -18,6 +18,7 @@ for src_dir in reversed(PACKAGE_SRC_DIRS):
 from flask import Flask  # noqa: E402
 
 from slim_report_core import Report, ReportObject  # noqa: E402
+from slim_report_core.serialization import JSONSerializer  # noqa: E402
 from slim_report_flask import SlimReportDesigner  # noqa: E402
 from slim_report_flask import extension as extension_module  # noqa: E402
 
@@ -99,7 +100,10 @@ def test_flask_designer_save_route_persists_template_json(tmp_path: Path) -> Non
     }
     saved_report = designer.get_report("lab-template")
     assert saved_report.template.metadata.title == "Saved Lab Result"
-    assert saved_report.to_dict()["objects"][0]["properties"]["text"] == "SAVED REPORT"
+    assert (
+        JSONSerializer().dump_mapping(saved_report)["objects"][0]["properties"]["text"]
+        == "SAVED REPORT"
+    )
 
     @designer.provider("lab_result")
     def lab_result(record_id: str) -> dict[str, Any]:
@@ -132,7 +136,7 @@ def test_flask_designer_save_route_rejects_non_object_payload(tmp_path: Path) ->
 
 def test_flask_designer_empty_template_starts_with_sample_objects(tmp_path: Path) -> None:
     app, designer = create_app(tmp_path)
-    empty_template = Report().to_dict()
+    empty_template = JSONSerializer().dump_mapping(Report())
     empty_template["metadata"]["title"] = "Empty Template"
     empty_template["metadata"]["custom"]["id"] = "empty-template"
     designer.create_template(empty_template)
@@ -179,8 +183,8 @@ def test_flask_pdf_export_delegates_to_core_rendering(
     def lab_result(record_id: str) -> dict[str, Any]:
         return {"record_id": record_id}
 
-    def fake_render_pdf(template: dict[str, Any], data: dict[str, Any]) -> bytes:
-        calls.append((template["metadata"]["title"], data))
+    def fake_render_pdf(report: Report, data: dict[str, Any]) -> bytes:
+        calls.append((report.metadata.title, data))
         return b"%PDF-1.4 fake"
 
     monkeypatch.setattr(extension_module, "render_pdf", fake_render_pdf)
@@ -261,7 +265,7 @@ def template_payload(provider: str | None = "lab_result") -> dict[str, Any]:
             properties={"field": "result.HGB"},
         )
     )
-    return report.to_dict()
+    return JSONSerializer().dump_mapping(report)
 
 
 if __name__ == "__main__":

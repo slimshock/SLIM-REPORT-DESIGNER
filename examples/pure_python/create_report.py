@@ -11,16 +11,17 @@ if str(CORE_SRC) not in sys.path:
     sys.path.insert(0, str(CORE_SRC))
 
 from slim_report_core import Report, ReportObject  # noqa: E402
+from slim_report_core.serialization import JSONSerializer  # noqa: E402
 
 
 def main() -> None:
     """Create a template, render HTML, and render PDF bytes."""
     report = Report()
-    report.template.metadata.title = "Pure Python Report"
-    report.template.metadata.description = "A minimal report created without a web framework."
-    report.template.page.width = 816
-    report.template.page.height = 1056
-    report.template.page.unit = "px"
+    report.metadata.title = "Pure Python Report"
+    report.metadata.description = "A minimal report created without a web framework."
+    report.page.width = 816
+    report.page.height = 1056
+    report.page.unit = "px"
 
     report.add_object(
         ReportObject(
@@ -53,7 +54,7 @@ def main() -> None:
 
     data = {"patient": {"name": "JUAN DELA CRUZ"}}
     output_dir = Path(__file__).resolve().parent
-    report.save_json(output_dir / "report.json")
+    JSONSerializer().save(report, output_dir / "report.json")
     (output_dir / "report.html").write_text(report.render_html(data), encoding="utf-8")
     (output_dir / "report.pdf").write_bytes(report.render_pdf(data))
     print(f"Saved report outputs in {output_dir}")

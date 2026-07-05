@@ -16,6 +16,7 @@ from slim_report_core import (
     render_html,
     render_pdf,
 )
+from slim_report_core.serialization import JSONSerializer
 
 from .blueprint import create_blueprint
 from .config import DEFAULT_CONFIG
@@ -29,6 +30,7 @@ class SlimReportDesigner:
         self.app: Flask | None = None
         self.providers = DataProviderRegistry()
         self.template_store: TemplateStore | None = None
+        self.serializer = JSONSerializer()
 
         if app is not None:
             self.init_app(app)
@@ -75,7 +77,7 @@ class SlimReportDesigner:
         """Create and save a new report template."""
         template_id = _template_id(payload)
         report = (
-            Report.load_from_dict(payload)
+            self.serializer.load_mapping(payload)
             if payload is not None
             else Report(create_default_template())
         )
@@ -84,7 +86,7 @@ class SlimReportDesigner:
 
     def save_template(self, template_id: str, payload: dict[str, Any]) -> TemplateRecord:
         """Validate and save an existing report template."""
-        report = Report.load_from_dict(payload)
+        report = self.serializer.load_mapping(payload)
         self._store().save(template_id, report)
         return self._store().get(template_id)
 
@@ -104,13 +106,13 @@ class SlimReportDesigner:
         """Render a report preview as HTML."""
         report = self.get_report(template_id)
         data = self.resolve_data(template_id, record_id)
-        return render_html(report.to_dict(), data)
+        return render_html(report, data)
 
     def export_pdf(self, template_id: str, record_id: str) -> bytes:
         """Render a report as PDF bytes."""
         report = self.get_report(template_id)
         data = self.resolve_data(template_id, record_id)
-        return render_pdf(report.to_dict(), data)
+        return render_pdf(report, data)
 
     def _provider_name(self, template_id: str, report: Report) -> str | None:
         configured = self.app.config if self.app is not None else {}
@@ -118,7 +120,7 @@ class SlimReportDesigner:
         if template_id in template_providers:
             return str(template_providers[template_id])
 
-        metadata_provider = report.template.metadata.custom.get("provider")
+        metadata_provider = report.metadata.custom.get("provider")
         if metadata_provider:
             return str(metadata_provider)
 

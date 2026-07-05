@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from slim_report_core import ExporterError, Report, ReportObject
+from slim_report_core.serialization import JSONSerializer
 
 
 def test_report_load_json_and_render_html(tmp_path: Path) -> None:
@@ -21,9 +22,10 @@ def test_report_load_json_and_render_html(tmp_path: Path) -> None:
         )
     )
     template_path = tmp_path / "template.json"
-    report.save_json(template_path)
+    serializer = JSONSerializer()
+    serializer.save(report, template_path)
 
-    loaded = Report.load_json(template_path)
+    loaded = serializer.load(template_path)
     html = loaded.render({"patient": {"name": "Iris"}}, exporter="html")
 
     assert isinstance(html, str)
