@@ -75,18 +75,26 @@ def test_flask_adapter_serves_framework_agnostic_designer_ui(tmp_path: Path) -> 
 
     response = client.get("/report-designer/designer?template=lab-template")
     script_response = client.get("/report-designer/designer-ui/js/designer.js")
+    toolbar_response = client.get("/report-designer/designer-ui/js/toolbar.js")
     css_response = client.get("/report-designer/designer-ui/css/designer.css")
 
     assert response.status_code == 200
     assert response.mimetype == "text/html"
     html = response.get_data(as_text=True)
     assert "Slim Report Designer" in html
+    assert "Click a tool to add it to the page." in html
+    assert 'id="selected-object"' in html
     assert 'window.SLIM_REPORT_API_BASE = "/report-designer/api";' in html
     assert script_response.status_code == 200
     assert script_response.mimetype in {"application/javascript", "text/javascript"}
     assert "createCanvasController" in script_response.get_data(as_text=True)
+    assert toolbar_response.status_code == 200
+    toolbar_js = toolbar_response.get_data(as_text=True)
+    assert "icon-action" in toolbar_js
+    assert "Export report as PDF" in toolbar_js
     assert css_response.status_code == 200
     assert css_response.mimetype == "text/css"
+    assert ".inspector-section" in css_response.get_data(as_text=True)
 
 
 def test_flask_adapter_new_template_get_returns_default_template(tmp_path: Path) -> None:

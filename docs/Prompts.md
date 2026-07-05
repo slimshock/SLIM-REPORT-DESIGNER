@@ -1690,3 +1690,149 @@ Acceptance Criteria
 - User can edit properties.
 - User can export JSON.
 - Flask can preview/export using the designer JSON.
+
+
+
+Sprint 5.1 — Designer UI Polish
+
+Current status:
+- Framework-agnostic designer UI works
+- Static designer works
+- Flask designer works
+- Drag/drop works
+- Resize works
+- Inspector works
+- Preview/export PDF works in Flask
+- Import/export/copy JSON works
+
+Goal:
+Polish the designer UI so it feels like a real report designer, while keeping the architecture simple and framework-agnostic.
+
+Important rules:
+- Do not introduce React, Vue, TypeScript, npm, Tailwind, Bootstrap, or a build step.
+- Use plain HTML, CSS, and vanilla JavaScript modules only.
+- Do not break static mode.
+- Do not break Flask mode.
+- Do not change the core renderer unless absolutely necessary.
+- Do not remove existing functionality.
+- Keep the UI package backend-agnostic.
+
+Files to inspect:
+- packages/slim_report_designer_ui/slim_report_designer_ui/static/index.html
+- packages/slim_report_designer_ui/slim_report_designer_ui/static/css/designer.css
+- packages/slim_report_designer_ui/slim_report_designer_ui/static/js/designer.js
+- packages/slim_report_designer_ui/slim_report_designer_ui/static/js/canvas.js
+- packages/slim_report_designer_ui/slim_report_designer_ui/static/js/inspector.js
+- packages/slim_report_designer_ui/slim_report_designer_ui/static/js/toolbar.js
+
+Tasks:
+
+1. Toolbar polish
+- Group toolbar actions visually:
+  - File: Save, Import JSON, Export JSON, Copy JSON
+  - Preview: Preview, Export PDF
+  - Edit: Duplicate, Delete
+- Keep all existing buttons working.
+- Make destructive Delete button visually distinct.
+- Improve spacing and alignment.
+- Keep the template name visible on the right.
+
+2. Toolbox polish
+- Improve left toolbox styling.
+- Make toolbox buttons look like report tools.
+- Keep tools:
+  - Text
+  - Field
+  - Line
+  - Rectangle
+- Add small helper text under toolbox title:
+  "Click a tool to add it to the page."
+- Add active/pressed visual feedback when a tool is clicked if simple.
+
+3. Canvas workspace polish
+- Center the page better inside the workspace.
+- Add a subtle page shadow.
+- Keep the light grid visible but softer.
+- Improve scroll behavior.
+- Keep horizontal and vertical scrolling working.
+- Add visual page boundary.
+- Keep page size based on template.page.width and template.page.height.
+
+4. Selection and resize polish
+- Improve selected object outline.
+- Make resize handle more visible.
+- Ensure selected object remains readable.
+- Use a small square resize handle in the bottom-right.
+- Do not break drag/resize.
+
+5. Inspector polish
+- Reorganize inspector into sections:
+  - Identity
+  - Position
+  - Size
+  - Content
+  - Style
+- id and type should appear readonly/disabled.
+- x/y/width/height should be grouped in two-column layout if possible.
+- For text:
+  - text
+  - font_size
+  - bold
+- For field:
+  - binding
+  - font_size
+  - bold
+- For rectangle:
+  - border_width
+- For line:
+  - stroke_width
+- Show a better empty state when no object is selected:
+  "Select an object to edit its properties."
+
+6. Status bar polish
+- Show:
+  - status message on the left
+  - selected object info in the middle
+  - object count on the right
+- Example:
+  Left: Saved
+  Middle: Selected: field sex_value
+  Right: 110 objects
+- Preserve existing status messages like imported, saved, deleted.
+
+7. Dirty state
+- Track when the template has unsaved changes.
+- Show "Unsaved changes" in the status bar after edits.
+- Show "Saved" after Save succeeds.
+- Do not block navigation yet.
+
+8. Accessibility/basic UX
+- Buttons should have title attributes.
+- Inputs should have labels.
+- Delete should only run when an object is selected.
+- Duplicate should only run when an object is selected.
+- Do not throw console errors when no object is selected.
+
+9. Tests/manual checks
+- Static designer still loads.
+- Flask designer still loads.
+- Add Text works.
+- Add Field works.
+- Drag works.
+- Resize works.
+- Inspector editing works.
+- Duplicate works.
+- Delete works.
+- Export JSON works.
+- Import JSON works.
+- Copy JSON works.
+- Flask Preview works.
+- Flask Export PDF works.
+
+Acceptance criteria:
+- UI looks cleaner and less like a debug prototype.
+- Existing designer behavior still works.
+- No framework dependency is added.
+- No build step is added.
+- Static mode still works.
+- Flask mode still works.

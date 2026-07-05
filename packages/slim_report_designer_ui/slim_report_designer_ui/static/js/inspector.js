@@ -1,14 +1,5 @@
 import { objectStyle, setObjectBinding, setObjectText } from "./objects.js";
 
-const COMMON_FIELDS = [
-  ["id", "text"],
-  ["type", "text", true],
-  ["x", "number"],
-  ["y", "number"],
-  ["width", "number"],
-  ["height", "number"]
-];
-
 export function createInspector({ form, getSelectedObject, onChange, onSelect }) {
   form.addEventListener("input", (event) => {
     const input = event.target;
@@ -20,10 +11,7 @@ export function createInspector({ form, getSelectedObject, onChange, onSelect })
       return;
     }
     applyInput(object, input);
-    onChange({ inspectorOnly: input.name === "id" });
-    if (input.name === "id") {
-      onSelect(object.id);
-    }
+    onChange();
   });
 
   return {
@@ -43,22 +31,43 @@ export function renderInspector(form, object) {
     return;
   }
 
-  for (const [name, type, readonly] of COMMON_FIELDS) {
-    form.appendChild(fieldRow(name, object[name], { type, readonly }));
-  }
+  form.appendChild(section("Identity", [
+    fieldRow("id", object.id, { disabled: true }),
+    fieldRow("type", object.type, { disabled: true })
+  ]));
+  form.appendChild(section("Position", [
+    fieldRow("x", object.x, { type: "number" }),
+    fieldRow("y", object.y, { type: "number" })
+  ], "field-grid"));
+  form.appendChild(section("Size", [
+    fieldRow("width", object.width, { type: "number" }),
+    fieldRow("height", object.height, { type: "number" })
+  ], "field-grid"));
 
   if (object.type === "text") {
-    form.appendChild(fieldRow("text", object.text || object.properties?.text || ""));
-    form.appendChild(styleField("font_size", object, "number"));
-    form.appendChild(styleField("bold", object, "checkbox"));
+    form.appendChild(section("Content", [
+      fieldRow("text", object.text || object.properties?.text || "")
+    ]));
+    form.appendChild(section("Style", [
+      styleField("font_size", object, "number"),
+      styleField("bold", object, "checkbox")
+    ]));
   } else if (object.type === "field") {
-    form.appendChild(fieldRow("binding", object.binding || object.properties?.binding || ""));
-    form.appendChild(styleField("font_size", object, "number"));
-    form.appendChild(styleField("bold", object, "checkbox"));
+    form.appendChild(section("Content", [
+      fieldRow("binding", object.binding || object.properties?.binding || "")
+    ]));
+    form.appendChild(section("Style", [
+      styleField("font_size", object, "number"),
+      styleField("bold", object, "checkbox")
+    ]));
   } else if (object.type === "rectangle") {
-    form.appendChild(styleField("border_width", object, "number"));
+    form.appendChild(section("Style", [
+      styleField("border_width", object, "number")
+    ]));
   } else if (object.type === "line") {
-    form.appendChild(styleField("stroke_width", object, "number"));
+    form.appendChild(section("Style", [
+      styleField("stroke_width", object, "number")
+    ]));
   }
 }
 
@@ -106,6 +115,7 @@ function fieldRow(name, value, options = {}) {
   input.name = name;
   input.type = options.type || "text";
   input.readOnly = Boolean(options.readonly);
+  input.disabled = Boolean(options.disabled);
   if (options.styleKey) {
     input.dataset.styleKey = options.styleKey;
   }
@@ -117,6 +127,20 @@ function fieldRow(name, value, options = {}) {
     row.append(label, input);
   }
   return row;
+}
+
+function section(title, rows, className = "") {
+  const group = document.createElement("fieldset");
+  group.className = `inspector-section ${className}`.trim();
+
+  const legend = document.createElement("legend");
+  legend.textContent = title;
+  group.appendChild(legend);
+
+  for (const row of rows) {
+    group.appendChild(row);
+  }
+  return group;
 }
 
 function defaultStyleValue(name) {

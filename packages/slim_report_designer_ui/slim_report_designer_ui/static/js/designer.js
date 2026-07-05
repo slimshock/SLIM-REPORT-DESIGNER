@@ -16,7 +16,9 @@ import { createToolbar } from "./toolbar.js";
 
 const state = {
   template: null,
-  selectedId: null
+  selectedId: null,
+  dirty: false,
+  statusMessage: "Ready"
 };
 
 const elements = {
@@ -25,6 +27,7 @@ const elements = {
   inspectorForm: document.querySelector("#inspector-form"),
   toolbar: document.querySelector("#toolbar-actions"),
   status: document.querySelector("#status-message"),
+  selectedObject: document.querySelector("#selected-object"),
   objectCount: document.querySelector("#object-count"),
   importFile: document.querySelector("#import-file"),
   templateTitle: document.querySelector("#template-title")
@@ -35,17 +38,17 @@ const canvasController = createCanvasController({
   getTemplate: () => state.template,
   getSelectedId: () => state.selectedId,
   onSelect: handleCanvasSelect,
-  onChange: render
+  onChange: markDirty
 });
 
 const inspector = createInspector({
   form: elements.inspectorForm,
   getSelectedObject,
-  onChange: render,
+  onChange: markDirty,
   onSelect: selectObject
 });
 
-createToolbar({
+const toolbar = createToolbar({
   container: elements.toolbar,
   onCommand: handleCommand
 });
@@ -58,8 +61,8 @@ elements.toolbox.addEventListener("click", (event) => {
   const object = createObject(button.dataset.tool, state.template);
   state.template.objects.push(object);
   selectObject(object.id);
-  setStatus(`Added ${object.type}`);
-  render();
+  showActiveTool(button);
+  markDirty(`Added ${object.type}`);
 });
 
 elements.importFile.addEventListener("change", async () => {
@@ -71,8 +74,7 @@ elements.importFile.addEventListener("change", async () => {
     const payload = JSON.parse(await file.text());
     state.template = normalizeTemplate(payload);
     state.selectedId = null;
-    setStatus(`Imported ${file.name}`);
-    render();
+    markDirty(`Imported ${file.name}`);
   } catch (error) {
     setStatus(error.message);
   } finally {
@@ -107,6 +109,7 @@ async function handleCommand(command) {
   try {
     if (command === "save") {
       state.template = normalizeTemplate(await saveTemplate(state.template));
+      state.dirty = false;
       setStatus("Saved");
     } else if (command === "preview") {
       await previewTemplate(state.template);
@@ -159,8 +162,7 @@ function duplicateSelected() {
   const clone = duplicateObject(selected, state.template);
   state.template.objects.push(clone);
   state.selectedId = clone.id;
-  setStatus(`Duplicated ${selected.id}`);
-  render();
+  markDirty(`Duplicated ${selected.id}`);
 }
 
 function deleteSelected() {
@@ -172,8 +174,7 @@ function deleteSelected() {
   if (index >= 0) {
     const [removed] = state.template.objects.splice(index, 1);
     state.selectedId = null;
-    setStatus(`Deleted ${removed.id}`);
-    render();
+    markDirty(`Deleted ${removed.id}`);
   }
 }
 
@@ -204,13 +205,49 @@ function render() {
   state.template = normalizeTemplate(state.template);
   canvasController.render();
   inspector.render();
+  toolbar.render({ hasSelection: Boolean(getSelectedObject()) });
   elements.templateTitle.textContent = templateTitle(state.template);
   const count = state.template.objects.length;
   elements.objectCount.textContent = `${count} ${count === 1 ? "object" : "objects"}`;
+  elements.selectedObject.textContent = selectedObjectLabel();
+  elements.status.textContent = statusLabel();
 }
 
 function setStatus(message) {
-  elements.status.textContent = message;
+  state.statusMessage = message;
+  elements.status.textContent = statusLabel();
+}
+
+function markDirty(message = "Unsaved changes") {
+  state.dirty = true;
+  state.statusMessage = message;
+  render();
+}
+
+function statusLabel() {
+  if (!state.dirty) {
+    return state.statusMessage;
+  }
+  if (!state.statusMessage || state.statusMessage === "Unsaved changes") {
+    return "Unsaved changes";
+  }
+  return `Unsaved changes - ${state.statusMessage}`;
+}
+
+function selectedObjectLabel() {
+  const selected = getSelectedObject();
+  if (!selected) {
+    return "No selection";
+  }
+  return `Selected: ${selected.type} ${selected.id}`;
+}
+
+function showActiveTool(button) {
+  for (const item of elements.toolbox.querySelectorAll(".tool-button.is-active")) {
+    item.classList.remove("is-active");
+  }
+  button.classList.add("is-active");
+  setTimeout(() => button.classList.remove("is-active"), 700);
 }
 
 function isEditingText(target) {

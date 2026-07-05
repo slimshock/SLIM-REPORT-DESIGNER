@@ -13,17 +13,30 @@
         <span class="brand-mark">SR</span>
         <span>Slim Report Designer</span>
       </div>
-      <div class="toolbar-group" id="toolbar-actions"></div>
       <div class="toolbar-spacer"></div>
+      <div class="toolbar-actions" id="toolbar-actions"></div>
       <div class="template-title" id="template-title">Untitled Report</div>
     </header>
 
     <aside class="toolbox" aria-label="Toolbox">
       <div class="panel-title">Toolbox</div>
-      <button class="tool-button" type="button" data-tool="text">Text</button>
-      <button class="tool-button" type="button" data-tool="field">Field</button>
-      <button class="tool-button" type="button" data-tool="line">Line</button>
-      <button class="tool-button" type="button" data-tool="rectangle">Rectangle</button>
+      <p class="panel-help">Click a tool to add it to the page.</p>
+      <button class="tool-button" type="button" data-tool="text" title="Add text object">
+        <span class="tool-icon">T</span>
+        <span>Text</span>
+      </button>
+      <button class="tool-button" type="button" data-tool="field" title="Add data field object">
+        <span class="tool-icon">{ }</span>
+        <span>Field</span>
+      </button>
+      <button class="tool-button" type="button" data-tool="line" title="Add line object">
+        <span class="tool-icon">-</span>
+        <span>Line</span>
+      </button>
+      <button class="tool-button" type="button" data-tool="rectangle" title="Add rectangle object">
+        <span class="tool-icon">[]</span>
+        <span>Rectangle</span>
+      </button>
     </aside>
 
     <section class="canvas-shell" aria-label="Report canvas">
@@ -41,6 +54,7 @@
 
     <footer class="status-bar">
       <span id="status-message">Ready</span>
+      <span id="selected-object">No selection</span>
       <span id="object-count">0 objects</span>
     </footer>
   </main>
