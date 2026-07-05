@@ -101,6 +101,62 @@ if (normalized.show_grid || normalized.snap_to_grid) {
     assert result.returncode == 0, result.stderr
 
 
+def test_data_field_helpers_infer_nested_and_array_paths() -> None:
+    module_path = (
+        "./packages/slim_report_designer_ui/"
+        "slim_report_designer_ui/static/js/data_fields.js"
+    )
+    script = """
+import {
+  fieldExists,
+  flattenDataPaths,
+  getFieldValue,
+  inferFieldsFromSample,
+  normalizeFieldPath
+} from '__MODULE_PATH__';
+
+const sample = {
+  patient: { name: 'Juan Dela Cruz', age: '34' },
+  order: { id: 'ORD-0001' },
+  results: [{ name: 'HGB', value: '13.2' }]
+};
+
+const paths = flattenDataPaths(sample);
+for (const path of ['patient.name', 'patient.age', 'order.id', 'results[0].name', 'results[].value']) {
+  if (!paths.includes(path)) {
+    throw new Error(`missing path ${path}`);
+  }
+}
+
+const fields = inferFieldsFromSample(sample);
+if (!fields.some((field) => field.path === 'patient.name' && field.sample === 'Juan Dela Cruz')) {
+  throw new Error('field inference failed');
+}
+if (getFieldValue(sample, 'results[].value') !== '13.2') {
+  throw new Error('array field lookup failed');
+}
+if (getFieldValue(sample, 'patient.missing') !== undefined) {
+  throw new Error('missing path should be undefined');
+}
+if (normalizeFieldPath('{{ patient.name }}') !== 'patient.name') {
+  throw new Error('field path normalization failed');
+}
+if (!fieldExists({ data: { fields } }, 'patient.name')) {
+  throw new Error('field existence check failed');
+}
+""".replace("__MODULE_PATH__", module_path)
+
+    result = subprocess.run(
+        ["node", "--input-type=module", "-e", script],
+        cwd=Path(__file__).resolve().parents[1],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
 def test_designer_static_ui_includes_canvas_controls() -> None:
     toolbar_source = (
         Path(__file__).resolve().parents[1]

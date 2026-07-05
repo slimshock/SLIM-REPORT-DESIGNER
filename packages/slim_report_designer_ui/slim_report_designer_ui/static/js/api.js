@@ -1,4 +1,5 @@
 import { createDefaultTemplate, normalizeTemplate, objectStyle } from "./objects.js";
+import { getFieldValue } from "./data_fields.js";
 
 export async function loadTemplate() {
   if (!apiBase()) {
@@ -93,7 +94,7 @@ function openHtmlPreview(html) {
 function localPreviewHtml(template) {
   const page = template.page || {};
   const bands = (template.bands || []).map((band) => localBandHtml(band, page.unit)).join("\n");
-  const objects = (template.objects || []).map((object) => localObjectHtml(object, page.unit)).join("\n");
+  const objects = (template.objects || []).map((object) => localObjectHtml(object, page.unit, template.data?.sample || {})).join("\n");
   const background = page.transparent ? "#fff" : page.background_color || "#fff";
   return `<!doctype html>
 <html lang="en">
@@ -113,10 +114,13 @@ function localBandHtml(band, unit = "px") {
   return `<div style="position:absolute;box-sizing:border-box;left:0;top:${unitToPx(band.y, unit)}px;width:100%;height:${unitToPx(band.height, unit)}px;background:${escapeHtml(band.background_color)}"></div>`;
 }
 
-function localObjectHtml(object, unit = "px") {
+function localObjectHtml(object, unit = "px", sampleData = {}) {
   const style = objectStyle(object);
+  const fieldValue = object.type === "field"
+    ? getFieldValue(sampleData, object.binding || object.properties?.binding || "")
+    : undefined;
   const value = object.type === "field"
-    ? `{{ ${object.binding || object.properties?.binding || ""} }}`
+    ? fieldValue === undefined || fieldValue === null ? `{{ ${object.binding || object.properties?.binding || ""} }}` : String(fieldValue)
     : object.text || object.properties?.text || "";
   const textDecoration = style.underline ? "underline" : "none";
   const display = object.type === "text" || object.type === "field" ? "flex" : "block";

@@ -1,4 +1,5 @@
 import { icon } from "./icons.js";
+import { fieldExists, getFieldValue, normalizeFieldPath } from "./data_fields.js";
 import {
   objectStyle,
   getBandById,
@@ -22,6 +23,8 @@ export function createInspector({
   getSelectedObject,
   getSelectedObjects = () => [],
   getActiveBandId = () => "detail",
+  getFields = () => [],
+  getSampleData = () => ({}),
   onBeforeChange = () => {},
   onCommand = () => {},
   onSelectBand = () => {},
@@ -97,12 +100,28 @@ export function createInspector({
 
   return {
     render() {
-      renderInspector(form, getSelectedObject(), getTemplate(), getSelectedObjects(), getActiveBandId());
+      renderInspector(
+        form,
+        getSelectedObject(),
+        getTemplate(),
+        getSelectedObjects(),
+        getActiveBandId(),
+        getFields(),
+        getSampleData()
+      );
     }
   };
 }
 
-export function renderInspector(form, object, template = {}, selectedObjects = [], activeBandId = "detail") {
+export function renderInspector(
+  form,
+  object,
+  template = {},
+  selectedObjects = [],
+  activeBandId = "detail",
+  fields = [],
+  sampleData = {}
+) {
   form.innerHTML = "";
   if (selectedObjects.length > 1) {
     form.appendChild(renderMultiSelectionInspector(selectedObjects));
@@ -137,9 +156,7 @@ export function renderInspector(form, object, template = {}, selectedObjects = [
     ]));
     form.appendChild(section("Style", textStyleFields(object)));
   } else if (object.type === "field") {
-    form.appendChild(section("Content", [
-      fieldRow("binding", object.binding || object.properties?.binding || "")
-    ]));
+    form.appendChild(section("Content", fieldContentFields(object, template, fields, sampleData)));
     form.appendChild(section("Style", textStyleFields(object)));
   } else if (object.type === "rectangle") {
     form.appendChild(section("Style", [
@@ -338,6 +355,49 @@ function textStyleFields(object) {
   ];
 }
 
+function fieldContentFields(object, template, fields, sampleData) {
+  const binding = normalizeFieldPath(object.binding || object.properties?.binding || "");
+  const rows = [
+    fieldRow("binding", binding),
+    fieldPickerRow(binding, fields),
+    commandGrid([["chooseField", "Choose Field"]])
+  ];
+  const sampleValue = getFieldValue(sampleData, binding);
+  const sample = document.createElement("p");
+  sample.className = "field-sample-preview";
+  sample.textContent = `Sample: ${
+    sampleValue === undefined || sampleValue === null || sampleValue === ""
+      ? "No sample value"
+      : String(sampleValue)
+  }`;
+  rows.push(sample);
+  if (binding && !fieldExists(template, binding)) {
+    const warning = document.createElement("p");
+    warning.className = "field-warning";
+    warning.textContent = "Binding not found in available fields.";
+    rows.push(warning);
+  }
+  return rows;
+}
+
+function fieldPickerRow(currentBinding, fields) {
+  const options = ["", ...fields.map((field) => field.path)];
+  const row = fieldRow("picker", currentBinding, {
+    type: "select",
+    name: "binding_picker",
+    options
+  });
+  const select = row.querySelector("select");
+  if (select && currentBinding && !options.includes(currentBinding)) {
+    const option = document.createElement("option");
+    option.value = currentBinding;
+    option.textContent = currentBinding;
+    select.appendChild(option);
+    select.value = currentBinding;
+  }
+  return row;
+}
+
 function applyInput(template, object, input) {
   const value = input.type === "checkbox" ? input.checked : input.value;
   const numericFields = new Set(["x", "y", "width", "height"]);
@@ -376,7 +436,11 @@ function applyInput(template, object, input) {
     return;
   }
   if (input.name === "binding") {
-    setObjectBinding(object, String(value));
+    setObjectBinding(object, normalizeFieldPath(value));
+    return;
+  }
+  if (input.name === "binding_picker") {
+    setObjectBinding(object, normalizeFieldPath(value));
     return;
   }
   object[input.name] = String(value);

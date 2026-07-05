@@ -130,6 +130,26 @@ def test_json_serializer_preserves_bands_and_object_band_alias() -> None:
     assert dumped["objects"][0]["band"] == "page_header"
 
 
+def test_json_serializer_round_trips_optional_data_metadata() -> None:
+    payload = sample_template()
+    payload["data"] = {
+        "sample": {"patient": {"name": "Juan Dela Cruz"}},
+        "fields": [{"path": "patient.name", "label": "Patient Name"}],
+    }
+
+    report = JSONSerializer().load_mapping(payload)
+    dumped = JSONSerializer().dump_mapping(report)
+
+    assert report.data["sample"]["patient"]["name"] == "Juan Dela Cruz"
+    assert dumped["data"] == payload["data"]
+
+
+def test_json_serializer_omits_data_for_old_templates_without_data() -> None:
+    dumped = JSONSerializer().dump_mapping(JSONSerializer().load_mapping(sample_template()))
+
+    assert "data" not in dumped
+
+
 def sample_template() -> dict:
     return {
         "version": DEFAULT_REPORT_VERSION,

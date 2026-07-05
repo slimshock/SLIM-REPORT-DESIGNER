@@ -118,8 +118,9 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.post("/api/preview")
     def api_preview() -> Response:
-        payload = request_template_payload()
-        data = request_template_data()
+        request_payload = request.get_json(silent=True)
+        payload = request_template_payload(request_payload)
+        data = request_template_data(request_payload, payload, designer)
         report = load_report_from_payload(normalize_template_payload(payload))
         context = validate_api_report(report)
         return Response(
@@ -130,8 +131,9 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.post("/api/export/pdf")
     def api_export_pdf() -> Response:
-        payload = request_template_payload()
-        data = request_template_data()
+        request_payload = request.get_json(silent=True)
+        payload = request_template_payload(request_payload)
+        data = request_template_data(request_payload, payload, designer)
         report = load_report_from_payload(normalize_template_payload(payload))
         context = validate_api_report(report)
         return Response(
@@ -207,9 +209,10 @@ def render_debug_headers(context: RenderContext) -> dict[str, str]:
     }
 
 
-def request_template_payload() -> dict[str, Any]:
+def request_template_payload(payload: Any | None = None) -> dict[str, Any]:
     """Return a report template payload from the current JSON request."""
-    payload = request.get_json(silent=True)
+    if payload is None:
+        payload = request.get_json(silent=True)
     if not isinstance(payload, dict):
         raise ValueError("Template payload must be a JSON object.")
     if isinstance(payload.get("template"), dict):
@@ -217,11 +220,31 @@ def request_template_payload() -> dict[str, Any]:
     return payload
 
 
-def request_template_data() -> dict[str, Any]:
+def request_template_data(
+    payload: Any | None = None,
+    template: dict[str, Any] | None = None,
+    designer: SlimReportDesigner | None = None,
+) -> dict[str, Any]:
     """Return optional render data from the current JSON request."""
-    payload = request.get_json(silent=True)
-    if isinstance(payload, dict) and isinstance(payload.get("data"), dict):
+    if payload is None:
+        payload = request.get_json(silent=True)
+    if (
+        isinstance(payload, dict)
+        and isinstance(payload.get("template"), dict)
+        and isinstance(payload.get("data"), dict)
+    ):
         return payload["data"]
+    data_metadata = template.get("data") if isinstance(template, dict) else None
+    if isinstance(data_metadata, dict) and isinstance(data_metadata.get("sample"), dict):
+        return data_metadata["sample"]
+    template_id = payload.get("template_id") if isinstance(payload, dict) else None
+    if designer is not None and template_id:
+        try:
+            resolved = designer.resolve_data(str(template_id), "sample")
+        except Exception:
+            resolved = {}
+        if isinstance(resolved, dict):
+            return resolved
     return {}
 
 

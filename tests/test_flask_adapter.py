@@ -209,6 +209,72 @@ def test_flask_designer_api_previews_and_exports_posted_json(tmp_path: Path) -> 
     assert pdf_response.get_data().startswith(b"%PDF")
 
 
+def test_flask_designer_api_uses_posted_template_sample_data(tmp_path: Path) -> None:
+    app, _designer = create_app(tmp_path)
+    payload = {
+        "version": "0.1",
+        "metadata": {"name": "Sample Data Preview"},
+        "page": {
+            "size": "A4",
+            "orientation": "portrait",
+            "width": 595,
+            "height": 842,
+            "unit": "px",
+        },
+        "objects": [
+            {
+                "id": "patient",
+                "type": "field",
+                "x": 40,
+                "y": 40,
+                "width": 180,
+                "height": 24,
+                "binding": "patient.name",
+            }
+        ],
+        "data": {"sample": {"patient": {"name": "Sample Patient"}}},
+        "bands": [],
+        "assets": [],
+    }
+
+    response = app.test_client().post("/report-designer/api/preview", json=payload)
+
+    assert response.status_code == 200
+    assert "Sample Patient" in response.get_data(as_text=True)
+
+
+def test_flask_designer_api_missing_render_data_does_not_crash(tmp_path: Path) -> None:
+    app, _designer = create_app(tmp_path)
+    payload = {
+        "version": "0.1",
+        "metadata": {"name": "No Data Preview"},
+        "page": {
+            "size": "A4",
+            "orientation": "portrait",
+            "width": 595,
+            "height": 842,
+            "unit": "px",
+        },
+        "objects": [
+            {
+                "id": "patient",
+                "type": "field",
+                "x": 40,
+                "y": 40,
+                "width": 180,
+                "height": 24,
+                "binding": "patient.name",
+            }
+        ],
+        "bands": [],
+        "assets": [],
+    }
+
+    response = app.test_client().post("/report-designer/api/preview", json=payload)
+
+    assert response.status_code == 200
+
+
 def test_flask_designer_api_rejects_empty_preview_and_export(tmp_path: Path) -> None:
     app, _designer = create_app(tmp_path)
     payload = {

@@ -2514,6 +2514,43 @@
       }
     }
   ],
+  "data": {
+    "sample": {
+      "patient": {
+        "name": "dhab W. cabrera",
+        "age": "1",
+        "dob": "09/18/2024",
+        "sex": "FEMALE",
+        "physician": "",
+        "clinical_diagnosis": ""
+      },
+      "order": {
+        "id": "ORDER-1001",
+        "source": "OPD",
+        "room_no": "",
+        "received": "06/29/2026, 11:04:55 AM",
+        "checked_in": "06/29/2026, 11:04:59 AM",
+        "released": "06/29/2026, 11:05:43 AM",
+        "printed": "07/05/2026, 06:45:49 PM"
+      },
+      "results": {
+        "wbc": "50",
+        "rbc": "5",
+        "hgb": "5",
+        "hct": "5",
+        "mcv": "",
+        "mch": "",
+        "mchc": "",
+        "rdw": "",
+        "neutrophils": "",
+        "lymphocytes": "",
+        "monocytes": "",
+        "basophils": "",
+        "total": "",
+        "platelet": ""
+      }
+    }
+  },
   "bands": [],
   "assets": []
 }

@@ -1,3 +1,5 @@
+import { normalizeDataMetadata } from "./data_fields.js";
+
 export function createDefaultTemplate() {
   return normalizeTemplate({
     version: "0.1",
@@ -44,6 +46,12 @@ export function normalizeTemplate(template) {
     assignObjectBand(source, object);
   }
   source.assets = Array.isArray(source.assets) ? source.assets : [];
+  const data = normalizeDataMetadata(source.data);
+  if (data) {
+    source.data = data;
+  } else {
+    delete source.data;
+  }
   return source;
 }
 
@@ -118,8 +126,12 @@ export function createObject(type, template) {
     base.properties.text = base.text;
     base.properties.style = { font_size: 14 };
   } else if (type === "field") {
-    base.binding = "patient.name";
+    base.width = 140;
+    base.height = 20;
+    base.binding = "";
+    base.text = "{{  }}";
     base.properties.binding = base.binding;
+    base.properties.text = base.text;
     base.properties.style = { font_size: 14 };
   } else if (type === "line") {
     base.width = 220;
@@ -313,9 +325,13 @@ export function setObjectText(object, value) {
 }
 
 export function setObjectBinding(object, value) {
-  object.binding = value;
+  const binding = String(value);
+  object.binding = binding;
   object.properties = object.properties || {};
-  object.properties.binding = value;
+  object.properties.binding = binding;
+  if (object.type === "field") {
+    setObjectText(object, binding ? `{{ ${binding} }}` : "{{  }}");
+  }
 }
 
 export function setObjectSource(object, value) {

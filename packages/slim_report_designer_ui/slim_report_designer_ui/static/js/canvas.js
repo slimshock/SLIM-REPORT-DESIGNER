@@ -1,5 +1,6 @@
 import { clampObjectToBand, getBandForObject, objectStyle } from "./objects.js";
 import { gridSizeForUnit, maybeSnap, screenDeltaToRealDelta } from "./canvas_settings.js";
+import { getFieldValue } from "./data_fields.js";
 
 export function createCanvasController({
   canvas,
@@ -313,7 +314,10 @@ export function renderCanvas(
     canvas.appendChild(renderBand(band, page.unit, activeBandId));
   }
   for (const object of template.objects || []) {
-    canvas.appendChild(renderObject(object, selectedIds, primarySelectedId, page.unit));
+    canvas.appendChild(renderObject(object, selectedIds, primarySelectedId, page.unit, {
+      sampleData: template.data?.sample || {},
+      showSampleData: Boolean(settings.show_sample_data)
+    }));
   }
   if (selectedIds.length > 1) {
     const selectedObjects = (template.objects || []).filter((object) => selectedIds.includes(object.id));
@@ -354,7 +358,7 @@ function renderBand(band, unit = "px", activeBandId = "detail") {
   return element;
 }
 
-function renderObject(object, selectedIds = [], primarySelectedId = null, unit = "px") {
+function renderObject(object, selectedIds = [], primarySelectedId = null, unit = "px", options = {}) {
   const element = document.createElement("div");
 
   element.className = "report-object";
@@ -395,7 +399,16 @@ function renderObject(object, selectedIds = [], primarySelectedId = null, unit =
   if (object.type === "text") {
     element.textContent = object.text || object.properties?.text || "Text";
   } else if (object.type === "field") {
-    element.textContent = `{{ ${object.binding || object.properties?.binding || ""} }}`;
+    const binding = object.binding || object.properties?.binding || "";
+    const sampleValue = options.showSampleData ? getFieldValue(options.sampleData, binding) : undefined;
+    if (options.showSampleData && sampleValue !== undefined && sampleValue !== null && sampleValue !== "") {
+      element.textContent = String(sampleValue);
+    } else {
+      element.textContent = `{{ ${binding} }}`;
+      if (options.showSampleData && binding) {
+        element.classList.add("unresolved-field");
+      }
+    }
   } else if (object.type === "line") {
     const line = document.createElement("div");
     line.className = "line-preview";

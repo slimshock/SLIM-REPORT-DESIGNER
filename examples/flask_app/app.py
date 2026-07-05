@@ -172,6 +172,7 @@ def create_lab_result_report() -> Report:
     page.field("result.WBC", x=180, y=262, width=120, height=20, id="wbc_value", font_size=12)
     page.text("PLT", x=75, y=298, width=80, height=20, id="plt_label", font_size=12, bold=True)
     page.field("result.PLT", x=180, y=298, width=120, height=20, id="plt_value", font_size=12)
+    report.data = {"sample": lab_result("ORDER-1001")}
     return report
 
 
@@ -367,6 +368,7 @@ def create_cerebro_cbc_report() -> Report:
     )
     page.line(x=448, y=693, width=193, id="pathologist_line", stroke_width=1)
     page.text("1 of 1", x=614, y=738, width=30, height=11, id="page_count", font_size=9, bold=True)
+    report.data = {"sample": cerebro_cbc("ORDER-1001")}
     return report
 
 

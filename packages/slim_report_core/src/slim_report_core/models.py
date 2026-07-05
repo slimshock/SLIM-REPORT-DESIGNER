@@ -1437,6 +1437,7 @@ class ReportTemplate:
     objects: list[Object] = field(default_factory=list)
     bands: list[Band] = field(default_factory=list)
     assets: list[Asset] = field(default_factory=list)
+    data: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> ReportTemplate:
@@ -1449,10 +1450,11 @@ class ReportTemplate:
             objects=[Object.from_dict(item) for item in mapping["objects"]],
             bands=[Band.from_dict(item) for item in mapping["bands"]],
             assets=[Asset.from_dict(item) for item in mapping["assets"]],
+            data=copy.deepcopy(mapping.get("data", {})) if isinstance(mapping.get("data"), Mapping) else {},
         )
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        data = {
             "version": self.version,
             "metadata": self.metadata.to_dict(),
             "page": self.page.to_dict(),
@@ -1460,6 +1462,9 @@ class ReportTemplate:
             "bands": [item.to_dict() for item in self.bands],
             "assets": [item.to_dict() for item in self.assets],
         }
+        if self.data:
+            data["data"] = copy.deepcopy(self.data)
+        return data
 
 
 def clone_model(value: Any) -> Any:

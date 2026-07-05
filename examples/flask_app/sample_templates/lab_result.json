@@ -296,6 +296,24 @@
       }
     }
   ],
+  "data": {
+    "sample": {
+      "patient": {
+        "name": "JUAN DELA CRUZ",
+        "age": "35",
+        "sex": "MALE"
+      },
+      "order": {
+        "id": "ORDER-1001",
+        "date": "2026-07-05"
+      },
+      "result": {
+        "HGB": "14.5",
+        "WBC": "7.2",
+        "PLT": "250"
+      }
+    }
+  },
   "bands": [],
   "assets": []
 }

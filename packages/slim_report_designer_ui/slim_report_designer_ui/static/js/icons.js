@@ -11,6 +11,7 @@ const ICONS = {
   redo: '<path d="M15 7h5v5"/><path d="M20 12l-5-5"/><path d="M19 12h-8a5 5 0 1 0 0 10h2"/>',
   text: '<path d="M5 5h14"/><path d="M12 5v14"/><path d="M9 19h6"/>',
   field: '<path d="M8 7H5v10h3"/><path d="M16 7h3v10h-3"/><path d="M10 15l4-6"/>',
+  database: '<ellipse cx="12" cy="5" rx="7" ry="3"/><path d="M5 5v6c0 1.7 3.1 3 7 3s7-1.3 7-3V5"/><path d="M5 11v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/>',
   line: '<path d="M4 12h16"/>',
   rectangle: '<rect x="4" y="6" width="16" height="12"/>',
   image: '<rect x="4" y="5" width="16" height="14" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M4 16l4-4 3 3 2-2 7 6"/>',

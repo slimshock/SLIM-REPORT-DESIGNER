@@ -6,7 +6,8 @@ export function defaultCanvasSettings() {
     zoom: 1,
     grid_size: 10,
     show_grid: true,
-    snap_to_grid: true
+    snap_to_grid: true,
+    show_sample_data: false
   };
 }
 
@@ -30,7 +31,10 @@ export function normalizeCanvasSettings(settings) {
     show_grid: settings?.show_grid === undefined ? defaults.show_grid : Boolean(settings.show_grid),
     snap_to_grid: settings?.snap_to_grid === undefined
       ? defaults.snap_to_grid
-      : Boolean(settings.snap_to_grid)
+      : Boolean(settings.snap_to_grid),
+    show_sample_data: settings?.show_sample_data === undefined
+      ? defaults.show_sample_data
+      : Boolean(settings.show_sample_data)
   };
 }
 

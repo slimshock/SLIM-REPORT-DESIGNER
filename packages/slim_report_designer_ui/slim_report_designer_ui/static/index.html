@@ -19,28 +19,42 @@
     </header>
 
     <aside class="toolbox" aria-label="Toolbox">
-      <div class="panel-title">Toolbox</div>
-      <p class="panel-help">Click a tool to add it to the page.</p>
-      <button class="tool-button" type="button" data-tool="text" title="Add text object">
-        <span class="tool-icon" data-icon="text">T</span>
-        <span>Text</span>
-      </button>
-      <button class="tool-button" type="button" data-tool="field" title="Add data field object">
-        <span class="tool-icon" data-icon="field">{ }</span>
-        <span>Field</span>
-      </button>
-      <button class="tool-button" type="button" data-tool="line" title="Add line object">
-        <span class="tool-icon" data-icon="line">-</span>
-        <span>Line</span>
-      </button>
-      <button class="tool-button" type="button" data-tool="rectangle" title="Add rectangle object">
-        <span class="tool-icon" data-icon="rectangle">[]</span>
-        <span>Rectangle</span>
-      </button>
-      <button class="tool-button" type="button" data-tool="image" title="Add image object">
-        <span class="tool-icon" data-icon="image">Img</span>
-        <span>Image</span>
-      </button>
+      <div class="panel-tabs" role="tablist" aria-label="Left panel">
+        <button class="panel-tab is-active" type="button" data-panel-tab="toolbox">Toolbox</button>
+        <button class="panel-tab" type="button" data-panel-tab="fields">Fields</button>
+      </div>
+      <section class="left-panel is-active" data-panel="toolbox">
+        <div class="panel-title">Toolbox</div>
+        <p class="panel-help">Click a tool to add it to the page.</p>
+        <button class="tool-button" type="button" data-tool="text" title="Add text object">
+          <span class="tool-icon" data-icon="text">T</span>
+          <span>Text</span>
+        </button>
+        <button class="tool-button" type="button" data-tool="field" title="Add data field object">
+          <span class="tool-icon" data-icon="field">{ }</span>
+          <span>Field</span>
+        </button>
+        <button class="tool-button" type="button" data-tool="line" title="Add line object">
+          <span class="tool-icon" data-icon="line">-</span>
+          <span>Line</span>
+        </button>
+        <button class="tool-button" type="button" data-tool="rectangle" title="Add rectangle object">
+          <span class="tool-icon" data-icon="rectangle">[]</span>
+          <span>Rectangle</span>
+        </button>
+        <button class="tool-button" type="button" data-tool="image" title="Add image object">
+          <span class="tool-icon" data-icon="image">Img</span>
+          <span>Image</span>
+        </button>
+      </section>
+      <section class="left-panel" data-panel="fields" hidden>
+        <div class="panel-title">Data Fields</div>
+        <div class="field-panel-actions">
+          <input id="field-search" type="search" placeholder="Search fields" aria-label="Search fields">
+          <button id="sample-data-open" class="toolbar-button icon-action" type="button" title="View or edit sample data" aria-label="View or edit sample data" data-icon="database"></button>
+        </div>
+        <div id="fields-list" class="fields-list"></div>
+      </section>
     </aside>
 
     <section class="canvas-shell" aria-label="Report canvas">
@@ -79,6 +93,25 @@
         <button id="history-clear" class="toolbar-button danger" type="button" title="Clear local version history">Clear History</button>
       </div>
       <div id="history-list" class="history-list"></div>
+    </section>
+  </div>
+
+  <div id="sample-data-modal" class="modal-backdrop" hidden>
+    <section class="sample-data-modal" role="dialog" aria-modal="true" aria-labelledby="sample-data-title">
+      <header class="history-header">
+        <div>
+          <h2 id="sample-data-title">Sample Data</h2>
+          <p class="history-subtitle">JSON used for field discovery and designer preview.</p>
+        </div>
+        <button id="sample-data-close" class="modal-icon-button" type="button" title="Close sample data" aria-label="Close sample data"></button>
+      </header>
+      <div class="sample-data-body">
+        <textarea id="sample-data-json" spellcheck="false" aria-label="Sample data JSON"></textarea>
+        <p id="sample-data-error" class="field-warning" hidden></p>
+      </div>
+      <footer class="sample-data-actions">
+        <button id="sample-data-apply" class="toolbar-button primary" type="button">Apply</button>
+      </footer>
     </section>
   </div>
 

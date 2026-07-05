@@ -14,8 +14,15 @@ import {
   duplicateObject,
   getBandById,
   normalizeTemplate,
+  setObjectBinding,
   templateTitle
 } from "./objects.js";
+import {
+  getFieldValue,
+  getTemplateFields,
+  inferFieldsFromSample,
+  normalizeFieldPath
+} from "./data_fields.js";
 import {
   exportPdf,
   loadTemplate,
@@ -51,6 +58,14 @@ const elements = {
   canvas: document.querySelector("#page-canvas"),
   canvasScroller: document.querySelector(".canvas-scroller"),
   toolbox: document.querySelector(".toolbox"),
+  fieldSearch: document.querySelector("#field-search"),
+  fieldsList: document.querySelector("#fields-list"),
+  sampleDataOpen: document.querySelector("#sample-data-open"),
+  sampleDataModal: document.querySelector("#sample-data-modal"),
+  sampleDataClose: document.querySelector("#sample-data-close"),
+  sampleDataApply: document.querySelector("#sample-data-apply"),
+  sampleDataJson: document.querySelector("#sample-data-json"),
+  sampleDataError: document.querySelector("#sample-data-error"),
   inspectorForm: document.querySelector("#inspector-form"),
   toolbar: document.querySelector("#toolbar-actions"),
   status: document.querySelector("#status-message"),
@@ -86,6 +101,8 @@ const inspector = createInspector({
   getSelectedObject,
   getSelectedObjects,
   getActiveBandId: () => state.activeBandId,
+  getFields: () => getTemplateFields(state.template),
+  getSampleData: () => state.template?.data?.sample || {},
   onBeforeChange: recordUndo,
   onChange: markDirty,
   onCommand: handleCommand,
@@ -100,8 +117,19 @@ const toolbar = createToolbar({
 
 initializeToolboxIcons();
 initializeHistoryUi();
+initializeSampleDataUi();
 
 elements.toolbox.addEventListener("click", (event) => {
+  const tab = event.target.closest("button[data-panel-tab]");
+  if (tab) {
+    showLeftPanel(tab.dataset.panelTab);
+    return;
+  }
+  const fieldButton = event.target.closest("button[data-field-path]");
+  if (fieldButton) {
+    addFieldObject(fieldButton.dataset.fieldPath);
+    return;
+  }
   const button = event.target.closest("button[data-tool]");
   if (!button) {
     return;
@@ -116,6 +144,34 @@ elements.toolbox.addEventListener("click", (event) => {
   showActiveTool(button);
   markDirty(`Added ${object.type}`);
 });
+
+elements.toolbox.addEventListener("dragstart", (event) => {
+  const fieldButton = event.target.closest("button[data-field-path]");
+  if (!fieldButton || !event.dataTransfer) {
+    return;
+  }
+  event.dataTransfer.setData("application/x-slim-report-field", fieldButton.dataset.fieldPath);
+  event.dataTransfer.effectAllowed = "copy";
+});
+
+elements.canvas.addEventListener("dragover", (event) => {
+  if (!event.dataTransfer?.types.includes("application/x-slim-report-field")) {
+    return;
+  }
+  event.preventDefault();
+  event.dataTransfer.dropEffect = "copy";
+});
+
+elements.canvas.addEventListener("drop", (event) => {
+  const path = event.dataTransfer?.getData("application/x-slim-report-field");
+  if (!path) {
+    return;
+  }
+  event.preventDefault();
+  addFieldObject(path, canvasDropPosition(event));
+});
+
+elements.fieldSearch.addEventListener("input", () => renderFieldsPanel());
 
 elements.importFile.addEventListener("change", async () => {
   const file = elements.importFile.files?.[0];
@@ -235,6 +291,10 @@ async function handleCommand(command, payload = {}) {
       setLockedSelected(false);
     } else if (command === "history") {
       openHistory();
+    } else if (command === "chooseField") {
+      showLeftPanel("fields");
+      elements.fieldSearch.focus();
+      setStatus("Choose a field from the Fields panel");
     } else if (command === "zoomIn") {
       updateCanvasSettings({ zoom: zoomIn(state.canvasSettings.zoom) });
     } else if (command === "zoomOut") {
@@ -518,10 +578,183 @@ function toJson() {
   return `${JSON.stringify(state.template, null, 2)}\n`;
 }
 
+function addFieldObject(path, position = null) {
+  const binding = normalizeFieldPath(path);
+  if (!binding) {
+    setStatus("Binding not found");
+    return;
+  }
+  recordUndo(`Add field ${binding}`);
+  const object = createObject("field", state.template);
+  object.width = 140;
+  object.height = 20;
+  setObjectBinding(object, binding);
+  assignObjectBand(state.template, object, state.activeBandId);
+  if (position) {
+    object.x = position.x;
+    object.y = position.y;
+  } else {
+    placeObjectOnCanvas(object, state.template, state.canvasSettings, elements.canvasScroller);
+  }
+  clampObjectToBand(state.template, object);
+  state.template.objects.push(object);
+  selectOnly(object.id);
+  markDirty(`Field added: ${binding}`);
+}
+
+function renderFieldsPanel() {
+  const query = String(elements.fieldSearch.value || "").trim().toLowerCase();
+  const fields = getTemplateFields(state.template).filter((field) => {
+    if (!query) {
+      return true;
+    }
+    return [field.path, field.label, field.sample].some((value) => String(value || "").toLowerCase().includes(query));
+  });
+  elements.fieldsList.innerHTML = "";
+  if (fields.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "empty-state";
+    empty.textContent = state.template?.data?.sample
+      ? "No fields match the search."
+      : "No sample data yet. Use the data button to add JSON or enter bindings manually in the inspector.";
+    elements.fieldsList.appendChild(empty);
+    return;
+  }
+  for (const [groupName, groupFields] of Object.entries(groupFieldsByRoot(fields))) {
+    const group = document.createElement("section");
+    group.className = "field-group";
+    const title = document.createElement("div");
+    title.className = "field-group-title";
+    title.textContent = groupName;
+    group.appendChild(title);
+    for (const field of groupFields) {
+      group.appendChild(fieldListItem(field));
+    }
+    elements.fieldsList.appendChild(group);
+  }
+}
+
+function fieldListItem(field) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "field-list-item";
+  button.dataset.fieldPath = field.path;
+  button.draggable = true;
+  button.title = field.label ? `${field.label}: ${field.path}` : field.path;
+
+  const path = document.createElement("span");
+  path.className = "field-list-path";
+  path.textContent = field.path;
+
+  const meta = document.createElement("span");
+  meta.className = "field-list-meta";
+  const label = document.createElement("span");
+  label.textContent = field.label || "Field";
+  const sample = document.createElement("span");
+  sample.textContent = field.sample || sampleValueLabel(getFieldValue(state.template?.data?.sample || {}, field.path));
+  meta.append(label, sample);
+  button.append(path, meta);
+  return button;
+}
+
+function groupFieldsByRoot(fields) {
+  return fields.reduce((groups, field) => {
+    const root = field.path.split(".")[0]?.replace(/\[(?:\d+)?\]/g, "") || "Fields";
+    const label = root.replace(/[_-]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+    groups[label] = groups[label] || [];
+    groups[label].push(field);
+    return groups;
+  }, {});
+}
+
+function sampleValueLabel(value) {
+  if (value === undefined || value === null) {
+    return "";
+  }
+  return String(value);
+}
+
+function canvasDropPosition(event) {
+  const page = state.template?.page || {};
+  const rect = elements.canvas.getBoundingClientRect();
+  const zoom = Number(state.canvasSettings.zoom) || 1;
+  const unitScale = unitToPx(1, page.unit);
+  return {
+    x: Math.round((event.clientX - rect.left) / zoom / unitScale),
+    y: Math.round((event.clientY - rect.top) / zoom / unitScale)
+  };
+}
+
+function showLeftPanel(panelName) {
+  for (const tab of elements.toolbox.querySelectorAll("[data-panel-tab]")) {
+    const active = tab.dataset.panelTab === panelName;
+    tab.classList.toggle("is-active", active);
+  }
+  for (const panel of elements.toolbox.querySelectorAll("[data-panel]")) {
+    const active = panel.dataset.panel === panelName;
+    panel.hidden = !active;
+    panel.classList.toggle("is-active", active);
+  }
+  if (panelName === "fields") {
+    renderFieldsPanel();
+  }
+}
+
 function initializeToolboxIcons() {
   for (const item of elements.toolbox.querySelectorAll("[data-icon]")) {
     applyIcon(item, item.dataset.icon);
   }
+}
+
+function initializeSampleDataUi() {
+  applyIcon(elements.sampleDataOpen, "database");
+  applyIcon(elements.sampleDataClose, "close");
+  elements.sampleDataOpen.addEventListener("click", openSampleDataModal);
+  elements.sampleDataClose.addEventListener("click", closeSampleDataModal);
+  elements.sampleDataApply.addEventListener("click", applySampleData);
+  elements.sampleDataModal.addEventListener("click", (event) => {
+    if (event.target === elements.sampleDataModal) {
+      closeSampleDataModal();
+    }
+  });
+}
+
+function openSampleDataModal() {
+  elements.sampleDataJson.value = JSON.stringify(state.template?.data?.sample || {}, null, 2);
+  elements.sampleDataError.hidden = true;
+  elements.sampleDataError.textContent = "";
+  elements.sampleDataModal.hidden = false;
+  elements.sampleDataJson.focus();
+}
+
+function closeSampleDataModal() {
+  elements.sampleDataModal.hidden = true;
+}
+
+function applySampleData() {
+  let sample;
+  try {
+    sample = JSON.parse(elements.sampleDataJson.value || "{}");
+  } catch (error) {
+    elements.sampleDataError.textContent = `Invalid JSON: ${error.message}`;
+    elements.sampleDataError.hidden = false;
+    setStatus("Invalid JSON");
+    return;
+  }
+  if (!sample || typeof sample !== "object" || Array.isArray(sample)) {
+    elements.sampleDataError.textContent = "Sample data must be a JSON object.";
+    elements.sampleDataError.hidden = false;
+    setStatus("Invalid JSON");
+    return;
+  }
+  recordUndo("Edit sample data");
+  state.template.data = {
+    ...(state.template.data || {}),
+    sample,
+    fields: inferFieldsFromSample(sample)
+  };
+  closeSampleDataModal();
+  markDirty("Sample data updated");
 }
 
 function initializeHistoryUi() {
@@ -660,6 +893,7 @@ function render(options = {}) {
   state.template = normalizeTemplate(state.template);
   ensureActiveBand();
   canvasController.render();
+  renderFieldsPanel();
   if (!options.preserveInspector) {
     inspector.render();
   }
