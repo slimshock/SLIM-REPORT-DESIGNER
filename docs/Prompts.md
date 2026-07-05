@@ -563,7 +563,69 @@ Open:
 ------------------------------------------------------
 
 
+# Prompt 9 — Architecture Review Sprint
 
+Review the current Slim Report Designer codebase after implementing foundation, Flask adapter, HTML preview, and PDF export.
+
+Goal:
+Improve architecture, naming, boundaries, tests, and documentation without adding major new features.
+
+Check and improve:
+
+1. Package boundaries
+- slim_report_core must not import Flask, Django, FastAPI, SQLAlchemy, or web framework code.
+- slim_report_flask should only handle Flask routes, requests, responses, provider registration, and storage orchestration.
+- Rendering must remain in slim_report_core.
+
+2. Public API
+Review whether these APIs are clean and Pythonic:
+
+from slim_report_core import render_html, render_pdf
+from slim_report_core import Report
+
+report = Report.load_from_dict(template_json)
+html = report.render_html(data)
+pdf = report.render_pdf(data)
+
+Improve naming only if clearly better.
+
+3. Renderer structure
+Make sure HTML and PDF rendering share common helpers where appropriate:
+- page size handling
+- orientation
+- coordinate conversion
+- field resolution
+- style normalization
+
+Avoid duplicated logic.
+
+4. Tests
+Add or improve tests for:
+- core does not import Flask
+- HTML rendering
+- PDF rendering
+- missing fields
+- field expression resolution
+- Flask preview route
+- Flask PDF export route
+
+5. Documentation
+Update README and docs with:
+- current status
+- how to run Flask example
+- how to preview report
+- how to export PDF
+- pure Python rendering example
+
+6. Developer quality
+Add type hints where useful.
+Add docstrings for public functions/classes.
+Remove debug code.
+Remove unused files/imports.
+Ensure formatting is clean.
+
+Do not add tables, barcode, QR, images, designer drag/drop, or pagination in this sprint.
+This sprint is for stabilization only.
 
 
 

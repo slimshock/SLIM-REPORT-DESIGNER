@@ -13,4 +13,6 @@ This project follows semantic versioning once public releases begin.
 - Example application directories.
 - Root documentation and contribution files.
 - Import boundary test for the framework-agnostic core package.
-
+- Framework-agnostic HTML and PDF rendering flow.
+- Flask adapter preview, PDF export, provider registration, and designer save route.
+- Pure Python rendering API and CLI rendering commands.

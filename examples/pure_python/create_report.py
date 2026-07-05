@@ -1,4 +1,4 @@
-"""Create a simple report and save it as JSON."""
+"""Create and render a simple report without a web framework."""
 
 from __future__ import annotations
 
@@ -10,33 +10,53 @@ CORE_SRC = REPO_ROOT / "packages" / "slim_report_core" / "src"
 if str(CORE_SRC) not in sys.path:
     sys.path.insert(0, str(CORE_SRC))
 
-from slim_report_core import Report, ReportObject
+from slim_report_core import Report, ReportObject  # noqa: E402
 
 
 def main() -> None:
+    """Create a template, render HTML, and render PDF bytes."""
     report = Report()
     report.template.metadata.title = "Pure Python Report"
     report.template.metadata.description = "A minimal report created without a web framework."
+    report.template.page.width = 816
+    report.template.page.height = 1056
+    report.template.page.unit = "px"
 
     report.add_object(
         ReportObject(
             id="title",
             type="text",
-            x=0.5,
-            y=0.5,
-            width=7.5,
-            height=0.4,
+            x=50,
+            y=40,
+            width=500,
+            height=32,
             properties={
-                "text": "Hello from Slim Report Designer",
-                "font_size": 18,
-                "font_weight": "bold",
+                "text": "PURE PYTHON REPORT",
+                "style": {"font_size": 22, "bold": True},
+            },
+        )
+    )
+    report.add_object(
+        ReportObject(
+            id="patient_name",
+            type="field",
+            x=50,
+            y=90,
+            width=300,
+            height=22,
+            properties={
+                "binding": "patient.name",
+                "style": {"font_size": 13},
             },
         )
     )
 
-    output_path = Path(__file__).with_name("report.json")
-    output_path.write_text(report.to_json(), encoding="utf-8")
-    print(f"Saved {output_path}")
+    data = {"patient": {"name": "JUAN DELA CRUZ"}}
+    output_dir = Path(__file__).resolve().parent
+    report.save_json(output_dir / "report.json")
+    (output_dir / "report.html").write_text(report.render_html(data), encoding="utf-8")
+    (output_dir / "report.pdf").write_bytes(report.render_pdf(data))
+    print(f"Saved report outputs in {output_dir}")
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from ..exceptions import ReportValidationError
+from ..expressions import resolve_expression, resolve_text
 
 CSS_DPI = 96.0
 POINTS_PER_INCH = 72.0
@@ -219,6 +220,15 @@ def object_pt(obj: RenderObject, unit: str) -> tuple[float, float, float, float]
         convert_unit(obj.width, unit, "pt"),
         convert_unit(obj.height, unit, "pt"),
     )
+
+
+def resolve_object_value(obj: RenderObject, data: Mapping[str, Any]) -> str:
+    """Resolve display text for text-like render objects."""
+    if obj.type == "text":
+        return str(resolve_text(obj.text, data))
+    if obj.type == "field":
+        return str(resolve_expression(obj.binding, data))
+    return ""
 
 
 def _style(obj: Mapping[str, Any], properties: Mapping[str, Any]) -> dict[str, Any]:

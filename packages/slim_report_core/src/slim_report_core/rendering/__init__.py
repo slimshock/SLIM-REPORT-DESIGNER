@@ -1,6 +1,12 @@
 """Rendering entry points for Slim Report Designer core."""
 
-from .context import RenderContext, RenderObject, RenderPage, create_render_context
+from .context import (
+    RenderContext,
+    RenderObject,
+    RenderPage,
+    create_render_context,
+    resolve_object_value,
+)
 from .html_renderer import render_html
 from .pdf_renderer import render_pdf
 
@@ -11,4 +17,5 @@ __all__ = [
     "create_render_context",
     "render_html",
     "render_pdf",
+    "resolve_object_value",
 ]

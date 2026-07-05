@@ -6,8 +6,13 @@ from io import BytesIO
 from typing import Any
 
 from ..exceptions import ExporterError, ReportValidationError
-from ..expressions import resolve_expression, resolve_text
-from .context import RenderContext, RenderObject, create_render_context, object_pt
+from .context import (
+    RenderContext,
+    RenderObject,
+    create_render_context,
+    object_pt,
+    resolve_object_value,
+)
 
 
 def render_pdf(template: Any, data: dict[str, Any] | None = None) -> bytes:
@@ -45,13 +50,11 @@ def render_pdf_object(canvas: Any, obj: RenderObject, context: RenderContext) ->
 
 
 def _render_text(canvas: Any, obj: RenderObject, context: RenderContext) -> None:
-    value = resolve_text(obj.text, context.data)
-    _draw_text(canvas, obj, context, str(value))
+    _draw_text(canvas, obj, context, resolve_object_value(obj, context.data))
 
 
 def _render_field(canvas: Any, obj: RenderObject, context: RenderContext) -> None:
-    value = resolve_expression(obj.binding, context.data)
-    _draw_text(canvas, obj, context, str(value))
+    _draw_text(canvas, obj, context, resolve_object_value(obj, context.data))
 
 
 def _render_line(canvas: Any, obj: RenderObject, context: RenderContext) -> None:
@@ -120,6 +123,6 @@ def _load_canvas() -> Any:
         from reportlab.pdfgen.canvas import Canvas
     except ImportError as exc:
         raise ExporterError(
-            "PDF export requires ReportLab. Install reportlab or slim-report-core[pdf]."
+            "PDF export requires ReportLab. Install reportlab or reinstall slim-report-core."
         ) from exc
     return Canvas

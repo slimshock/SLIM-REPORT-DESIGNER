@@ -26,8 +26,5 @@ dependencies = [
   "reportlab>=4.0",
 ]
 
-[project.optional-dependencies]
-pdf = ["reportlab>=4.0"]
-
 [tool.hatch.build.targets.wheel]
 packages = ["src/slim_report_core"]

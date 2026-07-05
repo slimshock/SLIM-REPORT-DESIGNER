@@ -6,8 +6,13 @@ from html import escape
 from typing import Any
 
 from ..exceptions import ReportValidationError
-from ..expressions import resolve_expression, resolve_text
-from .context import RenderContext, RenderObject, create_render_context, object_px
+from .context import (
+    RenderContext,
+    RenderObject,
+    create_render_context,
+    object_px,
+    resolve_object_value,
+)
 
 
 def render_html(template: Any, data: dict[str, Any] | None = None) -> str:
@@ -59,13 +64,11 @@ def render_html_object(obj: RenderObject, context: RenderContext) -> str:
 
 
 def _render_text(obj: RenderObject, context: RenderContext) -> str:
-    value = resolve_text(obj.text, context.data)
-    return _html_box(obj, context, escape(str(value)))
+    return _html_box(obj, context, escape(resolve_object_value(obj, context.data)))
 
 
 def _render_field(obj: RenderObject, context: RenderContext) -> str:
-    value = resolve_expression(obj.binding, context.data)
-    return _html_box(obj, context, escape(str(value)))
+    return _html_box(obj, context, escape(resolve_object_value(obj, context.data)))
 
 
 def _render_line(obj: RenderObject, context: RenderContext) -> str:
