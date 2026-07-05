@@ -1,178 +1,251 @@
 {
   "version": "1.0",
   "metadata": {
-    "title": "Laboratory Result",
+    "title": "Laboratory Result slim",
     "description": "Sample laboratory result report template.",
     "author": "Slim Report Designer",
-    "tags": ["demo", "lab"],
+    "tags": [
+      "demo",
+      "lab"
+    ],
     "custom": {
       "id": "lab_result",
       "provider": "lab_result"
     }
   },
   "page": {
-    "size": "letter",
+    "width": 816.0,
+    "height": 1056.0,
+    "unit": "px",
     "orientation": "portrait",
-    "unit": "px"
+    "margin_top": 0.5,
+    "margin_right": 0.5,
+    "margin_bottom": 0.5,
+    "margin_left": 0.5
   },
   "objects": [
     {
       "id": "title",
       "type": "text",
-      "x": 50,
-      "y": 40,
-      "width": 500,
-      "height": 32,
-      "text": "LABORATORY RESULT",
-      "style": {
-        "font_size": 22,
-        "bold": true
+      "x": 50.0,
+      "y": 40.0,
+      "width": 500.0,
+      "height": 32.0,
+      "band_id": null,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "style": {
+          "font_size": 22,
+          "bold": true
+        },
+        "text": "LABORATORY RESULT slim"
       }
     },
     {
       "id": "patient_name",
       "type": "field",
-      "x": 50,
-      "y": 90,
-      "width": 360,
-      "height": 22,
-      "binding": "patient.name",
-      "style": {
-        "font_size": 13,
-        "bold": true
+      "x": 50.0,
+      "y": 90.0,
+      "width": 360.0,
+      "height": 22.0,
+      "band_id": null,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "patient.name",
+        "style": {
+          "font_size": 13,
+          "bold": true
+        }
       }
     },
     {
       "id": "patient_age",
       "type": "field",
-      "x": 50,
-      "y": 116,
-      "width": 120,
-      "height": 20,
-      "binding": "patient.age",
-      "style": {
-        "font_size": 12
+      "x": 50.0,
+      "y": 116.0,
+      "width": 120.0,
+      "height": 20.0,
+      "band_id": null,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "patient.age",
+        "style": {
+          "font_size": 12
+        }
       }
     },
     {
       "id": "patient_sex",
       "type": "field",
-      "x": 190,
-      "y": 116,
-      "width": 120,
-      "height": 20,
-      "binding": "patient.sex",
-      "style": {
-        "font_size": 12
+      "x": 190.0,
+      "y": 116.0,
+      "width": 120.0,
+      "height": 20.0,
+      "band_id": null,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "patient.sex",
+        "style": {
+          "font_size": 12
+        }
       }
     },
     {
       "id": "order_id",
       "type": "field",
-      "x": 50,
-      "y": 142,
-      "width": 260,
-      "height": 20,
-      "binding": "order.id",
-      "style": {
-        "font_size": 12
+      "x": 50.0,
+      "y": 142.0,
+      "width": 260.0,
+      "height": 20.0,
+      "band_id": null,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "order.id",
+        "style": {
+          "font_size": 12
+        }
       }
     },
     {
       "id": "separator",
       "type": "line",
-      "x": 50,
-      "y": 176,
-      "width": 500,
-      "height": 0,
-      "style": {
-        "stroke_width": 1
+      "x": 50.0,
+      "y": 176.0,
+      "width": 500.0,
+      "height": 0.0,
+      "band_id": null,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "style": {
+          "stroke_width": 1
+        }
       }
     },
     {
       "id": "result_box",
       "type": "rectangle",
-      "x": 50,
-      "y": 200,
-      "width": 500,
-      "height": 130,
-      "style": {
-        "border_width": 1
+      "x": 50.0,
+      "y": 200.0,
+      "width": 500.0,
+      "height": 130.0,
+      "band_id": null,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "style": {
+          "border_width": 1
+        }
       }
     },
     {
       "id": "hgb_label",
       "type": "text",
-      "x": 75,
-      "y": 226,
-      "width": 80,
-      "height": 20,
-      "text": "HGB",
-      "style": {
-        "font_size": 12,
-        "bold": true
+      "x": 75.0,
+      "y": 226.0,
+      "width": 80.0,
+      "height": 20.0,
+      "band_id": null,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "style": {
+          "font_size": 12,
+          "bold": true
+        },
+        "text": "HGB"
       }
     },
     {
       "id": "hgb_value",
       "type": "field",
-      "x": 180,
-      "y": 226,
-      "width": 120,
-      "height": 20,
-      "binding": "result.HGB",
-      "style": {
-        "font_size": 12
+      "x": 180.0,
+      "y": 226.0,
+      "width": 120.0,
+      "height": 20.0,
+      "band_id": null,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "result.HGB",
+        "style": {
+          "font_size": 12
+        }
       }
     },
     {
       "id": "wbc_label",
       "type": "text",
-      "x": 75,
-      "y": 262,
-      "width": 80,
-      "height": 20,
-      "text": "WBC",
-      "style": {
-        "font_size": 12,
-        "bold": true
+      "x": 75.0,
+      "y": 262.0,
+      "width": 80.0,
+      "height": 20.0,
+      "band_id": null,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "style": {
+          "font_size": 12,
+          "bold": true
+        },
+        "text": "WBC"
       }
     },
     {
       "id": "wbc_value",
       "type": "field",
-      "x": 180,
-      "y": 262,
-      "width": 120,
-      "height": 20,
-      "binding": "result.WBC",
-      "style": {
-        "font_size": 12
+      "x": 180.0,
+      "y": 262.0,
+      "width": 120.0,
+      "height": 20.0,
+      "band_id": null,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "result.WBC",
+        "style": {
+          "font_size": 12
+        }
       }
     },
     {
       "id": "plt_label",
       "type": "text",
-      "x": 75,
-      "y": 298,
-      "width": 80,
-      "height": 20,
-      "text": "PLT",
-      "style": {
-        "font_size": 12,
-        "bold": true
+      "x": 75.0,
+      "y": 298.0,
+      "width": 80.0,
+      "height": 20.0,
+      "band_id": null,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "style": {
+          "font_size": 12,
+          "bold": true
+        },
+        "text": "PLT"
       }
     },
     {
       "id": "plt_value",
       "type": "field",
-      "x": 180,
-      "y": 298,
-      "width": 120,
-      "height": 20,
-      "binding": "result.PLT",
-      "style": {
-        "font_size": 12
+      "x": 180.0,
+      "y": 298.0,
+      "width": 120.0,
+      "height": 20.0,
+      "band_id": null,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "result.PLT",
+        "style": {
+          "font_size": 12
+        }
       }
     }
   ],
