@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from flask import Blueprint, Response, jsonify, request
+from flask import Blueprint, Response, jsonify, request, url_for
 
 from slim_report_core import ExporterError, Report, SlimReportError, create_default_template
+
+from .designer import render_designer_page, template_for_designer
 
 if TYPE_CHECKING:
     from .extension import SlimReportDesigner
@@ -39,7 +41,35 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
     @blueprint.get("/templates/<template_id>/designer")
     def designer_template(template_id: str) -> Response:
         report = designer.get_report(template_id)
-        return jsonify(report.to_dict())
+        editable_template = template_for_designer(report.to_dict())
+        html = render_designer_page(
+            template_id=template_id,
+            template=editable_template,
+            save_url=url_for(
+                "slim_report_designer.save_designer_template",
+                template_id=template_id,
+            ),
+            preview_url=url_for(
+                "slim_report_designer.preview",
+                template_id=template_id,
+                record_id="sample",
+            ),
+            pdf_url=url_for(
+                "slim_report_designer.export_pdf",
+                template_id=template_id,
+                record_id="sample",
+            ),
+        )
+        return Response(html, mimetype="text/html")
+
+    @blueprint.post("/templates/<template_id>/designer/save")
+    def save_designer_template(template_id: str) -> tuple[Response, int]:
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict):
+            return jsonify({"error": "Template payload must be a JSON object."}), 400
+
+        record = designer.save_template(template_id, payload)
+        return jsonify({"status": "saved", "template": record.to_dict()}), 200
 
     @blueprint.get("/templates/<template_id>/preview/<record_id>")
     def preview(template_id: str, record_id: str) -> Response:
@@ -83,4 +113,3 @@ def load_report_from_payload(payload: Any) -> Report:
     if not isinstance(payload, dict):
         raise ValueError("Template payload must be a JSON object.")
     return Report.load_from_dict(payload)
-

@@ -100,8 +100,8 @@ def test_html_exporter_renders_absolute_positioned_report() -> None:
     )
 
     assert '<div class="slim-report-page"' in html
-    assert "width: 612.0pt" in html
-    assert "height: 792.0pt" in html
+    assert "width: 816.0px" in html
+    assert "height: 1056.0px" in html
     assert "Patient: Mina" in html
     assert ">12.8<" in html
     assert "<svg" in html
@@ -112,8 +112,8 @@ def test_html_exporter_supports_a4_landscape() -> None:
     report = Report()
     html = HTMLExporter(page_size="a4", orientation="landscape").export(report)
 
-    assert "width: 841.8897637795277pt" in html
-    assert "height: 595.2755905511812pt" in html
+    assert "width: 1122.5196850393702px" in html
+    assert "height: 793.7007874015749px" in html
 
 
 def test_html_exporter_rejects_unknown_widget_type() -> None:

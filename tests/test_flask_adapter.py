@@ -1,12 +1,25 @@
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 from typing import Any
 
-from flask import Flask
+REPO_ROOT = Path(__file__).resolve().parents[1]
+PACKAGE_SRC_DIRS = (
+    "packages/slim_report_core/src",
+    "packages/slim_report_flask/src",
+)
 
-from slim_report_core import Report, ReportObject
-from slim_report_flask import SlimReportDesigner
+for src_dir in reversed(PACKAGE_SRC_DIRS):
+    src_path = str(REPO_ROOT / src_dir)
+    if src_path not in sys.path:
+        sys.path.insert(0, src_path)
+
+from flask import Flask  # noqa: E402
+
+from slim_report_core import Report, ReportObject  # noqa: E402
+from slim_report_flask import SlimReportDesigner  # noqa: E402
+from slim_report_flask import extension as extension_module  # noqa: E402
 
 
 def test_flask_adapter_registers_health_route(tmp_path: Path) -> None:
@@ -44,8 +57,15 @@ def test_flask_adapter_creates_lists_and_returns_template(tmp_path: Path) -> Non
     }
 
     designer_response = client.get("/report-designer/templates/lab-template/designer")
+    designer_html = designer_response.get_data(as_text=True)
     assert designer_response.status_code == 200
-    assert designer_response.get_json()["metadata"]["title"] == "Lab Result"
+    assert designer_response.mimetype == "text/html"
+    assert "Slim Report Designer: Lab Result" in designer_html
+    assert "Save" in designer_html
+    assert "Preview" in designer_html
+    assert "Export PDF" in designer_html
+    assert "/report-designer/templates/lab-template/preview/sample" in designer_html
+    assert "/report-designer/templates/lab-template/export/pdf/sample" in designer_html
 
 
 def test_flask_adapter_new_template_get_returns_default_template(tmp_path: Path) -> None:
@@ -55,6 +75,77 @@ def test_flask_adapter_new_template_get_returns_default_template(tmp_path: Path)
 
     assert response.status_code == 200
     assert response.get_json()["objects"] == []
+
+
+def test_flask_designer_save_route_persists_template_json(tmp_path: Path) -> None:
+    app, designer = create_app(tmp_path)
+    designer.create_template(template_payload())
+    payload = template_payload()
+    payload["metadata"]["title"] = "Saved Lab Result"
+    payload["objects"][0]["text"] = "SAVED REPORT"
+
+    response = app.test_client().post(
+        "/report-designer/templates/lab-template/designer/save",
+        json=payload,
+    )
+
+    assert response.status_code == 200
+    assert response.get_json() == {
+        "status": "saved",
+        "template": {
+            "id": "lab-template",
+            "title": "Saved Lab Result",
+        },
+    }
+    saved_report = designer.get_report("lab-template")
+    assert saved_report.template.metadata.title == "Saved Lab Result"
+    assert saved_report.to_dict()["objects"][0]["properties"]["text"] == "SAVED REPORT"
+
+    @designer.provider("lab_result")
+    def lab_result(record_id: str) -> dict[str, Any]:
+        return {"patient": {"name": record_id}, "result": {"HGB": "14.5"}}
+
+    preview_response = app.test_client().get(
+        "/report-designer/templates/lab-template/preview/sample"
+    )
+    pdf_response = app.test_client().get(
+        "/report-designer/templates/lab-template/export/pdf/sample"
+    )
+    assert preview_response.status_code == 200
+    assert "SAVED REPORT" in preview_response.get_data(as_text=True)
+    assert pdf_response.status_code == 200
+    assert pdf_response.get_data().startswith(b"%PDF")
+
+
+def test_flask_designer_save_route_rejects_non_object_payload(tmp_path: Path) -> None:
+    app, designer = create_app(tmp_path)
+    designer.create_template(template_payload())
+
+    response = app.test_client().post(
+        "/report-designer/templates/lab-template/designer/save",
+        json=["not", "an", "object"],
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "Template payload must be a JSON object."
+
+
+def test_flask_designer_empty_template_starts_with_sample_objects(tmp_path: Path) -> None:
+    app, designer = create_app(tmp_path)
+    empty_template = Report().to_dict()
+    empty_template["metadata"]["title"] = "Empty Template"
+    empty_template["metadata"]["custom"]["id"] = "empty-template"
+    designer.create_template(empty_template)
+
+    response = app.test_client().get("/report-designer/templates/empty-template/designer")
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert "LABORATORY RESULT" in html
+    assert "patient_name" in html
+    assert "result.HGB" in html
+    assert "result.WBC" in html
+    assert "result.PLT" in html
 
 
 def test_flask_preview_uses_provider_and_core_rendering(tmp_path: Path) -> None:
@@ -88,24 +179,18 @@ def test_flask_pdf_export_delegates_to_core_rendering(
     def lab_result(record_id: str) -> dict[str, Any]:
         return {"record_id": record_id}
 
-    def fake_render(
-        self: Report,
-        data: Any = None,
-        *,
-        exporter: str = "html",
-        context: Any = None,
-    ) -> bytes:
-        calls.append((data, exporter, context))
+    def fake_render_pdf(template: dict[str, Any], data: dict[str, Any]) -> bytes:
+        calls.append((template["metadata"]["title"], data))
         return b"%PDF-1.4 fake"
 
-    monkeypatch.setattr(Report, "render", fake_render)
+    monkeypatch.setattr(extension_module, "render_pdf", fake_render_pdf)
 
     response = app.test_client().get("/report-designer/templates/lab-template/export/pdf/ABC")
 
     assert response.status_code == 200
     assert response.mimetype == "application/pdf"
     assert response.get_data() == b"%PDF-1.4 fake"
-    assert calls == [({"record_id": "ABC"}, "pdf", {"record_id": "ABC"})]
+    assert calls == [("Lab Result", {"record_id": "ABC"})]
 
 
 def test_flask_adapter_uses_template_provider_mapping(tmp_path: Path) -> None:
@@ -177,3 +262,9 @@ def template_payload(provider: str | None = "lab_result") -> dict[str, Any]:
         )
     )
     return report.to_dict()
+
+
+if __name__ == "__main__":
+    import pytest
+
+    raise SystemExit(pytest.main([__file__]))

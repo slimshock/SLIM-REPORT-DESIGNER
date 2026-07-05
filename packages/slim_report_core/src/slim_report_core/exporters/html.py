@@ -2,49 +2,39 @@
 
 from __future__ import annotations
 
-from html import escape
 from typing import Any
 
-from .base import BaseExporter, object_to_points, render_context
+from ..exceptions import ExporterError, ReportValidationError
+from ..rendering import render_html
+from .base import BaseExporter
 
 
 class HTMLExporter(BaseExporter):
     """Export reports to absolute-positioned HTML."""
 
     def export(self, report: Any, data: Any = None, context: Any = None) -> str:
-        template = self.normalize_template(report)
-        layout = self.resolve_page_layout(template)
-        renderer_context = render_context(context, layout)
+        try:
+            return render_html(
+                _template_with_overrides(report, self.page_size, self.orientation),
+                data or {},
+            )
+        except ReportValidationError as exc:
+            raise ExporterError(str(exc)) from exc
 
-        objects = sorted(template.objects, key=lambda item: item.z_index)
-        rendered_objects = []
-        for obj in objects:
-            point_obj = object_to_points(obj, template.page.unit)
-            widget = self.get_widget(point_obj)
-            rendered_objects.append(widget.render_html(point_obj, data or {}, renderer_context))
 
-        title = escape(template.metadata.title)
-        page_style = (
-            "position: relative; "
-            f"width: {layout.width}pt; "
-            f"height: {layout.height}pt; "
-            "box-sizing: border-box; "
-            "background: #ffffff; "
-            "overflow: hidden;"
-        )
-        body = "\n    ".join(rendered_objects)
-        return (
-            "<!doctype html>\n"
-            '<html lang="en">\n'
-            "<head>\n"
-            '  <meta charset="utf-8">\n'
-            f"  <title>{title}</title>\n"
-            "</head>\n"
-            "<body>\n"
-            f'  <div class="slim-report-page" style="{page_style}">\n'
-            f"    {body}\n"
-            "  </div>\n"
-            "</body>\n"
-            "</html>\n"
-        )
+def _template_with_overrides(report: Any, page_size: str | None, orientation: str | None) -> Any:
+    if page_size is None and orientation is None:
+        return report
 
+    template = report.to_dict() if hasattr(report, "to_dict") else dict(report)
+    page = dict(template.get("page", {}))
+    if page_size is not None:
+        page["size"] = page_size
+        page["unit"] = page.get("unit", "px")
+        page.pop("width", None)
+        page.pop("height", None)
+    if orientation is not None:
+        page["orientation"] = orientation
+
+    template["page"] = page
+    return template

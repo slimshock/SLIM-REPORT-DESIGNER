@@ -283,4 +283,297 @@ The Flask adapter must use slim_report_core for rendering.
 
 Do not duplicate rendering logic inside Flask.
 
-Use Prompt 1 first, bro. Then run/test, commit, then continue Prompt 2.
+
+
+------------------------------------------------------
+
+
+
+# Prompt 7 — Report Preview and PDF Generation
+
+We already completed the first 6 foundation prompts for Slim Report Designer.
+
+Now implement the first working report generation flow.
+
+Goal:
+A user should be able to load a report template JSON, provide data, preview it as HTML, and export it as PDF.
+
+Important architecture rule:
+- slim_report_core must do all rendering logic.
+- slim_report_flask must only handle routes, request/response, storage, and calling the core.
+- Do not duplicate rendering logic in Flask.
+
+Implement the following:
+
+1. In slim_report_core
+
+Create or improve:
+
+packages/slim_report_core/rendering/
+  __init__.py
+  context.py
+  html_renderer.py
+  pdf_renderer.py
+
+The render flow should support:
+
+- Report template dict
+- Data dict
+- Export format: html or pdf
+- Page size A4 and Letter
+- Portrait and landscape
+- Absolute positioned report objects
+
+Supported objects for now:
+
+- text
+- field
+- line
+- rectangle
+
+Text object example:
+
+{
+  "id": "title1",
+  "type": "text",
+  "x": 50,
+  "y": 40,
+  "width": 400,
+  "height": 30,
+  "text": "Laboratory Result",
+  "style": {
+    "font_size": 18,
+    "bold": true
+  }
+}
+
+Field object example:
+
+{
+  "id": "patient_name",
+  "type": "field",
+  "x": 50,
+  "y": 90,
+  "width": 300,
+  "height": 20,
+  "binding": "patient.name",
+  "style": {
+    "font_size": 12
+  }
+}
+
+Line object example:
+
+{
+  "id": "line1",
+  "type": "line",
+  "x": 50,
+  "y": 130,
+  "width": 500,
+  "height": 0,
+  "style": {
+    "stroke_width": 1
+  }
+}
+
+Rectangle object example:
+
+{
+  "id": "box1",
+  "type": "rectangle",
+  "x": 50,
+  "y": 150,
+  "width": 500,
+  "height": 100,
+  "style": {
+    "border_width": 1
+  }
+}
+
+2. HTML Preview
+
+Implement HTML rendering that outputs a full HTML document.
+
+The output should include:
+
+- page wrapper
+- white page background
+- A4/Letter dimensions in pixels
+- absolute-positioned objects
+- basic CSS
+- field values resolved from data
+
+Field resolution:
+"patient.name" should resolve from:
+
+{
+  "patient": {
+    "name": "Juan Dela Cruz"
+  }
+}
+
+If a field is missing, show empty string.
+
+3. PDF Export
+
+Implement PDF rendering using ReportLab.
+
+The PDF should:
+
+- render text
+- render fields
+- render lines
+- render rectangles
+- respect x/y positioning
+- use top-left coordinate style in template JSON
+- convert internally to ReportLab bottom-left coordinates
+
+Return PDF as bytes.
+
+4. Public API
+
+Add methods to the core API:
+
+from slim_report_core import render_html, render_pdf
+
+html = render_html(template_json, data)
+pdf_bytes = render_pdf(template_json, data)
+
+Also support:
+
+from slim_report_core import Report
+
+report = Report.load_from_dict(template_json)
+html = report.render_html(data)
+pdf_bytes = report.render_pdf(data)
+
+5. Flask Adapter
+
+In slim_report_flask, implement routes:
+
+GET /report-designer/templates/<id>/preview/<record_id>
+GET /report-designer/templates/<id>/export/pdf/<record_id>
+
+Preview route:
+- load template
+- call provider using record_id
+- call slim_report_core.render_html()
+- return HTML response
+
+PDF route:
+- load template
+- call provider using record_id
+- call slim_report_core.render_pdf()
+- return PDF using Flask send_file or Response
+
+6. Demo Provider
+
+In examples/flask_app/app.py, add provider:
+
+@designer.provider("lab_result")
+def lab_result(record_id):
+    return {
+        "patient": {
+            "name": "JUAN DELA CRUZ",
+            "age": "35",
+            "sex": "MALE"
+        },
+        "order": {
+            "id": record_id,
+            "date": "2026-07-05"
+        },
+        "result": {
+            "HGB": "14.5",
+            "WBC": "7.2",
+            "PLT": "250"
+        }
+    }
+
+7. Demo Template
+
+Add sample template JSON:
+
+examples/flask_app/sample_templates/lab_result.json
+
+It should render:
+
+- title: LABORATORY RESULT
+- patient name
+- age / sex
+- order id
+- HGB
+- WBC
+- PLT
+- one line separator
+- one rectangle around results
+
+8. Tests
+
+Add tests for:
+
+- field value resolving
+- HTML rendering contains expected patient name
+- PDF rendering returns bytes starting with %PDF
+- missing field does not crash
+
+9. Keep code clean
+
+Use small functions.
+Avoid framework imports in slim_report_core.
+Add docstrings where useful.
+
+
+------------------------------------------------------
+
+
+
+# Prompt 8 — Designer Save, Preview Button, and PDF Button
+
+Improve the Flask visual designer so the user can save, preview, and export reports.
+
+Requirements:
+
+1. Designer page should have buttons:
+- Save
+- Preview
+- Export PDF
+
+2. Save button:
+POST template JSON to:
+/report-designer/templates/<id>/designer/save
+
+3. Preview button:
+Open:
+/report-designer/templates/<id>/preview/sample
+
+4. Export PDF button:
+Open:
+/report-designer/templates/<id>/export/pdf/sample
+
+5. The designer should start with sample objects if template is empty:
+- title text
+- patient field
+- result fields
+
+6. Make sure the saved JSON works with the core HTML and PDF renderer.
+
+7. Keep JavaScript modular and simple.
+
+
+------------------------------------------------------
+
+
+
+
+
+
+------------------------------------------------------
+
+
+
+
+
+
+------------------------------------------------------
+
+

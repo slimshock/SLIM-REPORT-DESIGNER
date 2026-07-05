@@ -10,6 +10,8 @@ from typing import Any
 
 from .exceptions import ExporterError, ReportObjectNotFoundError, ReportValidationError
 from .models import ReportObject, ReportTemplate
+from .rendering import render_html as render_template_html
+from .rendering import render_pdf as render_template_pdf
 from .utils import dump_json_object, parse_json_object
 
 PathValue = str | PathLike[str]
@@ -56,14 +58,19 @@ class Report:
         context: Any = None,
     ) -> str | bytes:
         """Render this report with a named exporter."""
-        from .exporters import create_default_exporter_registry
+        if exporter == "html":
+            return self.render_html(data)
+        if exporter == "pdf":
+            return self.render_pdf(data)
+        raise ExporterError(f"Exporter is not registered: {exporter}.")
 
-        return create_default_exporter_registry().export(
-            exporter,
-            self,
-            data=data,
-            context=context,
-        )
+    def render_html(self, data: Any = None) -> str:
+        """Render this report as HTML."""
+        return render_template_html(self.to_dict(), data or {})
+
+    def render_pdf(self, data: Any = None) -> bytes:
+        """Render this report as PDF bytes."""
+        return render_template_pdf(self.to_dict(), data or {})
 
     def save_pdf(self, path: PathValue, data: Any = None, *, context: Any = None) -> None:
         """Render this report as PDF and save it to a file path."""

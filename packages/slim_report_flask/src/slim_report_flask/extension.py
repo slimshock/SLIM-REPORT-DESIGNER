@@ -9,7 +9,13 @@ from typing import Any
 
 from flask import Flask
 
-from slim_report_core import DataProviderRegistry, Report, create_default_template
+from slim_report_core import (
+    DataProviderRegistry,
+    Report,
+    create_default_template,
+    render_html,
+    render_pdf,
+)
 
 from .blueprint import create_blueprint
 from .config import DEFAULT_CONFIG
@@ -76,6 +82,12 @@ class SlimReportDesigner:
         self._store().save(template_id, report)
         return self._store().get(template_id)
 
+    def save_template(self, template_id: str, payload: dict[str, Any]) -> TemplateRecord:
+        """Validate and save an existing report template."""
+        report = Report.load_from_dict(payload)
+        self._store().save(template_id, report)
+        return self._store().get(template_id)
+
     def get_report(self, template_id: str) -> Report:
         """Load a saved report template by id."""
         return self._store().load_report(template_id)
@@ -92,19 +104,13 @@ class SlimReportDesigner:
         """Render a report preview as HTML."""
         report = self.get_report(template_id)
         data = self.resolve_data(template_id, record_id)
-        rendered = report.render(data, exporter="html", context={"record_id": record_id})
-        if isinstance(rendered, bytes):
-            return rendered.decode("utf-8")
-        return rendered
+        return render_html(report.to_dict(), data)
 
     def export_pdf(self, template_id: str, record_id: str) -> bytes:
         """Render a report as PDF bytes."""
         report = self.get_report(template_id)
         data = self.resolve_data(template_id, record_id)
-        rendered = report.render(data, exporter="pdf", context={"record_id": record_id})
-        if not isinstance(rendered, bytes):
-            raise TypeError("PDF exporter must return bytes.")
-        return rendered
+        return render_pdf(report.to_dict(), data)
 
     def _provider_name(self, template_id: str, report: Report) -> str | None:
         configured = self.app.config if self.app is not None else {}

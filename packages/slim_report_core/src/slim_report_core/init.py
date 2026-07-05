@@ -29,6 +29,7 @@ from .models import (
     ReportPage,
     ReportTemplate,
 )
+from .rendering import render_html, render_pdf
 from .report import Report, create_default_template
 from .widgets import (
     BaseWidget,
@@ -70,6 +71,8 @@ __all__ = [
     "create_default_exporter_registry",
     "create_default_template",
     "create_default_widget_registry",
+    "render_html",
+    "render_pdf",
     "resolve_expression",
     "resolve_text",
 ]

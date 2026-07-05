@@ -1,0 +1,181 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "title": "Laboratory Result",
+    "description": "Sample laboratory result report template.",
+    "author": "Slim Report Designer",
+    "tags": ["demo", "lab"],
+    "custom": {
+      "id": "lab_result",
+      "provider": "lab_result"
+    }
+  },
+  "page": {
+    "size": "letter",
+    "orientation": "portrait",
+    "unit": "px"
+  },
+  "objects": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 50,
+      "y": 40,
+      "width": 500,
+      "height": 32,
+      "text": "LABORATORY RESULT",
+      "style": {
+        "font_size": 22,
+        "bold": true
+      }
+    },
+    {
+      "id": "patient_name",
+      "type": "field",
+      "x": 50,
+      "y": 90,
+      "width": 360,
+      "height": 22,
+      "binding": "patient.name",
+      "style": {
+        "font_size": 13,
+        "bold": true
+      }
+    },
+    {
+      "id": "patient_age",
+      "type": "field",
+      "x": 50,
+      "y": 116,
+      "width": 120,
+      "height": 20,
+      "binding": "patient.age",
+      "style": {
+        "font_size": 12
+      }
+    },
+    {
+      "id": "patient_sex",
+      "type": "field",
+      "x": 190,
+      "y": 116,
+      "width": 120,
+      "height": 20,
+      "binding": "patient.sex",
+      "style": {
+        "font_size": 12
+      }
+    },
+    {
+      "id": "order_id",
+      "type": "field",
+      "x": 50,
+      "y": 142,
+      "width": 260,
+      "height": 20,
+      "binding": "order.id",
+      "style": {
+        "font_size": 12
+      }
+    },
+    {
+      "id": "separator",
+      "type": "line",
+      "x": 50,
+      "y": 176,
+      "width": 500,
+      "height": 0,
+      "style": {
+        "stroke_width": 1
+      }
+    },
+    {
+      "id": "result_box",
+      "type": "rectangle",
+      "x": 50,
+      "y": 200,
+      "width": 500,
+      "height": 130,
+      "style": {
+        "border_width": 1
+      }
+    },
+    {
+      "id": "hgb_label",
+      "type": "text",
+      "x": 75,
+      "y": 226,
+      "width": 80,
+      "height": 20,
+      "text": "HGB",
+      "style": {
+        "font_size": 12,
+        "bold": true
+      }
+    },
+    {
+      "id": "hgb_value",
+      "type": "field",
+      "x": 180,
+      "y": 226,
+      "width": 120,
+      "height": 20,
+      "binding": "result.HGB",
+      "style": {
+        "font_size": 12
+      }
+    },
+    {
+      "id": "wbc_label",
+      "type": "text",
+      "x": 75,
+      "y": 262,
+      "width": 80,
+      "height": 20,
+      "text": "WBC",
+      "style": {
+        "font_size": 12,
+        "bold": true
+      }
+    },
+    {
+      "id": "wbc_value",
+      "type": "field",
+      "x": 180,
+      "y": 262,
+      "width": 120,
+      "height": 20,
+      "binding": "result.WBC",
+      "style": {
+        "font_size": 12
+      }
+    },
+    {
+      "id": "plt_label",
+      "type": "text",
+      "x": 75,
+      "y": 298,
+      "width": 80,
+      "height": 20,
+      "text": "PLT",
+      "style": {
+        "font_size": 12,
+        "bold": true
+      }
+    },
+    {
+      "id": "plt_value",
+      "type": "field",
+      "x": 180,
+      "y": 298,
+      "width": 120,
+      "height": 20,
+      "binding": "result.PLT",
+      "style": {
+        "font_size": 12
+      }
+    }
+  ],
+  "bands": [],
+  "assets": []
+}

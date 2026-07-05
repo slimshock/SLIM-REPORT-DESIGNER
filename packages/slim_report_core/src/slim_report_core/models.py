@@ -69,10 +69,17 @@ class ReportPage:
             return cls()
 
         mapping = ensure_mapping(data, context="Report page")
+        size = _optional_str(mapping.get("size"))
+        unit = str(mapping.get("unit", "px" if size else DEFAULT_PAGE_UNIT))
+        default_width = DEFAULT_PAGE_WIDTH
+        default_height = DEFAULT_PAGE_HEIGHT
+        if size and "width" not in mapping and "height" not in mapping:
+            default_width, default_height = _page_size_dimensions(size, unit)
+
         return cls(
-            width=float(mapping.get("width", DEFAULT_PAGE_WIDTH)),
-            height=float(mapping.get("height", DEFAULT_PAGE_HEIGHT)),
-            unit=str(mapping.get("unit", DEFAULT_PAGE_UNIT)),
+            width=float(mapping.get("width", default_width)),
+            height=float(mapping.get("height", default_height)),
+            unit=unit,
             orientation=str(mapping.get("orientation", DEFAULT_PAGE_ORIENTATION)),
             margin_top=float(mapping.get("margin_top", DEFAULT_MARGIN_TOP)),
             margin_right=float(mapping.get("margin_right", DEFAULT_MARGIN_RIGHT)),
@@ -102,6 +109,11 @@ class ReportObject:
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> ReportObject:
         mapping = ensure_mapping(data, context="Report object")
+        properties = dict(mapping.get("properties", {}))
+        for key in ("binding", "style", "text"):
+            if key in mapping:
+                properties[key] = mapping[key]
+
         return cls(
             id=_required_str(mapping, "id", context="Report object"),
             type=_required_str(mapping, "type", context="Report object"),
@@ -112,7 +124,7 @@ class ReportObject:
             band_id=_optional_str(mapping.get("band_id")),
             z_index=int(mapping.get("z_index", 0)),
             visible=bool(mapping.get("visible", True)),
-            properties=dict(mapping.get("properties", {})),
+            properties=properties,
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -213,3 +225,28 @@ def _required_str(mapping: Mapping[str, Any], key: str, *, context: str) -> str:
     if value is None or str(value).strip() == "":
         raise ReportValidationError(f"{context} requires a non-empty {key}.")
     return str(value)
+
+
+def _page_size_dimensions(size: str, unit: str) -> tuple[float, float]:
+    normalized_size = size.lower()
+    normalized_unit = unit.lower()
+    sizes_in_inches = {
+        "letter": (8.5, 11.0),
+        "a4": (210.0 / 25.4, 297.0 / 25.4),
+    }
+    if normalized_size not in sizes_in_inches:
+        raise ReportValidationError(f"Unsupported page size: {size}.")
+
+    width_in, height_in = sizes_in_inches[normalized_size]
+    if normalized_unit == "in":
+        return width_in, height_in
+    if normalized_unit == "px":
+        return width_in * 96.0, height_in * 96.0
+    if normalized_unit == "pt":
+        return width_in * 72.0, height_in * 72.0
+    if normalized_unit == "mm":
+        return width_in * 25.4, height_in * 25.4
+    if normalized_unit == "cm":
+        return width_in * 2.54, height_in * 2.54
+
+    raise ReportValidationError(f"Unsupported page unit: {unit}.")

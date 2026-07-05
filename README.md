@@ -66,3 +66,14 @@ Additional package-specific dependencies will be added as the adapters become fu
 
 Early foundation. APIs are not stable yet.
 
+# Changelog
+
+## v0.1.0-alpha.2
+
+### Added
+
+- HTML Preview Renderer
+- PDF Renderer
+- Flask Preview Routes
+- PDF Export Route
+- Sample Laboratory Report
