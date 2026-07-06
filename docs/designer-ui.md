@@ -78,6 +78,7 @@ http://127.0.0.1:5000/report-designer/designer?template=table_lab_result
 - Placeholder/sample display toggle
 - Repeating Detail rows
 - Basic array-bound tables
+- Basic preview/export pagination for repeating Detail rows and Detail-band tables
 
 ## Local Version History
 
@@ -107,7 +108,7 @@ Flask mode:
 ## Known Limitations
 
 - Advanced table features such as nested tables, merged cells, formulas, grouped tables, and complex pagination are not implemented yet.
-- Full pagination/multi-page repeat overflow is not implemented yet.
+- Custom page breaks, group pagination, and widow/orphan rules are not implemented yet.
 - Group headers/footers are not implemented yet.
 - Barcode/QR rendering is not implemented yet.
 - Django and FastAPI adapters are future work.

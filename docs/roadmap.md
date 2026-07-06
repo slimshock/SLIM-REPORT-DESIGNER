@@ -24,11 +24,12 @@ Slim Report Designer is early alpha. The roadmap is intentionally practical and 
 - Binding picker
 - Repeating Detail rows
 - Basic Table Object
+- Basic pagination for repeating Detail rows and Detail-band tables
 
 ## Next
 
 - Advanced table features
-- Better pagination/multi-page repeating output
+- Advanced pagination controls
 - Group headers/footers
 - Barcode/QR
 - Django adapter

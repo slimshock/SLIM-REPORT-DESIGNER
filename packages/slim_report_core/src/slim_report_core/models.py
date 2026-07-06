@@ -247,6 +247,7 @@ class Page:
     margin: Margin = field(default_factory=Margin)
     background_color: str = "#ffffff"
     transparent: bool = False
+    pagination: dict[str, Any] = field(default_factory=dict)
     id: str | None = None
     size: str | None = None
     _report: Any = field(default=None, init=False, repr=False, compare=False)
@@ -273,6 +274,7 @@ class Page:
             margin=margin,
             background_color=str(mapping.get("background_color", "#ffffff")),
             transparent=bool(mapping.get("transparent", False)),
+            pagination=_normalize_pagination(mapping.get("pagination")),
             id=_optional_str(mapping.get("id")),
             size=size,
         )
@@ -290,6 +292,8 @@ class Page:
             "background_color": self.background_color,
             "transparent": self.transparent,
         }
+        if self.pagination:
+            data["pagination"] = copy.deepcopy(self.pagination)
         if self.id:
             data["id"] = self.id
         if self.size:
@@ -310,6 +314,7 @@ class Page:
             margin=self.margin.clone(),
             background_color=self.background_color,
             transparent=self.transparent,
+            pagination=copy.deepcopy(self.pagination),
             id=_clone_id("page", self.id, new_ids=new_ids),
             size=self.size,
         )
@@ -445,11 +450,7 @@ class Page:
         return resolved
 
     def _extract_style_values(self, properties: dict[str, Any]) -> dict[str, Any]:
-        return {
-            key: properties.pop(key)
-            for key in tuple(properties)
-            if key in _STYLE_KEYS
-        }
+        return {key: properties.pop(key) for key in tuple(properties) if key in _STYLE_KEYS}
 
     def field(
         self,
@@ -1565,6 +1566,17 @@ def _normalize_repeat(value: Any) -> dict[str, Any]:
         "row_height": max(8, int(float(value.get("row_height", 22) or 22))),
         "preview_rows": min(100, max(1, int(float(value.get("preview_rows", 10) or 10)))),
         "empty_message": str(value.get("empty_message", "No records")),
+    }
+
+
+def _normalize_pagination(value: Any) -> dict[str, Any]:
+    if not isinstance(value, Mapping):
+        return {}
+    return {
+        "enabled": bool(value.get("enabled", True)),
+        "repeat_page_header": bool(value.get("repeat_page_header", True)),
+        "repeat_page_footer": bool(value.get("repeat_page_footer", True)),
+        "respect_margins": bool(value.get("respect_margins", True)),
     }
 
 

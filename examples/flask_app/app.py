@@ -30,6 +30,300 @@ designer = SlimReportDesigner()
 designer.init_app(app)
 
 
+def demo_lab_results() -> list[dict[str, str]]:
+    """Return enough realistic lab rows to exercise pagination demos."""
+    return [
+        {
+            "test": "WBC",
+            "result": "7.10",
+            "value": "7.10",
+            "unit": "10^9/L",
+            "reference": "4.00 - 10.00",
+            "flag": "N",
+        },
+        {
+            "test": "RBC",
+            "result": "5.02",
+            "value": "5.02",
+            "unit": "10^12/L",
+            "reference": "4.50 - 5.90",
+            "flag": "N",
+        },
+        {
+            "test": "HGB",
+            "result": "14.20",
+            "value": "14.20",
+            "unit": "g/dL",
+            "reference": "13.00 - 17.00",
+            "flag": "N",
+        },
+        {
+            "test": "HCT",
+            "result": "42.80",
+            "value": "42.80",
+            "unit": "%",
+            "reference": "40.00 - 50.00",
+            "flag": "N",
+        },
+        {
+            "test": "MCV",
+            "result": "85.30",
+            "value": "85.30",
+            "unit": "fL",
+            "reference": "80.00 - 100.00",
+            "flag": "N",
+        },
+        {
+            "test": "MCH",
+            "result": "28.30",
+            "value": "28.30",
+            "unit": "pg",
+            "reference": "27.00 - 32.00",
+            "flag": "N",
+        },
+        {
+            "test": "MCHC",
+            "result": "33.20",
+            "value": "33.20",
+            "unit": "g/dL",
+            "reference": "32.00 - 36.00",
+            "flag": "N",
+        },
+        {
+            "test": "RDW-CV",
+            "result": "13.10",
+            "value": "13.10",
+            "unit": "%",
+            "reference": "11.50 - 14.50",
+            "flag": "N",
+        },
+        {
+            "test": "PLT",
+            "result": "265",
+            "value": "265",
+            "unit": "10^9/L",
+            "reference": "150 - 400",
+            "flag": "N",
+        },
+        {
+            "test": "MPV",
+            "result": "9.40",
+            "value": "9.40",
+            "unit": "fL",
+            "reference": "7.50 - 11.50",
+            "flag": "N",
+        },
+        {
+            "test": "Neutrophils",
+            "result": "58",
+            "value": "58",
+            "unit": "%",
+            "reference": "50 - 70",
+            "flag": "N",
+        },
+        {
+            "test": "Lymphocytes",
+            "result": "32",
+            "value": "32",
+            "unit": "%",
+            "reference": "20 - 40",
+            "flag": "N",
+        },
+        {
+            "test": "Monocytes",
+            "result": "6",
+            "value": "6",
+            "unit": "%",
+            "reference": "2 - 8",
+            "flag": "N",
+        },
+        {
+            "test": "Eosinophils",
+            "result": "3",
+            "value": "3",
+            "unit": "%",
+            "reference": "1 - 4",
+            "flag": "N",
+        },
+        {
+            "test": "Basophils",
+            "result": "1",
+            "value": "1",
+            "unit": "%",
+            "reference": "0 - 1",
+            "flag": "N",
+        },
+        {
+            "test": "Glucose",
+            "result": "94",
+            "value": "94",
+            "unit": "mg/dL",
+            "reference": "70 - 99",
+            "flag": "N",
+        },
+        {
+            "test": "BUN",
+            "result": "14",
+            "value": "14",
+            "unit": "mg/dL",
+            "reference": "7 - 20",
+            "flag": "N",
+        },
+        {
+            "test": "Creatinine",
+            "result": "0.92",
+            "value": "0.92",
+            "unit": "mg/dL",
+            "reference": "0.70 - 1.30",
+            "flag": "N",
+        },
+        {
+            "test": "Uric Acid",
+            "result": "5.80",
+            "value": "5.80",
+            "unit": "mg/dL",
+            "reference": "3.50 - 7.20",
+            "flag": "N",
+        },
+        {
+            "test": "Total Cholesterol",
+            "result": "182",
+            "value": "182",
+            "unit": "mg/dL",
+            "reference": "< 200",
+            "flag": "N",
+        },
+        {
+            "test": "Triglycerides",
+            "result": "118",
+            "value": "118",
+            "unit": "mg/dL",
+            "reference": "< 150",
+            "flag": "N",
+        },
+        {
+            "test": "HDL",
+            "result": "48",
+            "value": "48",
+            "unit": "mg/dL",
+            "reference": "> 40",
+            "flag": "N",
+        },
+        {
+            "test": "LDL",
+            "result": "110",
+            "value": "110",
+            "unit": "mg/dL",
+            "reference": "< 130",
+            "flag": "N",
+        },
+        {
+            "test": "AST",
+            "result": "24",
+            "value": "24",
+            "unit": "U/L",
+            "reference": "0 - 40",
+            "flag": "N",
+        },
+        {
+            "test": "ALT",
+            "result": "29",
+            "value": "29",
+            "unit": "U/L",
+            "reference": "0 - 41",
+            "flag": "N",
+        },
+        {
+            "test": "Sodium",
+            "result": "139",
+            "value": "139",
+            "unit": "mmol/L",
+            "reference": "135 - 145",
+            "flag": "N",
+        },
+        {
+            "test": "Potassium",
+            "result": "4.20",
+            "value": "4.20",
+            "unit": "mmol/L",
+            "reference": "3.50 - 5.10",
+            "flag": "N",
+        },
+        {
+            "test": "Chloride",
+            "result": "102",
+            "value": "102",
+            "unit": "mmol/L",
+            "reference": "98 - 107",
+            "flag": "N",
+        },
+        {
+            "test": "Urine Color",
+            "result": "Yellow",
+            "value": "Yellow",
+            "unit": "",
+            "reference": "Yellow",
+            "flag": "N",
+        },
+        {
+            "test": "Urine Clarity",
+            "result": "Clear",
+            "value": "Clear",
+            "unit": "",
+            "reference": "Clear",
+            "flag": "N",
+        },
+        {
+            "test": "Specific Gravity",
+            "result": "1.020",
+            "value": "1.020",
+            "unit": "",
+            "reference": "1.005 - 1.030",
+            "flag": "N",
+        },
+        {
+            "test": "Urine pH",
+            "result": "6.0",
+            "value": "6.0",
+            "unit": "",
+            "reference": "5.0 - 8.0",
+            "flag": "N",
+        },
+        {
+            "test": "Protein",
+            "result": "Negative",
+            "value": "Negative",
+            "unit": "",
+            "reference": "Negative",
+            "flag": "N",
+        },
+        {
+            "test": "Glucose Urine",
+            "result": "Negative",
+            "value": "Negative",
+            "unit": "",
+            "reference": "Negative",
+            "flag": "N",
+        },
+        {
+            "test": "Ketones",
+            "result": "Negative",
+            "value": "Negative",
+            "unit": "",
+            "reference": "Negative",
+            "flag": "N",
+        },
+        {
+            "test": "Nitrite",
+            "result": "Negative",
+            "value": "Negative",
+            "unit": "",
+            "reference": "Negative",
+            "flag": "N",
+        },
+    ]
+
+
 @designer.provider("lab_result")
 def lab_result(record_id: str) -> dict[str, dict[str, str]]:
     return {
@@ -109,16 +403,7 @@ def repeating_lab_result(record_id: str) -> dict[str, object]:
             "physician": "Dr. Maria Santos",
             "section": "Hematology",
         },
-        "results": [
-            {"test": "WBC", "result": "7.10", "value": "7.10", "unit": "10^9/L", "reference": "4.00 - 10.00", "flag": "N"},
-            {"test": "RBC", "result": "5.02", "value": "5.02", "unit": "10^12/L", "reference": "4.50 - 5.90", "flag": "N"},
-            {"test": "HGB", "result": "14.20", "value": "14.20", "unit": "g/dL", "reference": "13.00 - 17.00", "flag": "N"},
-            {"test": "HCT", "result": "42.80", "value": "42.80", "unit": "%", "reference": "40.00 - 50.00", "flag": "N"},
-            {"test": "MCV", "result": "85.30", "value": "85.30", "unit": "fL", "reference": "80.00 - 100.00", "flag": "N"},
-            {"test": "MCH", "result": "28.30", "value": "28.30", "unit": "pg", "reference": "27.00 - 32.00", "flag": "N"},
-            {"test": "MCHC", "result": "33.20", "value": "33.20", "unit": "g/dL", "reference": "32.00 - 36.00", "flag": "N"},
-            {"test": "PLT", "result": "265", "value": "265", "unit": "10^9/L", "reference": "150 - 400", "flag": "N"},
-        ],
+        "results": demo_lab_results(),
     }
 
 
@@ -140,13 +425,7 @@ def table_lab_result(record_id: str) -> dict[str, object]:
             "date": "2026-07-06",
             "physician": "Dr. Maria Santos",
         },
-        "results": [
-            {"test": "WBC", "result": "7.10", "unit": "10^9/L", "reference": "4.00 - 10.00", "flag": "N"},
-            {"test": "RBC", "result": "5.02", "unit": "10^12/L", "reference": "4.50 - 5.90", "flag": "N"},
-            {"test": "HGB", "result": "14.20", "unit": "g/dL", "reference": "13.00 - 17.00", "flag": "N"},
-            {"test": "HCT", "result": "42.80", "unit": "%", "reference": "40.00 - 50.00", "flag": "N"},
-            {"test": "PLT", "result": "265", "unit": "10^9/L", "reference": "150 - 400", "flag": "N"},
-        ],
+        "results": demo_lab_results(),
     }
 
 
@@ -449,48 +728,140 @@ def create_repeating_lab_result_report() -> Report:
     page.height = 842
     page.unit = "px"
     report.bands = [
-        Band.from_dict({
-            "id": "page_header",
-            "type": "page_header",
-            "name": "Page Header",
-            "y": 0,
-            "height": 120,
-        }),
-        Band.from_dict({
-            "id": "detail",
-            "type": "detail",
-            "name": "Detail",
-            "y": 120,
-            "height": 660,
-            "repeat": {
-                "enabled": True,
-                "data_path": "results",
-                "row_height": 24,
-                "preview_rows": 10,
-                "empty_message": "No results",
-            },
-        }),
-        Band.from_dict({
-            "id": "page_footer",
-            "type": "page_footer",
-            "name": "Page Footer",
-            "y": 780,
-            "height": 62,
-        }),
+        Band.from_dict(
+            {
+                "id": "page_header",
+                "type": "page_header",
+                "name": "Page Header",
+                "y": 0,
+                "height": 120,
+            }
+        ),
+        Band.from_dict(
+            {
+                "id": "detail",
+                "type": "detail",
+                "name": "Detail",
+                "y": 120,
+                "height": 660,
+                "repeat": {
+                    "enabled": True,
+                    "data_path": "results",
+                    "row_height": 24,
+                    "preview_rows": 10,
+                    "empty_message": "No results",
+                },
+            }
+        ),
+        Band.from_dict(
+            {
+                "id": "page_footer",
+                "type": "page_footer",
+                "name": "Page Footer",
+                "y": 780,
+                "height": 62,
+            }
+        ),
     ]
-    page.text("LABORATORY RESULT", x=40, y=30, width=280, height=28, id="title", font_size=20, bold=True, band="page_header")
-    page.field("patient.name", x=40, y=72, width=220, height=18, id="patient_name", font_size=12, bold=True, band="page_header")
-    page.field("order.id", x=360, y=72, width=160, height=18, id="order_id", font_size=12, band="page_header")
-    page.text("TEST", x=42, y=126, width=160, height=18, id="test_header", font_size=11, bold=True, band="detail")
-    page.text("VALUE", x=220, y=126, width=90, height=18, id="value_header", font_size=11, bold=True, band="detail")
-    page.text("UNIT", x=330, y=126, width=90, height=18, id="unit_header", font_size=11, bold=True, band="detail")
-    page.text("FLAG", x=450, y=126, width=70, height=18, id="flag_header", font_size=11, bold=True, band="detail")
-    page.field("test", x=42, y=152, width=160, height=18, id="row_test", font_size=11, band="detail")
-    page.field("value", x=220, y=152, width=90, height=18, id="row_value", font_size=11, band="detail")
-    page.field("unit", x=330, y=152, width=90, height=18, id="row_unit", font_size=11, band="detail")
-    page.field("flag", x=450, y=152, width=70, height=18, id="row_flag", font_size=11, band="detail")
+    page.text(
+        "LABORATORY RESULT",
+        x=40,
+        y=30,
+        width=280,
+        height=28,
+        id="title",
+        font_size=20,
+        bold=True,
+        band="page_header",
+    )
+    page.field(
+        "patient.name",
+        x=40,
+        y=72,
+        width=220,
+        height=18,
+        id="patient_name",
+        font_size=12,
+        bold=True,
+        band="page_header",
+    )
+    page.field(
+        "order.id",
+        x=360,
+        y=72,
+        width=160,
+        height=18,
+        id="order_id",
+        font_size=12,
+        band="page_header",
+    )
+    page.text(
+        "TEST",
+        x=42,
+        y=126,
+        width=160,
+        height=18,
+        id="test_header",
+        font_size=11,
+        bold=True,
+        band="detail",
+    )
+    page.text(
+        "VALUE",
+        x=220,
+        y=126,
+        width=90,
+        height=18,
+        id="value_header",
+        font_size=11,
+        bold=True,
+        band="detail",
+    )
+    page.text(
+        "UNIT",
+        x=330,
+        y=126,
+        width=90,
+        height=18,
+        id="unit_header",
+        font_size=11,
+        bold=True,
+        band="detail",
+    )
+    page.text(
+        "FLAG",
+        x=450,
+        y=126,
+        width=70,
+        height=18,
+        id="flag_header",
+        font_size=11,
+        bold=True,
+        band="detail",
+    )
+    page.field(
+        "test", x=42, y=152, width=160, height=18, id="row_test", font_size=11, band="detail"
+    )
+    page.field(
+        "value", x=220, y=152, width=90, height=18, id="row_value", font_size=11, band="detail"
+    )
+    page.field(
+        "unit", x=330, y=152, width=90, height=18, id="row_unit", font_size=11, band="detail"
+    )
+    page.field(
+        "flag", x=450, y=152, width=70, height=18, id="row_flag", font_size=11, band="detail"
+    )
     page.line(x=40, y=174, width=480, id="row_rule", stroke_width=1, band="detail")
-    page.text("Generated by Slim Report Designer", x=40, y=802, width=240, height=16, id="footer", font_size=10, band="page_footer")
+    page.text(
+        "Generated by Slim Report Designer",
+        x=40,
+        y=802,
+        width=240,
+        height=16,
+        id="footer",
+        font_size=10,
+        band="page_footer",
+    )
     for obj in report.objects:
         if obj.id in {"title", "patient_name", "order_id"}:
             obj.band_id = "page_header"
@@ -522,17 +893,103 @@ def create_table_lab_result_report() -> Report:
     page.height = 842
     page.unit = "px"
     report.bands = [
-        Band.from_dict({"id": "page_header", "type": "page_header", "name": "Page Header", "y": 0, "height": 150}),
-        Band.from_dict({"id": "detail", "type": "detail", "name": "Detail", "y": 150, "height": 620}),
-        Band.from_dict({"id": "page_footer", "type": "page_footer", "name": "Page Footer", "y": 770, "height": 72}),
+        Band.from_dict(
+            {
+                "id": "page_header",
+                "type": "page_header",
+                "name": "Page Header",
+                "y": 0,
+                "height": 150,
+            }
+        ),
+        Band.from_dict(
+            {"id": "detail", "type": "detail", "name": "Detail", "y": 150, "height": 620}
+        ),
+        Band.from_dict(
+            {
+                "id": "page_footer",
+                "type": "page_footer",
+                "name": "Page Footer",
+                "y": 770,
+                "height": 72,
+            }
+        ),
     ]
-    page.field("laboratory.name", x=40, y=24, width=360, height=24, id="lab_name", font_size=18, bold=True, band="page_header")
-    page.text("Laboratory Result", x=40, y=58, width=300, height=22, id="report_title", font_size=15, bold=True, color="#2563eb", band="page_header")
-    page.text("Patient:", x=40, y=95, width=80, height=18, id="patient_label", font_size=11, bold=True, band="page_header")
-    page.field("patient.name", x=120, y=95, width=250, height=18, id="patient_name", font_size=11, band="page_header")
-    page.text("Order:", x=390, y=95, width=65, height=18, id="order_label", font_size=11, bold=True, band="page_header")
-    page.field("order.id", x=455, y=95, width=110, height=18, id="order_id", font_size=11, band="page_header")
-    page.line(x=40, y=144, width=515, height=1, id="header_line", stroke_width=1, stroke_color="#111827", band="page_header")
+    page.field(
+        "laboratory.name",
+        x=40,
+        y=24,
+        width=360,
+        height=24,
+        id="lab_name",
+        font_size=18,
+        bold=True,
+        band="page_header",
+    )
+    page.text(
+        "Laboratory Result",
+        x=40,
+        y=58,
+        width=300,
+        height=22,
+        id="report_title",
+        font_size=15,
+        bold=True,
+        color="#2563eb",
+        band="page_header",
+    )
+    page.text(
+        "Patient:",
+        x=40,
+        y=95,
+        width=80,
+        height=18,
+        id="patient_label",
+        font_size=11,
+        bold=True,
+        band="page_header",
+    )
+    page.field(
+        "patient.name",
+        x=120,
+        y=95,
+        width=250,
+        height=18,
+        id="patient_name",
+        font_size=11,
+        band="page_header",
+    )
+    page.text(
+        "Order:",
+        x=390,
+        y=95,
+        width=65,
+        height=18,
+        id="order_label",
+        font_size=11,
+        bold=True,
+        band="page_header",
+    )
+    page.field(
+        "order.id",
+        x=455,
+        y=95,
+        width=110,
+        height=18,
+        id="order_id",
+        font_size=11,
+        band="page_header",
+    )
+    page.line(
+        x=40,
+        y=144,
+        width=515,
+        height=1,
+        id="header_line",
+        stroke_width=1,
+        stroke_color="#111827",
+        band="page_header",
+    )
     page.table(
         id="results_table",
         x=40,
@@ -541,11 +998,46 @@ def create_table_lab_result_report() -> Report:
         height=260,
         data_path="results",
         columns=[
-            {"id": "test", "label": "Test", "binding": "test", "width": 130, "align": "left", "source_path": "results[].test"},
-            {"id": "result", "label": "Result", "binding": "result", "width": 90, "align": "center", "source_path": "results[].result"},
-            {"id": "unit", "label": "Unit", "binding": "unit", "width": 80, "align": "left", "source_path": "results[].unit"},
-            {"id": "reference", "label": "Reference", "binding": "reference", "width": 130, "align": "left", "source_path": "results[].reference"},
-            {"id": "flag", "label": "Flag", "binding": "flag", "width": 45, "align": "center", "source_path": "results[].flag"},
+            {
+                "id": "test",
+                "label": "Test",
+                "binding": "test",
+                "width": 130,
+                "align": "left",
+                "source_path": "results[].test",
+            },
+            {
+                "id": "result",
+                "label": "Result",
+                "binding": "result",
+                "width": 90,
+                "align": "center",
+                "source_path": "results[].result",
+            },
+            {
+                "id": "unit",
+                "label": "Unit",
+                "binding": "unit",
+                "width": 80,
+                "align": "left",
+                "source_path": "results[].unit",
+            },
+            {
+                "id": "reference",
+                "label": "Reference",
+                "binding": "reference",
+                "width": 130,
+                "align": "left",
+                "source_path": "results[].reference",
+            },
+            {
+                "id": "flag",
+                "label": "Flag",
+                "binding": "flag",
+                "width": 45,
+                "align": "center",
+                "source_path": "results[].flag",
+            },
         ],
         header={
             "visible": True,
@@ -567,8 +1059,26 @@ def create_table_lab_result_report() -> Report:
         border_radius=0,
         band="detail",
     )
-    page.line(x=40, y=780, width=515, height=1, id="footer_line", stroke_width=1, stroke_color="#d1d5db", band="page_footer")
-    page.text("Generated by Slim Report Designer", x=40, y=802, width=240, height=16, id="footer", font_size=10, band="page_footer")
+    page.line(
+        x=40,
+        y=780,
+        width=515,
+        height=1,
+        id="footer_line",
+        stroke_width=1,
+        stroke_color="#d1d5db",
+        band="page_footer",
+    )
+    page.text(
+        "Generated by Slim Report Designer",
+        x=40,
+        y=802,
+        width=240,
+        height=16,
+        id="footer",
+        font_size=10,
+        band="page_footer",
+    )
     for obj in report.objects:
         if obj.properties.get("band"):
             obj.band_id = obj.properties["band"]
@@ -576,14 +1086,29 @@ def create_table_lab_result_report() -> Report:
     report.data = {
         "sample": table_lab_result("ORDER-1001"),
         "fields": [
-            {"path": "laboratory.name", "label": "Laboratory Name", "type": "string", "sample": "Cerebro Diagnostic System"},
-            {"path": "patient.name", "label": "Patient Name", "type": "string", "sample": "JUAN DELA CRUZ"},
+            {
+                "path": "laboratory.name",
+                "label": "Laboratory Name",
+                "type": "string",
+                "sample": "Cerebro Diagnostic System",
+            },
+            {
+                "path": "patient.name",
+                "label": "Patient Name",
+                "type": "string",
+                "sample": "JUAN DELA CRUZ",
+            },
             {"path": "order.id", "label": "Order ID", "type": "string", "sample": "ORDER-1001"},
-            {"path": "results[]", "label": "Results", "type": "array", "sample": "5 rows"},
+            {"path": "results[]", "label": "Results", "type": "array", "sample": "36 rows"},
             {"path": "results[].test", "label": "Test", "type": "string", "sample": "WBC"},
             {"path": "results[].result", "label": "Result", "type": "string", "sample": "7.10"},
             {"path": "results[].unit", "label": "Unit", "type": "string", "sample": "10^9/L"},
-            {"path": "results[].reference", "label": "Reference", "type": "string", "sample": "4.00 - 10.00"},
+            {
+                "path": "results[].reference",
+                "label": "Reference",
+                "type": "string",
+                "sample": "4.00 - 10.00",
+            },
             {"path": "results[].flag", "label": "Flag", "type": "string", "sample": "N"},
         ],
     }

@@ -8,6 +8,11 @@ from slim_report_core import Band, Report, ReportValidationError, render_html, r
 from slim_report_core.expressions import resolve_expression
 from slim_report_core.rendering import render_html as render_report_html
 from slim_report_core.rendering.context import create_render_context
+from slim_report_core.rendering.pagination import (
+    calculate_rows_per_page,
+    get_available_detail_height,
+    pagination_summary,
+)
 from slim_report_core.serialization import JSONSerializer
 
 
@@ -73,6 +78,27 @@ def test_html_rendering_expands_repeating_detail_rows() -> None:
     assert html.count("LAB RESULT") == 1
 
 
+def test_pagination_helpers_calculate_detail_capacity() -> None:
+    context = create_render_context(repeating_report(), repeating_data())
+
+    assert get_available_detail_height(context) == 680
+    assert calculate_rows_per_page(24, 96) == 4
+    assert calculate_rows_per_page(24, 0) == 1
+
+
+def test_html_rendering_paginates_repeating_detail_rows() -> None:
+    report = repeating_report()
+
+    html = render_html(report, many_repeating_data())
+    summary = pagination_summary(create_render_context(report), many_repeating_data())
+
+    assert summary.page_count > 1
+    assert summary.repeated_row_count == 36
+    assert html.count('class="slim-report-page"') == summary.page_count
+    assert html.count("LAB RESULT") == summary.page_count
+    assert "Nitrite" in html
+
+
 def test_html_rendering_empty_repeating_detail_does_not_crash() -> None:
     report = repeating_report()
 
@@ -90,6 +116,19 @@ def test_pdf_rendering_expands_repeating_detail_rows() -> None:
     assert len(pdf) > 1000
 
 
+def test_pdf_rendering_paginates_repeating_detail_rows() -> None:
+    report = repeating_report()
+
+    short_pdf = render_pdf(report, repeating_data())
+    long_pdf = render_pdf(report, many_repeating_data())
+
+    assert long_pdf.startswith(b"%PDF")
+    assert len(long_pdf) > len(short_pdf)
+    page_count = pdf_page_count(long_pdf)
+    if page_count is not None:
+        assert page_count > 1
+
+
 def test_html_rendering_basic_table_object() -> None:
     report = table_report()
 
@@ -102,6 +141,19 @@ def test_html_rendering_basic_table_object() -> None:
     assert "WBC" in html
     assert "7.10" in html
     assert "background: #e5e7eb" in html
+
+
+def test_html_rendering_paginates_basic_table_object() -> None:
+    report = table_report()
+
+    html = render_html(report, many_repeating_data())
+    summary = pagination_summary(create_render_context(report), many_repeating_data())
+
+    assert summary.page_count > 1
+    assert summary.table_row_count == 36
+    assert html.count('class="slim-report-page"') == summary.page_count
+    assert html.count("<thead>") == summary.page_count
+    assert "Nitrite" in html
 
 
 def test_html_rendering_basic_table_missing_data_path_does_not_crash() -> None:
@@ -120,6 +172,19 @@ def test_pdf_rendering_basic_table_object() -> None:
 
     assert pdf.startswith(b"%PDF")
     assert len(pdf) > 1000
+
+
+def test_pdf_rendering_paginates_basic_table_object() -> None:
+    report = table_report()
+
+    short_pdf = render_pdf(report, table_data())
+    long_pdf = render_pdf(report, many_repeating_data())
+
+    assert long_pdf.startswith(b"%PDF")
+    assert len(long_pdf) > len(short_pdf)
+    page_count = pdf_page_count(long_pdf)
+    if page_count is not None:
+        assert page_count > 1
 
 
 def test_pdf_rendering_basic_table_missing_data_path_does_not_crash() -> None:
@@ -411,6 +476,15 @@ def repeating_data() -> dict:
     }
 
 
+def many_repeating_data() -> dict:
+    rows = [
+        {"test": f"Test {index:02d}", "result": str(index), "value": str(index), "unit": "mg/dL"}
+        for index in range(1, 36)
+    ]
+    rows.append({"test": "Nitrite", "result": "Negative", "value": "Negative", "unit": ""})
+    return {"results": rows}
+
+
 def repeating_report() -> Report:
     return JSONSerializer().load_mapping(
         {
@@ -563,3 +637,14 @@ def table_report() -> Report:
             "assets": [],
         }
     )
+
+
+def pdf_page_count(pdf: bytes) -> int | None:
+    try:
+        from pypdf import PdfReader
+    except ImportError:
+        return None
+
+    from io import BytesIO
+
+    return len(PdfReader(BytesIO(pdf)).pages)

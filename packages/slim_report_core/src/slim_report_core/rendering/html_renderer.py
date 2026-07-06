@@ -18,16 +18,18 @@ from .context import (
     resolve_object_value,
     resolve_repeated_object_value,
 )
+from .pagination import build_render_pages
 
 
 def render_html(report: Report, data: dict[str, Any] | None = None) -> str:
     """Render a report domain model and data as a full HTML document."""
     context = create_render_context(report, data)
-    bands = "\n      ".join(render_html_band(band) for band in context.bands)
-    objects = "\n      ".join(render_html_objects(context))
     page = context.page
     title = escape(context.title)
     page_background = "#fff" if page.transparent else escape(page.background_color, quote=True)
+    page_html = "\n".join(
+        render_html_page(plan, context, page_background) for plan in build_render_pages(context)
+    )
 
     return (
         "<!doctype html>\n"
@@ -37,22 +39,43 @@ def render_html(report: Report, data: dict[str, Any] | None = None) -> str:
         f"  <title>{title}</title>\n"
         "  <style>\n"
         "    body { margin: 0; background: #e5e7eb; font-family: Arial, sans-serif; }\n"
-        "    .slim-report-preview { padding: 24px; }\n"
+        "    .slim-report-preview { padding: 24px; display: grid; gap: 24px; }\n"
         "    .slim-report-page { position: relative; margin: 0 auto; background: #fff; "
-        "box-shadow: 0 2px 12px rgba(15, 23, 42, 0.18); overflow: hidden; }\n"
+        "box-shadow: 0 2px 12px rgba(15, 23, 42, 0.18); overflow: hidden; "
+        "break-after: page; page-break-after: always; }\n"
+        "    .slim-report-page:last-child { break-after: auto; page-break-after: auto; }\n"
+        "    .slim-report-page-number { position: absolute; right: 12px; bottom: 8px; "
+        "font: 10px Arial, sans-serif; color: #94a3b8; }\n"
         "    .slim-report-object { position: absolute; box-sizing: border-box; }\n"
+        "    @media print { body { background: #fff; } "
+        ".slim-report-preview { padding: 0; gap: 0; } "
+        ".slim-report-page { margin: 0; box-shadow: none; } }\n"
         "  </style>\n"
         "</head>\n"
         "<body>\n"
         '  <div class="slim-report-preview">\n'
-        f'    <div class="slim-report-page" style="width: {page.width_px}px; '
-        f'height: {page.height_px}px; background: {page_background};">\n'
-        f"      {bands}\n"
-        f"      {objects}\n"
-        "    </div>\n"
+        f"{page_html}"
         "  </div>\n"
         "</body>\n"
         "</html>\n"
+    )
+
+
+def render_html_page(plan: Any, context: RenderContext, page_background: str) -> str:
+    bands = "\n      ".join(render_html_band(band) for band in plan.bands)
+    objects = "\n      ".join(
+        render_html_object(obj, object_context) for obj, object_context in plan.objects
+    )
+    page = context.page
+    page_number = plan.index + 1
+    return (
+        f'    <div class="slim-report-page" data-slim-page="{page_number}" '
+        f'style="width: {page.width_px}px; height: {page.height_px}px; '
+        f'background: {page_background};">\n'
+        f"      {bands}\n"
+        f"      {objects}\n"
+        f'      <div class="slim-report-page-number">Page {page_number}</div>\n'
+        "    </div>\n"
     )
 
 
@@ -135,9 +158,7 @@ def _render_text(obj: RenderObject, context: RenderContext) -> str:
 def _render_field(obj: RenderObject, context: RenderContext) -> str:
     row = context.data.get("__slim_row__") if isinstance(context.data, dict) else None
     repeat_path = (
-        context.data.get("__slim_repeat_path__", "")
-        if isinstance(context.data, dict)
-        else ""
+        context.data.get("__slim_repeat_path__", "") if isinstance(context.data, dict) else ""
     )
     if isinstance(row, dict):
         value = resolve_repeated_object_value(obj, context.data, row, str(repeat_path))
@@ -181,7 +202,7 @@ def _render_rectangle(obj: RenderObject, context: RenderContext) -> str:
     return (
         f'<div class="slim-report-object" data-slim-object="{escape(obj.id, quote=True)}" '
         f'style="{_position_style(x, y, width, height)} border: {border_width}px solid '
-        f"{border_color}; border-radius: {border_radius}px; background: {fill_color};\"></div>"
+        f'{border_color}; border-radius: {border_radius}px; background: {fill_color};"></div>'
     )
 
 
@@ -219,12 +240,16 @@ def _render_table(obj: RenderObject, context: RenderContext) -> str:
     x, y, width, height = object_px(obj, context.page.unit)
     spec = _table_spec(obj)
     columns = spec["columns"]
-    rows = get_array_by_path(context.data, spec["data_path"])
+    rows_override = obj.properties.get("__slim_table_rows__")
+    row_offset = int(obj.properties.get("__slim_table_row_offset__", 0) or 0)
+    rows = (
+        rows_override
+        if isinstance(rows_override, list)
+        else get_array_by_path(context.data, spec["data_path"])
+    )
     row_height = float(spec["row"].get("height", 22) or 22)
     header_height = (
-        float(spec["header"].get("height", 24) or 24)
-        if spec["header"].get("visible", True)
-        else 0
+        float(spec["header"].get("height", 24) or 24) if spec["header"].get("visible", True) else 0
     )
     available_height = max(height - header_height, 0)
     max_rows = max(0, int(available_height // max(row_height, 1)))
@@ -234,8 +259,7 @@ def _render_table(obj: RenderObject, context: RenderContext) -> str:
     radius = float(obj.style.get("border_radius", 0) or 0)
     background = escape(str(obj.style.get("background_color", "#ffffff")), quote=True)
     colgroup = "".join(
-        f'<col style="width: {_column_width_percent(column, columns):.4f}%;">'
-        for column in columns
+        f'<col style="width: {_column_width_percent(column, columns):.4f}%;">' for column in columns
     )
     header_html = ""
     if spec["header"].get("visible", True):
@@ -265,7 +289,7 @@ def _render_table(obj: RenderObject, context: RenderContext) -> str:
             row_data = row if isinstance(row, dict) else {}
             row_bg = (
                 spec["row"].get("alternate_background_color")
-                if row_index % 2 == 1
+                if (row_offset + row_index) % 2 == 1
                 else spec["row"].get("background_color", "#ffffff")
             )
             cells = "".join(
@@ -345,8 +369,8 @@ def _html_box(obj: RenderObject, context: RenderContext, value: str) -> str:
 def _table_cell(value: object, *, align: str, style: str, tag: str = "td") -> str:
     text_align = escape(align if align in {"left", "center", "right"} else "left", quote=True)
     return (
-        f"<{tag} style=\"box-sizing: border-box; padding: 2px 6px; overflow: hidden; "
-        f"text-overflow: ellipsis; white-space: nowrap; text-align: {text_align}; {style}\">"
+        f'<{tag} style="box-sizing: border-box; padding: 2px 6px; overflow: hidden; '
+        f'text-overflow: ellipsis; white-space: nowrap; text-align: {text_align}; {style}">'
         f"{escape(str(value if value is not None else ''))}</{tag}>"
     )
 
@@ -430,10 +454,7 @@ def _table_spec(obj: RenderObject) -> dict[str, object]:
 def _normalize_table_column(column: object, index: int) -> dict[str, object]:
     mapping = _dict_value(column)
     binding = str(
-        mapping.get("binding")
-        or mapping.get("field")
-        or mapping.get("id")
-        or f"column_{index + 1}"
+        mapping.get("binding") or mapping.get("field") or mapping.get("id") or f"column_{index + 1}"
     )
     label = mapping.get("label") or binding.replace("_", " ").title() or f"Column {index + 1}"
     return {

@@ -30,7 +30,7 @@ Settings:
 - `preview_rows`: number of sample rows shown by the designer
 - `empty_message`: message shown when no records exist
 
-Only Detail band repeating is supported in this sprint.
+Only Detail band repeating is supported.
 
 ## Row-Relative Bindings
 
@@ -59,15 +59,15 @@ The designer can use `data.sample` and `preview_rows` to show repeated rows on t
 
 ## HTML Preview Behavior
 
-HTML preview repeats Detail-band objects for each row found at `data_path`. It offsets repeated objects by `row_height`.
+HTML preview repeats Detail-band objects for each row found at `data_path`. It offsets repeated objects by `row_height` and creates additional page containers when rows exceed the available detail area.
 
 ## PDF Export Behavior
 
-PDF export uses the same row data and row-relative binding behavior as HTML preview.
+PDF export uses the same row data and row-relative binding behavior as HTML preview. Long repeated data continues onto additional PDF pages.
 
 ## Current Limitations
 
-- Full multi-page overflow/pagination is not implemented yet.
+- Advanced pagination controls such as custom page breaks and widow/orphan rules are not implemented yet.
 - Group headers/footers are not implemented yet.
 - Advanced table features are separate future work.
-- Only Detail band repeating is supported in this sprint.
+- Only Detail band repeating is supported.

@@ -14,6 +14,7 @@ from slim_report_core.rendering.context import (
     create_render_context,
     get_array_by_path,
 )
+from slim_report_core.rendering.pagination import pagination_summary
 from slim_report_core.serialization import JSONSerializer
 from slim_report_designer_ui import static_file
 
@@ -151,17 +152,27 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.get("/templates/<template_id>/preview/<record_id>")
     def preview(template_id: str, record_id: str) -> Response:
-        html = designer.render_preview(template_id, record_id)
-        return Response(html, mimetype="text/html")
+        report = designer.get_report(template_id)
+        data = designer.resolve_data(template_id, record_id)
+        context = create_render_context(report)
+        return Response(
+            report.render_html(data),
+            mimetype="text/html",
+            headers=render_debug_headers(context, data),
+        )
 
     @blueprint.get("/templates/<template_id>/export/pdf/<record_id>")
     def export_pdf(template_id: str, record_id: str) -> Response:
+        report = designer.get_report(template_id)
+        data = designer.resolve_data(template_id, record_id)
+        context = create_render_context(report)
         pdf = designer.export_pdf(template_id, record_id)
         return Response(
             pdf,
             mimetype="application/pdf",
             headers={
                 "Content-Disposition": f'attachment; filename="{template_id}-{record_id}.pdf"',
+                **render_debug_headers(context, data),
             },
         )
 
@@ -215,7 +226,9 @@ def render_debug_headers(context: RenderContext, data: Any | None = None) -> dic
     )
     repeat_data_path = str(repeat.get("data_path", ""))
     repeat_rows = get_array_by_path(data or {}, repeat_data_path) if repeat_data_path else []
+    summary = pagination_summary(context, data)
     return {
+        "X-Slim-Report-Page-Count": str(summary.page_count),
         "X-Slim-Report-Object-Count": str(len(context.objects)),
         "X-Slim-Report-Page-Unit": context.page.unit,
         "X-Slim-Report-Page-Width": str(context.page.width_px),
@@ -225,6 +238,8 @@ def render_debug_headers(context: RenderContext, data: Any | None = None) -> dic
         ),
         "X-Slim-Report-Repeat-Data-Path": repeat_data_path,
         "X-Slim-Report-Repeat-Row-Count": str(len(repeat_rows)),
+        "X-Slim-Report-Repeated-Row-Count": str(summary.repeated_row_count),
+        "X-Slim-Report-Table-Row-Count": str(summary.table_row_count),
     }
 
 

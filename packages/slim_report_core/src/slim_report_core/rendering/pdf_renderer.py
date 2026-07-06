@@ -20,6 +20,7 @@ from .context import (
     resolve_object_value,
     resolve_repeated_object_value,
 )
+from .pagination import build_render_pages
 
 
 def render_pdf(report: Report, data: dict[str, Any] | None = None) -> bytes:
@@ -28,19 +29,24 @@ def render_pdf(report: Report, data: dict[str, Any] | None = None) -> bytes:
     context = create_render_context(report, data)
     buffer = BytesIO()
     canvas = canvas_class(buffer, pagesize=(context.page.width_pt, context.page.height_pt))
-    if not context.page.transparent:
-        _set_fill_color(canvas, context.page.background_color)
-        canvas.rect(0, 0, context.page.width_pt, context.page.height_pt, stroke=0, fill=1)
-
-    for band in context.bands:
-        _render_band(canvas, band, context)
-
-    for obj, object_context in pdf_render_objects(context):
-        render_pdf_object(canvas, obj, object_context)
-
-    canvas.showPage()
+    pages = build_render_pages(context)
+    for page_index, page in enumerate(pages):
+        _render_page_background(canvas, context)
+        for band in page.bands:
+            _render_band(canvas, band, context)
+        for obj, object_context in page.objects:
+            render_pdf_object(canvas, obj, object_context)
+        if page_index < len(pages) - 1:
+            canvas.showPage()
     canvas.save()
     return buffer.getvalue()
+
+
+def _render_page_background(canvas: Any, context: RenderContext) -> None:
+    if context.page.transparent:
+        return
+    _set_fill_color(canvas, context.page.background_color)
+    canvas.rect(0, 0, context.page.width_pt, context.page.height_pt, stroke=0, fill=1)
 
 
 def render_pdf_object(canvas: Any, obj: RenderObject, context: RenderContext) -> None:
@@ -124,9 +130,7 @@ def _render_text(canvas: Any, obj: RenderObject, context: RenderContext) -> None
 def _render_field(canvas: Any, obj: RenderObject, context: RenderContext) -> None:
     row = context.data.get("__slim_row__") if isinstance(context.data, dict) else None
     repeat_path = (
-        context.data.get("__slim_repeat_path__", "")
-        if isinstance(context.data, dict)
-        else ""
+        context.data.get("__slim_repeat_path__", "") if isinstance(context.data, dict) else ""
     )
     if isinstance(row, dict):
         value = resolve_repeated_object_value(obj, context.data, row, str(repeat_path))
@@ -215,7 +219,13 @@ def _render_table(canvas: Any, obj: RenderObject, context: RenderContext) -> Non
     x, y, width, height = object_pt(obj, context.page.unit)
     spec = _table_spec(obj)
     columns = spec["columns"]
-    rows = get_array_by_path(context.data, spec["data_path"])
+    rows_override = obj.properties.get("__slim_table_rows__")
+    row_offset = int(obj.properties.get("__slim_table_row_offset__", 0) or 0)
+    rows = (
+        rows_override
+        if isinstance(rows_override, list)
+        else get_array_by_path(context.data, spec["data_path"])
+    )
     row_height = _table_length_pt(spec["row"].get("height", 22), context)
     header_height = (
         _table_length_pt(spec["header"].get("height", 24), context)
@@ -258,7 +268,7 @@ def _render_table(canvas: Any, obj: RenderObject, context: RenderContext) -> Non
         row_data = row if isinstance(row, dict) else {}
         fill = (
             spec["row"].get("alternate_background_color")
-            if row_index % 2 == 1
+            if (row_offset + row_index) % 2 == 1
             else spec["row"].get("background_color", "#ffffff")
         )
         values = [
@@ -452,10 +462,7 @@ def _table_spec(obj: RenderObject) -> dict[str, Any]:
 def _normalize_table_column(column: Any, index: int) -> dict[str, Any]:
     mapping = _dict_value(column)
     binding = str(
-        mapping.get("binding")
-        or mapping.get("field")
-        or mapping.get("id")
-        or f"column_{index + 1}"
+        mapping.get("binding") or mapping.get("field") or mapping.get("id") or f"column_{index + 1}"
     )
     label = mapping.get("label") or binding.replace("_", " ").title() or f"Column {index + 1}"
     return {

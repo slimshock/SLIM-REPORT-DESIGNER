@@ -38,6 +38,8 @@ This project follows semantic versioning once public releases begin.
 - Repeating Detail rows.
 - Row-relative field bindings.
 - Basic array-bound Table object with designer, HTML preview, and PDF export support.
+- Basic multi-page pagination for repeating Detail rows and Detail-band tables.
+- Preview/export debug headers for page, object, repeated-row, and table-row counts.
 - `table_lab_result` Flask sample template.
 - Improved preview/PDF fidelity.
 
@@ -49,6 +51,6 @@ This project follows semantic versioning once public releases begin.
 
 - Advanced table features such as nested tables, merged cells, formulas, and grouped tables are not implemented yet.
 - Barcode/QR not implemented yet.
-- Full pagination/multi-page repeat overflow not implemented yet.
+- Advanced pagination controls such as custom page breaks and widow/orphan rules are not implemented yet.
 - Group headers/footers not implemented yet.
 - Django/FastAPI adapters are placeholders/future work.

@@ -43,6 +43,22 @@ Page settings describe the canvas and exported page:
 - `margin_left`
 - `background_color`
 - `transparent`
+- `pagination`
+
+Pagination settings are optional. Missing settings use the default values below:
+
+```json
+{
+  "pagination": {
+    "enabled": true,
+    "repeat_page_header": true,
+    "repeat_page_footer": true,
+    "respect_margins": true
+  }
+}
+```
+
+Basic pagination is used by HTML preview and PDF export for repeating Detail rows and Detail-band table rows.
 
 ## Bands
 
@@ -66,7 +82,7 @@ Current common band types:
 
 ## Band Repeat
 
-Only Detail band repeating is supported in this sprint.
+Only Detail band repeating is supported.
 
 ```json
 {
@@ -210,6 +226,8 @@ The basic Table object renders simple array-bound tabular data. It is not a full
 ```
 
 Column bindings are row-relative. For a table bound to `results`, `test` resolves against the current row.
+
+When a basic table is placed in the Detail band and has more rows than fit in its configured height, HTML preview and PDF export continue the table on generated pages and repeat the table header when visible.
 
 ## Data
 

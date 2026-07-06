@@ -8,6 +8,7 @@ This example demonstrates the Flask-hosted designer and the core rendering flow:
 - preview as HTML
 - export as PDF
 - demonstrate repeating Detail rows
+- demonstrate basic pagination for repeated rows and tables
 
 Flask does not own rendering. The adapter loads templates into `Report` and calls `slim_report_core`.
 
@@ -71,8 +72,8 @@ Templates can also include `data.sample` for preview/export. The designer API pr
 
 ## Repeating Detail Rows
 
-`repeating_lab_result` demonstrates a Detail band with `repeat.enabled`, `repeat.data_path`, `repeat.row_height`, and row-relative field bindings such as `test`, `result`, `unit`, and `flag`.
+`repeating_lab_result` demonstrates a Detail band with `repeat.enabled`, `repeat.data_path`, `repeat.row_height`, and row-relative field bindings such as `test`, `result`, `unit`, and `flag`. Its sample data includes enough rows to create multiple preview/PDF pages.
 
 ## Basic Table Object
 
-`table_lab_result` demonstrates a single Table object bound to `results`, with editable columns for `test`, `result`, `unit`, `reference`, and `flag`.
+`table_lab_result` demonstrates a single Table object bound to `results`, with editable columns for `test`, `result`, `unit`, `reference`, and `flag`. Its table rows continue onto additional pages and repeat the table header.

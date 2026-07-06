@@ -60,6 +60,7 @@ Implemented now:
 - Repeating Detail rows
 - Row-relative bindings for repeating data
 - Basic array-bound Table object
+- Basic multi-page pagination for repeating Detail rows and Detail-band tables
 - Flask-hosted preview and PDF export
 - CLI commands for validation, inspection, and rendering
 
@@ -67,7 +68,7 @@ Not implemented yet:
 
 - Advanced table features such as nested tables, merged cells, formulas, and grouped tables
 - Barcode/QR rendering
-- Full pagination and multi-page repeat overflow
+- Advanced pagination controls such as custom page breaks and widow/orphan rules
 - Group headers and footers
 - Django adapter
 - FastAPI adapter
@@ -175,7 +176,7 @@ http://127.0.0.1:5000/report-designer/designer?template=repeating_lab_result
 http://127.0.0.1:5000/report-designer/designer?template=table_lab_result
 ```
 
-The Flask example loads templates from `examples/flask_app/sample_templates/`. Preview works, PDF export works, and sample/provider data can be used for field rendering. The `repeating_lab_result` template demonstrates repeating Detail rows, and `table_lab_result` demonstrates the basic Table object.
+The Flask example loads templates from `examples/flask_app/sample_templates/`. Preview works, PDF export works, and sample/provider data can be used for field rendering. The `repeating_lab_result` template demonstrates paginated repeating Detail rows, and `table_lab_result` demonstrates the paginated basic Table object.
 
 ## Serialization
 

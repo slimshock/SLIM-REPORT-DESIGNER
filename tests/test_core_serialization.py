@@ -236,6 +236,26 @@ def test_json_serializer_round_trips_detail_repeat_settings() -> None:
     }
 
 
+def test_json_serializer_round_trips_page_pagination_settings() -> None:
+    payload = sample_template()
+    payload["page"]["pagination"] = {
+        "enabled": True,
+        "repeat_page_header": True,
+        "repeat_page_footer": True,
+        "respect_margins": True,
+    }
+
+    report = JSONSerializer().load_mapping(payload)
+    dumped = JSONSerializer().dump_mapping(report)
+
+    assert dumped["page"]["pagination"] == {
+        "enabled": True,
+        "repeat_page_header": True,
+        "repeat_page_footer": True,
+        "respect_margins": True,
+    }
+
+
 def sample_template() -> dict:
     return {
         "version": DEFAULT_REPORT_VERSION,

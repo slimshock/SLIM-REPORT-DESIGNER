@@ -25,7 +25,13 @@
     "margin_bottom": 24,
     "margin_left": 24,
     "background_color": "#ffffff",
-    "transparent": false
+    "transparent": false,
+    "pagination": {
+      "enabled": true,
+      "repeat_page_header": true,
+      "repeat_page_footer": true,
+      "respect_margins": true
+    }
   },
   "bands": [
     {
@@ -283,6 +289,7 @@
         {
           "test": "WBC",
           "result": "7.10",
+          "value": "7.10",
           "unit": "10^9/L",
           "reference": "4.00 - 10.00",
           "flag": "N"
@@ -290,6 +297,7 @@
         {
           "test": "RBC",
           "result": "5.02",
+          "value": "5.02",
           "unit": "10^12/L",
           "reference": "4.50 - 5.90",
           "flag": "N"
@@ -297,6 +305,7 @@
         {
           "test": "HGB",
           "result": "14.20",
+          "value": "14.20",
           "unit": "g/dL",
           "reference": "13.00 - 17.00",
           "flag": "N"
@@ -304,15 +313,265 @@
         {
           "test": "HCT",
           "result": "42.80",
+          "value": "42.80",
           "unit": "%",
           "reference": "40.00 - 50.00",
           "flag": "N"
         },
         {
+          "test": "MCV",
+          "result": "85.30",
+          "value": "85.30",
+          "unit": "fL",
+          "reference": "80.00 - 100.00",
+          "flag": "N"
+        },
+        {
+          "test": "MCH",
+          "result": "28.30",
+          "value": "28.30",
+          "unit": "pg",
+          "reference": "27.00 - 32.00",
+          "flag": "N"
+        },
+        {
+          "test": "MCHC",
+          "result": "33.20",
+          "value": "33.20",
+          "unit": "g/dL",
+          "reference": "32.00 - 36.00",
+          "flag": "N"
+        },
+        {
+          "test": "RDW-CV",
+          "result": "13.10",
+          "value": "13.10",
+          "unit": "%",
+          "reference": "11.50 - 14.50",
+          "flag": "N"
+        },
+        {
           "test": "PLT",
           "result": "265",
+          "value": "265",
           "unit": "10^9/L",
           "reference": "150 - 400",
+          "flag": "N"
+        },
+        {
+          "test": "MPV",
+          "result": "9.40",
+          "value": "9.40",
+          "unit": "fL",
+          "reference": "7.50 - 11.50",
+          "flag": "N"
+        },
+        {
+          "test": "Neutrophils",
+          "result": "58",
+          "value": "58",
+          "unit": "%",
+          "reference": "50 - 70",
+          "flag": "N"
+        },
+        {
+          "test": "Lymphocytes",
+          "result": "32",
+          "value": "32",
+          "unit": "%",
+          "reference": "20 - 40",
+          "flag": "N"
+        },
+        {
+          "test": "Monocytes",
+          "result": "6",
+          "value": "6",
+          "unit": "%",
+          "reference": "2 - 8",
+          "flag": "N"
+        },
+        {
+          "test": "Eosinophils",
+          "result": "3",
+          "value": "3",
+          "unit": "%",
+          "reference": "1 - 4",
+          "flag": "N"
+        },
+        {
+          "test": "Basophils",
+          "result": "1",
+          "value": "1",
+          "unit": "%",
+          "reference": "0 - 1",
+          "flag": "N"
+        },
+        {
+          "test": "Glucose",
+          "result": "94",
+          "value": "94",
+          "unit": "mg/dL",
+          "reference": "70 - 99",
+          "flag": "N"
+        },
+        {
+          "test": "BUN",
+          "result": "14",
+          "value": "14",
+          "unit": "mg/dL",
+          "reference": "7 - 20",
+          "flag": "N"
+        },
+        {
+          "test": "Creatinine",
+          "result": "0.92",
+          "value": "0.92",
+          "unit": "mg/dL",
+          "reference": "0.70 - 1.30",
+          "flag": "N"
+        },
+        {
+          "test": "Uric Acid",
+          "result": "5.80",
+          "value": "5.80",
+          "unit": "mg/dL",
+          "reference": "3.50 - 7.20",
+          "flag": "N"
+        },
+        {
+          "test": "Total Cholesterol",
+          "result": "182",
+          "value": "182",
+          "unit": "mg/dL",
+          "reference": "< 200",
+          "flag": "N"
+        },
+        {
+          "test": "Triglycerides",
+          "result": "118",
+          "value": "118",
+          "unit": "mg/dL",
+          "reference": "< 150",
+          "flag": "N"
+        },
+        {
+          "test": "HDL",
+          "result": "48",
+          "value": "48",
+          "unit": "mg/dL",
+          "reference": "> 40",
+          "flag": "N"
+        },
+        {
+          "test": "LDL",
+          "result": "110",
+          "value": "110",
+          "unit": "mg/dL",
+          "reference": "< 130",
+          "flag": "N"
+        },
+        {
+          "test": "AST",
+          "result": "24",
+          "value": "24",
+          "unit": "U/L",
+          "reference": "0 - 40",
+          "flag": "N"
+        },
+        {
+          "test": "ALT",
+          "result": "29",
+          "value": "29",
+          "unit": "U/L",
+          "reference": "0 - 41",
+          "flag": "N"
+        },
+        {
+          "test": "Sodium",
+          "result": "139",
+          "value": "139",
+          "unit": "mmol/L",
+          "reference": "135 - 145",
+          "flag": "N"
+        },
+        {
+          "test": "Potassium",
+          "result": "4.20",
+          "value": "4.20",
+          "unit": "mmol/L",
+          "reference": "3.50 - 5.10",
+          "flag": "N"
+        },
+        {
+          "test": "Chloride",
+          "result": "102",
+          "value": "102",
+          "unit": "mmol/L",
+          "reference": "98 - 107",
+          "flag": "N"
+        },
+        {
+          "test": "Urine Color",
+          "result": "Yellow",
+          "value": "Yellow",
+          "unit": "",
+          "reference": "Yellow",
+          "flag": "N"
+        },
+        {
+          "test": "Urine Clarity",
+          "result": "Clear",
+          "value": "Clear",
+          "unit": "",
+          "reference": "Clear",
+          "flag": "N"
+        },
+        {
+          "test": "Specific Gravity",
+          "result": "1.020",
+          "value": "1.020",
+          "unit": "",
+          "reference": "1.005 - 1.030",
+          "flag": "N"
+        },
+        {
+          "test": "Urine pH",
+          "result": "6.0",
+          "value": "6.0",
+          "unit": "",
+          "reference": "5.0 - 8.0",
+          "flag": "N"
+        },
+        {
+          "test": "Protein",
+          "result": "Negative",
+          "value": "Negative",
+          "unit": "",
+          "reference": "Negative",
+          "flag": "N"
+        },
+        {
+          "test": "Glucose Urine",
+          "result": "Negative",
+          "value": "Negative",
+          "unit": "",
+          "reference": "Negative",
+          "flag": "N"
+        },
+        {
+          "test": "Ketones",
+          "result": "Negative",
+          "value": "Negative",
+          "unit": "",
+          "reference": "Negative",
+          "flag": "N"
+        },
+        {
+          "test": "Nitrite",
+          "result": "Negative",
+          "value": "Negative",
+          "unit": "",
+          "reference": "Negative",
           "flag": "N"
         }
       ]
@@ -340,7 +599,7 @@
         "path": "results[]",
         "label": "Results",
         "type": "array",
-        "sample": "5 rows"
+        "sample": "36 rows"
       },
       {
         "path": "results[].test",

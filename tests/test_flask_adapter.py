@@ -194,7 +194,7 @@ def test_flask_designer_api_previews_and_exports_posted_json(tmp_path: Path) -> 
                     "border_width": 1,
                     "border_color": "#000000",
                 },
-            }
+            },
         ],
         "bands": [],
         "assets": [],
@@ -534,14 +534,7 @@ def test_flask_preview_and_pdf_support_repeating_detail_template(tmp_path: Path)
                 },
             }
         ],
-        "data": {
-            "sample": {
-                "results": [
-                    {"test": "WBC", "value": "7.1"},
-                    {"test": "HGB", "value": "13.2"},
-                ]
-            }
-        },
+        "data": {"sample": {"results": flask_many_results()}},
         "assets": [],
     }
     designer.create_template(payload)
@@ -552,9 +545,12 @@ def test_flask_preview_and_pdf_support_repeating_detail_template(tmp_path: Path)
 
     assert preview_response.status_code == 200
     assert "WBC" in preview_response.get_data(as_text=True)
-    assert "HGB" in preview_response.get_data(as_text=True)
+    assert "Nitrite" in preview_response.get_data(as_text=True)
+    assert int(preview_response.headers["X-Slim-Report-Page-Count"]) > 1
+    assert preview_response.headers["X-Slim-Report-Repeated-Row-Count"] == "36"
     assert pdf_response.status_code == 200
     assert pdf_response.get_data().startswith(b"%PDF")
+    assert int(pdf_response.headers["X-Slim-Report-Page-Count"]) > 1
 
 
 def test_flask_preview_and_pdf_support_basic_table_template(tmp_path: Path) -> None:
@@ -564,10 +560,7 @@ def test_flask_preview_and_pdf_support_basic_table_template(tmp_path: Path) -> N
     @designer.provider("table_lab_result")
     def table_provider(record_id: str) -> dict[str, Any]:
         return {
-            "results": [
-                {"test": "WBC", "result": "7.10", "unit": "10^9/L"},
-                {"test": "HGB", "result": "14.20", "unit": "g/dL"},
-            ],
+            "results": flask_many_results(),
             "order": {"id": record_id},
         }
 
@@ -579,10 +572,14 @@ def test_flask_preview_and_pdf_support_basic_table_template(tmp_path: Path) -> N
     html = preview_response.get_data(as_text=True)
     assert "WBC" in html
     assert "7.10" in html
+    assert "Nitrite" in html
+    assert int(preview_response.headers["X-Slim-Report-Page-Count"]) > 1
+    assert preview_response.headers["X-Slim-Report-Table-Row-Count"] == "36"
     assert pdf_response.status_code == 200
     assert pdf_response.mimetype == "application/pdf"
     assert pdf_response.get_data().startswith(b"%PDF")
     assert len(pdf_response.get_data()) > 1000
+    assert int(pdf_response.headers["X-Slim-Report-Page-Count"]) > 1
 
 
 def test_flask_adapter_returns_404_for_missing_template(tmp_path: Path) -> None:
@@ -608,6 +605,20 @@ def create_app(tmp_path: Path) -> tuple[Flask, SlimReportDesigner]:
     designer = SlimReportDesigner()
     designer.init_app(app)
     return app, designer
+
+
+def flask_many_results() -> list[dict[str, str]]:
+    rows = [
+        {
+            "test": "WBC" if index == 1 else f"Test {index:02d}",
+            "result": "7.10" if index == 1 else str(index),
+            "value": "7.10" if index == 1 else str(index),
+            "unit": "mg/dL",
+        }
+        for index in range(1, 36)
+    ]
+    rows.append({"test": "Nitrite", "result": "Negative", "value": "Negative", "unit": ""})
+    return rows
 
 
 def template_payload(provider: str | None = "lab_result") -> dict[str, Any]:
