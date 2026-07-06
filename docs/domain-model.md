@@ -67,8 +67,8 @@ The domain model includes:
 - `Position`: top-left object coordinates
 - `Size`: object width and height
 - `Object` / `ReportObject`: base class for every drawable report object
-- `TextObject`, `FieldObject`, `LineObject`, `RectangleObject`: currently renderable concrete objects
-- `ImageObject`, `BarcodeObject`, `QRCodeObject`, `TableObject`: concrete placeholder objects for future renderer support
+- `TextObject`, `FieldObject`, `LineObject`, `RectangleObject`, `ImageObject`: currently renderable concrete objects
+- `BarcodeObject`, `QRCodeObject`, `TableObject`: concrete placeholder objects for future renderer support
 - `Style`: reusable named or inline style values with optional inheritance
 - `Binding`: data binding expression for field objects
 - `Band`: layout grouping primitive
@@ -149,9 +149,9 @@ box = Object(
 `box.position` and `box.size` stay synchronized with `box.x`, `box.y`, `box.width`, and
 `box.height`. Serializers continue to emit the existing coordinate fields.
 
-Placeholder page helpers such as `image()`, `barcode()`, `qrcode()`, and `table()` create domain
-objects for future renderer support. Current HTML/PDF rendering remains implemented for text,
-field, line, and rectangle.
+`image()` creates a renderable image object. `barcode()`, `qrcode()`, and `table()` create domain
+objects for future renderer support. Current HTML/PDF rendering supports text, field, line,
+rectangle, image, bands, and repeating Detail rows.
 
 Supported helpers:
 

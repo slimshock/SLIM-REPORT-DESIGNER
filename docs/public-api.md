@@ -197,7 +197,7 @@ page.rectangle(x=40, y=140, width=520, height=120)
 
 ### `page.image(...)`
 
-Adds an image placeholder object:
+Adds an image object:
 
 ```python
 page.image("logo.png", x=40, y=40, width=120, height=60)
@@ -205,7 +205,7 @@ page.image("logo.png", x=40, y=40, width=120, height=60)
 
 ### `page.barcode(...)`
 
-Adds a barcode placeholder object:
+Adds a barcode placeholder domain object. Barcode rendering is not implemented yet:
 
 ```python
 page.barcode("ABC123", x=40, y=120, width=200, height=60)
@@ -213,7 +213,7 @@ page.barcode("ABC123", x=40, y=120, width=200, height=60)
 
 ### `page.qrcode(...)`
 
-Adds a QR code placeholder object:
+Adds a QR code placeholder domain object. QR rendering is not implemented yet:
 
 ```python
 page.qrcode("https://example.test", x=40, y=200, width=100, height=100)
@@ -221,7 +221,7 @@ page.qrcode("https://example.test", x=40, y=200, width=100, height=100)
 
 ### `page.table(...)`
 
-Adds a table placeholder object:
+Adds a table placeholder domain object. Full table rendering is not implemented yet:
 
 ```python
 page.table(

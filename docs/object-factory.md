@@ -19,7 +19,7 @@ line = factory.create_line(x=50, y=110, width=500)
 box = factory.create_rectangle(x=40, y=140, width=520, height=120)
 ```
 
-Future-facing placeholder constructors are also available:
+Image construction is supported, and future-facing placeholder constructors are also available:
 
 ```python
 factory.create_image("logo.png")
@@ -27,6 +27,8 @@ factory.create_barcode("ABC123")
 factory.create_qrcode("https://example.test")
 factory.create_table(binding="results")
 ```
+
+`create_image(...)` creates a renderable image object. Barcode, QR code, and full table rendering are future work.
 
 ## Page Helpers
 

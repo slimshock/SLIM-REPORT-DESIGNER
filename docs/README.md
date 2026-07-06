@@ -4,23 +4,29 @@ Project documentation, architecture decisions, and design notes live here.
 
 Start with:
 
-- `principles.md`
-- `manifesto.md`
-- `architecture.md`
-- `public-api.md`
-- `domain-model.md`
-- `object-model.md`
-- `object-factory.md`
-- `builder.md`
-- `geometry.md`
-- `styles.md`
-- `serialization.md`
-- `lessons-learned.md`
-- `validation.md`
-- `cloning.md`
-- `querying.md`
-- `events.md`
-- `decisions/`
+- [Architecture](architecture.md)
+- [Public API](public-api.md)
+- [Designer UI](designer-ui.md)
+- [Flask integration](flask-integration.md)
+- [JSON template schema](json-template-schema.md)
+- [Data Fields](data-fields.md)
+- [Repeating Detail rows](repeating-detail-rows.md)
+- [Roadmap](roadmap.md)
+- [Domain model](domain-model.md)
+- [Object model](object-model.md)
+- [Object factory](object-factory.md)
+- [Builder](builder.md)
+- [Geometry](geometry.md)
+- [Styles](styles.md)
+- [Serialization](serialization.md)
+- [Validation](validation.md)
+- [Cloning](cloning.md)
+- [Querying](querying.md)
+- [Events](events.md)
+- [Principles](principles.md)
+- [Manifesto](manifesto.md)
+- [Lessons learned](lessons-learned.md)
+- [Architecture decisions](decisions/)
 
 Current implementation notes:
 
@@ -33,16 +39,7 @@ Current implementation notes:
 - `ObjectFactory` is the shared construction point for report objects.
 - Serialization lives in `slim_report_core.serialization`.
 - JSON is the first built-in serializer, not a required runtime model.
-- YAML can be added as another serializer, and XML can live as a serializer plugin.
-- Database storage may serialize or decompose `Report`, but load operations should return `Report`.
 - Domain validation lives on `Report.validate()`.
-- Deep cloning lives on domain models through `clone()`.
-- Object querying lives on `Report` and its callable `objects` collection.
-- Framework-independent events are exposed through `Report.on()` and `Report.off()`.
-- Builder classes create `Report` domain objects directly.
-- `Position` and `Size` provide readable geometry value objects while preserving the existing coordinate fields.
-- Reusable styles and style inheritance live in the `Style` domain object.
 - Low-level renderers receive `Report` objects, not JSON mappings.
 - Flask routes call core rendering functions and do not duplicate HTML or PDF rendering logic.
 - Core import boundaries are enforced by tests.
-- Sprint 4 architecture review is recorded in `decisions/0007-sprint-4-architecture-review.md`.
