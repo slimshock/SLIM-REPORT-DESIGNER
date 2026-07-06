@@ -543,6 +543,83 @@ if (table.columns.length < 3 || table.columns[1].binding !== 'result') {
     assert result.returncode == 0, result.stderr
 
 
+def test_designer_barcode_and_qrcode_defaults() -> None:
+    module_path = (
+        "./packages/slim_report_designer_ui/"
+        "slim_report_designer_ui/static/js/objects.js"
+    )
+    script = """
+import { createObject, normalizeTemplate, objectStyle } from '__MODULE_PATH__';
+
+const template = normalizeTemplate({
+  metadata: { name: 'Barcode Test' },
+  page: { width: 595, height: 842, unit: 'px' },
+  objects: [],
+  bands: [{ id: 'detail', type: 'detail', y: 0, height: 842 }],
+  data: {
+    fields: [
+      { path: 'patient.name', label: 'Patient Name', type: 'string' },
+      { path: 'order.id', label: 'Order ID', type: 'string' }
+    ],
+    sample: { order: { id: 'ORDER-1001' } }
+  },
+  assets: []
+});
+
+const barcode = createObject('barcode', template);
+if (barcode.type !== 'barcode' || barcode.width !== 160 || barcode.height !== 48) {
+  throw new Error('barcode defaults invalid');
+}
+if (barcode.binding !== 'order.id' || barcode.format !== 'code128' || !barcode.show_text) {
+  throw new Error('barcode binding or settings invalid');
+}
+if (objectStyle(barcode).foreground_color !== '#111827') {
+  throw new Error('barcode style invalid');
+}
+
+const qrcode = createObject('qrcode', template);
+if (qrcode.type !== 'qrcode' || qrcode.width !== 80 || qrcode.height !== 80) {
+  throw new Error('qrcode defaults invalid');
+}
+if (qrcode.binding !== 'order.id' || qrcode.error_correction !== 'M') {
+  throw new Error('qrcode binding or settings invalid');
+}
+if (objectStyle(qrcode).background_color !== '#ffffff') {
+  throw new Error('qrcode style invalid');
+}
+""".replace("__MODULE_PATH__", module_path)
+
+    result = subprocess.run(
+        ["node", "--input-type=module", "-e", script],
+        cwd=Path(__file__).resolve().parents[1],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
+def test_designer_qrcode_preview_uses_centered_square_content() -> None:
+    source = (
+        Path(__file__).resolve().parents[1]
+        / "packages/slim_report_designer_ui/slim_report_designer_ui/static/js/canvas.js"
+    ).read_text(encoding="utf-8")
+    css = (
+        Path(__file__).resolve().parents[1]
+        / "packages/slim_report_designer_ui/slim_report_designer_ui/static/css/designer.css"
+    ).read_text(encoding="utf-8")
+
+    assert "const qrSize = Math.max(Math.min(Number(object.width)" in source
+    assert "const qrX = Math.max(((Number(object.width)" in source
+    assert "const qrY = Math.max(((Number(object.height)" in source
+    assert "appendQrSvg(wrapper" in source
+    assert ".qrcode-preview {\n  position: relative;" in css
+    assert ".qrcode-grid {\n  position: absolute;" in css
+    qrcode_css = css[css.index(".qrcode-grid {") : css.index(".inspector-form {")]
+    assert "background-image:" not in qrcode_css
+
+
 def test_designer_band_helpers_normalize_and_clamp_objects() -> None:
     module_path = (
         "./packages/slim_report_designer_ui/"

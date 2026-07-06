@@ -429,6 +429,32 @@ def table_lab_result(record_id: str) -> dict[str, object]:
     }
 
 
+@designer.provider("barcode_qr_lab_result")
+def barcode_qr_lab_result(record_id: str) -> dict[str, object]:
+    return {
+        "laboratory": {
+            "name": "Cerebro Diagnostic System",
+            "address": "Cagayan de Oro City, Philippines",
+        },
+        "patient": {
+            "name": "JUAN DELA CRUZ",
+            "patient_no": "P-00001234",
+            "age": "34",
+            "sex": "Male",
+        },
+        "order": {
+            "id": record_id,
+            "date": "2026-07-06",
+            "physician": "Dr. Maria Santos",
+        },
+        "result": {
+            "HGB": "14.20",
+            "WBC": "7.10",
+            "PLT": "265",
+        },
+    }
+
+
 @app.get("/")
 def index():
     return redirect("/report-designer/templates/lab_result/preview/ORDER-1001")
@@ -461,6 +487,7 @@ def ensure_sample_templates() -> None:
     ensure_report_template("cerebro_cbc", create_cerebro_cbc_report)
     ensure_report_template("repeating_lab_result", create_repeating_lab_result_report)
     ensure_report_template("table_lab_result", create_table_lab_result_report)
+    ensure_report_template("barcode_qr_lab_result", create_barcode_qr_lab_result_report)
 
 
 def ensure_sample_template() -> None:
@@ -1112,6 +1139,281 @@ def create_table_lab_result_report() -> Report:
             {"path": "results[].flag", "label": "Flag", "type": "string", "sample": "N"},
         ],
     }
+    return report
+
+
+def create_barcode_qr_lab_result_report() -> Report:
+    report = Report("Barcode QR Laboratory Result")
+    report.metadata(
+        description="Laboratory result template with barcode and QR code objects.",
+        author="Slim Report Designer",
+        tags=["demo", "lab", "barcode", "qr"],
+        id="barcode_qr_lab_result",
+        provider="barcode_qr_lab_result",
+    )
+    page = report.page()
+    page.width = 595
+    page.height = 842
+    page.unit = "px"
+    report.bands = [
+        Band.from_dict(
+            {
+                "id": "page_header",
+                "type": "page_header",
+                "name": "Page Header",
+                "y": 0,
+                "height": 150,
+            }
+        ),
+        Band.from_dict(
+            {
+                "id": "detail",
+                "type": "detail",
+                "name": "Detail",
+                "y": 150,
+                "height": 620,
+            }
+        ),
+        Band.from_dict(
+            {
+                "id": "page_footer",
+                "type": "page_footer",
+                "name": "Page Footer",
+                "y": 770,
+                "height": 72,
+            }
+        ),
+    ]
+    page.field(
+        "laboratory.name",
+        x=40,
+        y=24,
+        width=320,
+        height=24,
+        id="lab_name",
+        font_size=18,
+        bold=True,
+        band="page_header",
+    )
+    page.text(
+        "Barcode and QR Result",
+        x=40,
+        y=58,
+        width=260,
+        height=22,
+        id="report_title",
+        font_size=15,
+        bold=True,
+        color="#2563eb",
+        band="page_header",
+    )
+    barcode = page.barcode(
+        "1234567890",
+        x=380,
+        y=32,
+        width=160,
+        height=48,
+        id="barcode_order_id",
+        symbology="code128",
+        show_text=True,
+        binding="order.id",
+        foreground_color="#111827",
+        background_color="#ffffff",
+        font_size=8,
+        band="page_header",
+    )
+    barcode.properties["format"] = "code128"
+    qr = page.qrcode(
+        "https://example.com",
+        x=480,
+        y=86,
+        width=70,
+        height=70,
+        id="qr_order_id",
+        binding="order.id",
+        error_correction="M",
+        foreground_color="#111827",
+        background_color="#ffffff",
+        band="page_header",
+    )
+    page.text(
+        "Patient:",
+        x=40,
+        y=100,
+        width=70,
+        height=18,
+        id="patient_label",
+        font_size=11,
+        bold=True,
+        band="page_header",
+    )
+    page.field(
+        "patient.name",
+        x=112,
+        y=100,
+        width=220,
+        height=18,
+        id="patient_name",
+        font_size=11,
+        band="page_header",
+    )
+    page.text(
+        "Order:",
+        x=40,
+        y=124,
+        width=70,
+        height=18,
+        id="order_label",
+        font_size=11,
+        bold=True,
+        band="page_header",
+    )
+    page.field(
+        "order.id",
+        x=112,
+        y=124,
+        width=180,
+        height=18,
+        id="order_id",
+        font_size=11,
+        band="page_header",
+    )
+    page.line(
+        x=40,
+        y=146,
+        width=515,
+        height=1,
+        id="header_line",
+        stroke_width=1,
+        stroke_color="#111827",
+        band="page_header",
+    )
+    page.rectangle(
+        x=40,
+        y=185,
+        width=515,
+        height=150,
+        id="result_box",
+        border_width=1,
+        border_color="#d1d5db",
+        background_color="#ffffff",
+        band="detail",
+    )
+    page.text(
+        "HGB",
+        x=70,
+        y=215,
+        width=90,
+        height=20,
+        id="hgb_label",
+        font_size=12,
+        bold=True,
+        band="detail",
+    )
+    page.field(
+        "result.HGB",
+        x=170,
+        y=215,
+        width=100,
+        height=20,
+        id="hgb_value",
+        font_size=12,
+        band="detail",
+    )
+    page.text(
+        "WBC",
+        x=70,
+        y=250,
+        width=90,
+        height=20,
+        id="wbc_label",
+        font_size=12,
+        bold=True,
+        band="detail",
+    )
+    page.field(
+        "result.WBC",
+        x=170,
+        y=250,
+        width=100,
+        height=20,
+        id="wbc_value",
+        font_size=12,
+        band="detail",
+    )
+    page.text(
+        "PLT",
+        x=70,
+        y=285,
+        width=90,
+        height=20,
+        id="plt_label",
+        font_size=12,
+        bold=True,
+        band="detail",
+    )
+    page.field(
+        "result.PLT",
+        x=170,
+        y=285,
+        width=100,
+        height=20,
+        id="plt_value",
+        font_size=12,
+        band="detail",
+    )
+    page.line(
+        x=40,
+        y=780,
+        width=515,
+        height=1,
+        id="footer_line",
+        stroke_width=1,
+        stroke_color="#d1d5db",
+        band="page_footer",
+    )
+    page.text(
+        "Generated by Slim Report Designer",
+        x=40,
+        y=802,
+        width=240,
+        height=16,
+        id="footer",
+        font_size=10,
+        band="page_footer",
+    )
+    for obj in report.objects:
+        if obj.properties.get("band"):
+            obj.band_id = obj.properties["band"]
+            obj.properties["band_id"] = obj.band_id
+    report.data = {
+        "sample": barcode_qr_lab_result("ORDER-1001"),
+        "fields": [
+            {
+                "path": "laboratory.name",
+                "label": "Laboratory Name",
+                "type": "string",
+                "sample": "Cerebro Diagnostic System",
+            },
+            {
+                "path": "patient.name",
+                "label": "Patient Name",
+                "type": "string",
+                "sample": "JUAN DELA CRUZ",
+            },
+            {
+                "path": "patient.patient_no",
+                "label": "Patient No.",
+                "type": "string",
+                "sample": "P-00001234",
+            },
+            {"path": "order.id", "label": "Order ID", "type": "string", "sample": "ORDER-1001"},
+            {"path": "result.HGB", "label": "HGB", "type": "string", "sample": "14.20"},
+            {"path": "result.WBC", "label": "WBC", "type": "string", "sample": "7.10"},
+            {"path": "result.PLT", "label": "PLT", "type": "string", "sample": "265"},
+        ],
+    }
+    qr.properties["value"] = "https://example.com"
     return report
 
 

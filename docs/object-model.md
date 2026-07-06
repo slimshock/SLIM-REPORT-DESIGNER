@@ -49,7 +49,7 @@ page.add(TextObject("Laboratory Result", x=50, y=30))
 
 ## Additional Objects
 
-Image and basic table objects are supported by the current designer, HTML preview, and PDF export. Barcode and QR code objects exist as domain placeholders for future renderer support:
+Image, barcode, QR code, and basic table objects are supported by the current designer, HTML preview, and PDF export:
 
 ```python
 page.barcode("ABC123", x=40, y=120, width=200, height=60)
@@ -75,7 +75,7 @@ page.table(
 )
 ```
 
-`page.barcode(...)` and `page.qrcode(...)` create domain objects, but barcode/QR rendering is not implemented yet. Advanced table features such as nested tables, merged cells, formulas, and grouped tables are future work.
+`page.barcode(...)` and `page.qrcode(...)` create renderable objects. They resolve `binding` first and fall back to literal `value` when no data value is available. Advanced table features such as nested tables, merged cells, formulas, and grouped tables are future work.
 
 ## Serialization
 

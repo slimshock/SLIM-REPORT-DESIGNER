@@ -1,5 +1,6 @@
 import { createDefaultTemplate, normalizeTemplate, objectStyle } from "./objects.js";
 import { ensureTemplateData, getArrayByPath, getFieldValue, getRowValue } from "./data_fields.js";
+import { qrSvgMarkup } from "./qrcode.js";
 
 export async function loadTemplate() {
   if (!apiBase()) {
@@ -211,7 +212,40 @@ function localObjectHtml(object, unit = "px", sampleData = {}, rowData = null, r
     }
     return `<div style="${imageBox}"><img src="${escapeHtml(src)}" alt="${escapeHtml(object.alt || object.properties?.alt || "")}" style="width:100%;height:100%;object-fit:${style.object_fit || "contain"};display:block"></div>`;
   }
+  if (object.type === "barcode") {
+    const barcodeValue = boundObjectValue(object, sampleData, rowData, repeatDataPath) || "Barcode";
+    const foreground = style.foreground_color || "#111827";
+    const background = style.background_color || "#ffffff";
+    const bars = `height:100%;background:repeating-linear-gradient(90deg,${foreground} 0 2px,transparent 2px 4px,${foreground} 4px 5px,transparent 5px 9px)`;
+    const label = object.show_text ?? object.properties?.show_text ?? true
+      ? `<div style="font:${style.font_size || 8}px Arial,sans-serif;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(barcodeValue)}</div>`
+      : "";
+    return `<div style="${box};display:grid;grid-template-rows:minmax(0,1fr) auto;padding:2px;color:${foreground};background:${background}"><div style="${bars}"></div>${label}</div>`;
+  }
+  if (object.type === "qrcode") {
+    const qrValue = boundObjectValue(object, sampleData, rowData, repeatDataPath) || "QR Code";
+    const foreground = style.foreground_color || "#111827";
+    const background = style.background_color || "#ffffff";
+    const qrSize = Math.min(Number(object.width) || 0, Number(object.height) || 0);
+    const qrX = Math.max(((Number(object.width) || 0) - qrSize) / 2, 0);
+    const qrY = Math.max(((Number(object.height) || 0) - qrSize) / 2, 0);
+    const grid = `position:absolute;left:${qrX}px;top:${qrY}px;width:${qrSize}px;height:${qrSize}px;box-sizing:border-box`;
+    return `<div title="${escapeHtml(qrValue)}" style="${box};background:${background};color:${foreground};overflow:hidden"><div style="${grid}">${qrSvgMarkup(qrValue, { foreground, background })}</div></div>`;
+  }
   return `<div style="${box}">${escapeHtml(value)}</div>`;
+}
+
+function boundObjectValue(object, sampleData = {}, rowData = null, repeatDataPath = "") {
+  const binding = object.binding || object.properties?.binding || "";
+  if (binding) {
+    const value = rowData
+      ? repeatedFieldValue(rowData, binding, repeatDataPath, sampleData)
+      : getFieldValue(sampleData, binding);
+    if (value !== undefined && value !== null && value !== "") {
+      return String(value);
+    }
+  }
+  return String(object.value ?? object.properties?.value ?? "");
 }
 
 function repeatedFieldValue(rowData, binding, repeatDataPath, sampleData) {

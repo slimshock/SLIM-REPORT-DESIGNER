@@ -582,6 +582,36 @@ def test_flask_preview_and_pdf_support_basic_table_template(tmp_path: Path) -> N
     assert int(pdf_response.headers["X-Slim-Report-Page-Count"]) > 1
 
 
+def test_flask_preview_and_pdf_support_barcode_qr_template(tmp_path: Path) -> None:
+    app, designer = create_app(tmp_path)
+    designer.create_template(barcode_qr_template_payload())
+
+    @designer.provider("barcode_qr_lab_result")
+    def barcode_qr_provider(record_id: str) -> dict[str, Any]:
+        return {
+            "order": {"id": record_id},
+            "patient": {"name": "JUAN DELA CRUZ", "patient_no": "P-00001234"},
+        }
+
+    client = app.test_client()
+    preview_response = client.get(
+        "/report-designer/templates/barcode_qr_lab_result/preview/ORDER-42"
+    )
+    pdf_response = client.get(
+        "/report-designer/templates/barcode_qr_lab_result/export/pdf/ORDER-42"
+    )
+
+    assert preview_response.status_code == 200
+    html = preview_response.get_data(as_text=True)
+    assert "ORDER-42" in html
+    assert 'data-slim-object="barcode_order_id"' in html
+    assert 'data-slim-object="qr_order_id"' in html
+    assert pdf_response.status_code == 200
+    assert pdf_response.mimetype == "application/pdf"
+    assert pdf_response.get_data().startswith(b"%PDF")
+    assert len(pdf_response.get_data()) > 1000
+
+
 def test_flask_adapter_returns_404_for_missing_template(tmp_path: Path) -> None:
     app, _designer = create_app(tmp_path)
 
@@ -741,6 +771,48 @@ def table_template_payload() -> dict[str, Any]:
         ],
         "bands": [],
         "data": {"sample": {"results": [{"test": "WBC", "result": "7.10", "unit": "10^9/L"}]}},
+        "assets": [],
+    }
+
+
+def barcode_qr_template_payload() -> dict[str, Any]:
+    return {
+        "version": "1.0",
+        "metadata": {
+            "title": "Barcode QR Lab Result",
+            "custom": {
+                "id": "barcode_qr_lab_result",
+                "provider": "barcode_qr_lab_result",
+            },
+        },
+        "page": {"width": 595, "height": 842, "unit": "px"},
+        "objects": [
+            {
+                "id": "barcode_order_id",
+                "type": "barcode",
+                "x": 40,
+                "y": 40,
+                "width": 160,
+                "height": 48,
+                "value": "1234567890",
+                "binding": "order.id",
+                "format": "code128",
+                "show_text": True,
+            },
+            {
+                "id": "qr_order_id",
+                "type": "qrcode",
+                "x": 230,
+                "y": 32,
+                "width": 80,
+                "height": 80,
+                "value": "https://example.com",
+                "binding": "order.id",
+                "error_correction": "M",
+            },
+        ],
+        "bands": [],
+        "data": {"sample": {"order": {"id": "ORDER-1001"}}},
         "assets": [],
     }
 

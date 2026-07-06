@@ -17,10 +17,12 @@ from .context import (
     get_row_value,
     get_value_by_path,
     object_pt,
+    resolve_bound_object_value,
     resolve_object_value,
     resolve_repeated_object_value,
 )
 from .pagination import build_render_pages
+from .qrcode import QR_GRID_SIZE, qr_module_matrix
 
 
 def render_pdf(report: Report, data: dict[str, Any] | None = None) -> bytes:
@@ -70,6 +72,12 @@ def render_pdf_object(canvas: Any, obj: RenderObject, context: RenderContext) ->
         return
     if obj.type == "table":
         _render_table(canvas, obj, context)
+        return
+    if obj.type == "barcode":
+        _render_barcode(canvas, obj, context)
+        return
+    if obj.type == "qrcode":
+        _render_qrcode(canvas, obj, context)
         return
     raise ReportValidationError(f"Unsupported report object type: {obj.type}.")
 
@@ -137,6 +145,19 @@ def _render_field(canvas: Any, obj: RenderObject, context: RenderContext) -> Non
     else:
         value = resolve_object_value(obj, context.data)
     _draw_text(canvas, obj, context, value)
+
+
+def _object_value(obj: RenderObject, context: RenderContext) -> str:
+    row = context.data.get("__slim_row__") if isinstance(context.data, dict) else None
+    repeat_path = (
+        context.data.get("__slim_repeat_path__", "") if isinstance(context.data, dict) else ""
+    )
+    return resolve_bound_object_value(
+        obj,
+        context.data,
+        row if isinstance(row, dict) else None,
+        str(repeat_path),
+    )
 
 
 def _render_line(canvas: Any, obj: RenderObject, context: RenderContext) -> None:
@@ -213,6 +234,117 @@ def _render_image(canvas: Any, obj: RenderObject, context: RenderContext) -> Non
     except Exception:
         _set_alpha(canvas, 1)
         _draw_image_placeholder(canvas, x, y, width, height, context)
+
+
+def _render_barcode(canvas: Any, obj: RenderObject, context: RenderContext) -> None:
+    x, y, width, height = object_pt(obj, context.page.unit)
+    value = _object_value(obj, context)
+    style = obj.style
+    background = style.get("background_color", "#ffffff")
+    foreground = style.get("foreground_color", "#111827")
+    font_size = _font_size_pt(style.get("font_size", 8), context)
+    show_text = bool(obj.properties.get("show_text", True))
+    text_height = font_size + 4 if show_text else 0
+    bar_height = max(height - text_height, 4)
+
+    if not _is_transparent(background):
+        _set_fill_color(canvas, background)
+        canvas.rect(x, _pdf_y(context, y + height), width, height, stroke=0, fill=1)
+
+    if not value:
+        _draw_barcode_placeholder(canvas, x, y, width, height, context, "Barcode")
+        return
+
+    try:
+        from reportlab.graphics.barcode.code128 import Code128
+
+        barcode = Code128(value, barHeight=bar_height, humanReadable=False)
+        if hasattr(barcode, "barFillColor"):
+            barcode.barFillColor = _hex_color(foreground)
+        scale_x = width / max(float(getattr(barcode, "width", width) or width), 1)
+        scale_y = bar_height / max(float(getattr(barcode, "height", bar_height) or bar_height), 1)
+        canvas.saveState()
+        canvas.translate(x, _pdf_y(context, y + bar_height))
+        canvas.scale(scale_x, scale_y)
+        barcode.drawOn(canvas, 0, 0)
+        canvas.restoreState()
+    except Exception:
+        _draw_barcode_placeholder(canvas, x, y, width, bar_height, context, value)
+
+    if show_text:
+        canvas.setFont("Helvetica", font_size)
+        _set_fill_color(canvas, foreground)
+        text_width = canvas.stringWidth(value, "Helvetica", font_size)
+        text_x = x + max((width - text_width) / 2, 0)
+        canvas.drawString(text_x, _pdf_y(context, y + bar_height + font_size), value)
+
+
+def _render_qrcode(canvas: Any, obj: RenderObject, context: RenderContext) -> None:
+    x, y, width, height = object_pt(obj, context.page.unit)
+    value = _object_value(obj, context) or "QR Code"
+    style = obj.style
+    background = style.get("background_color", "#ffffff")
+    foreground = style.get("foreground_color", "#111827")
+    size = min(width, height)
+    qr_x = x + max((width - size) / 2, 0)
+    qr_y = y + max((height - size) / 2, 0)
+
+    if not _is_transparent(background):
+        _set_fill_color(canvas, background)
+        canvas.rect(x, _pdf_y(context, y + height), width, height, stroke=0, fill=1)
+
+    _draw_qr_placeholder(canvas, qr_x, qr_y, size, context, foreground, background, value)
+
+
+def _draw_barcode_placeholder(
+    canvas: Any,
+    x: float,
+    y: float,
+    width: float,
+    height: float,
+    context: RenderContext,
+    label: str,
+) -> None:
+    _set_fill_color(canvas, "#111827")
+    cursor = x
+    pattern = (2, 1, 1, 3, 2, 2, 1, 1, 3, 1)
+    index = 0
+    while cursor < x + width:
+        bar_width = pattern[index % len(pattern)]
+        canvas.rect(cursor, _pdf_y(context, y + height), bar_width, height, stroke=0, fill=1)
+        cursor += bar_width + 2
+        index += 1
+    canvas.setFont("Helvetica", 7)
+    _set_fill_color(canvas, "#64748b")
+    canvas.drawString(x + 2, _pdf_y(context, y + height + 8), str(label)[:40])
+
+
+def _draw_qr_placeholder(
+    canvas: Any,
+    x: float,
+    y: float,
+    size: float,
+    context: RenderContext,
+    foreground: Any,
+    background: Any,
+    value: str,
+) -> None:
+    if not _is_transparent(background):
+        _set_fill_color(canvas, background)
+        canvas.rect(x, _pdf_y(context, y + size), size, size, stroke=0, fill=1)
+    cell = size / QR_GRID_SIZE
+    _set_fill_color(canvas, foreground)
+    for row, modules in enumerate(qr_module_matrix(value)):
+        for col, enabled in enumerate(modules):
+            if enabled:
+                canvas.rect(
+                    x + (col * cell),
+                    _pdf_y(context, y + ((row + 1) * cell)),
+                    cell,
+                    cell,
+                    stroke=0,
+                    fill=1,
+                )
 
 
 def _render_table(canvas: Any, obj: RenderObject, context: RenderContext) -> None:

@@ -2,7 +2,7 @@
 
 The Designer UI is the framework-agnostic visual editor for Slim Report Designer templates.
 
-It is an early-alpha editor for building and editing JSON report templates with a visual canvas. It is useful today for lab-style reports, fixed layouts, fields, bands, images, basic tables, and repeating Detail rows.
+It is an early-alpha editor for building and editing JSON report templates with a visual canvas. It is useful today for lab-style reports, fixed layouts, fields, bands, images, barcode/QR labels, basic tables, and repeating Detail rows.
 
 ## Purpose
 
@@ -48,6 +48,7 @@ http://127.0.0.1:5000/report-designer/designer?template=lab_result
 http://127.0.0.1:5000/report-designer/designer?template=cerebro_cbc
 http://127.0.0.1:5000/report-designer/designer?template=repeating_lab_result
 http://127.0.0.1:5000/report-designer/designer?template=table_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=barcode_qr_lab_result
 ```
 
 ## Supported Tools
@@ -57,6 +58,8 @@ http://127.0.0.1:5000/report-designer/designer?template=table_lab_result
 - Line
 - Rectangle
 - Image
+- Barcode
+- QR Code
 - Table
 
 ## Supported Canvas Features
@@ -78,6 +81,7 @@ http://127.0.0.1:5000/report-designer/designer?template=table_lab_result
 - Placeholder/sample display toggle
 - Repeating Detail rows
 - Basic array-bound tables
+- Barcode and QR code objects
 - Basic preview/export pagination for repeating Detail rows and Detail-band tables
 
 ## Local Version History
@@ -110,5 +114,5 @@ Flask mode:
 - Advanced table features such as nested tables, merged cells, formulas, grouped tables, and complex pagination are not implemented yet.
 - Custom page breaks, group pagination, and widow/orphan rules are not implemented yet.
 - Group headers/footers are not implemented yet.
-- Barcode/QR rendering is not implemented yet.
+- Barcode/QR objects render without additional frontend dependencies. Current built-in output uses deterministic fallback visuals rather than a full barcode/QR encoder for every symbology.
 - Django and FastAPI adapters are future work.

@@ -190,6 +190,7 @@ class ObjectFactory:
         position: Position | Mapping[str, Any] | None = None,
         size: Size | Mapping[str, Any] | None = None,
         symbology: str = "code128",
+        show_text: bool | None = None,
         style: Style | Mapping[str, Any] | None = None,
         style_values: Mapping[str, Any] | None = None,
         properties: Mapping[str, Any] | None = None,
@@ -206,6 +207,7 @@ class ObjectFactory:
             position=position,
             size=size,
             symbology=symbology,
+            show_text=show_text,
             style=_style_with_values(style, style_values),
             properties=properties,
             **common,
@@ -222,6 +224,7 @@ class ObjectFactory:
         height: float = 100.0,
         position: Position | Mapping[str, Any] | None = None,
         size: Size | Mapping[str, Any] | None = None,
+        error_correction: str = "M",
         style: Style | Mapping[str, Any] | None = None,
         style_values: Mapping[str, Any] | None = None,
         properties: Mapping[str, Any] | None = None,
@@ -237,6 +240,7 @@ class ObjectFactory:
             height=height,
             position=position,
             size=size,
+            error_correction=str((properties or {}).get("error_correction", error_correction)),
             style=_style_with_values(style, style_values),
             properties=properties,
             **common,
@@ -361,6 +365,16 @@ class ObjectFactory:
             for key in ("data_path", "header", "row", "border", "columns"):
                 if key in mapping:
                     properties[key] = mapping[key]
+        if object_type == "barcode":
+            for key in ("value", "format", "symbology", "show_text"):
+                if key in mapping:
+                    properties[key] = mapping[key]
+            if "format" in properties and "symbology" not in properties:
+                properties["symbology"] = properties["format"]
+        if object_type == "qrcode":
+            for key in ("value", "error_correction"):
+                if key in mapping:
+                    properties[key] = mapping[key]
         target_class = object_class or _object_class(object_type)
         common = {
             "id": _required_str(mapping, "id", context="Report object"),
@@ -394,11 +408,16 @@ class ObjectFactory:
         if target_class is BarcodeObject:
             return self.create_barcode(
                 str(properties.get("value", "")),
-                symbology=str(properties.get("symbology", "code128")),
+                symbology=str(properties.get("format", properties.get("symbology", "code128"))),
+                show_text=bool(properties.get("show_text", True)),
                 **common,
             )
         if target_class is QRCodeObject:
-            return self.create_qrcode(str(properties.get("value", "")), **common)
+            return self.create_qrcode(
+                str(properties.get("value", "")),
+                error_correction=str(properties.get("error_correction", "M")),
+                **common,
+            )
         if target_class is TableObject:
             columns = properties.get("columns")
             header = properties.get("header")
@@ -495,6 +514,7 @@ _STYLE_KEYS = (
     "fill_color",
     "font_family",
     "font_size",
+    "foreground_color",
     "italic",
     "line_height",
     "line_width",

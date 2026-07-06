@@ -37,7 +37,7 @@ Implemented now:
 - JSON template serialization through `JSONSerializer`
 - HTML preview renderer
 - ReportLab PDF renderer
-- Text, field, line, rectangle, image, and basic table objects
+- Text, field, line, rectangle, image, barcode, QR code, and basic table objects
 - Visual designer canvas
 - Drag and drop
 - Resize handles
@@ -60,6 +60,7 @@ Implemented now:
 - Repeating Detail rows
 - Row-relative bindings for repeating data
 - Basic array-bound Table object
+- Barcode and QR code objects with designer, HTML preview, and PDF export support
 - Basic multi-page pagination for repeating Detail rows and Detail-band tables
 - Flask-hosted preview and PDF export
 - CLI commands for validation, inspection, and rendering
@@ -67,7 +68,6 @@ Implemented now:
 Not implemented yet:
 
 - Advanced table features such as nested tables, merged cells, formulas, and grouped tables
-- Barcode/QR rendering
 - Advanced pagination controls such as custom page breaks and widow/orphan rules
 - Group headers and footers
 - Django adapter
@@ -174,9 +174,10 @@ http://127.0.0.1:5000/report-designer/designer?template=lab_result
 http://127.0.0.1:5000/report-designer/designer?template=cerebro_cbc
 http://127.0.0.1:5000/report-designer/designer?template=repeating_lab_result
 http://127.0.0.1:5000/report-designer/designer?template=table_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=barcode_qr_lab_result
 ```
 
-The Flask example loads templates from `examples/flask_app/sample_templates/`. Preview works, PDF export works, and sample/provider data can be used for field rendering. The `repeating_lab_result` template demonstrates paginated repeating Detail rows, and `table_lab_result` demonstrates the paginated basic Table object.
+The Flask example loads templates from `examples/flask_app/sample_templates/`. Preview works, PDF export works, and sample/provider data can be used for field rendering. The `repeating_lab_result` template demonstrates paginated repeating Detail rows, `table_lab_result` demonstrates the paginated basic Table object, and `barcode_qr_lab_result` demonstrates barcode/QR objects.
 
 ## Serialization
 

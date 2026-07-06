@@ -1,6 +1,7 @@
 import { clampObjectToBand, getBandForObject, objectStyle } from "./objects.js";
 import { gridSizeForUnit, maybeSnap, screenDeltaToRealDelta } from "./canvas_settings.js";
 import { getArrayByPath, getFieldValue, getRowValue } from "./data_fields.js";
+import { appendQrSvg } from "./qrcode.js";
 
 export function createCanvasController({
   canvas,
@@ -471,6 +472,19 @@ function renderObject(object, selectedIds = [], primarySelectedId = null, unit =
     element.style.color = "";
     element.style.fontSize = "";
     element.appendChild(renderTablePreview(object, options));
+  } else if (object.type === "barcode") {
+    element.classList.add("barcode-object");
+    element.style.display = "grid";
+    element.style.background = style.background_color || "#ffffff";
+    element.style.color = style.foreground_color || "#111827";
+    element.appendChild(renderBarcodePreview(object, options));
+  } else if (object.type === "qrcode") {
+    element.classList.add("qrcode-object");
+    element.style.display = "grid";
+    element.style.padding = "0";
+    element.style.background = style.background_color || "#ffffff";
+    element.style.color = style.foreground_color || "#111827";
+    element.appendChild(renderQrCodePreview(object, options));
   }
 
   if (object.locked) {
@@ -560,6 +574,54 @@ function renderTablePreview(object, options = {}) {
   }
   table.appendChild(tbody);
   return table;
+}
+
+function renderBarcodePreview(object, options = {}) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "barcode-preview";
+  const bars = document.createElement("div");
+  bars.className = "barcode-bars";
+  const label = document.createElement("div");
+  label.className = "barcode-label";
+  label.textContent = objectPreviewValue(object, options) || "Barcode";
+  wrapper.appendChild(bars);
+  if (object.show_text ?? object.properties?.show_text ?? true) {
+    wrapper.appendChild(label);
+  }
+  return wrapper;
+}
+
+function renderQrCodePreview(object, options = {}) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "qrcode-preview";
+  const value = objectPreviewValue(object, options) || "QR Code";
+  const style = objectStyle(object);
+  wrapper.title = value;
+  const qrSize = Math.max(Math.min(Number(object.width) || 0, Number(object.height) || 0), 0);
+  const qrX = Math.max(((Number(object.width) || 0) - qrSize) / 2, 0);
+  const qrY = Math.max(((Number(object.height) || 0) - qrSize) / 2, 0);
+  appendQrSvg(wrapper, {
+    value,
+    left: qrX,
+    top: qrY,
+    size: qrSize,
+    foreground: "currentColor",
+    background: style.background_color || "#ffffff"
+  });
+  return wrapper;
+}
+
+function objectPreviewValue(object, options = {}) {
+  const binding = object.binding || object.properties?.binding || "";
+  if (options.showSampleData && binding) {
+    const value = options.rowData
+      ? repeatedFieldValue(options.rowData, binding, options.repeatDataPath, options.sampleData)
+      : getFieldValue(options.sampleData, binding);
+    if (value !== undefined && value !== null && value !== "") {
+      return String(value);
+    }
+  }
+  return String(object.value ?? object.properties?.value ?? binding ?? "");
 }
 
 function tableSpec(object) {

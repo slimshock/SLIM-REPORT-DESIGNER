@@ -196,6 +196,94 @@ def test_pdf_rendering_basic_table_missing_data_path_does_not_crash() -> None:
     assert len(pdf) > 1000
 
 
+def test_html_rendering_barcode_and_qrcode_objects() -> None:
+    report = barcode_qr_report()
+
+    html = render_html(report, {"order": {"id": "ORDER-42"}})
+
+    assert 'data-slim-object="barcode_order_id"' in html
+    assert 'data-slim-object="qr_order_id"' in html
+    assert "ORDER-42" in html
+    assert "repeating-linear-gradient" in html
+    assert 'viewBox="0 0 29 29"' in html
+
+
+def test_html_rendering_qrcode_content_is_square_and_centered() -> None:
+    report = JSONSerializer().load_mapping(
+        {
+            "version": "1.0",
+            "metadata": {"title": "Non-square QR"},
+            "page": {"width": 300, "height": 200, "unit": "px"},
+            "objects": [
+                {
+                    "id": "wide_qr",
+                    "type": "qrcode",
+                    "x": 10,
+                    "y": 20,
+                    "width": 140,
+                    "height": 70,
+                    "value": "ORDER-42",
+                }
+            ],
+            "bands": [],
+            "assets": [],
+        }
+    )
+
+    html = render_html(report, {})
+
+    assert 'data-slim-object="wide_qr"' in html
+    assert "left: 35.0px; top: 0.0px;" in html
+    assert "width: 70.0px; height: 70.0px;" in html
+    assert "background-image: linear-gradient" not in html
+
+
+def test_html_rendering_barcode_and_qrcode_value_fallbacks() -> None:
+    report = barcode_qr_report()
+
+    html = render_html(report, {})
+
+    assert "1234567890" in html
+    assert "https://example.com" in html
+
+
+def test_pdf_rendering_barcode_and_qrcode_objects() -> None:
+    report = barcode_qr_report()
+
+    pdf = render_pdf(report, {"order": {"id": "ORDER-42"}})
+
+    assert pdf.startswith(b"%PDF")
+    assert len(pdf) > 1000
+
+
+def test_pdf_rendering_non_square_qrcode_object_does_not_crash() -> None:
+    report = JSONSerializer().load_mapping(
+        {
+            "version": "1.0",
+            "metadata": {"title": "Non-square QR PDF"},
+            "page": {"width": 300, "height": 200, "unit": "px"},
+            "objects": [
+                {
+                    "id": "wide_qr",
+                    "type": "qrcode",
+                    "x": 10,
+                    "y": 20,
+                    "width": 140,
+                    "height": 70,
+                    "value": "ORDER-42",
+                }
+            ],
+            "bands": [],
+            "assets": [],
+        }
+    )
+
+    pdf = render_pdf(report, {})
+
+    assert pdf.startswith(b"%PDF")
+    assert len(pdf) > 1000
+
+
 def test_render_context_applies_shared_style_defaults() -> None:
     report = JSONSerializer().load_mapping(
         {
@@ -291,6 +379,7 @@ def test_sample_templates_render_html_and_pdf() -> None:
         "lab_result",
         "repeating_lab_result",
         "table_lab_result",
+        "barcode_qr_lab_result",
     ):
         report = JSONSerializer().load(
             REPO_ROOT / f"examples/flask_app/sample_templates/{template_name}.json"
@@ -632,6 +721,52 @@ def table_report() -> Report:
                         },
                     ],
                 }
+            ],
+            "bands": [],
+            "assets": [],
+        }
+    )
+
+
+def barcode_qr_report() -> Report:
+    return JSONSerializer().load_mapping(
+        {
+            "version": "1.0",
+            "metadata": {"title": "Barcode QR"},
+            "page": {"width": 595, "height": 842, "unit": "px"},
+            "objects": [
+                {
+                    "id": "barcode_order_id",
+                    "type": "barcode",
+                    "x": 40,
+                    "y": 40,
+                    "width": 160,
+                    "height": 48,
+                    "value": "1234567890",
+                    "binding": "order.id",
+                    "format": "code128",
+                    "show_text": True,
+                    "style": {
+                        "foreground_color": "#111827",
+                        "background_color": "#ffffff",
+                        "font_size": 8,
+                    },
+                },
+                {
+                    "id": "qr_order_id",
+                    "type": "qrcode",
+                    "x": 220,
+                    "y": 32,
+                    "width": 80,
+                    "height": 80,
+                    "value": "https://example.com",
+                    "binding": "order.id",
+                    "error_correction": "M",
+                    "style": {
+                        "foreground_color": "#111827",
+                        "background_color": "#ffffff",
+                    },
+                },
             ],
             "bands": [],
             "assets": [],

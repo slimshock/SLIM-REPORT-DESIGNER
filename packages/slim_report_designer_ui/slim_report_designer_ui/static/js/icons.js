@@ -16,6 +16,8 @@ const ICONS = {
   rectangle: '<rect x="4" y="6" width="16" height="12"/>',
   image: '<rect x="4" y="5" width="16" height="14" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M4 16l4-4 3 3 2-2 7 6"/>',
   table: '<rect x="4" y="5" width="16" height="14" rx="1"/><path d="M4 10h16"/><path d="M4 14h16"/><path d="M9 5v14"/><path d="M15 5v14"/>',
+  barcode: '<path d="M4 5v14"/><path d="M7 5v14"/><path d="M11 5v14"/><path d="M13 5v14"/><path d="M17 5v14"/><path d="M20 5v14"/>',
+  qrcode: '<rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><path d="M14 14h2v2h-2z"/><path d="M18 14h2v6h-6v-2h4z"/>',
   history: '<path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v6h6"/><path d="M12 7v5l4 2"/>',
   restore: '<path d="M4 12a8 8 0 1 0 3-6.3"/><path d="M4 5v5h5"/><path d="M12 8v5h4"/>',
   close: '<path d="M6 6l12 12"/><path d="M18 6L6 18"/>',

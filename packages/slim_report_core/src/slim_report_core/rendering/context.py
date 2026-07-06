@@ -70,6 +70,17 @@ TABLE_STYLE_DEFAULTS: dict[str, Any] = {
     "overflow": "hidden",
 }
 
+BARCODE_STYLE_DEFAULTS: dict[str, Any] = {
+    "foreground_color": "#111827",
+    "background_color": "#ffffff",
+    "font_size": 8,
+}
+
+QRCODE_STYLE_DEFAULTS: dict[str, Any] = {
+    "foreground_color": "#111827",
+    "background_color": "#ffffff",
+}
+
 UNIT_TO_PX = {
     "px": 1.0,
     "pt": CSS_DPI / POINTS_PER_INCH,
@@ -395,6 +406,25 @@ def resolve_repeated_object_value(
     return str(resolve_expression(obj.binding, data))
 
 
+def resolve_bound_object_value(
+    obj: RenderObject,
+    data: Mapping[str, Any],
+    row: Mapping[str, Any] | None = None,
+    repeat_data_path: str = "",
+) -> str:
+    """Resolve a binding-capable non-field object with a value fallback."""
+    if row is not None and obj.binding:
+        row_value = get_row_value(row, obj.binding, repeat_data_path)
+        if row_value not in ("", None):
+            return str(row_value)
+    if obj.binding:
+        value = resolve_expression(obj.binding, data)
+        if value not in ("", None):
+            return str(value)
+    value = obj.properties.get("value", "")
+    return "" if value is None else str(value)
+
+
 def get_value_by_path(data: Any, path: str) -> Any:
     """Return a nested value from dict/list data using dot and [] path syntax."""
     value = data
@@ -490,6 +520,10 @@ def default_style_for_type(object_type: str) -> dict[str, Any]:
         return dict(IMAGE_STYLE_DEFAULTS)
     if object_type == "table":
         return dict(TABLE_STYLE_DEFAULTS)
+    if object_type == "barcode":
+        return dict(BARCODE_STYLE_DEFAULTS)
+    if object_type == "qrcode":
+        return dict(QRCODE_STYLE_DEFAULTS)
     return dict(TEXT_STYLE_DEFAULTS)
 
 
@@ -503,6 +537,7 @@ _STYLE_KEYS = (
     "fill_color",
     "font_family",
     "font_size",
+    "foreground_color",
     "italic",
     "line_height",
     "line_width",

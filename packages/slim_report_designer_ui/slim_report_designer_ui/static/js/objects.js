@@ -98,6 +98,12 @@ export function normalizeObject(object) {
   if (type === "table") {
     normalizeTableObject(normalized, object);
   }
+  if (type === "barcode") {
+    normalizeBarcodeObject(normalized, object);
+  }
+  if (type === "qrcode") {
+    normalizeQrCodeObject(normalized, object);
+  }
   const style = explicitStyle(object);
   if (Object.keys(style).length > 0) {
     normalized.style = style;
@@ -169,6 +175,29 @@ export function createObject(type, template) {
     base.properties.border = base.border;
     base.properties.columns = base.columns;
     base.properties.style = defaultStyleForType("table");
+  } else if (type === "barcode") {
+    base.width = 160;
+    base.height = 48;
+    base.value = "1234567890";
+    base.binding = firstUsefulBinding(template);
+    base.format = "code128";
+    base.show_text = true;
+    base.properties.value = base.value;
+    base.properties.binding = base.binding;
+    base.properties.format = base.format;
+    base.properties.symbology = base.format;
+    base.properties.show_text = base.show_text;
+    base.properties.style = defaultStyleForType("barcode");
+  } else if (type === "qrcode") {
+    base.width = 80;
+    base.height = 80;
+    base.value = "https://example.com";
+    base.binding = firstUsefulBinding(template);
+    base.error_correction = "M";
+    base.properties.value = base.value;
+    base.properties.binding = base.binding;
+    base.properties.error_correction = base.error_correction;
+    base.properties.style = defaultStyleForType("qrcode");
   }
 
   return normalizeObject(base);
@@ -336,6 +365,19 @@ export function defaultStyleForType(type) {
       background_color: "#ffffff",
       border_radius: 0,
       overflow: "hidden"
+    };
+  }
+  if (type === "barcode") {
+    return {
+      foreground_color: "#111827",
+      background_color: "#ffffff",
+      font_size: 8
+    };
+  }
+  if (type === "qrcode") {
+    return {
+      foreground_color: "#111827",
+      background_color: "#ffffff"
     };
   }
   return {
@@ -637,6 +679,12 @@ function defaultHeightForType(type) {
   if (type === "table") {
     return 220;
   }
+  if (type === "barcode") {
+    return 48;
+  }
+  if (type === "qrcode") {
+    return 80;
+  }
   return 32;
 }
 
@@ -657,6 +705,7 @@ function explicitStyle(object) {
     "fill_color",
     "font_family",
     "font_size",
+    "foreground_color",
     "italic",
     "line_height",
     "line_width",
@@ -705,6 +754,34 @@ function normalizeTableObject(normalized, source) {
   }
 }
 
+function normalizeBarcodeObject(normalized, source) {
+  const properties = source.properties || {};
+  const binding = String(source.binding ?? properties.binding ?? "");
+  normalized.binding = binding;
+  normalized.properties.binding = binding;
+  normalized.value = String(source.value ?? properties.value ?? "1234567890");
+  normalized.format = String(source.format ?? properties.format ?? properties.symbology ?? "code128");
+  normalized.show_text = Boolean(source.show_text ?? properties.show_text ?? true);
+  normalized.properties.value = normalized.value;
+  normalized.properties.format = normalized.format;
+  normalized.properties.symbology = normalized.format;
+  normalized.properties.show_text = normalized.show_text;
+}
+
+function normalizeQrCodeObject(normalized, source) {
+  const properties = source.properties || {};
+  const binding = String(source.binding ?? properties.binding ?? "");
+  normalized.binding = binding;
+  normalized.properties.binding = binding;
+  normalized.value = String(source.value ?? properties.value ?? "https://example.com");
+  normalized.error_correction = String(source.error_correction ?? properties.error_correction ?? "M");
+  if (!["L", "M", "Q", "H"].includes(normalized.error_correction)) {
+    normalized.error_correction = "M";
+  }
+  normalized.properties.value = normalized.value;
+  normalized.properties.error_correction = normalized.error_correction;
+}
+
 function tableColumnsForDataPath(template, dataPath) {
   const fields = getArrayChildFields(template, dataPath).slice(0, 6);
   if (fields.length === 0) {
@@ -724,6 +801,18 @@ function firstArrayDataPath(template) {
   const fields = template?.data?.fields || [];
   const arrayField = fields.find((field) => String(field.path || "").endsWith("[]"));
   return normalizeArrayFieldPath(arrayField?.path || "");
+}
+
+function firstUsefulBinding(template) {
+  const fields = template?.data?.fields || [];
+  const paths = fields
+    .map((field) => String(field.path || ""))
+    .filter((path) => path && !path.includes("[]"));
+  return paths.find((path) => path === "order.id")
+    || paths.find((path) => path.endsWith(".id"))
+    || paths.find((path) => path.includes("patient_no"))
+    || paths[0]
+    || "";
 }
 
 function defaultTableColumns() {

@@ -9,6 +9,7 @@ This example demonstrates the Flask-hosted designer and the core rendering flow:
 - export as PDF
 - demonstrate repeating Detail rows
 - demonstrate basic pagination for repeated rows and tables
+- demonstrate barcode and QR objects
 
 Flask does not own rendering. The adapter loads templates into `Report` and calls `slim_report_core`.
 
@@ -30,6 +31,7 @@ http://127.0.0.1:5000/report-designer/designer?template=lab_result
 http://127.0.0.1:5000/report-designer/designer?template=cerebro_cbc
 http://127.0.0.1:5000/report-designer/designer?template=repeating_lab_result
 http://127.0.0.1:5000/report-designer/designer?template=table_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=barcode_qr_lab_result
 ```
 
 ## Preview And PDF
@@ -47,6 +49,8 @@ http://127.0.0.1:5000/report-designer/templates/repeating_lab_result/preview/sam
 http://127.0.0.1:5000/report-designer/templates/repeating_lab_result/export/pdf/sample
 http://127.0.0.1:5000/report-designer/templates/table_lab_result/preview/sample
 http://127.0.0.1:5000/report-designer/templates/table_lab_result/export/pdf/sample
+http://127.0.0.1:5000/report-designer/templates/barcode_qr_lab_result/preview/sample
+http://127.0.0.1:5000/report-designer/templates/barcode_qr_lab_result/export/pdf/sample
 ```
 
 ## Templates
@@ -63,6 +67,7 @@ Included templates:
 - `cerebro_cbc`
 - `repeating_lab_result`
 - `table_lab_result`
+- `barcode_qr_lab_result`
 
 ## Sample And Provider Data
 
@@ -77,3 +82,7 @@ Templates can also include `data.sample` for preview/export. The designer API pr
 ## Basic Table Object
 
 `table_lab_result` demonstrates a single Table object bound to `results`, with editable columns for `test`, `result`, `unit`, `reference`, and `flag`. Its table rows continue onto additional pages and repeat the table header.
+
+## Barcode And QR Objects
+
+`barcode_qr_lab_result` demonstrates barcode and QR code objects bound to `order.id`. Preview and PDF export resolve provider/sample data first and fall back to literal object values when no bound value is available.

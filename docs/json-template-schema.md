@@ -123,6 +123,8 @@ Supported object types:
 - `line`
 - `rectangle`
 - `image`
+- `barcode`
+- `qrcode`
 - `table`
 
 ## Field Object
@@ -178,6 +180,75 @@ Example:
   }
 }
 ```
+
+## Barcode Object
+
+Barcode objects can bind to render data or use a literal fallback value:
+
+```json
+{
+  "id": "order_barcode",
+  "type": "barcode",
+  "band": "page_header",
+  "x": 390,
+  "y": 24,
+  "width": 160,
+  "height": 48,
+  "binding": "order.id",
+  "value": "ORDER-1001",
+  "format": "code128",
+  "show_text": true,
+  "style": {
+    "foreground_color": "#111827",
+    "background_color": "#ffffff",
+    "font_size": 8
+  }
+}
+```
+
+`binding` is resolved first. If it is missing or empty, renderers use `value`.
+
+Supported fields:
+
+- `binding`
+- `value`
+- `format`
+- `symbology`
+- `show_text`
+- `foreground_color`
+- `background_color`
+- `font_size`
+
+## QR Code Object
+
+QR code objects use the same binding-first value resolution:
+
+```json
+{
+  "id": "order_qr",
+  "type": "qrcode",
+  "band": "page_header",
+  "x": 40,
+  "y": 24,
+  "width": 80,
+  "height": 80,
+  "binding": "order.id",
+  "value": "ORDER-1001",
+  "error_correction": "M",
+  "style": {
+    "foreground_color": "#111827",
+    "background_color": "#ffffff"
+  }
+}
+```
+
+Supported fields:
+
+- `binding`
+- `value`
+- `error_correction`
+- `foreground_color`
+- `background_color`
 
 ## Table Object
 

@@ -234,6 +234,19 @@ export function renderInspector(
       styleField("background_color", object, "color", { label: "background", transparent: true }),
       styleField("border_radius", object, "number")
     ]));
+  } else if (object.type === "barcode") {
+    form.appendChild(section("Barcode", barcodeFields(object, fields)));
+    form.appendChild(section("Style", [
+      styleField("foreground_color", object, "color", { label: "foreground" }),
+      styleField("background_color", object, "color", { label: "background", transparent: true }),
+      styleField("font_size", object, "number", { min: "6" })
+    ]));
+  } else if (object.type === "qrcode") {
+    form.appendChild(section("QR Code", qrCodeFields(object, fields)));
+    form.appendChild(section("Style", [
+      styleField("foreground_color", object, "color", { label: "foreground" }),
+      styleField("background_color", object, "color", { label: "background", transparent: true })
+    ]));
   }
   form.appendChild(section("Object State", [
     fieldRow("locked", Boolean(object.locked), { type: "checkbox", name: "locked" })
@@ -480,6 +493,38 @@ function tableDataFields(object, template, fields) {
   return rows;
 }
 
+function barcodeFields(object, fields) {
+  const binding = normalizeFieldPath(object.binding || object.properties?.binding || "");
+  return [
+    fieldRow("binding", binding),
+    fieldPickerRow(binding, fields),
+    fieldRow("value", object.value || object.properties?.value || "", { name: "value" }),
+    fieldRow("format", object.format || object.properties?.format || "code128", {
+      type: "select",
+      name: "format",
+      options: ["code128"]
+    }),
+    fieldRow("show text", Boolean(object.show_text ?? object.properties?.show_text ?? true), {
+      type: "checkbox",
+      name: "show_text"
+    })
+  ];
+}
+
+function qrCodeFields(object, fields) {
+  const binding = normalizeFieldPath(object.binding || object.properties?.binding || "");
+  return [
+    fieldRow("binding", binding),
+    fieldPickerRow(binding, fields),
+    fieldRow("value", object.value || object.properties?.value || "", { name: "value" }),
+    fieldRow("error correction", object.error_correction || object.properties?.error_correction || "M", {
+      type: "select",
+      name: "error_correction",
+      options: ["L", "M", "Q", "H"]
+    })
+  ];
+}
+
 function tableColumnFields(object) {
   const rows = [];
   const columns = tableColumns(object);
@@ -635,6 +680,19 @@ function applyInput(template, object, input) {
   }
   if (input.name === "binding_picker") {
     setObjectBinding(object, normalizeFieldPath(value));
+    return;
+  }
+  if (input.name === "value") {
+    setObjectPropertyValue(object, "value", String(value));
+    return;
+  }
+  if (input.name === "format") {
+    setObjectPropertyValue(object, "format", String(value));
+    setObjectPropertyValue(object, "symbology", String(value));
+    return;
+  }
+  if (input.name === "show_text" || input.name === "error_correction") {
+    setObjectPropertyValue(object, input.name, inputValue(input, value));
     return;
   }
   if (input.name === "table.data_path") {
@@ -871,6 +929,9 @@ function defaultStyleValue(name) {
     return 1.2;
   }
   if (name === "color" || name === "border_color" || name === "stroke_color") {
+    return "#111827";
+  }
+  if (name === "foreground_color") {
     return "#111827";
   }
   if (name === "background_color") {

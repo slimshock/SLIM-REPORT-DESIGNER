@@ -205,7 +205,7 @@ page.image("logo.png", x=40, y=40, width=120, height=60)
 
 ### `page.barcode(...)`
 
-Adds a barcode placeholder domain object. Barcode rendering is not implemented yet:
+Adds a barcode object. HTML preview and PDF export render a barcode visual and optional text label:
 
 ```python
 page.barcode("ABC123", x=40, y=120, width=200, height=60)
@@ -213,7 +213,7 @@ page.barcode("ABC123", x=40, y=120, width=200, height=60)
 
 ### `page.qrcode(...)`
 
-Adds a QR code placeholder domain object. QR rendering is not implemented yet:
+Adds a QR code object. HTML preview and PDF export render a deterministic QR-style visual:
 
 ```python
 page.qrcode("https://example.test", x=40, y=200, width=100, height=100)

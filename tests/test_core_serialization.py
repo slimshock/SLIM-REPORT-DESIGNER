@@ -199,6 +199,57 @@ def test_json_serializer_round_trips_basic_table_object() -> None:
     assert table["border"]["color"] == "#d1d5db"
 
 
+def test_json_serializer_round_trips_barcode_and_qrcode_objects() -> None:
+    payload = sample_template()
+    payload["objects"].extend([
+        {
+            "id": "barcode_order_id",
+            "type": "barcode",
+            "x": 40,
+            "y": 160,
+            "width": 160,
+            "height": 48,
+            "value": "1234567890",
+            "binding": "order.id",
+            "format": "code128",
+            "show_text": True,
+            "style": {
+                "foreground_color": "#111827",
+                "background_color": "#ffffff",
+                "font_size": 8,
+            },
+        },
+        {
+            "id": "qr_order_id",
+            "type": "qrcode",
+            "x": 220,
+            "y": 160,
+            "width": 80,
+            "height": 80,
+            "value": "https://example.com",
+            "binding": "order.id",
+            "error_correction": "M",
+            "style": {
+                "foreground_color": "#111827",
+                "background_color": "#ffffff",
+            },
+        },
+    ])
+
+    dumped = JSONSerializer().dump_mapping(JSONSerializer().load_mapping(payload))
+    barcode = next(item for item in dumped["objects"] if item["id"] == "barcode_order_id")
+    qrcode = next(item for item in dumped["objects"] if item["id"] == "qr_order_id")
+
+    assert barcode["type"] == "barcode"
+    assert barcode["binding"] == "order.id"
+    assert barcode["value"] == "1234567890"
+    assert barcode["format"] == "code128"
+    assert barcode["show_text"] is True
+    assert qrcode["type"] == "qrcode"
+    assert qrcode["binding"] == "order.id"
+    assert qrcode["error_correction"] == "M"
+
+
 def test_json_serializer_omits_data_for_old_templates_without_data() -> None:
     dumped = JSONSerializer().dump_mapping(JSONSerializer().load_mapping(sample_template()))
 

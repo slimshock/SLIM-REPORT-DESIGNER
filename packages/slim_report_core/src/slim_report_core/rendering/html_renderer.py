@@ -15,10 +15,12 @@ from .context import (
     get_row_value,
     get_value_by_path,
     object_px,
+    resolve_bound_object_value,
     resolve_object_value,
     resolve_repeated_object_value,
 )
 from .pagination import build_render_pages
+from .qrcode import QR_GRID_SIZE, qr_module_matrix
 
 
 def render_html(report: Report, data: dict[str, Any] | None = None) -> str:
@@ -109,6 +111,10 @@ def render_html_object(obj: RenderObject, context: RenderContext) -> str:
         return _render_image(obj, context)
     if obj.type == "table":
         return _render_table(obj, context)
+    if obj.type == "barcode":
+        return _render_barcode(obj, context)
+    if obj.type == "qrcode":
+        return _render_qrcode(obj, context)
     raise ReportValidationError(f"Unsupported report object type: {obj.type}.")
 
 
@@ -165,6 +171,19 @@ def _render_field(obj: RenderObject, context: RenderContext) -> str:
     else:
         value = resolve_object_value(obj, context.data)
     return _html_box(obj, context, escape(value))
+
+
+def _object_value(obj: RenderObject, context: RenderContext) -> str:
+    row = context.data.get("__slim_row__") if isinstance(context.data, dict) else None
+    repeat_path = (
+        context.data.get("__slim_repeat_path__", "") if isinstance(context.data, dict) else ""
+    )
+    return resolve_bound_object_value(
+        obj,
+        context.data,
+        row if isinstance(row, dict) else None,
+        str(repeat_path),
+    )
 
 
 def _render_line(obj: RenderObject, context: RenderContext) -> str:
@@ -233,6 +252,85 @@ def _render_image(obj: RenderObject, context: RenderContext) -> str:
         f'<div class="slim-report-object" data-slim-object="{escape(obj.id, quote=True)}" '
         f'style="{css}"><img src="{escape(source, quote=True)}" alt="{alt}" '
         f'style="width: 100%; height: 100%; object-fit: {object_fit}; display: block;"></div>'
+    )
+
+
+def _render_barcode(obj: RenderObject, context: RenderContext) -> str:
+    x, y, width, height = object_px(obj, context.page.unit)
+    value = escape(_object_value(obj, context) or "Barcode")
+    style = obj.style
+    foreground = escape(str(style.get("foreground_color", "#111827")), quote=True)
+    background = escape(str(style.get("background_color", "#ffffff")), quote=True)
+    font_size = float(style.get("font_size", 8) or 8)
+    show_text = bool(obj.properties.get("show_text", True))
+    bars_height = max(height - (font_size + 6 if show_text else 0), 8)
+    wrapper_style = (
+        f"{_position_style(x, y, width, height)} "
+        f"background: {background}; color: {foreground}; overflow: hidden; "
+        "display: grid; grid-template-rows: minmax(0, 1fr) auto; padding: 2px;"
+    )
+    bars_style = (
+        f"height: {bars_height}px; min-height: 8px; background: "
+        f"repeating-linear-gradient(90deg, {foreground} 0 2px, transparent 2px 4px, "
+        f"{foreground} 4px 5px, transparent 5px 9px);"
+    )
+    text_html = (
+        f'<div style="font: {font_size}px Arial, sans-serif; text-align: center; '
+        'white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">'
+        f"{value}</div>"
+        if show_text
+        else ""
+    )
+    return (
+        f'<div class="slim-report-object slim-report-barcode" '
+        f'data-slim-object="{escape(obj.id, quote=True)}" style="{wrapper_style}">'
+        f'<div aria-hidden="true" style="{bars_style}"></div>{text_html}</div>'
+    )
+
+
+def _render_qrcode(obj: RenderObject, context: RenderContext) -> str:
+    x, y, width, height = object_px(obj, context.page.unit)
+    value = escape(_object_value(obj, context) or "QR Code")
+    style = obj.style
+    foreground = escape(str(style.get("foreground_color", "#111827")), quote=True)
+    background = escape(str(style.get("background_color", "#ffffff")), quote=True)
+    size = min(width, height)
+    qr_x = max((width - size) / 2, 0)
+    qr_y = max((height - size) / 2, 0)
+    wrapper_style = (
+        f"{_position_style(x, y, width, height)} "
+        f"background: {background}; color: {foreground}; overflow: hidden; "
+        "position: absolute;"
+    )
+    qr_style = (
+        f"position: absolute; left: {qr_x}px; top: {qr_y}px; "
+        f"width: {size}px; height: {size}px; box-sizing: border-box; "
+        "display: block;"
+    )
+    return (
+        f'<div class="slim-report-object slim-report-qrcode" '
+        f'data-slim-object="{escape(obj.id, quote=True)}" title="{value}" '
+        f'style="{wrapper_style}">{_qr_svg(value, qr_style, foreground, background)}</div>'
+    )
+
+
+def _qr_svg(value: str, style: str, foreground: str, background: str) -> str:
+    background_rect = (
+        f'<rect width="{QR_GRID_SIZE}" height="{QR_GRID_SIZE}" fill="{background}" />'
+        if not _is_transparent(background)
+        else ""
+    )
+    modules = []
+    for row_index, row in enumerate(qr_module_matrix(value)):
+        for col_index, enabled in enumerate(row):
+            if enabled:
+                modules.append(f'<rect x="{col_index}" y="{row_index}" width="1" height="1" />')
+    module_html = "".join(modules)
+    return (
+        f'<svg aria-label="{value}" role="img" style="{style}" '
+        f'viewBox="0 0 {QR_GRID_SIZE} {QR_GRID_SIZE}" '
+        'xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">'
+        f"{background_rect}<g fill=\"{foreground}\">{module_html}</g></svg>"
     )
 
 
@@ -468,6 +566,10 @@ def _normalize_table_column(column: object, index: int) -> dict[str, object]:
 
 def _dict_value(value: object) -> dict[str, object]:
     return dict(value) if isinstance(value, dict) else {}
+
+
+def _is_transparent(value: object) -> bool:
+    return str(value or "").strip().lower() in {"", "none", "transparent"}
 
 
 def _position_style(x: float, y: float, width: float, height: float) -> str:

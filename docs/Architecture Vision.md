@@ -83,10 +83,10 @@ Developer Preview
   Sprint 6 - Canvas designer
 
 Alpha
-  Widgets, export quality, bands, pagination, tables
+  Widgets, export quality, bands, pagination, tables, barcode/QR
 
 Beta
-  Assets, barcode/QR, expressions, variables, marketplace
+  Assets, expressions, variables, marketplace
 
 Stable
   Community, performance, plugins, documentation

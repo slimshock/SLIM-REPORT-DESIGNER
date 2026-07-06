@@ -33,6 +33,7 @@ _STYLE_KEYS = (
     "fill_color",
     "font_family",
     "font_size",
+    "foreground_color",
     "italic",
     "line_height",
     "line_width",
@@ -1183,7 +1184,7 @@ class ImageObject(Object):
 
 
 class BarcodeObject(Object):
-    """Barcode placeholder report object."""
+    """Barcode report object."""
 
     def __init__(
         self,
@@ -1197,6 +1198,7 @@ class BarcodeObject(Object):
         position: Position | Mapping[str, Any] | None = None,
         size: Size | Mapping[str, Any] | None = None,
         symbology: str = "code128",
+        show_text: bool | None = None,
         style: Style | Mapping[str, Any] | None = None,
         band_id: str | None = None,
         layer_id: str | None = None,
@@ -1207,6 +1209,9 @@ class BarcodeObject(Object):
         merged_properties = dict(properties or {})
         merged_properties["value"] = value
         merged_properties["symbology"] = symbology
+        merged_properties["format"] = symbology
+        if show_text is not None:
+            merged_properties["show_text"] = bool(show_text)
         super().__init__(
             id=id,
             type="barcode",
@@ -1224,9 +1229,21 @@ class BarcodeObject(Object):
             properties=merged_properties,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        data = super().to_dict()
+        properties = data.setdefault("properties", {})
+        for key in ("value", "binding", "show_text"):
+            if key in properties:
+                data[key] = copy.deepcopy(properties[key])
+        symbology = properties.get("format", properties.get("symbology", "code128"))
+        data["format"] = str(symbology)
+        properties["format"] = str(symbology)
+        properties["symbology"] = str(symbology)
+        return data
+
 
 class QRCodeObject(Object):
-    """QR code placeholder report object."""
+    """QR code report object."""
 
     def __init__(
         self,
@@ -1239,6 +1256,7 @@ class QRCodeObject(Object):
         height: float = 100.0,
         position: Position | Mapping[str, Any] | None = None,
         size: Size | Mapping[str, Any] | None = None,
+        error_correction: str = "M",
         style: Style | Mapping[str, Any] | None = None,
         band_id: str | None = None,
         layer_id: str | None = None,
@@ -1248,6 +1266,7 @@ class QRCodeObject(Object):
     ) -> None:
         merged_properties = dict(properties or {})
         merged_properties["value"] = value
+        merged_properties["error_correction"] = str(error_correction or "M")
         super().__init__(
             id=id,
             type="qrcode",
@@ -1264,6 +1283,16 @@ class QRCodeObject(Object):
             visible=visible,
             properties=merged_properties,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        data = super().to_dict()
+        properties = data.setdefault("properties", {})
+        for key in ("value", "binding", "error_correction"):
+            if key in properties:
+                data[key] = copy.deepcopy(properties[key])
+        data.setdefault("error_correction", "M")
+        properties.setdefault("error_correction", data["error_correction"])
+        return data
 
 
 class TableObject(Object):

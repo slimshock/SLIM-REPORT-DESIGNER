@@ -39,8 +39,10 @@ This project follows semantic versioning once public releases begin.
 - Row-relative field bindings.
 - Basic array-bound Table object with designer, HTML preview, and PDF export support.
 - Basic multi-page pagination for repeating Detail rows and Detail-band tables.
+- Barcode and QR code objects with designer, HTML preview, PDF export, and binding support.
 - Preview/export debug headers for page, object, repeated-row, and table-row counts.
 - `table_lab_result` Flask sample template.
+- `barcode_qr_lab_result` Flask sample template.
 - Improved preview/PDF fidelity.
 
 ### Changed
@@ -50,7 +52,6 @@ This project follows semantic versioning once public releases begin.
 ### Known limitations
 
 - Advanced table features such as nested tables, merged cells, formulas, and grouped tables are not implemented yet.
-- Barcode/QR not implemented yet.
 - Advanced pagination controls such as custom page breaks and widow/orphan rules are not implemented yet.
 - Group headers/footers not implemented yet.
 - Django/FastAPI adapters are placeholders/future work.
