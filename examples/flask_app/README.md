@@ -28,6 +28,7 @@ python examples/flask_app/app.py
 http://127.0.0.1:5000/report-designer/designer?template=lab_result
 http://127.0.0.1:5000/report-designer/designer?template=cerebro_cbc
 http://127.0.0.1:5000/report-designer/designer?template=repeating_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=table_lab_result
 ```
 
 ## Preview And PDF
@@ -43,6 +44,8 @@ http://127.0.0.1:5000/report-designer/templates/cerebro_cbc/preview/sample
 http://127.0.0.1:5000/report-designer/templates/cerebro_cbc/export/pdf/sample
 http://127.0.0.1:5000/report-designer/templates/repeating_lab_result/preview/sample
 http://127.0.0.1:5000/report-designer/templates/repeating_lab_result/export/pdf/sample
+http://127.0.0.1:5000/report-designer/templates/table_lab_result/preview/sample
+http://127.0.0.1:5000/report-designer/templates/table_lab_result/export/pdf/sample
 ```
 
 ## Templates
@@ -58,6 +61,7 @@ Included templates:
 - `lab_result`
 - `cerebro_cbc`
 - `repeating_lab_result`
+- `table_lab_result`
 
 ## Sample And Provider Data
 
@@ -68,3 +72,7 @@ Templates can also include `data.sample` for preview/export. The designer API pr
 ## Repeating Detail Rows
 
 `repeating_lab_result` demonstrates a Detail band with `repeat.enabled`, `repeat.data_path`, `repeat.row_height`, and row-relative field bindings such as `test`, `result`, `unit`, and `flag`.
+
+## Basic Table Object
+
+`table_lab_result` demonstrates a single Table object bound to `results`, with editable columns for `test`, `result`, `unit`, `reference`, and `flag`.

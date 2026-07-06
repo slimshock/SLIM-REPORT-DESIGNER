@@ -37,7 +37,7 @@ Implemented now:
 - JSON template serialization through `JSONSerializer`
 - HTML preview renderer
 - ReportLab PDF renderer
-- Text, field, line, rectangle, and image objects
+- Text, field, line, rectangle, image, and basic table objects
 - Visual designer canvas
 - Drag and drop
 - Resize handles
@@ -59,12 +59,13 @@ Implemented now:
 - `template.data.fields` support
 - Repeating Detail rows
 - Row-relative bindings for repeating data
+- Basic array-bound Table object
 - Flask-hosted preview and PDF export
 - CLI commands for validation, inspection, and rendering
 
 Not implemented yet:
 
-- Full table component
+- Advanced table features such as nested tables, merged cells, formulas, and grouped tables
 - Barcode/QR rendering
 - Full pagination and multi-page repeat overflow
 - Group headers and footers
@@ -171,9 +172,10 @@ Open:
 http://127.0.0.1:5000/report-designer/designer?template=lab_result
 http://127.0.0.1:5000/report-designer/designer?template=cerebro_cbc
 http://127.0.0.1:5000/report-designer/designer?template=repeating_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=table_lab_result
 ```
 
-The Flask example loads templates from `examples/flask_app/sample_templates/`. Preview works, PDF export works, and sample/provider data can be used for field rendering. The `repeating_lab_result` template demonstrates repeating Detail rows over array data.
+The Flask example loads templates from `examples/flask_app/sample_templates/`. Preview works, PDF export works, and sample/provider data can be used for field rendering. The `repeating_lab_result` template demonstrates repeating Detail rows, and `table_lab_result` demonstrates the basic Table object.
 
 ## Serialization
 

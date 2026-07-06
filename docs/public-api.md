@@ -221,16 +221,16 @@ page.qrcode("https://example.test", x=40, y=200, width=100, height=100)
 
 ### `page.table(...)`
 
-Adds a table placeholder domain object. Full table rendering is not implemented yet:
+Adds a basic array-bound table object:
 
 ```python
 page.table(
-    binding="results",
+    data_path="results",
     x=40,
     y=320,
     width=520,
     height=200,
-    columns=[{"label": "Test", "field": "name"}],
+    columns=[{"label": "Test", "binding": "test"}],
 )
 ```
 

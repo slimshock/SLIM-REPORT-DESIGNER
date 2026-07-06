@@ -166,6 +166,39 @@ def test_repeating_lab_result_sample_template_preserves_data_metadata(tmp_path: 
     assert dumped["data"]["fields"] == payload["data"]["fields"]
 
 
+def test_json_serializer_round_trips_basic_table_object() -> None:
+    payload = sample_template()
+    payload["objects"].append(
+        {
+            "id": "results_table",
+            "type": "table",
+            "x": 40,
+            "y": 180,
+            "width": 515,
+            "height": 260,
+            "data_path": "results",
+            "header": {"visible": True, "height": 24},
+            "row": {"height": 22},
+            "border": {"width": 1, "color": "#d1d5db"},
+            "columns": [
+                {"id": "test", "label": "Test", "binding": "test", "width": 150},
+                {"id": "result", "label": "Result", "binding": "result", "width": 90},
+            ],
+        }
+    )
+
+    report = JSONSerializer().load_mapping(payload)
+    dumped = JSONSerializer().dump_mapping(report)
+    table = next(item for item in dumped["objects"] if item["id"] == "results_table")
+
+    assert table["type"] == "table"
+    assert table["data_path"] == "results"
+    assert table["columns"][0]["binding"] == "test"
+    assert table["columns"][1]["label"] == "Result"
+    assert table["header"]["height"] == 24
+    assert table["border"]["color"] == "#d1d5db"
+
+
 def test_json_serializer_omits_data_for_old_templates_without_data() -> None:
     dumped = JSONSerializer().dump_mapping(JSONSerializer().load_mapping(sample_template()))
 

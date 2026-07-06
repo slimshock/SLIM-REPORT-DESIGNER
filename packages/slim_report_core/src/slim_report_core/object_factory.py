@@ -251,7 +251,11 @@ class ObjectFactory:
         width: float = 300.0,
         height: float = 100.0,
         binding: str | None = None,
+        data_path: str | None = None,
         columns: list[Mapping[str, Any]] | None = None,
+        header: Mapping[str, Any] | None = None,
+        row: Mapping[str, Any] | None = None,
+        border: Mapping[str, Any] | None = None,
         position: Position | Mapping[str, Any] | None = None,
         size: Size | Mapping[str, Any] | None = None,
         style: Style | Mapping[str, Any] | None = None,
@@ -267,7 +271,11 @@ class ObjectFactory:
             width=width,
             height=height,
             binding=binding,
+            data_path=data_path,
             columns=columns,
+            header=header,
+            row=row,
+            border=border,
             position=position,
             size=size,
             style=_style_with_values(style, style_values),
@@ -349,6 +357,10 @@ class ObjectFactory:
                 properties[key] = value
 
         object_type = _required_str(mapping, "type", context="Report object")
+        if object_type == "table":
+            for key in ("data_path", "header", "row", "border", "columns"):
+                if key in mapping:
+                    properties[key] = mapping[key]
         target_class = object_class or _object_class(object_type)
         common = {
             "id": _required_str(mapping, "id", context="Report object"),
@@ -389,9 +401,16 @@ class ObjectFactory:
             return self.create_qrcode(str(properties.get("value", "")), **common)
         if target_class is TableObject:
             columns = properties.get("columns")
+            header = properties.get("header")
+            row = properties.get("row")
+            border = properties.get("border")
             return self.create_table(
                 binding=properties.get("binding"),
+                data_path=properties.get("data_path"),
                 columns=columns if isinstance(columns, list) else None,
+                header=header if isinstance(header, Mapping) else None,
+                row=row if isinstance(row, Mapping) else None,
+                border=border if isinstance(border, Mapping) else None,
                 **common,
             )
         return self.create_custom(

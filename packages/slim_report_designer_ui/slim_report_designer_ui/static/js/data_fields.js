@@ -56,6 +56,21 @@ export function getArrayByPath(data, path) {
   return Array.isArray(value) ? value : [];
 }
 
+export function getArrayChildFields(template, dataPath) {
+  const arrayPath = normalizeArrayFieldPath(dataPath);
+  if (!arrayPath) {
+    return [];
+  }
+  const prefix = `${arrayPath}[].`;
+  return getTemplateFields(template)
+    .filter((field) => normalizeFieldPath(field.path).startsWith(prefix))
+    .map((field) => ({
+      ...field,
+      child_path: normalizeFieldPath(field.path).slice(prefix.length)
+    }))
+    .filter((field) => field.child_path);
+}
+
 export function getRowValue(row, binding, repeatDataPath = "") {
   const normalized = normalizeFieldPath(binding);
   if (!normalized) {

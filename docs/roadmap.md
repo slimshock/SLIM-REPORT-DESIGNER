@@ -23,10 +23,11 @@ Slim Report Designer is early alpha. The roadmap is intentionally practical and 
 - Data Fields panel
 - Binding picker
 - Repeating Detail rows
+- Basic Table Object
 
 ## Next
 
-- Basic Table Object
+- Advanced table features
 - Better pagination/multi-page repeating output
 - Group headers/footers
 - Barcode/QR

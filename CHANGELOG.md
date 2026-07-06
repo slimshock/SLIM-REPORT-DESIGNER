@@ -37,6 +37,8 @@ This project follows semantic versioning once public releases begin.
 - Placeholder/sample data toggle.
 - Repeating Detail rows.
 - Row-relative field bindings.
+- Basic array-bound Table object with designer, HTML preview, and PDF export support.
+- `table_lab_result` Flask sample template.
 - Improved preview/PDF fidelity.
 
 ### Changed
@@ -45,7 +47,7 @@ This project follows semantic versioning once public releases begin.
 
 ### Known limitations
 
-- Full table component not implemented yet.
+- Advanced table features such as nested tables, merged cells, formulas, and grouped tables are not implemented yet.
 - Barcode/QR not implemented yet.
 - Full pagination/multi-page repeat overflow not implemented yet.
 - Group headers/footers not implemented yet.

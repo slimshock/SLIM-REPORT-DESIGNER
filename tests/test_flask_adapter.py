@@ -497,13 +497,51 @@ def test_flask_preview_and_pdf_support_repeating_detail_template(tmp_path: Path)
         "metadata": {"title": "Repeating", "custom": {"id": "repeating"}},
         "page": {"width": 595, "height": 842, "unit": "px"},
         "objects": [
-            {"id": "test", "type": "field", "x": 40, "y": 140, "width": 100, "height": 18, "binding": "test", "band": "detail"},
-            {"id": "value", "type": "field", "x": 160, "y": 140, "width": 100, "height": 18, "binding": "results[].value", "band": "detail"},
+            {
+                "id": "test",
+                "type": "field",
+                "x": 40,
+                "y": 140,
+                "width": 100,
+                "height": 18,
+                "binding": "test",
+                "band": "detail",
+            },
+            {
+                "id": "value",
+                "type": "field",
+                "x": 160,
+                "y": 140,
+                "width": 100,
+                "height": 18,
+                "binding": "results[].value",
+                "band": "detail",
+            },
         ],
         "bands": [
-            {"id": "detail", "type": "detail", "name": "Detail", "y": 100, "height": 700, "repeat": {"enabled": True, "data_path": "results", "row_height": 24, "preview_rows": 10, "empty_message": "No results"}}
+            {
+                "id": "detail",
+                "type": "detail",
+                "name": "Detail",
+                "y": 100,
+                "height": 700,
+                "repeat": {
+                    "enabled": True,
+                    "data_path": "results",
+                    "row_height": 24,
+                    "preview_rows": 10,
+                    "empty_message": "No results",
+                },
+            }
         ],
-        "data": {"sample": {"results": [{"test": "WBC", "value": "7.1"}, {"test": "HGB", "value": "13.2"}]}},
+        "data": {
+            "sample": {
+                "results": [
+                    {"test": "WBC", "value": "7.1"},
+                    {"test": "HGB", "value": "13.2"},
+                ]
+            }
+        },
         "assets": [],
     }
     designer.create_template(payload)
@@ -517,6 +555,34 @@ def test_flask_preview_and_pdf_support_repeating_detail_template(tmp_path: Path)
     assert "HGB" in preview_response.get_data(as_text=True)
     assert pdf_response.status_code == 200
     assert pdf_response.get_data().startswith(b"%PDF")
+
+
+def test_flask_preview_and_pdf_support_basic_table_template(tmp_path: Path) -> None:
+    app, designer = create_app(tmp_path)
+    designer.create_template(table_template_payload())
+
+    @designer.provider("table_lab_result")
+    def table_provider(record_id: str) -> dict[str, Any]:
+        return {
+            "results": [
+                {"test": "WBC", "result": "7.10", "unit": "10^9/L"},
+                {"test": "HGB", "result": "14.20", "unit": "g/dL"},
+            ],
+            "order": {"id": record_id},
+        }
+
+    client = app.test_client()
+    preview_response = client.get("/report-designer/templates/table_lab_result/preview/sample")
+    pdf_response = client.get("/report-designer/templates/table_lab_result/export/pdf/sample")
+
+    assert preview_response.status_code == 200
+    html = preview_response.get_data(as_text=True)
+    assert "WBC" in html
+    assert "7.10" in html
+    assert pdf_response.status_code == 200
+    assert pdf_response.mimetype == "application/pdf"
+    assert pdf_response.get_data().startswith(b"%PDF")
+    assert len(pdf_response.get_data()) > 1000
 
 
 def test_flask_adapter_returns_404_for_missing_template(tmp_path: Path) -> None:
@@ -628,6 +694,42 @@ def repeating_template_payload() -> dict[str, Any]:
                 {"path": "results[].result", "label": "Result", "type": "string", "sample": "7.10"},
             ],
         },
+        "assets": [],
+    }
+
+
+def table_template_payload() -> dict[str, Any]:
+    return {
+        "version": "1.0",
+        "metadata": {
+            "title": "Table Lab Result",
+            "custom": {
+                "id": "table_lab_result",
+                "provider": "table_lab_result",
+            },
+        },
+        "page": {"width": 595, "height": 842, "unit": "px"},
+        "objects": [
+            {
+                "id": "results_table",
+                "type": "table",
+                "x": 40,
+                "y": 120,
+                "width": 300,
+                "height": 120,
+                "data_path": "results",
+                "columns": [
+                    {"id": "test", "label": "Test", "binding": "test", "width": 150},
+                    {"id": "result", "label": "Result", "binding": "result", "width": 90},
+                    {"id": "unit", "label": "Unit", "binding": "unit", "width": 80},
+                ],
+                "header": {"visible": True, "height": 24},
+                "row": {"height": 22},
+                "border": {"width": 1, "color": "#d1d5db"},
+            }
+        ],
+        "bands": [],
+        "data": {"sample": {"results": [{"test": "WBC", "result": "7.10", "unit": "10^9/L"}]}},
         "assets": [],
     }
 

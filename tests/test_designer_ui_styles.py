@@ -110,6 +110,7 @@ def test_data_field_helpers_infer_nested_and_array_paths() -> None:
 import {
   fieldExists,
   flattenDataPaths,
+  getArrayChildFields,
   getFieldValue,
   getArrayByPath,
   getRowValue,
@@ -124,7 +125,14 @@ const sample = {
 };
 
 const paths = flattenDataPaths(sample);
-for (const path of ['patient.name', 'patient.age', 'order.id', 'results[0].name', 'results[].value']) {
+const expectedPaths = [
+  'patient.name',
+  'patient.age',
+  'order.id',
+  'results[0].name',
+  'results[].value'
+];
+for (const path of expectedPaths) {
 if (!paths.includes(path)) {
     throw new Error(`missing path ${path}`);
   }
@@ -154,6 +162,14 @@ if (normalizeFieldPath('{{ patient.name }}') !== 'patient.name') {
 }
 if (!fieldExists({ data: { fields } }, 'patient.name')) {
   throw new Error('field existence check failed');
+}
+const childFields = getArrayChildFields({ data: { fields } }, 'results');
+if (
+  childFields.length !== 2 ||
+  childFields[0].child_path !== 'name' ||
+  childFields[1].child_path !== 'value'
+) {
+  throw new Error('array child field helper failed');
 }
 """.replace("__MODULE_PATH__", module_path)
 
@@ -185,13 +201,18 @@ const template = normalizeTemplate({
   version: '0.1',
   metadata: { name: 'Repeating' },
   page: { width: 595, height: 842, unit: 'px' },
-  bands: [{ id: 'detail', type: 'detail', repeat: { enabled: true, data_path: 'results', row_height: 24 } }],
+  bands: [{
+    id: 'detail',
+    type: 'detail',
+    repeat: { enabled: true, data_path: 'results', row_height: 24 }
+  }],
   objects: [{ id: 'result_test', type: 'field', binding: 'test', band: 'detail' }],
   data: { sample: { results: [{ test: 'WBC', result: '7.10' }] } },
   assets: []
 });
 
-if (!template.data.sample.results || !template.data.fields.some((field) => field.path === 'results[].test')) {
+const hasResultsField = template.data.fields.some((field) => field.path === 'results[].test');
+if (!template.data.sample.results || !hasResultsField) {
   throw new Error('normalizeTemplate did not preserve or infer data metadata');
 }
 
@@ -225,7 +246,10 @@ await previewTemplate(template);
 if (!previewBody.template.data.sample.results || previewBody.data.results[0].test !== 'WBC') {
   throw new Error('previewTemplate did not post full template and render data');
 }
-""".replace("__OBJECTS_MODULE_PATH__", objects_module_path).replace("__API_MODULE_PATH__", api_module_path)
+""".replace("__OBJECTS_MODULE_PATH__", objects_module_path).replace(
+        "__API_MODULE_PATH__",
+        api_module_path,
+    )
 
     result = subprocess.run(
         ["node", "--input-type=module", "-e", script],
@@ -471,6 +495,54 @@ if (objectStyle(created).object_fit !== 'contain') {
     assert result.returncode == 0, result.stderr
 
 
+def test_designer_table_defaults_and_column_generation() -> None:
+    module_path = (
+        "./packages/slim_report_designer_ui/"
+        "slim_report_designer_ui/static/js/objects.js"
+    )
+    script = """
+import { createObject, generateTableColumns, normalizeTemplate } from '__MODULE_PATH__';
+
+const template = normalizeTemplate({
+  metadata: { name: 'Table Test' },
+  page: { width: 595, height: 842, unit: 'px' },
+  objects: [],
+  bands: [{ id: 'detail', type: 'detail', y: 0, height: 842 }],
+  data: {
+    sample: { results: [{ test: 'WBC', result: '7.10', unit: '10^9/L' }] }
+  },
+  assets: []
+});
+
+const table = createObject('table', template);
+if (table.type !== 'table' || table.width !== 500 || table.height !== 220) {
+  throw new Error('table defaults invalid');
+}
+if (table.data_path !== 'results') {
+  throw new Error('table did not select first array data path');
+}
+if (!table.columns.some((column) => column.binding === 'test')) {
+  throw new Error('table columns were not inferred');
+}
+table.columns = [];
+table.properties.columns = [];
+generateTableColumns(template, table);
+if (table.columns.length < 3 || table.columns[1].binding !== 'result') {
+  throw new Error('table column generation failed');
+}
+""".replace("__MODULE_PATH__", module_path)
+
+    result = subprocess.run(
+        ["node", "--input-type=module", "-e", script],
+        cwd=Path(__file__).resolve().parents[1],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
 def test_designer_band_helpers_normalize_and_clamp_objects() -> None:
     module_path = (
         "./packages/slim_report_designer_ui/"
@@ -503,7 +575,15 @@ const blank = createDefaultTemplate();
 if (blank.bands.length !== 3 || blank.bands[0].id !== 'page_header') {
   throw new Error('blank template did not receive default report bands');
 }
-const object = { id: 'footer_text', type: 'text', x: 10, y: 0, width: 100, height: 20, properties: {} };
+const object = {
+  id: 'footer_text',
+  type: 'text',
+  x: 10,
+  y: 0,
+  width: 100,
+  height: 20,
+  properties: {}
+};
 assignObjectBand(blank, object, 'page_footer');
 clampObjectToBand(blank, object);
 if (object.band !== 'page_footer' || object.y < blank.bands[2].y) {
@@ -514,7 +594,8 @@ if (object.band !== 'page_header' || object.y >= blank.bands[1].y) {
   throw new Error('object band change did not clamp into header');
 }
 setBandValue(blank, 'page_header', 'height', 120);
-if (blank.bands[1].y !== 120 || blank.bands[2].y !== blank.bands[0].height + blank.bands[1].height) {
+const expectedFooterY = blank.bands[0].height + blank.bands[1].height;
+if (blank.bands[1].y !== 120 || blank.bands[2].y !== expectedFooterY) {
   throw new Error('band layout was not recalculated');
 }
 """.replace("__MODULE_PATH__", module_path)

@@ -122,6 +122,34 @@ def repeating_lab_result(record_id: str) -> dict[str, object]:
     }
 
 
+@designer.provider("table_lab_result")
+def table_lab_result(record_id: str) -> dict[str, object]:
+    return {
+        "laboratory": {
+            "name": "Cerebro Diagnostic System",
+            "address": "Cagayan de Oro City, Philippines",
+        },
+        "patient": {
+            "name": "JUAN DELA CRUZ",
+            "patient_no": "P-00001234",
+            "age": "34",
+            "sex": "Male",
+        },
+        "order": {
+            "id": record_id,
+            "date": "2026-07-06",
+            "physician": "Dr. Maria Santos",
+        },
+        "results": [
+            {"test": "WBC", "result": "7.10", "unit": "10^9/L", "reference": "4.00 - 10.00", "flag": "N"},
+            {"test": "RBC", "result": "5.02", "unit": "10^12/L", "reference": "4.50 - 5.90", "flag": "N"},
+            {"test": "HGB", "result": "14.20", "unit": "g/dL", "reference": "13.00 - 17.00", "flag": "N"},
+            {"test": "HCT", "result": "42.80", "unit": "%", "reference": "40.00 - 50.00", "flag": "N"},
+            {"test": "PLT", "result": "265", "unit": "10^9/L", "reference": "150 - 400", "flag": "N"},
+        ],
+    }
+
+
 @app.get("/")
 def index():
     return redirect("/report-designer/templates/lab_result/preview/ORDER-1001")
@@ -153,6 +181,7 @@ def ensure_sample_templates() -> None:
     ensure_report_template("lab_result", create_lab_result_report)
     ensure_report_template("cerebro_cbc", create_cerebro_cbc_report)
     ensure_report_template("repeating_lab_result", create_repeating_lab_result_report)
+    ensure_report_template("table_lab_result", create_table_lab_result_report)
 
 
 def ensure_sample_template() -> None:
@@ -476,6 +505,88 @@ def create_repeating_lab_result_report() -> Report:
             obj.properties["band"] = "detail"
             obj.properties["band_id"] = "detail"
     report.data = {"sample": repeating_lab_result("ORDER-1001")}
+    return report
+
+
+def create_table_lab_result_report() -> Report:
+    report = Report("Table Laboratory Result")
+    report.metadata(
+        description="Laboratory result template using the basic table object.",
+        author="Slim Report Designer",
+        tags=["demo", "lab", "table"],
+        id="table_lab_result",
+        provider="table_lab_result",
+    )
+    page = report.page()
+    page.width = 595
+    page.height = 842
+    page.unit = "px"
+    report.bands = [
+        Band.from_dict({"id": "page_header", "type": "page_header", "name": "Page Header", "y": 0, "height": 150}),
+        Band.from_dict({"id": "detail", "type": "detail", "name": "Detail", "y": 150, "height": 620}),
+        Band.from_dict({"id": "page_footer", "type": "page_footer", "name": "Page Footer", "y": 770, "height": 72}),
+    ]
+    page.field("laboratory.name", x=40, y=24, width=360, height=24, id="lab_name", font_size=18, bold=True, band="page_header")
+    page.text("Laboratory Result", x=40, y=58, width=300, height=22, id="report_title", font_size=15, bold=True, color="#2563eb", band="page_header")
+    page.text("Patient:", x=40, y=95, width=80, height=18, id="patient_label", font_size=11, bold=True, band="page_header")
+    page.field("patient.name", x=120, y=95, width=250, height=18, id="patient_name", font_size=11, band="page_header")
+    page.text("Order:", x=390, y=95, width=65, height=18, id="order_label", font_size=11, bold=True, band="page_header")
+    page.field("order.id", x=455, y=95, width=110, height=18, id="order_id", font_size=11, band="page_header")
+    page.line(x=40, y=144, width=515, height=1, id="header_line", stroke_width=1, stroke_color="#111827", band="page_header")
+    page.table(
+        id="results_table",
+        x=40,
+        y=180,
+        width=515,
+        height=260,
+        data_path="results",
+        columns=[
+            {"id": "test", "label": "Test", "binding": "test", "width": 130, "align": "left", "source_path": "results[].test"},
+            {"id": "result", "label": "Result", "binding": "result", "width": 90, "align": "center", "source_path": "results[].result"},
+            {"id": "unit", "label": "Unit", "binding": "unit", "width": 80, "align": "left", "source_path": "results[].unit"},
+            {"id": "reference", "label": "Reference", "binding": "reference", "width": 130, "align": "left", "source_path": "results[].reference"},
+            {"id": "flag", "label": "Flag", "binding": "flag", "width": 45, "align": "center", "source_path": "results[].flag"},
+        ],
+        header={
+            "visible": True,
+            "height": 24,
+            "background_color": "#e5e7eb",
+            "color": "#111827",
+            "font_size": 10,
+            "bold": True,
+        },
+        row={
+            "height": 24,
+            "background_color": "#ffffff",
+            "alternate_background_color": "#f9fafb",
+            "color": "#111827",
+            "font_size": 10,
+        },
+        border={"width": 1, "color": "#d1d5db"},
+        background_color="#ffffff",
+        border_radius=0,
+        band="detail",
+    )
+    page.line(x=40, y=780, width=515, height=1, id="footer_line", stroke_width=1, stroke_color="#d1d5db", band="page_footer")
+    page.text("Generated by Slim Report Designer", x=40, y=802, width=240, height=16, id="footer", font_size=10, band="page_footer")
+    for obj in report.objects:
+        if obj.properties.get("band"):
+            obj.band_id = obj.properties["band"]
+            obj.properties["band_id"] = obj.band_id
+    report.data = {
+        "sample": table_lab_result("ORDER-1001"),
+        "fields": [
+            {"path": "laboratory.name", "label": "Laboratory Name", "type": "string", "sample": "Cerebro Diagnostic System"},
+            {"path": "patient.name", "label": "Patient Name", "type": "string", "sample": "JUAN DELA CRUZ"},
+            {"path": "order.id", "label": "Order ID", "type": "string", "sample": "ORDER-1001"},
+            {"path": "results[]", "label": "Results", "type": "array", "sample": "5 rows"},
+            {"path": "results[].test", "label": "Test", "type": "string", "sample": "WBC"},
+            {"path": "results[].result", "label": "Result", "type": "string", "sample": "7.10"},
+            {"path": "results[].unit", "label": "Unit", "type": "string", "sample": "10^9/L"},
+            {"path": "results[].reference", "label": "Reference", "type": "string", "sample": "4.00 - 10.00"},
+            {"path": "results[].flag", "label": "Flag", "type": "string", "sample": "N"},
+        ],
+    }
     return report
 
 

@@ -1,4 +1,4 @@
-import { ensureTemplateData } from "./data_fields.js";
+import { ensureTemplateData, getArrayChildFields, normalizeArrayFieldPath } from "./data_fields.js";
 
 export function createDefaultTemplate() {
   return normalizeTemplate({
@@ -95,6 +95,9 @@ export function normalizeObject(object) {
       object.maintain_aspect_ratio ?? object.properties?.maintain_aspect_ratio ?? true
     );
   }
+  if (type === "table") {
+    normalizeTableObject(normalized, object);
+  }
   const style = explicitStyle(object);
   if (Object.keys(style).length > 0) {
     normalized.style = style;
@@ -152,6 +155,20 @@ export function createObject(type, template) {
     base.properties.alt = "";
     base.properties.maintain_aspect_ratio = true;
     base.properties.style = defaultStyleForType("image");
+  } else if (type === "table") {
+    base.width = 500;
+    base.height = 220;
+    base.data_path = firstArrayDataPath(template);
+    base.header = defaultTableHeader();
+    base.row = defaultTableRow();
+    base.border = defaultTableBorder();
+    base.columns = tableColumnsForDataPath(template, base.data_path);
+    base.properties.data_path = base.data_path;
+    base.properties.header = base.header;
+    base.properties.row = base.row;
+    base.properties.border = base.border;
+    base.properties.columns = base.columns;
+    base.properties.style = defaultStyleForType("table");
   }
 
   return normalizeObject(base);
@@ -314,6 +331,13 @@ export function defaultStyleForType(type) {
       background_color: "transparent"
     };
   }
+  if (type === "table") {
+    return {
+      background_color: "#ffffff",
+      border_radius: 0,
+      overflow: "hidden"
+    };
+  }
   return {
     font_family: "Arial",
     font_size: 12,
@@ -360,6 +384,72 @@ export function setObjectAlt(object, value) {
 export function setObjectPropertyValue(object, key, value) {
   object.properties = object.properties || {};
   object.properties[key] = value;
+  object[key] = value;
+}
+
+export function setTableDataPath(object, value) {
+  const dataPath = normalizeArrayFieldPath(value);
+  object.data_path = dataPath;
+  object.properties = object.properties || {};
+  object.properties.data_path = dataPath;
+}
+
+export function generateTableColumns(template, object) {
+  const dataPath = object.data_path || object.properties?.data_path || "";
+  const columns = tableColumnsForDataPath(template, dataPath);
+  object.columns = columns;
+  object.properties = object.properties || {};
+  object.properties.columns = columns;
+}
+
+export function addTableColumn(object) {
+  const columns = normalizedTableColumns(object).slice();
+  const index = columns.length + 1;
+  columns.push({
+    id: `column_${index}`,
+    label: `Column ${index}`,
+    binding: `column_${index}`,
+    width: 120,
+    align: "left"
+  });
+  setTableColumns(object, columns);
+}
+
+export function removeTableColumn(object, index) {
+  const columns = normalizedTableColumns(object).filter((_column, columnIndex) => columnIndex !== index);
+  setTableColumns(object, columns.length ? columns : defaultTableColumns());
+}
+
+export function setTableColumnValue(object, index, key, value) {
+  const columns = normalizedTableColumns(object).slice();
+  const column = { ...(columns[index] || {}) };
+  if (key === "width") {
+    column.width = Math.max(20, Math.round(Number(value) || 20));
+  } else if (key === "align") {
+    column.align = ["left", "center", "right"].includes(String(value)) ? String(value) : "left";
+  } else {
+    column[key] = String(value);
+  }
+  if (key === "binding" && !column.id) {
+    column.id = String(value) || `column_${index + 1}`;
+  }
+  columns[index] = normalizeTableColumn(column, index);
+  setTableColumns(object, columns);
+}
+
+export function setTableSectionValue(object, sectionName, key, value) {
+  const current = normalizedTableSection(object, sectionName);
+  const next = {
+    ...current,
+    [key]: key === "visible" || key === "bold"
+      ? Boolean(value)
+      : ["height", "font_size", "width"].includes(key)
+        ? Number(value) || 0
+        : String(value)
+  };
+  object[sectionName] = next;
+  object.properties = object.properties || {};
+  object.properties[sectionName] = next;
 }
 
 export function setPageValue(template, key, value) {
@@ -544,6 +634,9 @@ function defaultHeightForType(type) {
   if (type === "image") {
     return 80;
   }
+  if (type === "table") {
+    return 220;
+  }
   return 32;
 }
 
@@ -568,6 +661,7 @@ function explicitStyle(object) {
     "line_height",
     "line_width",
     "object_fit",
+    "overflow",
     "opacity",
     "border_radius",
     "stroke_color",
@@ -590,4 +684,151 @@ function explicitStyle(object) {
     style.stroke_color = style.border_color;
   }
   return style;
+}
+
+function normalizeTableObject(normalized, source) {
+  const properties = source.properties || {};
+  const dataPath = normalizeArrayFieldPath(source.data_path ?? properties.data_path ?? source.binding ?? properties.binding ?? "");
+  normalized.data_path = dataPath;
+  normalized.properties.data_path = dataPath;
+  normalized.header = normalizeTableSection(source.header ?? properties.header, defaultTableHeader());
+  normalized.row = normalizeTableSection(source.row ?? properties.row, defaultTableRow());
+  normalized.border = normalizeTableSection(source.border ?? properties.border, defaultTableBorder());
+  normalized.columns = normalizeTableColumns(source.columns ?? properties.columns);
+  normalized.properties.header = normalized.header;
+  normalized.properties.row = normalized.row;
+  normalized.properties.border = normalized.border;
+  normalized.properties.columns = normalized.columns;
+  if (source.empty_message !== undefined || properties.empty_message !== undefined) {
+    normalized.empty_message = String(source.empty_message ?? properties.empty_message ?? "");
+    normalized.properties.empty_message = normalized.empty_message;
+  }
+}
+
+function tableColumnsForDataPath(template, dataPath) {
+  const fields = getArrayChildFields(template, dataPath).slice(0, 6);
+  if (fields.length === 0) {
+    return defaultTableColumns();
+  }
+  return fields.map((field, index) => normalizeTableColumn({
+    id: field.child_path || `column_${index + 1}`,
+    label: field.label || field.child_path,
+    binding: field.child_path,
+    source_path: field.path,
+    width: defaultColumnWidth(field.child_path),
+    align: defaultColumnAlign(field.child_path)
+  }, index));
+}
+
+function firstArrayDataPath(template) {
+  const fields = template?.data?.fields || [];
+  const arrayField = fields.find((field) => String(field.path || "").endsWith("[]"));
+  return normalizeArrayFieldPath(arrayField?.path || "");
+}
+
+function defaultTableColumns() {
+  return [
+    { id: "column_1", label: "Column 1", binding: "column_1", width: 150, align: "left" },
+    { id: "column_2", label: "Column 2", binding: "column_2", width: 120, align: "left" },
+    { id: "column_3", label: "Column 3", binding: "column_3", width: 120, align: "left" }
+  ];
+}
+
+function defaultTableHeader() {
+  return {
+    visible: true,
+    height: 24,
+    background_color: "#e5e7eb",
+    color: "#111827",
+    font_size: 10,
+    bold: true
+  };
+}
+
+function defaultTableRow() {
+  return {
+    height: 22,
+    background_color: "#ffffff",
+    alternate_background_color: "#f9fafb",
+    color: "#111827",
+    font_size: 10
+  };
+}
+
+function defaultTableBorder() {
+  return {
+    width: 1,
+    color: "#d1d5db"
+  };
+}
+
+function setTableColumns(object, columns) {
+  object.columns = columns.map(normalizeTableColumn);
+  object.properties = object.properties || {};
+  object.properties.columns = object.columns;
+}
+
+function normalizedTableColumns(object) {
+  return normalizeTableColumns(object.columns ?? object.properties?.columns);
+}
+
+function normalizeTableColumns(columns) {
+  if (!Array.isArray(columns) || columns.length === 0) {
+    return defaultTableColumns();
+  }
+  return columns.map(normalizeTableColumn);
+}
+
+function normalizeTableColumn(column, index = 0) {
+  const source = column && typeof column === "object" ? column : {};
+  const binding = String(source.binding || source.field || source.id || `column_${index + 1}`);
+  return {
+    id: String(source.id || binding || `column_${index + 1}`),
+    label: String(source.label || labelForBinding(binding) || `Column ${index + 1}`),
+    binding,
+    width: Math.max(20, Math.round(Number(source.width) || 120)),
+    align: ["left", "center", "right"].includes(String(source.align)) ? String(source.align) : "left",
+    ...(source.source_path ? { source_path: String(source.source_path) } : {})
+  };
+}
+
+function normalizedTableSection(object, sectionName) {
+  const defaults = sectionName === "header"
+    ? defaultTableHeader()
+    : sectionName === "row"
+      ? defaultTableRow()
+      : defaultTableBorder();
+  return normalizeTableSection(object[sectionName] ?? object.properties?.[sectionName], defaults);
+}
+
+function normalizeTableSection(value, defaults) {
+  return {
+    ...defaults,
+    ...(value && typeof value === "object" ? value : {})
+  };
+}
+
+function labelForBinding(binding) {
+  return String(binding || "")
+    .split(".")
+    .pop()
+    .replace(/\[(?:\d+)?\]/g, "")
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function defaultColumnWidth(binding) {
+  const key = String(binding || "").toLowerCase();
+  if (key.includes("result") || key.includes("value")) {
+    return 90;
+  }
+  if (key.includes("unit") || key.includes("flag")) {
+    return 70;
+  }
+  return 140;
+}
+
+function defaultColumnAlign(binding) {
+  const key = String(binding || "").toLowerCase();
+  return key.includes("result") || key.includes("value") || key.includes("flag") ? "center" : "left";
 }

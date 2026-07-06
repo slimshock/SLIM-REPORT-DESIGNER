@@ -90,6 +90,47 @@ def test_pdf_rendering_expands_repeating_detail_rows() -> None:
     assert len(pdf) > 1000
 
 
+def test_html_rendering_basic_table_object() -> None:
+    report = table_report()
+
+    html = render_html(report, table_data())
+
+    assert 'data-slim-object="results_table"' in html
+    assert "<th" in html
+    assert "Test" in html
+    assert "Result" in html
+    assert "WBC" in html
+    assert "7.10" in html
+    assert "background: #e5e7eb" in html
+
+
+def test_html_rendering_basic_table_missing_data_path_does_not_crash() -> None:
+    report = table_report()
+
+    html = render_html(report, {"results": "not an array"})
+
+    assert 'data-slim-object="results_table"' in html
+    assert "<!doctype html>" in html
+
+
+def test_pdf_rendering_basic_table_object() -> None:
+    report = table_report()
+
+    pdf = render_pdf(report, table_data())
+
+    assert pdf.startswith(b"%PDF")
+    assert len(pdf) > 1000
+
+
+def test_pdf_rendering_basic_table_missing_data_path_does_not_crash() -> None:
+    report = table_report()
+
+    pdf = render_pdf(report, {})
+
+    assert pdf.startswith(b"%PDF")
+    assert len(pdf) > 1000
+
+
 def test_render_context_applies_shared_style_defaults() -> None:
     report = JSONSerializer().load_mapping(
         {
@@ -180,8 +221,15 @@ def test_render_functions_accept_report_domain_model() -> None:
 
 
 def test_sample_templates_render_html_and_pdf() -> None:
-    for template_name in ("cerebro_cbc", "lab_result"):
-        report = JSONSerializer().load(REPO_ROOT / f"examples/flask_app/sample_templates/{template_name}.json")
+    for template_name in (
+        "cerebro_cbc",
+        "lab_result",
+        "repeating_lab_result",
+        "table_lab_result",
+    ):
+        report = JSONSerializer().load(
+            REPO_ROOT / f"examples/flask_app/sample_templates/{template_name}.json"
+        )
 
         html = render_html(report, sample_data())
         pdf = render_pdf(report, sample_data())
@@ -412,7 +460,13 @@ def repeating_report() -> Report:
                 },
             ],
             "bands": [
-                {"id": "page_header", "type": "page_header", "name": "Page Header", "y": 0, "height": 100},
+                {
+                    "id": "page_header",
+                    "type": "page_header",
+                    "name": "Page Header",
+                    "y": 0,
+                    "height": 100,
+                },
                 {
                     "id": "detail",
                     "type": "detail",
@@ -427,8 +481,85 @@ def repeating_report() -> Report:
                         "empty_message": "No results",
                     },
                 },
-                {"id": "page_footer", "type": "page_footer", "name": "Page Footer", "y": 780, "height": 62},
+                {
+                    "id": "page_footer",
+                    "type": "page_footer",
+                    "name": "Page Footer",
+                    "y": 780,
+                    "height": 62,
+                },
             ],
+            "assets": [],
+        }
+    )
+
+
+def table_data() -> dict:
+    return {
+        "results": [
+            {"test": "WBC", "result": "7.10", "unit": "10^9/L"},
+            {"test": "HGB", "result": "14.20", "unit": "g/dL"},
+        ]
+    }
+
+
+def table_report() -> Report:
+    return JSONSerializer().load_mapping(
+        {
+            "version": "1.0",
+            "metadata": {"title": "Table"},
+            "page": {"width": 595, "height": 842, "unit": "px"},
+            "objects": [
+                {
+                    "id": "results_table",
+                    "type": "table",
+                    "x": 40,
+                    "y": 180,
+                    "width": 300,
+                    "height": 120,
+                    "data_path": "results",
+                    "header": {
+                        "visible": True,
+                        "height": 24,
+                        "background_color": "#e5e7eb",
+                        "color": "#111827",
+                        "font_size": 10,
+                        "bold": True,
+                    },
+                    "row": {
+                        "height": 22,
+                        "background_color": "#ffffff",
+                        "alternate_background_color": "#f9fafb",
+                        "color": "#111827",
+                        "font_size": 10,
+                    },
+                    "border": {"width": 1, "color": "#d1d5db"},
+                    "columns": [
+                        {
+                            "id": "test",
+                            "label": "Test",
+                            "binding": "test",
+                            "width": 150,
+                            "align": "left",
+                        },
+                        {
+                            "id": "result",
+                            "label": "Result",
+                            "binding": "result",
+                            "width": 90,
+                            "align": "center",
+                        },
+                        {
+                            "id": "unit",
+                            "label": "Unit",
+                            "binding": "unit",
+                            "width": 80,
+                            "align": "left",
+                        },
+                    ],
+                }
+            ],
+            "bands": [],
             "assets": [],
         }
     )

@@ -14,6 +14,8 @@ from .context import (
     convert_unit,
     create_render_context,
     get_array_by_path,
+    get_row_value,
+    get_value_by_path,
     object_pt,
     resolve_object_value,
     resolve_repeated_object_value,
@@ -60,6 +62,9 @@ def render_pdf_object(canvas: Any, obj: RenderObject, context: RenderContext) ->
     if obj.type == "image":
         _render_image(canvas, obj, context)
         return
+    if obj.type == "table":
+        _render_table(canvas, obj, context)
+        return
     raise ReportValidationError(f"Unsupported report object type: {obj.type}.")
 
 
@@ -78,7 +83,13 @@ def pdf_render_objects(context: RenderContext) -> list[tuple[RenderObject, Rende
         row_data = row if isinstance(row, dict) else {}
         row_context = context_with_row(context, row_data, data_path)
         for obj in detail_objects:
-            repeated = RenderObject(**{**obj.__dict__, "id": f"{obj.id}__row_{row_index}", "y": obj.y + (row_index * row_height)})
+            repeated = RenderObject(
+                **{
+                    **obj.__dict__,
+                    "id": f"{obj.id}__row_{row_index}",
+                    "y": obj.y + (row_index * row_height),
+                }
+            )
             rendered.append((repeated, row_context))
     return rendered
 
@@ -112,7 +123,11 @@ def _render_text(canvas: Any, obj: RenderObject, context: RenderContext) -> None
 
 def _render_field(canvas: Any, obj: RenderObject, context: RenderContext) -> None:
     row = context.data.get("__slim_row__") if isinstance(context.data, dict) else None
-    repeat_path = context.data.get("__slim_repeat_path__", "") if isinstance(context.data, dict) else ""
+    repeat_path = (
+        context.data.get("__slim_repeat_path__", "")
+        if isinstance(context.data, dict)
+        else ""
+    )
     if isinstance(row, dict):
         value = resolve_repeated_object_value(obj, context.data, row, str(repeat_path))
     else:
@@ -135,7 +150,10 @@ def _render_line(canvas: Any, obj: RenderObject, context: RenderContext) -> None
 def _render_rectangle(canvas: Any, obj: RenderObject, context: RenderContext) -> None:
     x, y, width, height = object_pt(obj, context.page.unit)
     style = obj.style
-    border_width = _style_length_pt(style.get("border_width", style.get("stroke_width", 1)), context)
+    border_width = _style_length_pt(
+        style.get("border_width", style.get("stroke_width", 1)),
+        context,
+    )
     border_radius = _style_length_pt(style.get("border_radius", 0), context)
     canvas.setLineWidth(border_width)
     _set_stroke_color(canvas, style.get("border_color", "#000000"))
@@ -191,6 +209,266 @@ def _render_image(canvas: Any, obj: RenderObject, context: RenderContext) -> Non
     except Exception:
         _set_alpha(canvas, 1)
         _draw_image_placeholder(canvas, x, y, width, height, context)
+
+
+def _render_table(canvas: Any, obj: RenderObject, context: RenderContext) -> None:
+    x, y, width, height = object_pt(obj, context.page.unit)
+    spec = _table_spec(obj)
+    columns = spec["columns"]
+    rows = get_array_by_path(context.data, spec["data_path"])
+    row_height = _table_length_pt(spec["row"].get("height", 22), context)
+    header_height = (
+        _table_length_pt(spec["header"].get("height", 24), context)
+        if spec["header"].get("visible", True)
+        else 0
+    )
+    border_width = _table_length_pt(spec["border"].get("width", 1), context)
+    col_widths = _table_column_widths(columns, width)
+    table_top = y
+    table_bottom = y + height
+    cursor_y = table_top
+
+    background = obj.style.get("background_color", "#ffffff")
+    if not _is_transparent(background):
+        _set_fill_color(canvas, background)
+        canvas.rect(x, _pdf_y(context, table_bottom), width, height, stroke=0, fill=1)
+
+    if spec["header"].get("visible", True) and header_height > 0:
+        _draw_table_row(
+            canvas,
+            context,
+            x,
+            cursor_y,
+            col_widths,
+            header_height,
+            [str(column.get("label", "")) for column in columns],
+            fill_color=spec["header"].get("background_color", "#e5e7eb"),
+            text_color=spec["header"].get("color", "#111827"),
+            font_size=spec["header"].get("font_size", 10),
+            bold=bool(spec["header"].get("bold", True)),
+            aligns=[str(column.get("align", "left")) for column in columns],
+            border_color=spec["border"].get("color", "#d1d5db"),
+            border_width=border_width,
+        )
+        cursor_y += header_height
+
+    available_height = max(table_bottom - cursor_y, 0)
+    max_rows = max(0, int(available_height // max(row_height, 1)))
+    for row_index, row in enumerate(rows[:max_rows]):
+        row_data = row if isinstance(row, dict) else {}
+        fill = (
+            spec["row"].get("alternate_background_color")
+            if row_index % 2 == 1
+            else spec["row"].get("background_color", "#ffffff")
+        )
+        values = [
+            _table_cell_value(column, row_data, str(spec["data_path"]), context)
+            for column in columns
+        ]
+        _draw_table_row(
+            canvas,
+            context,
+            x,
+            cursor_y,
+            col_widths,
+            row_height,
+            values,
+            fill_color=fill or "#ffffff",
+            text_color=spec["row"].get("color", "#111827"),
+            font_size=spec["row"].get("font_size", 10),
+            bold=False,
+            aligns=[str(column.get("align", "left")) for column in columns],
+            border_color=spec["border"].get("color", "#d1d5db"),
+            border_width=border_width,
+        )
+        cursor_y += row_height
+
+    if not rows:
+        _draw_table_row(
+            canvas,
+            context,
+            x,
+            cursor_y,
+            [width],
+            max(row_height, available_height),
+            [str(spec.get("empty_message", ""))],
+            fill_color=spec["row"].get("background_color", "#ffffff"),
+            text_color="#64748b",
+            font_size=spec["row"].get("font_size", 10),
+            bold=False,
+            aligns=["center"],
+            border_color=spec["border"].get("color", "#d1d5db"),
+            border_width=border_width,
+        )
+
+    if border_width > 0:
+        canvas.setLineWidth(border_width)
+        _set_stroke_color(canvas, spec["border"].get("color", "#d1d5db"))
+        canvas.rect(x, _pdf_y(context, y + height), width, height, stroke=1, fill=0)
+
+
+def _draw_table_row(
+    canvas: Any,
+    context: RenderContext,
+    x: float,
+    top_y: float,
+    col_widths: list[float],
+    height: float,
+    values: list[str],
+    *,
+    fill_color: Any,
+    text_color: Any,
+    font_size: Any,
+    bold: bool,
+    aligns: list[str],
+    border_color: Any,
+    border_width: float,
+) -> None:
+    cursor_x = x
+    font_name = "Helvetica-Bold" if bold else "Helvetica"
+    resolved_font_size = _font_size_pt(font_size, context)
+    for index, col_width in enumerate(col_widths):
+        if not _is_transparent(fill_color):
+            _set_fill_color(canvas, fill_color)
+            canvas.rect(
+                cursor_x,
+                _pdf_y(context, top_y + height),
+                col_width,
+                height,
+                stroke=0,
+                fill=1,
+            )
+        if border_width > 0:
+            canvas.setLineWidth(border_width)
+            _set_stroke_color(canvas, border_color)
+            canvas.rect(
+                cursor_x,
+                _pdf_y(context, top_y + height),
+                col_width,
+                height,
+                stroke=1,
+                fill=0,
+            )
+        value = values[index] if index < len(values) else ""
+        canvas.setFont(font_name, resolved_font_size)
+        _set_fill_color(canvas, text_color)
+        padding = 4
+        text_width = canvas.stringWidth(value, font_name, resolved_font_size)
+        align = aligns[index] if index < len(aligns) else "left"
+        text_x = cursor_x + padding
+        if align == "center":
+            text_x = cursor_x + max((col_width - text_width) / 2, padding)
+        elif align == "right":
+            text_x = cursor_x + max(col_width - text_width - padding, padding)
+        baseline = _pdf_y(context, top_y + (height / 2) - (resolved_font_size / 2)) - 1
+        canvas.drawString(text_x, baseline, str(value))
+        cursor_x += col_width
+
+
+def _table_length_pt(value: Any, context: RenderContext) -> float:
+    length = float(value or 0)
+    if context.page.unit == "px":
+        return convert_unit(length, "px", "pt")
+    return length
+
+
+def _table_column_widths(columns: list[dict[str, Any]], table_width: float) -> list[float]:
+    raw_widths = [max(float(column.get("width", 0) or 0), 0) for column in columns]
+    total = sum(raw_widths)
+    if total <= 0:
+        return [table_width / max(len(columns), 1)] * len(columns)
+    return [table_width * raw / total for raw in raw_widths]
+
+
+def _table_cell_value(
+    column: dict[str, Any],
+    row: dict[str, Any],
+    data_path: str,
+    context: RenderContext,
+) -> str:
+    binding = str(column.get("binding", "") or column.get("field", "") or column.get("id", ""))
+    value = get_row_value(row, binding, data_path)
+    if value in ("", None):
+        value = get_value_by_path(context.data, binding)
+    return "" if value is None else str(value)
+
+
+def _table_spec(obj: RenderObject) -> dict[str, Any]:
+    properties = obj.properties or {}
+    columns = properties.get("columns")
+    if not isinstance(columns, list) or not columns:
+        columns = [
+            {
+                "id": "column_1",
+                "label": "Column 1",
+                "binding": "column_1",
+                "width": 120,
+                "align": "left",
+            },
+            {
+                "id": "column_2",
+                "label": "Column 2",
+                "binding": "column_2",
+                "width": 120,
+                "align": "left",
+            },
+            {
+                "id": "column_3",
+                "label": "Column 3",
+                "binding": "column_3",
+                "width": 120,
+                "align": "left",
+            },
+        ]
+    return {
+        "data_path": str(properties.get("data_path") or properties.get("binding") or ""),
+        "columns": [_normalize_table_column(column, index) for index, column in enumerate(columns)],
+        "header": {
+            "visible": True,
+            "height": 24,
+            "background_color": "#e5e7eb",
+            "color": "#111827",
+            "font_size": 10,
+            "bold": True,
+            **_dict_value(properties.get("header")),
+        },
+        "row": {
+            "height": 22,
+            "background_color": "#ffffff",
+            "alternate_background_color": "#f9fafb",
+            "color": "#111827",
+            "font_size": 10,
+            **_dict_value(properties.get("row")),
+        },
+        "border": {
+            "width": 1,
+            "color": "#d1d5db",
+            **_dict_value(properties.get("border")),
+        },
+        "empty_message": str(properties.get("empty_message", "")),
+    }
+
+
+def _normalize_table_column(column: Any, index: int) -> dict[str, Any]:
+    mapping = _dict_value(column)
+    binding = str(
+        mapping.get("binding")
+        or mapping.get("field")
+        or mapping.get("id")
+        or f"column_{index + 1}"
+    )
+    label = mapping.get("label") or binding.replace("_", " ").title() or f"Column {index + 1}"
+    return {
+        "id": str(mapping.get("id") or binding or f"column_{index + 1}"),
+        "label": str(label),
+        "binding": binding,
+        "width": float(mapping.get("width", 120) or 120),
+        "align": str(mapping.get("align", "left") or "left"),
+    }
+
+
+def _dict_value(value: Any) -> dict[str, Any]:
+    return dict(value) if isinstance(value, dict) else {}
 
 
 def _draw_image_placeholder(

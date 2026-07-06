@@ -2,7 +2,7 @@
 
 The Designer UI is the framework-agnostic visual editor for Slim Report Designer templates.
 
-It is an early-alpha editor for building and editing JSON report templates with a visual canvas. It is useful today for lab-style reports, fixed layouts, fields, bands, images, and repeating Detail rows.
+It is an early-alpha editor for building and editing JSON report templates with a visual canvas. It is useful today for lab-style reports, fixed layouts, fields, bands, images, basic tables, and repeating Detail rows.
 
 ## Purpose
 
@@ -47,6 +47,7 @@ Open:
 http://127.0.0.1:5000/report-designer/designer?template=lab_result
 http://127.0.0.1:5000/report-designer/designer?template=cerebro_cbc
 http://127.0.0.1:5000/report-designer/designer?template=repeating_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=table_lab_result
 ```
 
 ## Supported Tools
@@ -56,6 +57,7 @@ http://127.0.0.1:5000/report-designer/designer?template=repeating_lab_result
 - Line
 - Rectangle
 - Image
+- Table
 
 ## Supported Canvas Features
 
@@ -75,6 +77,7 @@ http://127.0.0.1:5000/report-designer/designer?template=repeating_lab_result
 - Sample data editor
 - Placeholder/sample display toggle
 - Repeating Detail rows
+- Basic array-bound tables
 
 ## Local Version History
 
@@ -103,7 +106,7 @@ Flask mode:
 
 ## Known Limitations
 
-- Full table component is not implemented yet.
+- Advanced table features such as nested tables, merged cells, formulas, grouped tables, and complex pagination are not implemented yet.
 - Full pagination/multi-page repeat overflow is not implemented yet.
 - Group headers/footers are not implemented yet.
 - Barcode/QR rendering is not implemented yet.

@@ -69,5 +69,5 @@ PDF export uses the same row data and row-relative binding behavior as HTML prev
 
 - Full multi-page overflow/pagination is not implemented yet.
 - Group headers/footers are not implemented yet.
-- A full table component is a separate future feature.
+- Advanced table features are separate future work.
 - Only Detail band repeating is supported in this sprint.

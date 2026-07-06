@@ -652,7 +652,11 @@ class Page:
         width: float = 300.0,
         height: float = 100.0,
         binding: str | None = None,
+        data_path: str | None = None,
         columns: list[Mapping[str, Any]] | None = None,
+        header: Mapping[str, Any] | None = None,
+        row: Mapping[str, Any] | None = None,
+        border: Mapping[str, Any] | None = None,
         position: Position | Mapping[str, Any] | None = None,
         size: Size | Mapping[str, Any] | None = None,
         id: str | None = None,
@@ -670,7 +674,11 @@ class Page:
                 width=width,
                 height=height,
                 binding=binding,
+                data_path=data_path,
                 columns=columns,
+                header=header,
+                row=row,
+                border=border,
                 position=position,
                 size=size,
                 style=style,
@@ -891,7 +899,9 @@ class Object:
         if not self.style.resolved_values() and isinstance(self.properties.get("style"), Mapping):
             self.style = Style.from_dict(self.properties["style"])
         if self.band_id is None:
-            self.band_id = _optional_str(self.properties.get("band", self.properties.get("band_id")))
+            self.band_id = _optional_str(
+                self.properties.get("band", self.properties.get("band_id"))
+            )
 
     @property
     def position(self) -> Position:
@@ -1256,7 +1266,7 @@ class QRCodeObject(Object):
 
 
 class TableObject(Object):
-    """Table placeholder report object."""
+    """Basic array-bound table report object."""
 
     def __init__(
         self,
@@ -1267,7 +1277,11 @@ class TableObject(Object):
         width: float = 300.0,
         height: float = 100.0,
         binding: str | None = None,
+        data_path: str | None = None,
         columns: list[Mapping[str, Any]] | None = None,
+        header: Mapping[str, Any] | None = None,
+        row: Mapping[str, Any] | None = None,
+        border: Mapping[str, Any] | None = None,
         position: Position | Mapping[str, Any] | None = None,
         size: Size | Mapping[str, Any] | None = None,
         style: Style | Mapping[str, Any] | None = None,
@@ -1280,8 +1294,16 @@ class TableObject(Object):
         merged_properties = dict(properties or {})
         if binding is not None:
             merged_properties["binding"] = binding
+        if data_path is not None:
+            merged_properties["data_path"] = data_path
         if columns is not None:
             merged_properties["columns"] = [dict(column) for column in columns]
+        if header is not None:
+            merged_properties["header"] = dict(header)
+        if row is not None:
+            merged_properties["row"] = dict(row)
+        if border is not None:
+            merged_properties["border"] = dict(border)
         super().__init__(
             id=id,
             type="table",
@@ -1298,6 +1320,16 @@ class TableObject(Object):
             visible=visible,
             properties=merged_properties,
         )
+
+    def to_dict(self) -> dict[str, Any]:
+        data = super().to_dict()
+        properties = data.setdefault("properties", {})
+        for key in ("data_path", "header", "row", "border", "columns"):
+            if key in properties:
+                data[key] = copy.deepcopy(properties[key])
+        if "binding" in properties and "data_path" not in data:
+            data["data_path"] = properties["binding"]
+        return data
 
 
 @dataclass
@@ -1326,7 +1358,12 @@ class Band:
             name=_optional_str(mapping.get("name")),
             y=float(mapping.get("y", mapping.get("top", 0.0))),
             height=float(mapping.get("height", 0.0)),
-            background_color=str(mapping.get("background_color", properties.get("background_color", "transparent"))),
+            background_color=str(
+                mapping.get(
+                    "background_color",
+                    properties.get("background_color", "transparent"),
+                )
+            ),
             visible=bool(mapping.get("visible", True)),
             locked=bool(mapping.get("locked", False)),
             repeat=_normalize_repeat(mapping.get("repeat", properties.get("repeat"))),
@@ -1455,7 +1492,11 @@ class ReportTemplate:
             objects=[Object.from_dict(item) for item in mapping["objects"]],
             bands=[Band.from_dict(item) for item in mapping["bands"]],
             assets=[Asset.from_dict(item) for item in mapping["assets"]],
-            data=copy.deepcopy(mapping.get("data", {})) if isinstance(mapping.get("data"), Mapping) else {},
+            data=(
+                copy.deepcopy(mapping.get("data", {}))
+                if isinstance(mapping.get("data"), Mapping)
+                else {}
+            ),
         )
 
     def to_dict(self) -> dict[str, Any]:

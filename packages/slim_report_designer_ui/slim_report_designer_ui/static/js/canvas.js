@@ -463,6 +463,14 @@ function renderObject(object, selectedIds = [], primarySelectedId = null, unit =
       placeholder.textContent = "Image";
       element.appendChild(placeholder);
     }
+  } else if (object.type === "table") {
+    element.classList.add("table-object");
+    element.style.background = style.background_color || "#ffffff";
+    element.style.borderRadius = `${Number(style.border_radius) || 0}px`;
+    element.style.display = "block";
+    element.style.color = "";
+    element.style.fontSize = "";
+    element.appendChild(renderTablePreview(object, options));
   }
 
   if (object.locked) {
@@ -487,6 +495,137 @@ function repeatedFieldValue(rowData, binding, repeatDataPath, sampleData) {
     return rowValue;
   }
   return getFieldValue(sampleData, binding);
+}
+
+function renderTablePreview(object, options = {}) {
+  const spec = tableSpec(object);
+  const rows = getArrayByPath(options.sampleData || {}, spec.data_path);
+  const table = document.createElement("table");
+  table.className = "table-preview";
+  table.style.borderColor = spec.border.color;
+  table.style.borderWidth = `${spec.border.width}px`;
+  table.style.background = objectStyle(object).background_color || "#ffffff";
+
+  const colgroup = document.createElement("colgroup");
+  for (const column of spec.columns) {
+    const col = document.createElement("col");
+    col.style.width = `${columnWidthPercent(column, spec.columns)}%`;
+    colgroup.appendChild(col);
+  }
+  table.appendChild(colgroup);
+
+  if (spec.header.visible) {
+    const thead = document.createElement("thead");
+    const tr = document.createElement("tr");
+    for (const column of spec.columns) {
+      const th = document.createElement("th");
+      th.textContent = column.label;
+      th.style.height = `${spec.header.height}px`;
+      th.style.background = spec.header.background_color;
+      th.style.color = spec.header.color;
+      th.style.fontSize = `${spec.header.font_size}px`;
+      th.style.fontWeight = spec.header.bold ? "700" : "400";
+      th.style.textAlign = column.align;
+      tr.appendChild(th);
+    }
+    thead.appendChild(tr);
+    table.appendChild(thead);
+  }
+
+  const tbody = document.createElement("tbody");
+  const headerHeight = spec.header.visible ? spec.header.height : 0;
+  const maxRows = Math.max(1, Math.floor((Number(object.height) - headerHeight) / Math.max(spec.row.height, 1)));
+  const visibleRows = options.showSampleData ? rows.slice(0, maxRows) : [];
+  const bodyRows = visibleRows.length > 0
+    ? visibleRows
+    : Array.from({ length: Math.min(maxRows, 4) }, () => ({}));
+  for (const [rowIndex, row] of bodyRows.entries()) {
+    const tr = document.createElement("tr");
+    const rowBackground = rowIndex % 2 === 1
+      ? spec.row.alternate_background_color
+      : spec.row.background_color;
+    for (const column of spec.columns) {
+      const td = document.createElement("td");
+      td.textContent = options.showSampleData && visibleRows.length > 0
+        ? tableCellValue(column, row, spec.data_path, options.sampleData)
+        : `{{ ${column.binding} }}`;
+      td.style.height = `${spec.row.height}px`;
+      td.style.background = rowBackground;
+      td.style.color = spec.row.color;
+      td.style.fontSize = `${spec.row.font_size}px`;
+      td.style.textAlign = column.align;
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+  return table;
+}
+
+function tableSpec(object) {
+  return {
+    data_path: object.data_path || object.properties?.data_path || "",
+    columns: normalizeTableColumns(object.columns || object.properties?.columns),
+    header: {
+      visible: true,
+      height: 24,
+      background_color: "#e5e7eb",
+      color: "#111827",
+      font_size: 10,
+      bold: true,
+      ...(object.header || object.properties?.header || {})
+    },
+    row: {
+      height: 22,
+      background_color: "#ffffff",
+      alternate_background_color: "#f9fafb",
+      color: "#111827",
+      font_size: 10,
+      ...(object.row || object.properties?.row || {})
+    },
+    border: {
+      width: 1,
+      color: "#d1d5db",
+      ...(object.border || object.properties?.border || {})
+    }
+  };
+}
+
+function normalizeTableColumns(columns) {
+  const source = Array.isArray(columns) && columns.length > 0
+    ? columns
+    : [
+        { id: "column_1", label: "Column 1", binding: "column_1", width: 150, align: "left" },
+        { id: "column_2", label: "Column 2", binding: "column_2", width: 120, align: "left" },
+        { id: "column_3", label: "Column 3", binding: "column_3", width: 120, align: "left" }
+      ];
+  return source.map((column, index) => {
+    const binding = String(column.binding || column.field || column.id || `column_${index + 1}`);
+    return {
+      id: String(column.id || binding),
+      label: String(column.label || binding),
+      binding,
+      width: Math.max(20, Number(column.width) || 120),
+      align: ["left", "center", "right"].includes(String(column.align)) ? String(column.align) : "left"
+    };
+  });
+}
+
+function tableCellValue(column, row, dataPath, sampleData) {
+  const rowValue = getRowValue(row, column.binding, dataPath);
+  if (rowValue !== "") {
+    return String(rowValue);
+  }
+  const globalValue = getFieldValue(sampleData, column.binding);
+  return globalValue === undefined || globalValue === null ? "" : String(globalValue);
+}
+
+function columnWidthPercent(column, columns) {
+  const total = columns.reduce((sum, item) => sum + Math.max(Number(item.width) || 0, 0), 0);
+  if (total <= 0) {
+    return 100 / Math.max(columns.length, 1);
+  }
+  return Math.max(Number(column.width) || 0, 0) * 100 / total;
 }
 
 function renderRepeatedPreviewCopies(canvas, template, selectedIds, primarySelectedId, unit, repeat, rows) {

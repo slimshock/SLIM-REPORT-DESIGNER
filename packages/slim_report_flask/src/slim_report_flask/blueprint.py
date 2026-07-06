@@ -9,7 +9,11 @@ from typing import TYPE_CHECKING, Any
 from flask import Blueprint, Response, jsonify, request, url_for
 
 from slim_report_core import ExporterError, Report, SlimReportError, create_default_template
-from slim_report_core.rendering.context import RenderContext, create_render_context, get_array_by_path
+from slim_report_core.rendering.context import (
+    RenderContext,
+    create_render_context,
+    get_array_by_path,
+)
 from slim_report_core.serialization import JSONSerializer
 from slim_report_designer_ui import static_file
 
@@ -216,7 +220,9 @@ def render_debug_headers(context: RenderContext, data: Any | None = None) -> dic
         "X-Slim-Report-Page-Unit": context.page.unit,
         "X-Slim-Report-Page-Width": str(context.page.width_px),
         "X-Slim-Report-Page-Height": str(context.page.height_px),
-        "X-Slim-Report-Has-Data-Sample": "true" if isinstance(data, dict) and bool(data) else "false",
+        "X-Slim-Report-Has-Data-Sample": (
+            "true" if isinstance(data, dict) and bool(data) else "false"
+        ),
         "X-Slim-Report-Repeat-Data-Path": repeat_data_path,
         "X-Slim-Report-Repeat-Row-Count": str(len(repeat_rows)),
     }

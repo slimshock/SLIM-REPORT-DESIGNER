@@ -107,6 +107,7 @@ Supported object types:
 - `line`
 - `rectangle`
 - `image`
+- `table`
 
 ## Field Object
 
@@ -161,6 +162,54 @@ Example:
   }
 }
 ```
+
+## Table Object
+
+The basic Table object renders simple array-bound tabular data. It is not a full spreadsheet or advanced table engine.
+
+```json
+{
+  "id": "results_table",
+  "type": "table",
+  "band": "detail",
+  "x": 40,
+  "y": 180,
+  "width": 515,
+  "height": 260,
+  "data_path": "results",
+  "header": {
+    "visible": true,
+    "height": 24,
+    "background_color": "#e5e7eb",
+    "color": "#111827",
+    "font_size": 10,
+    "bold": true
+  },
+  "row": {
+    "height": 22,
+    "background_color": "#ffffff",
+    "alternate_background_color": "#f9fafb",
+    "color": "#111827",
+    "font_size": 10
+  },
+  "border": {
+    "width": 1,
+    "color": "#d1d5db"
+  },
+  "columns": [
+    {
+      "id": "test",
+      "label": "Test",
+      "binding": "test",
+      "width": 150,
+      "align": "left",
+      "source_path": "results[].test"
+    }
+  ]
+}
+```
+
+Column bindings are row-relative. For a table bound to `results`, `test` resolves against the current row.
 
 ## Data
 

@@ -1,8 +1,11 @@
 import { icon } from "./icons.js";
-import { fieldExists, getFieldValue, getRowValue, normalizeArrayFieldPath, normalizeFieldPath } from "./data_fields.js";
+import { fieldExists, getArrayChildFields, getFieldValue, getRowValue, normalizeArrayFieldPath, normalizeFieldPath } from "./data_fields.js";
 import {
+  addTableColumn,
+  generateTableColumns,
   objectStyle,
   getBandById,
+  removeTableColumn,
   setBandValue,
   setBandRepeatValue,
   setObjectAlt,
@@ -15,7 +18,10 @@ import {
   setPageOrientation,
   setPageSize,
   setPageUnit,
-  setPageValue
+  setPageValue,
+  setTableColumnValue,
+  setTableDataPath,
+  setTableSectionValue
 } from "./objects.js";
 
 export function createInspector({
@@ -69,6 +75,24 @@ export function createInspector({
     onChange();
   });
   form.addEventListener("click", (event) => {
+    const tableButton = event.target.closest("button[data-table-command]");
+    if (tableButton) {
+      event.preventDefault();
+      const object = getSelectedObject();
+      if (!object || object.type !== "table") {
+        return;
+      }
+      onBeforeChange("Edit table");
+      if (tableButton.dataset.tableCommand === "generateColumns") {
+        generateTableColumns(getTemplate(), object);
+      } else if (tableButton.dataset.tableCommand === "addColumn") {
+        addTableColumn(object);
+      } else if (tableButton.dataset.tableCommand === "deleteColumn") {
+        removeTableColumn(object, Number(tableButton.dataset.columnIndex) || 0);
+      }
+      onChange();
+      return;
+    }
     const commandButton = event.target.closest("button[data-inspector-command]");
     if (commandButton) {
       event.preventDefault();
@@ -199,6 +223,16 @@ export function renderInspector(
         type: "checkbox",
         name: "maintain_aspect_ratio"
       })
+    ]));
+  } else if (object.type === "table") {
+    form.appendChild(section("Table Data", tableDataFields(object, template, fields)));
+    form.appendChild(section("Columns", tableColumnFields(object)));
+    form.appendChild(section("Header", tableHeaderFields(object)));
+    form.appendChild(section("Rows", tableRowFields(object)));
+    form.appendChild(section("Borders", tableBorderFields(object)));
+    form.appendChild(section("Style", [
+      styleField("background_color", object, "color", { label: "background", transparent: true }),
+      styleField("border_radius", object, "number")
     ]));
   }
   form.appendChild(section("Object State", [
@@ -423,6 +457,111 @@ function repeatFields(band, fields) {
   ];
 }
 
+function tableDataFields(object, template, fields) {
+  const dataPath = object.data_path || object.properties?.data_path || "";
+  const rows = [
+    fieldRow("data path", dataPath, {
+      type: "select",
+      name: "table.data_path",
+      options: arrayPathOptions(fields, dataPath)
+    }),
+    fieldRow("empty message", object.empty_message || object.properties?.empty_message || "", {
+      name: "table.empty_message"
+    })
+  ];
+  const childFields = getArrayChildFields(template, dataPath);
+  const note = document.createElement("p");
+  note.className = "field-sample-preview";
+  note.textContent = childFields.length
+    ? `${childFields.length} child fields available.`
+    : "No child fields detected for this array.";
+  rows.push(note);
+  rows.push(tableCommandButton("generateColumns", "Generate columns from data"));
+  return rows;
+}
+
+function tableColumnFields(object) {
+  const rows = [];
+  const columns = tableColumns(object);
+  columns.forEach((column, index) => {
+    const group = document.createElement("div");
+    group.className = "table-column-editor";
+    const title = document.createElement("div");
+    title.className = "table-column-title";
+    title.textContent = `Column ${index + 1}`;
+    const deleteButton = tableCommandButton("deleteColumn", "Delete");
+    deleteButton.dataset.columnIndex = String(index);
+    group.append(
+      title,
+      fieldRow("label", column.label, { name: `table.column.${index}.label` }),
+      fieldRow("binding", column.binding, { name: `table.column.${index}.binding` }),
+      fieldRow("width", column.width, { type: "number", name: `table.column.${index}.width`, min: "20" }),
+      fieldRow("align", column.align, {
+        type: "select",
+        name: `table.column.${index}.align`,
+        options: ["left", "center", "right"]
+      }),
+      deleteButton
+    );
+    rows.push(group);
+  });
+  rows.push(tableCommandButton("addColumn", "Add column"));
+  return rows;
+}
+
+function tableHeaderFields(object) {
+  const header = {
+    visible: true,
+    height: 24,
+    background_color: "#e5e7eb",
+    color: "#111827",
+    font_size: 10,
+    bold: true,
+    ...(object.header || object.properties?.header || {})
+  };
+  return [
+    fieldRow("show header", Boolean(header.visible), { type: "checkbox", name: "table.header.visible" }),
+    fieldRow("height", header.height, { type: "number", name: "table.header.height", min: "8" }),
+    fieldRow("background", header.background_color, { type: "color", name: "table.header.background_color" }),
+    fieldRow("text color", header.color, { type: "color", name: "table.header.color" }),
+    fieldRow("font size", header.font_size, { type: "number", name: "table.header.font_size", min: "6" }),
+    fieldRow("bold", Boolean(header.bold), { type: "checkbox", name: "table.header.bold" })
+  ];
+}
+
+function tableRowFields(object) {
+  const row = {
+    height: 22,
+    background_color: "#ffffff",
+    alternate_background_color: "#f9fafb",
+    color: "#111827",
+    font_size: 10,
+    ...(object.row || object.properties?.row || {})
+  };
+  return [
+    fieldRow("row height", row.height, { type: "number", name: "table.row.height", min: "8" }),
+    fieldRow("background", row.background_color, { type: "color", name: "table.row.background_color" }),
+    fieldRow("alternate background", row.alternate_background_color, {
+      type: "color",
+      name: "table.row.alternate_background_color"
+    }),
+    fieldRow("text color", row.color, { type: "color", name: "table.row.color" }),
+    fieldRow("font size", row.font_size, { type: "number", name: "table.row.font_size", min: "6" })
+  ];
+}
+
+function tableBorderFields(object) {
+  const border = {
+    width: 1,
+    color: "#d1d5db",
+    ...(object.border || object.properties?.border || {})
+  };
+  return [
+    fieldRow("border width", border.width, { type: "number", name: "table.border.width", min: "0" }),
+    fieldRow("border color", border.color, { type: "color", name: "table.border.color" })
+  ];
+}
+
 function arrayPathOptions(fields, current = "") {
   const paths = fields
     .map((field) => String(field.path || ""))
@@ -496,6 +635,31 @@ function applyInput(template, object, input) {
   }
   if (input.name === "binding_picker") {
     setObjectBinding(object, normalizeFieldPath(value));
+    return;
+  }
+  if (input.name === "table.data_path") {
+    setTableDataPath(object, value);
+    return;
+  }
+  if (input.name === "table.empty_message") {
+    setObjectPropertyValue(object, "empty_message", String(value));
+    return;
+  }
+  if (input.name.startsWith("table.column.")) {
+    const [, , rawIndex, key] = input.name.split(".");
+    setTableColumnValue(object, Number(rawIndex) || 0, key, inputValue(input, value));
+    return;
+  }
+  if (input.name.startsWith("table.header.")) {
+    setTableSectionValue(object, "header", input.name.slice("table.header.".length), inputValue(input, value));
+    return;
+  }
+  if (input.name.startsWith("table.row.")) {
+    setTableSectionValue(object, "row", input.name.slice("table.row.".length), inputValue(input, value));
+    return;
+  }
+  if (input.name.startsWith("table.border.")) {
+    setTableSectionValue(object, "border", input.name.slice("table.border.".length), inputValue(input, value));
     return;
   }
   object[input.name] = String(value);
@@ -664,6 +828,15 @@ function fieldRow(labelText, value, options = {}) {
   return row;
 }
 
+function tableCommandButton(command, label) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = command === "deleteColumn" ? "toolbar-button danger" : "toolbar-button";
+  button.dataset.tableCommand = command;
+  button.textContent = label;
+  return button;
+}
+
 function readFileAsDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -771,4 +944,22 @@ function repeatForObject(template, object) {
     dataPath: repeat.data_path,
     array: Array.isArray(array) ? array : []
   };
+}
+
+function tableColumns(object) {
+  const columns = object.columns || object.properties?.columns || [];
+  if (!Array.isArray(columns) || columns.length === 0) {
+    return [
+      { id: "column_1", label: "Column 1", binding: "column_1", width: 150, align: "left" },
+      { id: "column_2", label: "Column 2", binding: "column_2", width: 120, align: "left" },
+      { id: "column_3", label: "Column 3", binding: "column_3", width: 120, align: "left" }
+    ];
+  }
+  return columns.map((column, index) => ({
+    id: String(column.id || column.binding || `column_${index + 1}`),
+    label: String(column.label || column.binding || `Column ${index + 1}`),
+    binding: String(column.binding || column.field || column.id || `column_${index + 1}`),
+    width: Math.max(20, Number(column.width) || 120),
+    align: ["left", "center", "right"].includes(String(column.align)) ? String(column.align) : "left"
+  }));
 }

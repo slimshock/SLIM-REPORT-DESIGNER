@@ -64,6 +64,12 @@ IMAGE_STYLE_DEFAULTS: dict[str, Any] = {
     "background_color": "transparent",
 }
 
+TABLE_STYLE_DEFAULTS: dict[str, Any] = {
+    "background_color": "#ffffff",
+    "border_radius": 0,
+    "overflow": "hidden",
+}
+
 UNIT_TO_PX = {
     "px": 1.0,
     "pt": CSS_DPI / POINTS_PER_INCH,
@@ -235,9 +241,20 @@ def normalize_object(obj: Object) -> RenderObject:
     width = float(getattr(obj, "width", 0))
     height = float(getattr(obj, "height", 0))
     if not all(math.isfinite(value) for value in (x, y, width, height)):
-        raise ReportValidationError(f"Report object {getattr(obj, 'id', '')} has invalid coordinates.")
+        raise ReportValidationError(
+            f"Report object {getattr(obj, 'id', '')} has invalid coordinates."
+        )
     if width < 0 or height < 0:
-        raise ReportValidationError(f"Report object {getattr(obj, 'id', '')} has invalid dimensions.")
+        raise ReportValidationError(
+            f"Report object {getattr(obj, 'id', '')} has invalid dimensions."
+        )
+
+    band = (
+        getattr(obj, "band_id", None)
+        or properties.get("band")
+        or properties.get("band_id")
+        or "detail"
+    )
 
     return RenderObject(
         id=_required_attr(obj, "id", "Report object"),
@@ -249,7 +266,7 @@ def normalize_object(obj: Object) -> RenderObject:
         text=str(getattr(obj, "text", "") or properties.get("text", "")),
         binding=str(binding_expression or ""),
         style=style,
-        band=str(getattr(obj, "band_id", None) or properties.get("band") or properties.get("band_id") or "detail"),
+        band=str(band),
         locked=_bool(properties.get("locked", getattr(obj, "locked", False))),
         z_index=int(getattr(obj, "z_index", 0)),
         visible=bool(getattr(obj, "visible", True)),
@@ -471,6 +488,8 @@ def default_style_for_type(object_type: str) -> dict[str, Any]:
         return dict(LINE_STYLE_DEFAULTS)
     if object_type == "image":
         return dict(IMAGE_STYLE_DEFAULTS)
+    if object_type == "table":
+        return dict(TABLE_STYLE_DEFAULTS)
     return dict(TEXT_STYLE_DEFAULTS)
 
 
