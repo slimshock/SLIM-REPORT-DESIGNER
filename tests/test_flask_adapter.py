@@ -20,16 +20,17 @@ for src_dir in reversed(PACKAGE_SRC_DIRS):
 from flask import Flask  # noqa: E402
 
 from slim_report_core import Report, ReportObject  # noqa: E402
+from slim_report_core.assets import FileSystemAssetProvider  # noqa: E402
 from slim_report_core.serialization import JSONSerializer  # noqa: E402
 from slim_report_flask import (  # noqa: E402
     FileSystemTemplateProvider,
-    SQLAlchemyTemplateProvider,
     SlimReportDesigner,
+    SQLAlchemyTemplateProvider,
     TemplateProvider,
     TemplateStorageError,
 )
-from slim_report_flask.blueprint import safe_pdf_filename  # noqa: E402
 from slim_report_flask import extension as extension_module  # noqa: E402
+from slim_report_flask.blueprint import safe_pdf_filename  # noqa: E402
 
 
 def test_flask_adapter_registers_health_route(tmp_path: Path) -> None:
@@ -122,7 +123,9 @@ def test_flask_adapter_serves_framework_agnostic_designer_ui(tmp_path: Path) -> 
     assert ".inspector-section" in css_response.get_data(as_text=True)
 
 
-def test_flask_adapter_supports_app_factory_custom_prefix_and_runtime_config(tmp_path: Path) -> None:
+def test_flask_adapter_supports_app_factory_custom_prefix_and_runtime_config(
+    tmp_path: Path,
+) -> None:
     provider = FileSystemTemplateProvider(tmp_path / "templates", allow_save=True)
     app = Flask(__name__)
     app.config["TESTING"] = True
@@ -153,9 +156,132 @@ def test_flask_adapter_supports_app_factory_custom_prefix_and_runtime_config(tmp
     assert js_response.mimetype in {"application/javascript", "text/javascript"}
 
 
+def test_flask_asset_routes_list_and_serve_assets(tmp_path: Path) -> None:
+    asset_dir = tmp_path / "assets"
+    asset_dir.mkdir()
+    (asset_dir / "clinic_logo.svg").write_text("<svg></svg>", encoding="utf-8")
+    app = Flask(__name__)
+    app.config["TESTING"] = True
+    designer = SlimReportDesigner(
+        template_provider=FileSystemTemplateProvider(tmp_path / "templates", allow_save=True),
+        asset_provider=FileSystemAssetProvider(
+            asset_dir,
+            base_url="/report-designer/assets",
+        ),
+    )
+    designer.init_app(app)
+    client = app.test_client()
+
+    list_response = client.get("/report-designer/api/assets")
+    metadata_response = client.get("/report-designer/api/assets/clinic_logo")
+    content_response = client.get("/report-designer/assets/clinic_logo")
+
+    assert list_response.status_code == 200
+    assert list_response.get_json()["assets"][0]["id"] == "clinic_logo"
+    assert metadata_response.status_code == 200
+    assert metadata_response.get_json()["asset"]["url"] == "/report-designer/assets/clinic_logo"
+    assert content_response.status_code == 200
+    assert content_response.mimetype == "image/svg+xml"
+    assert content_response.get_data() == b"<svg></svg>"
+
+
+def test_flask_asset_routes_support_custom_prefix(tmp_path: Path) -> None:
+    asset_dir = tmp_path / "assets"
+    asset_dir.mkdir()
+    (asset_dir / "clinic_logo.svg").write_text("<svg></svg>", encoding="utf-8")
+    app = Flask(__name__)
+    app.config["TESTING"] = True
+    designer = SlimReportDesigner(
+        template_provider=FileSystemTemplateProvider(tmp_path / "templates", allow_save=True),
+        asset_provider=FileSystemAssetProvider(
+            asset_dir,
+            base_url="/admin/reports/assets",
+        ),
+        url_prefix="/admin/reports",
+    )
+    designer.init_app(app)
+
+    response = app.test_client().get("/admin/reports/api/assets")
+    asset_response = app.test_client().get("/admin/reports/assets/clinic_logo")
+
+    assert response.status_code == 200
+    assert response.get_json()["assets"][0]["url"] == "/admin/reports/assets/clinic_logo"
+    assert asset_response.status_code == 200
+
+
+def test_flask_asset_routes_return_clean_errors_and_block_saves(tmp_path: Path) -> None:
+    app = Flask(__name__)
+    app.config["TESTING"] = True
+    designer = SlimReportDesigner(
+        template_provider=FileSystemTemplateProvider(tmp_path / "templates", allow_save=True),
+        asset_provider=FileSystemAssetProvider(tmp_path / "assets"),
+    )
+    designer.init_app(app)
+    client = app.test_client()
+
+    missing_response = client.get("/report-designer/api/assets/missing_logo")
+    invalid_response = client.get("/report-designer/api/assets/..%5Csecret")
+    save_response = client.post(
+        "/report-designer/api/assets/clinic_logo",
+        data=b"<svg></svg>",
+        content_type="image/svg+xml",
+    )
+
+    assert missing_response.status_code == 404
+    assert missing_response.get_json() == {
+        "ok": False,
+        "error": {
+            "code": "asset_not_found",
+            "message": "Asset not found: missing_logo",
+        },
+    }
+    assert invalid_response.status_code in {400, 404}
+    assert save_response.status_code == 403
+    assert save_response.get_json()["error"]["code"] == "asset_forbidden"
+
+
+def test_flask_preview_uses_asset_provider_for_posted_template(tmp_path: Path) -> None:
+    asset_dir = tmp_path / "assets"
+    asset_dir.mkdir()
+    (asset_dir / "clinic_logo.svg").write_text("<svg></svg>", encoding="utf-8")
+    app = Flask(__name__)
+    app.config["TESTING"] = True
+    designer = SlimReportDesigner(
+        template_provider=FileSystemTemplateProvider(tmp_path / "templates", allow_save=True),
+        asset_provider=FileSystemAssetProvider(
+            asset_dir,
+            base_url="/report-designer/assets",
+        ),
+    )
+    designer.init_app(app)
+    payload = {
+        "version": "0.1",
+        "metadata": {"name": "Asset Preview"},
+        "page": {"width": 240, "height": 120, "unit": "px"},
+        "objects": [
+            {
+                "id": "logo",
+                "type": "image",
+                "x": 20,
+                "y": 20,
+                "width": 120,
+                "height": 48,
+                "assetId": "clinic_logo",
+            }
+        ],
+        "bands": [],
+        "assets": [],
+    }
+
+    response = app.test_client().post("/report-designer/api/preview", json=payload)
+
+    assert response.status_code == 200
+    assert 'src="/report-designer/assets/clinic_logo"' in response.get_data(as_text=True)
+
+
 def test_flask_adapter_supports_sqlalchemy_template_provider() -> None:
     sqlalchemy = pytest.importorskip("sqlalchemy")
-    from sqlalchemy import Boolean, Column, DateTime, Integer, JSON, String, Text, create_engine
+    from sqlalchemy import JSON, Boolean, Column, DateTime, Integer, String, Text, create_engine
     from sqlalchemy.orm import declarative_base, sessionmaker
 
     base = declarative_base()
@@ -208,7 +334,7 @@ def test_flask_adapter_supports_sqlalchemy_template_provider() -> None:
 
 def test_flask_adapter_sqlalchemy_template_provider_saves_database_rows() -> None:
     pytest.importorskip("sqlalchemy")
-    from sqlalchemy import Boolean, Column, DateTime, Integer, JSON, String, Text, create_engine
+    from sqlalchemy import JSON, Boolean, Column, DateTime, Integer, String, Text, create_engine
     from sqlalchemy.orm import declarative_base, sessionmaker
 
     base = declarative_base()
@@ -238,7 +364,10 @@ def test_flask_adapter_sqlalchemy_template_provider_saves_database_rows() -> Non
     designer.init_app(app)
     client = app.test_client()
 
-    create_response = client.post("/report-designer/api/templates/lab-template", json=template_payload())
+    create_response = client.post(
+        "/report-designer/api/templates/lab-template",
+        json=template_payload(),
+    )
     saved_row = session.query(ReportTemplate).filter_by(template_id="lab-template").first()
 
     assert create_response.status_code == 200
@@ -247,7 +376,9 @@ def test_flask_adapter_sqlalchemy_template_provider_saves_database_rows() -> Non
     assert provider.get_template("lab-template")["metadata"]["title"] == "Lab Result"
 
 
-def test_filesystem_template_provider_lists_gets_saves_and_rejects_traversal(tmp_path: Path) -> None:
+def test_filesystem_template_provider_lists_gets_saves_and_rejects_traversal(
+    tmp_path: Path,
+) -> None:
     provider = FileSystemTemplateProvider(tmp_path, allow_save=True)
     saved = provider.save_template("lab-template", template_payload())
 
@@ -617,8 +748,12 @@ def test_flask_permission_hooks_block_view_edit_and_export(tmp_path: Path) -> No
         can_export_template=lambda template_id: False,
     )
     designer.init_app(app)
-    designer.create_template({**template_payload(), "metadata": {"title": "Allowed", "custom": {"id": "allowed"}}})
-    designer.create_template({**template_payload(), "metadata": {"title": "Blocked", "custom": {"id": "blocked"}}})
+    designer.create_template(
+        {**template_payload(), "metadata": {"title": "Allowed", "custom": {"id": "allowed"}}}
+    )
+    designer.create_template(
+        {**template_payload(), "metadata": {"title": "Blocked", "custom": {"id": "blocked"}}}
+    )
     client = app.test_client()
 
     view_response = client.get("/report-designer/api/templates/blocked")
@@ -708,7 +843,10 @@ def test_flask_export_uses_page_print_filename_and_safe_slug(tmp_path: Path) -> 
     response = app.test_client().post("/report-designer/api/export/pdf", json=payload)
 
     assert response.status_code == 200
-    assert response.headers["Content-Disposition"] == 'attachment; filename="CBC-Result-July-08.pdf"'
+    assert (
+        response.headers["Content-Disposition"]
+        == 'attachment; filename="CBC-Result-July-08.pdf"'
+    )
 
 
 def test_safe_pdf_filename_removes_windows_invalid_characters() -> None:

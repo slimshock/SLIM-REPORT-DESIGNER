@@ -166,9 +166,17 @@ class RenderContext:
     bands: list[RenderBand]
     objects: list[RenderObject]
     title: str
+    asset_provider: Any | None = None
+    asset_resolver: Any | None = None
 
 
-def create_render_context(report: Report, data: Mapping[str, Any] | None = None) -> RenderContext:
+def create_render_context(
+    report: Report,
+    data: Mapping[str, Any] | None = None,
+    *,
+    asset_provider: Any | None = None,
+    asset_resolver: Any | None = None,
+) -> RenderContext:
     """Normalize a report domain model and data into a render context."""
     if not isinstance(report, Report):
         raise ReportValidationError("Renderer expects a Report domain model.")
@@ -185,6 +193,8 @@ def create_render_context(report: Report, data: Mapping[str, Any] | None = None)
         bands=bands,
         objects=objects,
         title=resolve_title(report),
+        asset_provider=asset_provider,
+        asset_resolver=asset_resolver,
     )
 
 
@@ -741,6 +751,8 @@ def context_with_page_numbers(
         bands=context.bands,
         objects=context.objects,
         title=context.title,
+        asset_provider=context.asset_provider,
+        asset_resolver=context.asset_resolver,
     )
 
 

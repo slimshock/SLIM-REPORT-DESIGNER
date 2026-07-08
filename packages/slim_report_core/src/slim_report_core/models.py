@@ -962,6 +962,10 @@ class Object:
         for key in ("formula", "formula_mode", "conditions"):
             if key in data["properties"]:
                 data[key] = data["properties"][key]
+        if self.type == "image":
+            for key in ("src", "source", "assetId", "asset_id", "asset", "alt"):
+                if key in data["properties"]:
+                    data[key] = copy.deepcopy(data["properties"][key])
         if self.style.resolved_values():
             data["style"] = self.style.to_dict()
             data["properties"]["style"] = self.style.to_dict()

@@ -3,6 +3,19 @@
 __version__ = "0.6.0a0"
 
 from .api import normalize_template, render_html, render_pdf
+from .assets import (
+    AssetError,
+    AssetIdError,
+    AssetNotFoundError,
+    AssetPermissionError,
+    AssetProvider,
+    AssetStorageError,
+    AssetTypeError,
+    FileSystemAssetProvider,
+    ImageSourceResolver,
+    ResolvedImageSource,
+    validate_asset_id,
+)
 from .builder import ObjectBuilder, PageBuilder, ReportBuilder, StyleBuilder
 from .constants import DEFAULT_REPORT_VERSION
 from .data import DataContext, DataProviderRegistry
@@ -68,6 +81,13 @@ from .widgets import (
 __all__ = [
     "DEFAULT_REPORT_VERSION",
     "Asset",
+    "AssetError",
+    "AssetIdError",
+    "AssetNotFoundError",
+    "AssetPermissionError",
+    "AssetProvider",
+    "AssetStorageError",
+    "AssetTypeError",
     "Band",
     "BarcodeObject",
     "BaseExporter",
@@ -82,8 +102,10 @@ __all__ = [
     "ExporterRegistry",
     "FieldObject",
     "FieldWidget",
+    "FileSystemAssetProvider",
     "HTMLExporter",
     "ImageObject",
+    "ImageSourceResolver",
     "ImageWidget",
     "JSONSerializer",
     "Layer",
@@ -116,6 +138,7 @@ __all__ = [
     "ReportValidationError",
     "ReportValidationIssue",
     "ReportValidationResult",
+    "ResolvedImageSource",
     "Size",
     "SlimReportError",
     "Style",
@@ -133,4 +156,5 @@ __all__ = [
     "render_pdf",
     "resolve_expression",
     "resolve_text",
+    "validate_asset_id",
 ]

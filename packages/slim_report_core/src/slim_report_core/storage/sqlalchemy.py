@@ -105,13 +105,19 @@ class SQLAlchemyTemplateProvider:
         self._set_if_present(record, self.category_field, metadata["category"])
         self._set_if_present(record, self.template_field, normalized, json_value=True)
 
-        sample_data = normalized.get("data", {}).get("sample") if isinstance(normalized.get("data"), dict) else None
+        sample_data = (
+            normalized.get("data", {}).get("sample")
+            if isinstance(normalized.get("data"), dict)
+            else None
+        )
         if isinstance(sample_data, dict) and self._has_field(self.sample_data_field):
             self._set_if_present(record, self.sample_data_field, sample_data, json_value=True)
 
         if self._has_field(self.version_field):
             current_version = getattr(record, self.version_field, None)
-            next_version = 1 if is_new or not isinstance(current_version, int) else current_version + 1
+            next_version = (
+                1 if is_new or not isinstance(current_version, int) else current_version + 1
+            )
             setattr(record, self.version_field, next_version)
         self._set_if_present(record, self.active_field, True)
         now = datetime.now(timezone.utc)
@@ -178,8 +184,12 @@ class SQLAlchemyTemplateProvider:
             "category": str(self._get_if_present(record, self.category_field, "") or ""),
             "version": self._get_if_present(record, self.version_field, None),
             "is_active": bool(self._get_if_present(record, self.active_field, True)),
-            "created_at": self._string_or_none(self._get_if_present(record, self.created_at_field, None)),
-            "updated_at": self._string_or_none(self._get_if_present(record, self.updated_at_field, None)),
+            "created_at": self._string_or_none(
+                self._get_if_present(record, self.created_at_field, None)
+            ),
+            "updated_at": self._string_or_none(
+                self._get_if_present(record, self.updated_at_field, None)
+            ),
         }
 
     def _sample_data_for_record(self, record: Any) -> dict[str, Any]:

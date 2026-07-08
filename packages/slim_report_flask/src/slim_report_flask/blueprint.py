@@ -16,6 +16,14 @@ from slim_report_core import (
     create_default_template,
     normalize_template,
 )
+from slim_report_core.assets import (
+    AssetError,
+    AssetIdError,
+    AssetNotFoundError,
+    AssetPermissionError,
+    AssetStorageError,
+    AssetTypeError,
+)
 from slim_report_core.rendering.context import (
     RenderContext,
     create_render_context,
@@ -159,6 +167,81 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         template = designer.get_template(template_id)
         return jsonify(template_response(template_id, template))
 
+    @blueprint.get("/api/assets")
+    def api_assets() -> Response:
+        blocked = require_asset_access(designer, "view", "", api=True)
+        if blocked:
+            return blocked
+        if designer.asset_provider is None:
+            return jsonify({"ok": True, "assets": []})
+        try:
+            return jsonify({"ok": True, "assets": designer.asset_provider.list_assets()})
+        except AssetError as exc:
+            return asset_error_response(exc)
+
+    @blueprint.get("/api/assets/<asset_id>")
+    def api_asset(asset_id: str) -> Response | tuple[Response, int]:
+        blocked = require_asset_access(designer, "view", asset_id, api=True)
+        if blocked:
+            return blocked
+        if designer.asset_provider is None:
+            return asset_error_response(AssetNotFoundError(f"Asset not found: {asset_id}"))
+        try:
+            return jsonify({"ok": True, "asset": designer.asset_provider.get_asset(asset_id)})
+        except AssetError as exc:
+            return asset_error_response(exc)
+
+    @blueprint.post("/api/assets/<asset_id>")
+    def save_api_asset(asset_id: str) -> Response | tuple[Response, int]:
+        blocked = require_asset_access(designer, "edit", asset_id, api=True)
+        if blocked:
+            return blocked
+        if designer.asset_provider is None:
+            return asset_error_response(AssetPermissionError("Asset provider is not configured."))
+        try:
+            content, content_type, metadata = request_asset_content()
+            asset = designer.asset_provider.save_asset(
+                asset_id,
+                content,
+                content_type=content_type,
+                metadata=metadata,
+            )
+            return jsonify({"ok": True, "asset": asset}), 201
+        except AssetError as exc:
+            return asset_error_response(exc)
+
+    @blueprint.delete("/api/assets/<asset_id>")
+    def delete_api_asset(asset_id: str) -> Response | tuple[Response, int]:
+        blocked = require_asset_access(designer, "edit", asset_id, api=True)
+        if blocked:
+            return blocked
+        if designer.asset_provider is None:
+            return asset_error_response(AssetPermissionError("Asset provider is not configured."))
+        try:
+            deleted = designer.asset_provider.delete_asset(asset_id)
+            return jsonify({"ok": True, "deleted": deleted})
+        except AssetError as exc:
+            return asset_error_response(exc)
+
+    @blueprint.get("/assets/<asset_id>")
+    def serve_asset(asset_id: str) -> Response | tuple[Response, int]:
+        blocked = require_asset_access(designer, "view", asset_id, api=False)
+        if blocked:
+            return blocked
+        if designer.asset_provider is None:
+            return asset_error_response(AssetNotFoundError(f"Asset not found: {asset_id}"))
+        try:
+            metadata = designer.asset_provider.get_asset(asset_id)
+            with designer.asset_provider.open_asset(asset_id) as asset_file:
+                content = asset_file.read()
+            mimetype = metadata.get("content_type") or "application/octet-stream"
+            response = Response(content, mimetype=str(mimetype))
+            if current_app.debug:
+                response.headers["Cache-Control"] = "no-store"
+            return response
+        except AssetError as exc:
+            return asset_error_response(exc)
+
     @blueprint.post("/api/templates/<template_id>")
     def save_api_template(template_id: str) -> tuple[Response, int]:
         blocked = require_access(designer, "edit", template_id, api=True)
@@ -181,7 +264,7 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
             data = request_template_data(request_payload, payload, designer, report)
             context = validate_api_report(report)
             return Response(
-                report.render_html(data),
+                render_report_html(report, data, designer),
                 mimetype="text/html",
                 headers=render_debug_headers(context, data, renderer="html"),
             )
@@ -201,7 +284,7 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
             data = request_template_data(request_payload, payload, designer, report)
             context = validate_api_report(report)
             return Response(
-                report.render_pdf(data),
+                render_report_pdf(report, data, designer),
                 mimetype="application/pdf",
                 headers={
                     "Content-Disposition": content_disposition(default_export_filename(report)),
@@ -224,9 +307,9 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
                 request_args=request.args,
                 report=report,
             )
-            context = create_render_context(report)
+            context = create_render_context(report, asset_provider=designer.asset_provider)
             return Response(
-                report.render_html(data),
+                render_report_html(report, data, designer),
                 mimetype="text/html",
                 headers=render_debug_headers(context, data, renderer="html"),
             )
@@ -246,7 +329,7 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
                 request_args=request.args,
                 report=report,
             )
-            context = create_render_context(report)
+            context = create_render_context(report, asset_provider=designer.asset_provider)
             pdf = designer.export_pdf(template_id, record_id)
             return Response(
                 pdf,
@@ -277,6 +360,10 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
     def template_storage_error(exc: TemplateStorageError) -> tuple[Response, int]:
         return error_response(_error_code_for_exception(exc), str(exc), _status_for_exception(exc))
 
+    @blueprint.errorhandler(AssetError)
+    def asset_error(exc: AssetError) -> tuple[Response, int]:
+        return asset_error_response(exc)
+
     return blueprint
 
 
@@ -284,6 +371,18 @@ def _status_for_core_error(exc: SlimReportError) -> int:
     if isinstance(exc, ExporterError):
         return 500
     return 400
+
+
+def render_report_html(report: Report, data: dict[str, Any], designer: SlimReportDesigner) -> str:
+    if designer.asset_provider is None:
+        return report.render_html(data)
+    return report.render_html(data, asset_provider=designer.asset_provider)
+
+
+def render_report_pdf(report: Report, data: dict[str, Any], designer: SlimReportDesigner) -> bytes:
+    if designer.asset_provider is None:
+        return report.render_pdf(data)
+    return report.render_pdf(data, asset_provider=designer.asset_provider)
 
 
 def render_failure_response(exc: Exception) -> tuple[Response, int]:
@@ -313,6 +412,8 @@ def error_response(
 
 
 def _error_code_for_exception(exc: Exception) -> str:
+    if isinstance(exc, AssetError):
+        return _asset_error_code(exc)
     if isinstance(exc, FileNotFoundError):
         return "template_not_found"
     if isinstance(exc, TemplateNotFoundError):
@@ -335,6 +436,8 @@ def _error_code_for_exception(exc: Exception) -> str:
 
 
 def _status_for_exception(exc: Exception) -> int:
+    if isinstance(exc, AssetError):
+        return _status_for_asset_exception(exc)
     if isinstance(exc, FileNotFoundError):
         return 404
     if isinstance(exc, TemplateNotFoundError):
@@ -350,6 +453,50 @@ def _status_for_exception(exc: Exception) -> int:
     if isinstance(exc, SlimReportError):
         return _status_for_core_error(exc)
     return 500
+
+
+def _asset_error_code(exc: AssetError) -> str:
+    if isinstance(exc, AssetNotFoundError):
+        return "asset_not_found"
+    if isinstance(exc, AssetIdError):
+        return "invalid_asset_id"
+    if isinstance(exc, AssetPermissionError):
+        return "asset_forbidden"
+    if isinstance(exc, AssetTypeError):
+        return "unsupported_asset_type"
+    if isinstance(exc, AssetStorageError):
+        return "asset_storage_error"
+    return "asset_error"
+
+
+def _status_for_asset_exception(exc: AssetError) -> int:
+    if isinstance(exc, AssetNotFoundError):
+        return 404
+    if isinstance(exc, AssetIdError):
+        return 400
+    if isinstance(exc, AssetPermissionError):
+        return 403
+    if isinstance(exc, AssetTypeError):
+        return 400
+    if isinstance(exc, AssetStorageError):
+        return 400
+    return 500
+
+
+def asset_error_response(exc: AssetError) -> tuple[Response, int]:
+    code = _asset_error_code(exc)
+    return (
+        jsonify(
+            {
+                "ok": False,
+                "error": {
+                    "code": code,
+                    "message": str(exc),
+                },
+            }
+        ),
+        _status_for_asset_exception(exc),
+    )
 
 
 def require_access(
@@ -376,7 +523,46 @@ def require_access(
     return None
 
 
-def template_response(template_id: str, template: dict[str, Any], *, ok: bool | None = None) -> dict[str, Any]:
+def require_asset_access(
+    designer: SlimReportDesigner,
+    action: str,
+    asset_id: str,
+    *,
+    api: bool,
+) -> Response | tuple[Response, int] | None:
+    if not designer.is_authenticated():
+        if api:
+            return asset_error_response(AssetPermissionError("Authentication required."))
+        return Response("Authentication required.", status=401, mimetype="text/plain")
+    if asset_id:
+        allowed = (
+            designer.can_view_asset(asset_id)
+            if action == "view"
+            else designer.can_edit_asset(asset_id)
+        )
+        if not allowed:
+            if api:
+                return asset_error_response(AssetPermissionError("Permission denied."))
+            return Response("Permission denied.", status=403, mimetype="text/plain")
+    return None
+
+
+def request_asset_content() -> tuple[bytes, str | None, dict[str, Any]]:
+    if request.files:
+        upload = next(iter(request.files.values()))
+        content = upload.read()
+        return content, upload.mimetype, {"filename": upload.filename}
+    content = request.get_data() or b""
+    content_type = request.headers.get("Content-Type")
+    return content, content_type, {}
+
+
+def template_response(
+    template_id: str,
+    template: dict[str, Any],
+    *,
+    ok: bool | None = None,
+) -> dict[str, Any]:
     payload: dict[str, Any] = {
         "template_id": template_id,
         "template": template,

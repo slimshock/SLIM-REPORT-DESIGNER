@@ -6,6 +6,7 @@ import base64
 from io import BytesIO
 from typing import Any
 
+from ..assets.resolver import ResolvedImageSource, resolve_image_source
 from ..exceptions import ExporterError, ReportValidationError
 from ..report import Report
 from .context import (
@@ -28,10 +29,21 @@ from .pagination import build_render_pages
 from .qrcode import QR_GRID_SIZE, qr_module_matrix
 
 
-def render_pdf(report: Report, data: dict[str, Any] | None = None) -> bytes:
+def render_pdf(
+    report: Report,
+    data: dict[str, Any] | None = None,
+    *,
+    asset_provider: Any | None = None,
+    asset_resolver: Any | None = None,
+) -> bytes:
     """Render a report domain model and data as PDF bytes."""
     canvas_class = _load_canvas()
-    context = create_render_context(report, data)
+    context = create_render_context(
+        report,
+        data,
+        asset_provider=asset_provider,
+        asset_resolver=asset_resolver,
+    )
     buffer = BytesIO()
     canvas = canvas_class(buffer, pagesize=(context.page.width_pt, context.page.height_pt))
     _apply_pdf_metadata(canvas, report)
@@ -55,8 +67,14 @@ def render_pdf(report: Report, data: dict[str, Any] | None = None) -> bytes:
 
 def _apply_pdf_metadata(canvas: Any, report: Report) -> None:
     settings = getattr(getattr(report, "page", None), "print", {}) or {}
-    title = str(settings.get("pdf_title") or getattr(report.metadata, "title", "") or "Untitled Report")
-    author = str(settings.get("pdf_author") or getattr(report.metadata, "author", "") or "Slim Report Designer")
+    title = str(
+        settings.get("pdf_title") or getattr(report.metadata, "title", "") or "Untitled Report"
+    )
+    author = str(
+        settings.get("pdf_author")
+        or getattr(report.metadata, "author", "")
+        or "Slim Report Designer"
+    )
     subject = str(settings.get("pdf_subject") or getattr(report.metadata, "description", "") or "")
     metadata = {
         "setTitle": title,
@@ -147,6 +165,8 @@ def context_with_row(context: RenderContext, row: dict[str, Any], data_path: str
         bands=context.bands,
         objects=context.objects,
         title=context.title,
+        asset_provider=context.asset_provider,
+        asset_resolver=context.asset_resolver,
     )
 
 
@@ -258,10 +278,8 @@ def _render_image(canvas: Any, obj: RenderObject, context: RenderContext) -> Non
         _set_stroke_color(canvas, style.get("border_color", "#000000"))
         canvas.rect(x, _pdf_y(context, y + height), width, height, stroke=1, fill=0)
 
-    source = _image_source(
-        obj.properties.get("src") or obj.properties.get("source") or _object_value(obj, context)
-    )
-    reader = _image_reader(source)
+    resolved_source = _resolved_image_source(obj, context)
+    reader = _image_reader(resolved_source)
     if reader is None:
         return
     try:
@@ -655,15 +673,25 @@ def _dict_value(value: Any) -> dict[str, Any]:
     return dict(value) if isinstance(value, dict) else {}
 
 
-def _image_reader(source: str) -> Any | None:
+def _image_reader(source: str | ResolvedImageSource) -> Any | None:
+    content: bytes | None = None
+    if isinstance(source, ResolvedImageSource):
+        content = source.content
+        source = source.source
     if not source:
-        return None
+        if content is None:
+            return None
     if source.startswith(("http://", "https://")):
         return None
     try:
         from reportlab.lib.utils import ImageReader
     except ImportError:
         return None
+    if content is not None:
+        try:
+            return ImageReader(BytesIO(content))
+        except Exception:
+            return None
     if source.startswith("data:image/"):
         try:
             _, encoded = source.split(",", 1)
@@ -683,6 +711,39 @@ def _image_source(value: Any) -> str:
     if text.startswith("{{") and text.endswith("}}"):
         return ""
     return text
+
+
+def _resolved_image_source(obj: RenderObject, context: RenderContext) -> ResolvedImageSource:
+    resolver = context.asset_resolver
+    source = (
+        obj.properties.get("src")
+        or obj.properties.get("source")
+        or _object_value(obj, context)
+    )
+    asset_id = _image_asset_id(obj)
+    if resolver is not None and hasattr(resolver, "resolve"):
+        return resolver.resolve(
+            source=source,
+            asset_id=asset_id,
+            prefer_url=False,
+            prefer_bytes=True,
+        )
+    return resolve_image_source(
+        source=source,
+        asset_id=asset_id,
+        asset_provider=context.asset_provider,
+        prefer_url=False,
+        prefer_bytes=True,
+    )
+
+
+def _image_asset_id(obj: RenderObject) -> str:
+    return str(
+        obj.properties.get("assetId")
+        or obj.properties.get("asset_id")
+        or obj.properties.get("asset")
+        or ""
+    ).strip()
 
 
 def _draw_text(canvas: Any, obj: RenderObject, context: RenderContext, value: str) -> None:

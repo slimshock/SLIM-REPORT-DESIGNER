@@ -15,14 +15,34 @@ def normalize_template(template: Mapping[str, Any]) -> dict[str, Any]:
     return normalize_template_mapping(template)
 
 
-def render_html(report: Report, data: Any = None) -> str:
+def render_html(
+    report: Report,
+    data: Any = None,
+    *,
+    asset_provider: Any | None = None,
+    asset_resolver: Any | None = None,
+) -> str:
     """Render a report domain model as HTML."""
-    return _require_report(report).render_html(data)
+    return _require_report(report).render_html(
+        data,
+        asset_provider=asset_provider,
+        asset_resolver=asset_resolver,
+    )
 
 
-def render_pdf(report: Report, data: Any = None) -> bytes:
+def render_pdf(
+    report: Report,
+    data: Any = None,
+    *,
+    asset_provider: Any | None = None,
+    asset_resolver: Any | None = None,
+) -> bytes:
     """Render a report domain model as PDF bytes."""
-    return _require_report(report).render_pdf(data)
+    return _require_report(report).render_pdf(
+        data,
+        asset_provider=asset_provider,
+        asset_resolver=asset_resolver,
+    )
 
 
 def _require_report(report: Report) -> Report:

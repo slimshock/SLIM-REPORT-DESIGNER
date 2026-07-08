@@ -17,10 +17,8 @@ from slim_report_core import (
     render_html,
     render_pdf,
 )
+from slim_report_core.assets import AssetProvider
 from slim_report_core.serialization import JSONSerializer
-
-from .blueprint import create_blueprint
-from .config import DEFAULT_CONFIG
 from slim_report_core.storage import (
     FileSystemTemplateProvider,
     TemplateProvider,
@@ -28,6 +26,9 @@ from slim_report_core.storage import (
     TemplateStorageError,
     record_from_summary,
 )
+
+from .blueprint import create_blueprint
+from .config import DEFAULT_CONFIG
 
 DataProvider = Callable[[str, Any, Any], Any]
 AuthHook = Callable[[], bool]
@@ -43,24 +44,30 @@ class SlimReportDesigner:
         app: Flask | None = None,
         *,
         template_provider: TemplateProvider | None = None,
+        asset_provider: AssetProvider | None = None,
         data_provider: DataProvider | None = None,
         url_prefix: str | None = None,
         auth_required: AuthHook | None = None,
         can_view_template: PermissionHook | None = None,
         can_edit_template: PermissionHook | None = None,
         can_export_template: PermissionHook | None = None,
+        can_view_asset: PermissionHook | None = None,
+        can_edit_asset: PermissionHook | None = None,
         csrf_token_provider: CsrfTokenProvider | None = None,
         csrf_header_name: str = "X-CSRFToken",
     ) -> None:
         self.app: Flask | None = None
         self.providers = DataProviderRegistry()
         self.template_provider = template_provider
+        self.asset_provider = asset_provider
         self.data_provider = data_provider
         self.url_prefix = url_prefix
         self.auth_required = auth_required
         self.can_view_template = can_view_template
         self.can_edit_template = can_edit_template
         self.can_export_template = can_export_template
+        self.can_view_asset_hook = can_view_asset
+        self.can_edit_asset_hook = can_edit_asset
         self.csrf_token_provider = csrf_token_provider
         self.csrf_header_name = csrf_header_name
         self.serializer = JSONSerializer()
@@ -83,6 +90,8 @@ class SlimReportDesigner:
         self.app = app
         if hasattr(self.template_provider, "ensure"):
             self.template_provider.ensure()
+        if self.asset_provider is not None and hasattr(self.asset_provider, "ensure"):
+            self.asset_provider.ensure()
         app.extensions["slim_report_designer"] = self
 
         blueprint = create_blueprint(self)
@@ -153,7 +162,11 @@ class SlimReportDesigner:
         prepare = getattr(provider, "prepare_template_for_request", None)
         if callable(prepare):
             request_args = request.args if has_request_context() else None
-            request_json = request.get_json(silent=True) if has_request_context() and request.is_json else None
+            request_json = (
+                request.get_json(silent=True)
+                if has_request_context() and request.is_json
+                else None
+            )
             prepared = prepare(template_id, template, request_args, request_json)
             if isinstance(prepared, dict):
                 return prepared
@@ -196,13 +209,17 @@ class SlimReportDesigner:
         """Render a report preview as HTML."""
         report = self.get_report(template_id)
         data = self.resolve_data(template_id, record_id, request_args=request.args, report=report)
-        return render_html(report, data)
+        if self.asset_provider is None:
+            return render_html(report, data)
+        return render_html(report, data, asset_provider=self.asset_provider)
 
     def export_pdf(self, template_id: str, record_id: str) -> bytes:
         """Render a report as PDF bytes."""
         report = self.get_report(template_id)
         data = self.resolve_data(template_id, record_id, request_args=request.args, report=report)
-        return render_pdf(report, data)
+        if self.asset_provider is None:
+            return render_pdf(report, data)
+        return render_pdf(report, data, asset_provider=self.asset_provider)
 
     def is_authenticated(self) -> bool:
         """Return whether the current request is authenticated."""
@@ -218,6 +235,12 @@ class SlimReportDesigner:
 
     def can_export(self, template_id: str) -> bool:
         return self._permission(self.can_export_template, template_id)
+
+    def can_view_asset(self, asset_id: str) -> bool:
+        return self._permission(self.can_view_asset_hook, asset_id)
+
+    def can_edit_asset(self, asset_id: str) -> bool:
+        return self._permission(self.can_edit_asset_hook, asset_id)
 
     def csrf_config(self) -> dict[str, str]:
         """Return frontend CSRF config."""

@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from slim_report_core import Band, Report, ReportValidationError, render_html, render_pdf
+from slim_report_core.assets import FileSystemAssetProvider
 from slim_report_core.expressions import resolve_expression
 from slim_report_core.rendering import render_html as render_report_html
 from slim_report_core.rendering.context import (
@@ -93,10 +94,54 @@ def test_html_rendering_unresolved_image_binding_is_blank() -> None:
     assert "<img" not in html
 
 
+def test_html_rendering_image_asset_id_uses_provider_url(tmp_path: Path) -> None:
+    (tmp_path / "clinic_logo.svg").write_text("<svg></svg>", encoding="utf-8")
+    provider = FileSystemAssetProvider(tmp_path, base_url="/report-designer/assets")
+    report = image_asset_report("clinic_logo")
+
+    html = render_html(report, {}, asset_provider=provider)
+
+    assert '<img src="/report-designer/assets/clinic_logo"' in html
+    assert 'data-slim-object="logo"' in html
+
+
+def test_html_rendering_image_asset_id_embeds_bytes_without_url(tmp_path: Path) -> None:
+    (tmp_path / "clinic_logo.svg").write_text("<svg></svg>", encoding="utf-8")
+    provider = FileSystemAssetProvider(tmp_path)
+    report = image_asset_report("clinic_logo")
+
+    html = render_html(report, {}, asset_provider=provider)
+
+    assert 'src="data:image/svg+xml;base64,' in html
+    assert ">Image<" not in html
+
+
+def test_html_rendering_missing_image_asset_id_is_blank(tmp_path: Path) -> None:
+    provider = FileSystemAssetProvider(tmp_path)
+    report = image_asset_report("missing_logo")
+
+    html = render_html(report, {}, asset_provider=provider)
+
+    assert 'data-slim-object="logo"' in html
+    assert "<img" not in html
+    assert ">Image<" not in html
+
+
 def test_pdf_rendering_empty_image_source_does_not_crash() -> None:
     report = image_source_report("null")
 
     pdf = render_pdf(report, {})
+
+    assert pdf.startswith(b"%PDF")
+    assert len(pdf) > 100
+
+
+def test_pdf_rendering_image_asset_id_does_not_crash(tmp_path: Path) -> None:
+    (tmp_path / "clinic_logo.svg").write_text("<svg></svg>", encoding="utf-8")
+    provider = FileSystemAssetProvider(tmp_path)
+    report = image_asset_report("clinic_logo")
+
+    pdf = render_pdf(report, {}, asset_provider=provider)
 
     assert pdf.startswith(b"%PDF")
     assert len(pdf) > 100
@@ -587,7 +632,11 @@ def test_sample_templates_render_html_and_pdf() -> None:
             REPO_ROOT / f"examples/flask_app/sample_templates/{template_name}.json"
         )
 
-        data = report.data.get("sample") if isinstance(report.data.get("sample"), dict) else sample_data()
+        data = (
+            report.data.get("sample")
+            if isinstance(report.data.get("sample"), dict)
+            else sample_data()
+        )
         html = render_html(report, data)
         pdf = render_pdf(report, data)
 
@@ -628,7 +677,11 @@ def test_sample_templates_render_expected_content_with_embedded_data() -> None:
         report = JSONSerializer().load(
             REPO_ROOT / f"examples/flask_app/sample_templates/{template_name}.json"
         )
-        data = report.data.get("sample") if isinstance(report.data.get("sample"), dict) else sample_data()
+        data = (
+            report.data.get("sample")
+            if isinstance(report.data.get("sample"), dict)
+            else sample_data()
+        )
 
         html = render_html(report, data)
 
@@ -757,6 +810,29 @@ def image_source_report(source: str) -> Report:
                     "width": 120,
                     "height": 48,
                     "src": source,
+                }
+            ],
+            "bands": [],
+            "assets": [],
+        }
+    )
+
+
+def image_asset_report(asset_id: str) -> Report:
+    return JSONSerializer().load_mapping(
+        {
+            "version": "1.0",
+            "metadata": {"title": "Image Asset"},
+            "page": {"width": 240, "height": 120, "unit": "px"},
+            "objects": [
+                {
+                    "id": "logo",
+                    "type": "image",
+                    "x": 20,
+                    "y": 20,
+                    "width": 120,
+                    "height": 48,
+                    "assetId": asset_id,
                 }
             ],
             "bands": [],

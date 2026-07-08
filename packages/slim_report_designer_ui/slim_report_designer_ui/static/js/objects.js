@@ -103,9 +103,17 @@ export function normalizeObject(object) {
   if (type === "image") {
     normalized.src = source === undefined ? "" : String(source);
     normalized.alt = String(object.alt ?? object.properties?.alt ?? "");
+    normalized.assetId = String(object.assetId ?? object.asset_id ?? object.asset ?? object.properties?.assetId ?? object.properties?.asset_id ?? object.properties?.asset ?? "");
     normalized.properties.src = normalized.src;
     normalized.properties.source = normalized.src;
     normalized.properties.alt = normalized.alt;
+    if (normalized.assetId) {
+      normalized.properties.assetId = normalized.assetId;
+    } else {
+      delete normalized.properties.assetId;
+      delete normalized.properties.asset_id;
+      delete normalized.properties.asset;
+    }
     normalized.properties.maintain_aspect_ratio = Boolean(
       object.maintain_aspect_ratio ?? object.properties?.maintain_aspect_ratio ?? true
     );
@@ -175,6 +183,7 @@ export function createObject(type, template) {
     base.height = 80;
     base.src = "";
     base.alt = "";
+    base.assetId = "";
     base.properties.src = "";
     base.properties.source = "";
     base.properties.alt = "";
@@ -576,6 +585,19 @@ export function setObjectSource(object, value) {
   object.properties = object.properties || {};
   object.properties.src = value;
   object.properties.source = value;
+}
+
+export function setObjectAssetId(object, value) {
+  const assetId = String(value || "").trim();
+  object.assetId = assetId;
+  object.properties = object.properties || {};
+  if (assetId) {
+    object.properties.assetId = assetId;
+  } else {
+    delete object.properties.assetId;
+  }
+  delete object.properties.asset_id;
+  delete object.properties.asset;
 }
 
 export function setObjectAlt(object, value) {

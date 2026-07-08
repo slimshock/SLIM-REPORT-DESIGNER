@@ -13,6 +13,7 @@ import {
   setBandGroupValue,
   setBandRepeatValue,
   setGroupFooterVisible,
+  setObjectAssetId,
   setObjectConditionValue,
   setObjectAlt,
   setObjectBand,
@@ -229,6 +230,9 @@ export function renderInspector(
       }),
       fieldRow("Image URL", object.src || object.properties?.src || object.properties?.source || "", {
         name: "src"
+      }),
+      fieldRow("Asset ID", object.assetId || object.properties?.assetId || object.properties?.asset_id || object.properties?.asset || "", {
+        name: "assetId"
       }),
       fieldRow("Upload image", "", {
         type: "file",
@@ -817,6 +821,10 @@ function applyInput(template, object, input) {
   }
   if (input.name === "src") {
     setObjectSource(object, String(value));
+    return;
+  }
+  if (input.name === "assetId") {
+    setObjectAssetId(object, String(value));
     return;
   }
   if (input.name === "alt") {

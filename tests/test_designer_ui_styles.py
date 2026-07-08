@@ -438,7 +438,11 @@ global.document = {
 };
 global.fetch = async () => ({
   ok: true,
-  headers: { get: (name) => name === 'content-disposition' ? 'attachment; filename="CBC: Result.pdf"' : '' },
+  headers: {
+    get: (name) => name === 'content-disposition'
+      ? 'attachment; filename="CBC: Result.pdf"'
+      : ''
+  },
   blob: async () => new Blob(['pdf'], { type: 'application/pdf' })
 });
 
@@ -997,8 +1001,12 @@ if (blank.bands[1].y !== 120 || blank.bands[2].y !== expectedFooterY) {
 
 
 def test_designer_drag_delta_uses_live_object_band_for_header_objects() -> None:
-    canvas_module_path = "./packages/slim_report_designer_ui/slim_report_designer_ui/static/js/canvas.js"
-    objects_module_path = "./packages/slim_report_designer_ui/slim_report_designer_ui/static/js/objects.js"
+    canvas_module_path = (
+        "./packages/slim_report_designer_ui/slim_report_designer_ui/static/js/canvas.js"
+    )
+    objects_module_path = (
+        "./packages/slim_report_designer_ui/slim_report_designer_ui/static/js/objects.js"
+    )
     script = """
 import { constrainedGroupDelta } from '__CANVAS_MODULE_PATH__';
 import { normalizeTemplate } from '__OBJECTS_MODULE_PATH__';

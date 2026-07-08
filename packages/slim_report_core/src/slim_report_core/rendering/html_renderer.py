@@ -5,6 +5,7 @@ from __future__ import annotations
 from html import escape
 from typing import Any
 
+from ..assets.resolver import resolve_image_source
 from ..exceptions import ReportValidationError
 from ..report import Report
 from .context import (
@@ -26,9 +27,20 @@ from .pagination import build_render_pages
 from .qrcode import QR_GRID_SIZE, qr_module_matrix
 
 
-def render_html(report: Report, data: dict[str, Any] | None = None) -> str:
+def render_html(
+    report: Report,
+    data: dict[str, Any] | None = None,
+    *,
+    asset_provider: Any | None = None,
+    asset_resolver: Any | None = None,
+) -> str:
     """Render a report domain model and data as a full HTML document."""
-    context = create_render_context(report, data)
+    context = create_render_context(
+        report,
+        data,
+        asset_provider=asset_provider,
+        asset_resolver=asset_resolver,
+    )
     page = context.page
     title = escape(context.title)
     page_background = "#fff" if page.transparent else escape(page.background_color, quote=True)
@@ -36,7 +48,8 @@ def render_html(report: Report, data: dict[str, Any] | None = None) -> str:
     show_print_button = bool(print_settings.get("show_browser_print_button", True))
     print_toolbar = (
         '  <div class="slim-report-preview-toolbar">'
-        '<button class="slim-report-print-button" type="button" onclick="window.print()">Print</button>'
+        '<button class="slim-report-print-button" type="button" onclick="window.print()">'
+        "Print</button>"
         "</div>\n"
         if show_print_button
         else ""
@@ -72,7 +85,8 @@ def render_html(report: Report, data: dict[str, Any] | None = None) -> str:
         "font: 10px Arial, sans-serif; color: #94a3b8; }\n"
         "    .slim-report-object { position: absolute; box-sizing: border-box; }\n"
         "    @media print { html, body { margin: 0; background: #fff; } "
-        ".slim-report-preview-toolbar, .slim-report-print-button, button { display: none !important; } "
+        ".slim-report-preview-toolbar, .slim-report-print-button, button "
+        "{ display: none !important; } "
         ".slim-report-preview { padding: 0; gap: 0; } "
         ".slim-report-page { margin: 0; box-shadow: none; break-after: page; "
         "page-break-after: always; } "
@@ -194,6 +208,8 @@ def context_with_row(context: RenderContext, row: dict[str, Any], data_path: str
         bands=context.bands,
         objects=context.objects,
         title=context.title,
+        asset_provider=context.asset_provider,
+        asset_resolver=context.asset_resolver,
     )
 
 
@@ -278,9 +294,18 @@ def _render_rectangle(obj: RenderObject, context: RenderContext) -> str:
 def _render_image(obj: RenderObject, context: RenderContext) -> str:
     x, y, width, height = object_px(obj, context.page.unit)
     style = obj.style
-    source = _image_source(
-        obj.properties.get("src") or obj.properties.get("source") or _object_value(obj, context)
-    )
+    resolved_source = _resolved_image_source(obj, context)
+    source = resolved_source.as_data_url()
+    if not source:
+        source = resolved_source.source
+    source = _image_source(source)
+    asset_id = _image_asset_id(obj)
+    if asset_id and not source:
+        source = ""
+    elif not asset_id and not source:
+        source = _image_source(
+            obj.properties.get("src") or obj.properties.get("source") or _object_value(obj, context)
+        )
     border_width = float(style.get("border_width", 0))
     border_color = escape(str(style.get("border_color", "#000000")), quote=True)
     background_color = escape(str(style.get("background_color", "transparent")), quote=True)
@@ -314,6 +339,39 @@ def _image_source(value: Any) -> str:
     if text.startswith("{{") and text.endswith("}}"):
         return ""
     return text
+
+
+def _resolved_image_source(obj: RenderObject, context: RenderContext) -> Any:
+    resolver = context.asset_resolver
+    source = (
+        obj.properties.get("src")
+        or obj.properties.get("source")
+        or _object_value(obj, context)
+    )
+    asset_id = _image_asset_id(obj)
+    if resolver is not None and hasattr(resolver, "resolve"):
+        return resolver.resolve(
+            source=source,
+            asset_id=asset_id,
+            prefer_url=True,
+            prefer_bytes=False,
+        )
+    return resolve_image_source(
+        source=source,
+        asset_id=asset_id,
+        asset_provider=context.asset_provider,
+        prefer_url=True,
+        prefer_bytes=False,
+    )
+
+
+def _image_asset_id(obj: RenderObject) -> str:
+    return str(
+        obj.properties.get("assetId")
+        or obj.properties.get("asset_id")
+        or obj.properties.get("asset")
+        or ""
+    ).strip()
 
 
 def _render_barcode(obj: RenderObject, context: RenderContext) -> str:

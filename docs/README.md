@@ -12,6 +12,8 @@ Start with:
 - [Template storage](template-storage.md)
 - [LIS Flask template storage](lis-flask-template-storage.md)
 - [LIS integration hardening](lis-integration-hardening.md)
+- [Asset Manager](asset-manager.md)
+- [LIS Asset Management](lis-asset-management.md)
 - [JSON template schema](json-template-schema.md)
 - [Data Fields](data-fields.md)
 - [Repeating Detail rows](repeating-detail-rows.md)

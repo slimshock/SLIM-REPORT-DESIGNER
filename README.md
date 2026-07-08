@@ -71,6 +71,10 @@ Implemented now:
 - Page print/export settings, safe PDF filenames, and PDF metadata
 - Framework-agnostic template storage providers
 - Filesystem and optional SQLAlchemy template storage
+- Framework-agnostic asset provider interface for report images
+- Filesystem asset provider for logos, signatures, watermarks, and reusable image assets
+- Image object `assetId` resolution in HTML preview and PDF export
+- Flask asset listing/serving routes behind the configurable designer URL prefix
 - Flask-hosted preview and PDF export
 - CLI commands for validation, inspection, and rendering
 - Public convenience imports: `render_html`, `render_pdf`, and `normalize_template`
@@ -109,7 +113,6 @@ Not implemented yet:
 - Advanced pagination controls such as custom page breaks and widow/orphan rules
 - Django adapter
 - FastAPI adapter
-- Asset manager
 - Database migrations owned by Slim Report Designer
 - Production packaging and public release
 
@@ -311,6 +314,33 @@ The provider stores report template JSON, metadata, and optional sample data. Th
 owns database migrations, LIS data queries, users, and permissions. Compatibility imports from
 `slim_report_flask` still work for existing Sprint 6.1 code.
 
+## Asset Manager
+
+Report images can reference reusable assets through `assetId`:
+
+```json
+{
+  "type": "image",
+  "assetId": "clinic_logo"
+}
+```
+
+Applications pass an optional provider into rendering or Flask integration:
+
+```python
+from slim_report_core.assets import FileSystemAssetProvider
+from slim_report_flask import SlimReportDesigner
+
+asset_provider = FileSystemAssetProvider(
+    "report_assets",
+    base_url="/report-designer/assets",
+)
+
+designer = SlimReportDesigner(asset_provider=asset_provider)
+```
+
+Existing image `src`, data URL, and bound field behavior remains compatible. See [Asset Manager](docs/asset-manager.md) and [LIS Asset Management](docs/lis-asset-management.md).
+
 ## Serialization
 
 Use `JSONSerializer` when you want to load or save JSON:
@@ -365,6 +395,8 @@ The CLI accepts JSON files as input, but commands deserialize to `Report` before
 - [Flask production integration](docs/flask-production-integration.md)
 - [Template storage](docs/template-storage.md)
 - [LIS Flask template storage](docs/lis-flask-template-storage.md)
+- [Asset Manager](docs/asset-manager.md)
+- [LIS Asset Management](docs/lis-asset-management.md)
 - [JSON template schema](docs/json-template-schema.md)
 - [Data Fields](docs/data-fields.md)
 - [Repeating Detail rows](docs/repeating-detail-rows.md)

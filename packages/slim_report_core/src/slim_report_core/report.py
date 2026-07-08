@@ -199,35 +199,67 @@ class Report:
         *,
         exporter: str = "html",
         context: Any = None,
+        asset_provider: Any | None = None,
+        asset_resolver: Any | None = None,
     ) -> str | bytes:
         """Render this report with a named exporter."""
         self.emit("before_export", exporter=exporter, data=data, context=context)
         if exporter == "html":
-            result = self.render_html(data)
+            result = self.render_html(
+                data,
+                asset_provider=asset_provider,
+                asset_resolver=asset_resolver,
+            )
         elif exporter == "pdf":
-            result = self.render_pdf(data)
+            result = self.render_pdf(
+                data,
+                asset_provider=asset_provider,
+                asset_resolver=asset_resolver,
+            )
         else:
             raise ExporterError(f"Exporter is not registered: {exporter}.")
         self.emit("after_export", exporter=exporter, data=data, context=context, result=result)
         return result
 
-    def render_html(self, data: Any = None) -> str:
+    def render_html(
+        self,
+        data: Any = None,
+        *,
+        asset_provider: Any | None = None,
+        asset_resolver: Any | None = None,
+    ) -> str:
         """Render this report as HTML."""
         from .rendering import render_html
 
         resolved_data = data or {}
         self.emit("before_render", format="html", data=resolved_data)
-        result = render_html(self, resolved_data)
+        result = render_html(
+            self,
+            resolved_data,
+            asset_provider=asset_provider,
+            asset_resolver=asset_resolver,
+        )
         self.emit("after_render", format="html", data=resolved_data, result=result)
         return result
 
-    def render_pdf(self, data: Any = None) -> bytes:
+    def render_pdf(
+        self,
+        data: Any = None,
+        *,
+        asset_provider: Any | None = None,
+        asset_resolver: Any | None = None,
+    ) -> bytes:
         """Render this report as PDF bytes."""
         from .rendering import render_pdf
 
         resolved_data = data or {}
         self.emit("before_render", format="pdf", data=resolved_data)
-        result = render_pdf(self, resolved_data)
+        result = render_pdf(
+            self,
+            resolved_data,
+            asset_provider=asset_provider,
+            asset_resolver=asset_resolver,
+        )
         self.emit("after_render", format="pdf", data=resolved_data, result=result)
         return result
 

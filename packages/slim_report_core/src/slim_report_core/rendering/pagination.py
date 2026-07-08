@@ -561,6 +561,8 @@ def context_with_row(context: RenderContext, row: dict[str, Any], data_path: str
         bands=context.bands,
         objects=context.objects,
         title=context.title,
+        asset_provider=context.asset_provider,
+        asset_resolver=context.asset_resolver,
     )
 
 
@@ -572,6 +574,8 @@ def context_with_group(context: RenderContext, group: RowGroup) -> RenderContext
         bands=context.bands,
         objects=context.objects,
         title=context.title,
+        asset_provider=context.asset_provider,
+        asset_resolver=context.asset_resolver,
     )
 
 
@@ -593,6 +597,8 @@ def context_with_row_group(
         bands=context.bands,
         objects=context.objects,
         title=context.title,
+        asset_provider=context.asset_provider,
+        asset_resolver=context.asset_resolver,
     )
 
 
@@ -614,6 +620,8 @@ def context_with_data(context: RenderContext, data: Any) -> RenderContext:
         bands=context.bands,
         objects=context.objects,
         title=context.title,
+        asset_provider=context.asset_provider,
+        asset_resolver=context.asset_resolver,
     )
 
 

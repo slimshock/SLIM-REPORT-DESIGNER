@@ -410,6 +410,9 @@ class ObjectFactory:
             )
             if source not in ("", None):
                 properties["src"] = str(source)
+            for key in ("assetId", "asset_id", "asset", "alt"):
+                if key in mapping:
+                    properties[key] = mapping[key]
             return self.create_image(str(source or ""), **common)
         if target_class is BarcodeObject:
             return self.create_barcode(
