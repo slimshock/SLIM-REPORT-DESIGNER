@@ -375,6 +375,33 @@ def computed_demo_lab_results() -> list[dict[str, object]]:
     return rows
 
 
+def conditional_demo_lab_results() -> list[dict[str, object]]:
+    """Return grouped rows with H/L/N flags for conditional formatting demos."""
+    rows = computed_demo_lab_results()
+    for row in rows:
+        if row["test"] == "HGB":
+            row["flag"] = "L"
+            row["result"] = "11.20"
+            row["value"] = "11.20"
+            row["numeric_value"] = 11.2
+        elif row["test"] == "Glucose":
+            row["flag"] = "H"
+            row["result"] = "126"
+            row["value"] = "126"
+            row["numeric_value"] = 126
+    rows.append({
+        "section": "CHEMISTRY",
+        "test": "Manual Review",
+        "result": "",
+        "value": "",
+        "numeric_value": 0.0,
+        "unit": "",
+        "reference": "",
+        "flag": "",
+    })
+    return rows
+
+
 @designer.provider("lab_result")
 def lab_result(record_id: str) -> dict[str, dict[str, str]]:
     return {
@@ -472,6 +499,14 @@ def computed_fields_lab_result(record_id: str) -> dict[str, object]:
     return data
 
 
+@designer.provider("conditional_lab_result")
+def conditional_lab_result(record_id: str) -> dict[str, object]:
+    data = repeating_lab_result(record_id)
+    data["patient"] = {**dict(data.get("patient", {})), "sex": "F"}
+    data["results"] = conditional_demo_lab_results()
+    return data
+
+
 @designer.provider("table_lab_result")
 def table_lab_result(record_id: str) -> dict[str, object]:
     return {
@@ -553,6 +588,7 @@ def ensure_sample_templates() -> None:
     ensure_report_template("repeating_lab_result", create_repeating_lab_result_report)
     ensure_report_template("grouped_lab_result", create_grouped_lab_result_report)
     ensure_report_template("computed_fields_lab_result", create_computed_fields_lab_result_report)
+    ensure_report_template("conditional_lab_result", create_conditional_lab_result_report)
     ensure_report_template("table_lab_result", create_table_lab_result_report)
     ensure_report_template("barcode_qr_lab_result", create_barcode_qr_lab_result_report)
 
@@ -615,6 +651,11 @@ def create_lab_result_report() -> Report:
 def create_computed_fields_lab_result_report() -> Report:
     """Load the computed fields sample template."""
     return JSONSerializer().load(BASE_DIR / "sample_templates/computed_fields_lab_result.json")
+
+
+def create_conditional_lab_result_report() -> Report:
+    """Load the conditional formatting sample template."""
+    return JSONSerializer().load(BASE_DIR / "sample_templates/conditional_lab_result.json")
 
 
 def create_cerebro_cbc_report() -> Report:

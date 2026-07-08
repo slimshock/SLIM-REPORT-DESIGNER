@@ -379,6 +379,8 @@ class ObjectFactory:
             for key in ("formula", "formula_mode"):
                 if key in mapping:
                     properties[key] = mapping[key]
+        if "conditions" in mapping:
+            properties["conditions"] = mapping["conditions"]
         target_class = object_class or _object_class(object_type)
         common = {
             "id": _required_str(mapping, "id", context="Report object"),

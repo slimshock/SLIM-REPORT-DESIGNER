@@ -7,7 +7,12 @@ import pytest
 from slim_report_core import Band, Report, ReportValidationError, render_html, render_pdf
 from slim_report_core.expressions import resolve_expression
 from slim_report_core.rendering import render_html as render_report_html
-from slim_report_core.rendering.context import create_render_context, resolve_binding
+from slim_report_core.rendering.context import (
+    RenderObject,
+    apply_conditional_styles,
+    create_render_context,
+    resolve_binding,
+)
 from slim_report_core.rendering.pagination import (
     calculate_rows_per_page,
     get_available_detail_height,
@@ -78,6 +83,61 @@ def test_html_rendering_expands_repeating_detail_rows() -> None:
     assert "top: 176.0px" in html
     assert "LAB RESULT" in html
     assert html.count("LAB RESULT") == 1
+
+
+def test_conditional_style_merge_and_hide_action() -> None:
+    obj = RenderObject(
+        id="row_result",
+        type="field",
+        x=0,
+        y=0,
+        width=80,
+        height=18,
+        binding="result",
+        style={"font_size": 10, "color": "#111827", "bold": False},
+        conditions=[
+            {
+                "id": "high",
+                "enabled": True,
+                "condition": "flag == 'H'",
+                "style": {"color": "#dc2626", "bold": True},
+            },
+            {
+                "id": "large",
+                "enabled": True,
+                "condition": "numeric_value > 10",
+                "style": {"background_color": "#fee2e2", "color": "#991b1b"},
+            },
+            {
+                "id": "hidden",
+                "enabled": True,
+                "condition": "result == ''",
+                "style": {},
+                "action": "hide",
+            },
+        ],
+    )
+
+    normal = apply_conditional_styles(
+        obj,
+        {"__slim_row__": {"flag": "N", "numeric_value": 7, "result": "7"}},
+    )
+    high = apply_conditional_styles(
+        obj,
+        {"__slim_row__": {"flag": "H", "numeric_value": 12, "result": "12"}},
+    )
+    hidden = apply_conditional_styles(
+        obj,
+        {"__slim_row__": {"flag": "N", "numeric_value": 0, "result": ""}},
+    )
+
+    assert normal["style"] == obj.style
+    assert normal["hidden"] is False
+    assert high["style"]["font_size"] == 10
+    assert high["style"]["bold"] is True
+    assert high["style"]["color"] == "#991b1b"
+    assert high["style"]["background_color"] == "#fee2e2"
+    assert hidden["hidden"] is True
 
 
 def test_pagination_helpers_calculate_detail_capacity() -> None:
@@ -463,6 +523,7 @@ def test_sample_templates_render_html_and_pdf() -> None:
         "repeating_lab_result",
         "grouped_lab_result",
         "computed_fields_lab_result",
+        "conditional_lab_result",
         "table_lab_result",
         "barcode_qr_lab_result",
     ):
@@ -478,6 +539,30 @@ def test_sample_templates_render_html_and_pdf() -> None:
         assert len(html) > 1000
         assert pdf.startswith(b"%PDF")
         assert len(pdf) > 1000
+
+
+def test_conditional_lab_result_sample_applies_rules_html_and_pdf() -> None:
+    report = JSONSerializer().load(
+        REPO_ROOT / "examples/flask_app/sample_templates/conditional_lab_result.json"
+    )
+    data = report.data["sample"]
+
+    html = render_html(report, data)
+    pdf = render_pdf(report, data)
+
+    assert "126 mg/dL" in html
+    assert "11.20 g/dL" in html
+    assert "7.10 10^9/L" in html
+    assert "color: #dc2626" in html
+    assert "background: #fee2e2" in html
+    assert "font-weight: 700" in html
+    assert "color: #2563eb" in html
+    assert "background: #dbeafe" in html
+    assert "background: #fef3c7" in html
+    assert "Manual Review" in html
+    assert 'data-slim-object="row_result__group_chemistry_row_2"' not in html
+    assert pdf.startswith(b"%PDF")
+    assert len(pdf) > 1000
 
 
 def test_computed_fields_sample_renders_formulas_html_and_pdf() -> None:

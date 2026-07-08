@@ -1,5 +1,5 @@
 import { createDefaultTemplate, normalizeTemplate, objectStyle } from "./objects.js";
-import { ensureTemplateData, evaluateFormula, getArrayByPath, getFieldValue, getRowValue, resolveBinding } from "./data_fields.js";
+import { conditionalStyleResult, ensureTemplateData, evaluateFormula, getArrayByPath, getFieldValue, getRowValue, resolveBinding } from "./data_fields.js";
 import { qrSvgMarkup } from "./qrcode.js";
 
 export async function loadTemplate() {
@@ -232,7 +232,7 @@ function localGroupedObjectsHtml(template, unit, sampleData, repeat, groupHeader
 }
 
 function localObjectHtml(object, unit = "px", sampleData = {}, rowData = null, repeatDataPath = "", groupData = null) {
-  const style = objectStyle(object);
+  const baseStyle = objectStyle(object);
   const binding = object.binding || object.properties?.binding || "";
   const formula = object.formula ?? object.properties?.formula ?? "";
   const formulaMode = Boolean(object.formula_mode ?? object.properties?.formula_mode ?? false);
@@ -243,6 +243,11 @@ function localObjectHtml(object, unit = "px", sampleData = {}, rowData = null, r
     pageNumber: 1,
     totalPages: 1
   };
+  const conditional = conditionalStyleResult(object, baseStyle, sampleData, fieldContext);
+  if (conditional.hidden) {
+    return "";
+  }
+  const style = conditional.style;
   const fieldValue = object.type === "field"
     ? fieldObjectValue({ binding, formula, formulaMode }, sampleData, fieldContext)
     : undefined;

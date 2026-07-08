@@ -106,6 +106,8 @@ def test_data_field_helpers_infer_nested_and_array_paths() -> None:
     )
     script = """
 import {
+  conditionalStyleResult,
+  evaluateCondition,
   evaluateFormula,
   fieldExists,
   flattenDataPaths,
@@ -233,6 +235,28 @@ if (pageFormula.value !== 'Page 2 of 3') {
 }
 if (!evaluateFormula("__import__('os')", sample, formulaContext).error) {
   throw new Error('unsafe formula should fail');
+}
+if (!evaluateCondition("flag == 'H' and numeric_value > 7", sample, formulaContext)) {
+  throw new Error('condition and comparison failed');
+}
+if (evaluateCondition("flag == 'L' or numeric_value < 1", sample, formulaContext)) {
+  throw new Error('condition false branch failed');
+}
+if (evaluateCondition("__import__('os')", sample, formulaContext)) {
+  throw new Error('unsafe condition should be false');
+}
+const conditional = conditionalStyleResult({
+  conditions: [
+    { enabled: true, condition: "flag == 'H'", style: { color: '#dc2626', bold: true } },
+    { enabled: true, condition: 'numeric_value > 7', action: 'hide' }
+  ]
+}, { color: '#111827', bold: false }, sample, formulaContext);
+if (
+  conditional.style.color !== '#dc2626' ||
+  conditional.style.bold !== true ||
+  !conditional.hidden
+) {
+  throw new Error('conditional style result failed');
 }
 """.replace("__MODULE_PATH__", module_path)
 
@@ -468,6 +492,82 @@ if (!locked.locked || locked.properties.locked !== true) {
   throw new Error('locked state was not preserved');
 }
 """.replace("__MODULE_PATH__", module_path)
+
+    result = subprocess.run(
+        ["node", "--input-type=module", "-e", script],
+        cwd=Path(__file__).resolve().parents[1],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
+def test_designer_conditions_roundtrip_and_evaluate_safely() -> None:
+    objects_module_path = (
+        "./packages/slim_report_designer_ui/slim_report_designer_ui/static/js/objects.js"
+    )
+    data_module_path = (
+        "./packages/slim_report_designer_ui/slim_report_designer_ui/static/js/data_fields.js"
+    )
+    script = """
+import {
+  addObjectCondition,
+  normalizeObject,
+  objectStyle,
+  setObjectConditionValue
+} from '__OBJECTS_MODULE_PATH__';
+import { conditionalStyleResult, evaluateCondition } from '__DATA_MODULE_PATH__';
+
+const object = normalizeObject({
+  id: 'row_result',
+  type: 'field',
+  binding: 'result',
+  style: { color: '#111827' },
+  conditions: [{
+    id: 'high',
+    enabled: true,
+    condition: "flag == 'H'",
+    style: { color: '#dc2626', bold: true }
+  }]
+});
+
+if (!object.conditions || object.properties.conditions[0].id !== 'high') {
+  throw new Error('conditions were not normalized');
+}
+const high = conditionalStyleResult(object, objectStyle(object), {
+  results: [{ result: '12.4', flag: 'H', numeric_value: 12.4 }]
+}, {
+  rowData: { result: '12.4', flag: 'H', numeric_value: 12.4 },
+  repeatDataPath: 'results'
+});
+if (high.style.color !== '#dc2626' || high.style.bold !== true || high.hidden) {
+  throw new Error('conditional style was not applied');
+}
+if (!evaluateCondition("numeric_value > 10 and flag == 'H'", {}, {
+  rowData: { numeric_value: 12.4, flag: 'H' },
+  repeatDataPath: 'results'
+})) {
+  throw new Error('condition evaluator failed');
+}
+if (evaluateCondition("__import__('os')", {}, {})) {
+  throw new Error('unsafe condition should be false');
+}
+
+addObjectCondition(object);
+setObjectConditionValue(object, 1, 'condition', "result == ''");
+setObjectConditionValue(object, 1, 'action', 'hide');
+const hidden = conditionalStyleResult(object, objectStyle(object), {}, {
+  rowData: { result: '', flag: 'N' },
+  repeatDataPath: 'results'
+});
+if (!hidden.hidden) {
+  throw new Error('hide action was not detected');
+}
+""".replace("__OBJECTS_MODULE_PATH__", objects_module_path).replace(
+        "__DATA_MODULE_PATH__", data_module_path
+    )
 
     result = subprocess.run(
         ["node", "--input-type=module", "-e", script],

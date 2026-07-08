@@ -1,15 +1,18 @@
 import { icon } from "./icons.js";
 import { evaluateFormula, fieldExists, getArrayChildFields, getFieldValue, getRowValue, normalizeArrayFieldPath, normalizeFieldPath, resolveBinding } from "./data_fields.js";
 import {
+  addObjectCondition,
   addTableColumn,
   generateTableColumns,
   objectStyle,
   getBandById,
   removeTableColumn,
+  removeObjectCondition,
   setBandValue,
   setBandGroupValue,
   setBandRepeatValue,
   setGroupFooterVisible,
+  setObjectConditionValue,
   setObjectAlt,
   setObjectBand,
   setObjectBinding,
@@ -95,6 +98,22 @@ export function createInspector({
         removeTableColumn(object, Number(tableButton.dataset.columnIndex) || 0);
       }
       onChange();
+      return;
+    }
+    const conditionButton = event.target.closest("button[data-condition-command]");
+    if (conditionButton) {
+      event.preventDefault();
+      const object = getSelectedObject();
+      if (!object) {
+        return;
+      }
+      onBeforeChange("Edit conditional formatting");
+      if (conditionButton.dataset.conditionCommand === "add") {
+        addObjectCondition(object);
+      } else if (conditionButton.dataset.conditionCommand === "delete") {
+        removeObjectCondition(object, Number(conditionButton.dataset.conditionIndex) || 0);
+      }
+      onChange({ preserveInspector: false });
       return;
     }
     const commandButton = event.target.closest("button[data-inspector-command]");
@@ -252,6 +271,7 @@ export function renderInspector(
       styleField("background_color", object, "color", { label: "background", transparent: true })
     ]));
   }
+  form.appendChild(section("Conditional Formatting", conditionalFormattingFields(object)));
   form.appendChild(section("Object State", [
     fieldRow("locked", Boolean(object.locked), { type: "checkbox", name: "locked" })
   ]));
@@ -758,6 +778,11 @@ function applyInput(template, object, input) {
     object.properties.locked = object.locked;
     return;
   }
+  if (input.name.startsWith("condition.")) {
+    const [, rawIndex, ...pathParts] = input.name.split(".");
+    setObjectConditionValue(object, Number(rawIndex) || 0, pathParts.join("."), inputValue(input, value));
+    return;
+  }
   if (input.dataset.styleKey) {
     setObjectStyleValue(object, input.dataset.styleKey, inputValue(input, value));
     return;
@@ -837,6 +862,113 @@ function applyInput(template, object, input) {
     return;
   }
   object[input.name] = String(value);
+}
+
+function conditionalFormattingFields(object) {
+  const rows = [];
+  const rules = Array.isArray(object.conditions ?? object.properties?.conditions)
+    ? object.conditions ?? object.properties?.conditions
+    : [];
+  rules.forEach((rule, index) => {
+    const group = document.createElement("div");
+    group.className = "condition-rule-editor";
+    const title = document.createElement("div");
+    title.className = "condition-rule-title";
+    title.textContent = `Rule ${index + 1}`;
+    const deleteButton = conditionCommandButton("delete", "Delete");
+    deleteButton.dataset.conditionIndex = String(index);
+    group.append(
+      title,
+      fieldRow("enabled", Boolean(rule.enabled ?? true), {
+        type: "checkbox",
+        name: `condition.${index}.enabled`
+      }),
+      fieldRow("condition", rule.condition || "", {
+        name: `condition.${index}.condition`
+      }),
+      fieldRow("text color", rule.style?.color || "", {
+        type: "color",
+        name: `condition.${index}.style.color`
+      }),
+      fieldRow("background", rule.style?.background_color || "", {
+        type: "color",
+        name: `condition.${index}.style.background_color`
+      }),
+      fieldRow("bold", Boolean(rule.style?.bold), {
+        type: "checkbox",
+        name: `condition.${index}.style.bold`
+      }),
+      fieldRow("italic", Boolean(rule.style?.italic), {
+        type: "checkbox",
+        name: `condition.${index}.style.italic`
+      }),
+      fieldRow("underline", Boolean(rule.style?.underline), {
+        type: "checkbox",
+        name: `condition.${index}.style.underline`
+      }),
+      ...conditionalObjectStyleRows(object, rule, index),
+      fieldRow("action", rule.action || "", {
+        type: "select",
+        name: `condition.${index}.action`,
+        options: ["", "hide"]
+      }),
+      deleteButton
+    );
+    rows.push(group);
+  });
+  const examples = document.createElement("p");
+  examples.className = "field-sample-preview";
+  examples.textContent = "Examples: flag == 'H'; flag == 'L'; numeric_value > 10; patient.sex == 'F'; group.count > 5; contains(result, '+')";
+  rows.push(examples);
+  rows.push(conditionCommandButton("add", "Add rule"));
+  return rows;
+}
+
+function conditionalObjectStyleRows(object, rule, index) {
+  if (object.type === "rectangle" || object.type === "image" || object.type === "table") {
+    return [
+      fieldRow("border color", rule.style?.border_color || "", {
+        type: "color",
+        name: `condition.${index}.style.border_color`
+      }),
+      fieldRow("border width", rule.style?.border_width ?? "", {
+        type: "number",
+        name: `condition.${index}.style.border_width`,
+        min: "0"
+      })
+    ];
+  }
+  if (object.type === "line") {
+    return [
+      fieldRow("stroke color", rule.style?.stroke_color || "", {
+        type: "color",
+        name: `condition.${index}.style.stroke_color`
+      }),
+      fieldRow("stroke width", rule.style?.stroke_width ?? "", {
+        type: "number",
+        name: `condition.${index}.style.stroke_width`,
+        min: "0"
+      })
+    ];
+  }
+  if (object.type === "barcode" || object.type === "qrcode") {
+    return [
+      fieldRow("foreground", rule.style?.foreground_color || "", {
+        type: "color",
+        name: `condition.${index}.style.foreground_color`
+      })
+    ];
+  }
+  return [];
+}
+
+function conditionCommandButton(command, label) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = command === "delete" ? "toolbar-button danger" : "toolbar-button";
+  button.dataset.conditionCommand = command;
+  button.textContent = label;
+  return button;
 }
 
 function applyPageInput(template, input, activeBandId = "detail") {

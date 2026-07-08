@@ -58,6 +58,17 @@ def evaluate_formula_result(
     return FormulaEvaluation(value)
 
 
+def evaluate_condition(
+    condition: str,
+    data: Mapping[str, Any] | None = None,
+    *,
+    resolver: Resolver | None = None,
+) -> bool:
+    """Evaluate a safe condition expression and return False on failure."""
+    result = evaluate_formula_result(condition, data, resolver=resolver)
+    return result.ok and _truthy(result.value)
+
+
 def resolve_formula_identifier(identifier: str, data: Mapping[str, Any] | None = None) -> Any:
     """Resolve a dotted identifier from mapping data for standalone evaluator use."""
     value: Any = data or {}

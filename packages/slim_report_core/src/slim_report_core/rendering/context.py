@@ -10,7 +10,7 @@ from datetime import date, datetime
 from typing import Any
 
 from ..exceptions import ReportValidationError
-from ..formula import evaluate_formula_result
+from ..formula import evaluate_condition, evaluate_formula_result
 from ..models import Band, Object, Page
 from ..report import Report
 
@@ -131,6 +131,7 @@ class RenderObject:
     binding: str = ""
     formula: str = ""
     formula_mode: bool = False
+    conditions: list[dict[str, Any]] = field(default_factory=list)
     style: dict[str, Any] = field(default_factory=dict)
     band: str = "detail"
     locked: bool = False
@@ -285,6 +286,7 @@ def normalize_object(obj: Object) -> RenderObject:
         binding=str(binding_expression or ""),
         formula=str(properties.get("formula", getattr(obj, "formula", "")) or ""),
         formula_mode=_bool(properties.get("formula_mode", getattr(obj, "formula_mode", False))),
+        conditions=_conditions(properties.get("conditions", getattr(obj, "conditions", []))),
         style=style,
         band=str(band),
         locked=_bool(properties.get("locked", getattr(obj, "locked", False))),
@@ -496,6 +498,61 @@ def resolve_bound_object_value(
             return value_to_text(value)
     value = obj.properties.get("value", "")
     return "" if value is None else str(value)
+
+
+def object_with_conditional_style(
+    obj: RenderObject,
+    data: Mapping[str, Any],
+) -> RenderObject | None:
+    """Return an object with conditional style applied, or None when hidden."""
+    resolved = apply_conditional_styles(obj, data)
+    if resolved["hidden"]:
+        return None
+    if resolved["style"] == obj.style:
+        return obj
+    return RenderObject(**{**obj.__dict__, "style": resolved["style"]})
+
+
+def apply_conditional_styles(
+    obj: RenderObject,
+    data: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Evaluate object conditions and return the merged style and hide action."""
+    style = dict(obj.style)
+    hidden = False
+    if not obj.conditions:
+        return {"style": style, "hidden": hidden}
+    row = data.get("__slim_row__") if isinstance(data, Mapping) else None
+    repeat_data_path = str(
+        data.get("__slim_repeat_path__", "") if isinstance(data, Mapping) else ""
+    )
+    for condition in obj.conditions:
+        if not bool(condition.get("enabled", True)):
+            continue
+        expression = str(condition.get("condition", "") or "").strip()
+        if not expression:
+            continue
+        matched = evaluate_condition(
+            expression,
+            data,
+            resolver=lambda identifier: resolve_binding(
+                identifier,
+                data,
+                row=row if isinstance(row, Mapping) else None,
+                repeat_data_path=repeat_data_path,
+            ),
+        )
+        if not matched:
+            continue
+        condition_style = condition.get("style")
+        if isinstance(condition_style, Mapping):
+            style.update(dict(condition_style))
+        action = condition.get("action", "")
+        if isinstance(action, Mapping):
+            action = action.get("type", action.get("name", ""))
+        if str(action or "").lower() == "hide":
+            hidden = True
+    return {"style": style, "hidden": hidden}
 
 
 def resolve_binding_text(
@@ -762,6 +819,25 @@ def _format_number(value: float) -> int | float:
     if float(value).is_integer():
         return int(value)
     return round(value, 6)
+
+
+def _conditions(value: Any) -> list[dict[str, Any]]:
+    if not isinstance(value, list):
+        return []
+    normalized: list[dict[str, Any]] = []
+    for index, item in enumerate(value):
+        if not isinstance(item, Mapping):
+            continue
+        condition = {
+            "id": str(item.get("id") or f"condition_{index + 1}"),
+            "enabled": bool(item.get("enabled", True)),
+            "condition": str(item.get("condition", "") or ""),
+            "style": dict(item.get("style")) if isinstance(item.get("style"), Mapping) else {},
+        }
+        if "action" in item:
+            condition["action"] = item["action"]
+        normalized.append(condition)
+    return normalized
 
 
 def get_value_by_path(data: Any, path: str) -> Any:

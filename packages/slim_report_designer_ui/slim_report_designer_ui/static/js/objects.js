@@ -90,6 +90,11 @@ export function normalizeObject(object) {
     normalized.formula_mode = Boolean(formulaMode);
     normalized.properties.formula_mode = normalized.formula_mode;
   }
+  const conditions = object.conditions ?? object.properties?.conditions;
+  if (conditions !== undefined) {
+    normalized.conditions = normalizeConditionRules(conditions);
+    normalized.properties.conditions = normalized.conditions;
+  }
   if (object.source_path !== undefined || object.properties?.source_path !== undefined) {
     normalized.source_path = String(object.source_path ?? object.properties?.source_path ?? "");
     normalized.properties.source_path = normalized.source_path;
@@ -427,6 +432,56 @@ export function setObjectStyleValue(object, key, value) {
     ...(object.style || {}),
     [key]: value
   };
+}
+
+export function addObjectCondition(object) {
+  const conditions = normalizeConditionRules(object.conditions ?? object.properties?.conditions);
+  conditions.push({
+    id: uniqueId("condition", conditions.map((condition) => condition.id)),
+    enabled: true,
+    condition: "",
+    style: {},
+    action: ""
+  });
+  setObjectConditions(object, conditions);
+}
+
+export function removeObjectCondition(object, index) {
+  const conditions = normalizeConditionRules(object.conditions ?? object.properties?.conditions)
+    .filter((_rule, ruleIndex) => ruleIndex !== index);
+  setObjectConditions(object, conditions);
+}
+
+export function setObjectConditionValue(object, index, path, value) {
+  const conditions = normalizeConditionRules(object.conditions ?? object.properties?.conditions);
+  const rule = conditions[index];
+  if (!rule) {
+    return;
+  }
+  if (path.startsWith("style.")) {
+    const key = path.slice("style.".length);
+    rule.style = rule.style || {};
+    if (value === "" || value === null || value === undefined) {
+      delete rule.style[key];
+    } else {
+      rule.style[key] = value;
+    }
+  } else if (path === "enabled") {
+    rule.enabled = Boolean(value);
+  } else if (path === "condition") {
+    rule.condition = String(value);
+  } else if (path === "action") {
+    rule.action = String(value || "");
+  } else {
+    rule[path] = value;
+  }
+  setObjectConditions(object, conditions);
+}
+
+export function setObjectConditions(object, conditions) {
+  object.conditions = normalizeConditionRules(conditions);
+  object.properties = object.properties || {};
+  object.properties.conditions = object.conditions;
 }
 
 export function defaultStyleForType(type) {
@@ -883,6 +938,25 @@ function explicitStyle(object) {
     style.stroke_color = style.border_color;
   }
   return style;
+}
+
+function normalizeConditionRules(conditions) {
+  if (!Array.isArray(conditions)) {
+    return [];
+  }
+  return conditions
+    .filter((rule) => rule && typeof rule === "object" && !Array.isArray(rule))
+    .map((rule, index) => ({
+      id: String(rule.id || `condition_${index + 1}`),
+      enabled: Boolean(rule.enabled ?? true),
+      condition: String(rule.condition || ""),
+      style: rule.style && typeof rule.style === "object" && !Array.isArray(rule.style)
+        ? { ...rule.style }
+        : {},
+      action: typeof rule.action === "object"
+        ? String(rule.action?.type || rule.action?.name || "")
+        : String(rule.action || "")
+    }));
 }
 
 function normalizeTableObject(normalized, source) {

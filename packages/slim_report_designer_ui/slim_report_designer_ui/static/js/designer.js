@@ -665,14 +665,16 @@ function formulaExamplesPanel() {
   panel.className = "field-group formula-examples";
   const title = document.createElement("div");
   title.className = "field-group-title";
-  title.textContent = "Formula Examples";
+  title.textContent = "Formula / Condition Examples";
   const examples = document.createElement("div");
   examples.className = "formula-example-list";
   for (const formula of [
     "concat(result, ' ', unit)",
     "if(flag == 'H', 'HIGH', 'NORMAL')",
     "number(numeric_value, 2)",
-    "default(patient.middle_name, '')"
+    "default(patient.middle_name, '')",
+    "numeric_value > 10",
+    "group.count > 5"
   ]) {
     const item = document.createElement("code");
     item.textContent = formula;

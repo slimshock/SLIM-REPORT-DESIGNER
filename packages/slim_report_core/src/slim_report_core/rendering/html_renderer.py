@@ -16,6 +16,7 @@ from .context import (
     get_row_value,
     get_value_by_path,
     object_px,
+    object_with_conditional_style,
     resolve_bound_object_value,
     resolve_grouped_object_value,
     resolve_object_value,
@@ -111,6 +112,10 @@ def render_html_object(obj: RenderObject, context: RenderContext) -> str:
     """Render one normalized report object as HTML."""
     if not obj.visible:
         return ""
+    resolved_obj = object_with_conditional_style(obj, context.data)
+    if resolved_obj is None:
+        return ""
+    obj = resolved_obj
     if obj.type == "text":
         return _render_text(obj, context)
     if obj.type == "field":

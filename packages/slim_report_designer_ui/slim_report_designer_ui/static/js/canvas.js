@@ -1,6 +1,6 @@
 import { clampObjectToBand, getBandForObject, objectStyle } from "./objects.js";
 import { gridSizeForUnit, maybeSnap, screenDeltaToRealDelta } from "./canvas_settings.js";
-import { evaluateFormula, getArrayByPath, getFieldValue, getRowValue, resolveBinding } from "./data_fields.js";
+import { conditionalStyleResult, evaluateFormula, getArrayByPath, getFieldValue, getRowValue, resolveBinding } from "./data_fields.js";
 import { appendQrSvg } from "./qrcode.js";
 
 export function createCanvasController({
@@ -407,7 +407,21 @@ function renderObject(object, selectedIds = [], primarySelectedId = null, unit =
   element.style.width = `${unitToPx(Number(object.width) || 0, unit)}px`;
   element.style.height = `${unitToPx(Math.max(Number(object.height) || 0, object.type === "line" ? 6 : 8), unit)}px`;
 
-  const style = objectStyle(object);
+  let style = objectStyle(object);
+  const conditionContext = {
+    rowData: options.rowData,
+    repeatDataPath: options.repeatDataPath,
+    groupData: options.groupData,
+    pageNumber: 1,
+    totalPages: 1
+  };
+  const conditional = options.showSampleData
+    ? conditionalStyleResult(object, style, options.sampleData, conditionContext)
+    : { style, hidden: false };
+  style = conditional.style;
+  if (conditional.hidden) {
+    element.classList.add("condition-hidden");
+  }
 
   element.style.fontSize = `${Number(style.font_size) || 12}px`;
   element.style.fontFamily = style.font_family || "Arial";
@@ -507,6 +521,13 @@ function renderObject(object, selectedIds = [], primarySelectedId = null, unit =
     lock.className = "lock-indicator";
     lock.textContent = "Locked";
     element.appendChild(lock);
+  }
+
+  if (conditional.hidden) {
+    const hidden = document.createElement("span");
+    hidden.className = "condition-hidden-indicator";
+    hidden.textContent = "Hidden by condition";
+    element.appendChild(hidden);
   }
 
   if (!options.previewCopy && object.id === primarySelectedId && !object.locked) {

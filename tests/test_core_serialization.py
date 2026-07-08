@@ -346,6 +346,36 @@ def test_json_serializer_round_trips_page_pagination_settings() -> None:
     }
 
 
+def test_json_serializer_round_trips_object_conditions() -> None:
+    payload = sample_template()
+    payload["objects"][0]["conditions"] = [
+        {
+            "id": "high_flag",
+            "enabled": True,
+            "condition": "flag == 'H'",
+            "style": {"color": "#dc2626", "bold": True},
+        },
+        {
+            "id": "hide_empty",
+            "enabled": True,
+            "condition": "patient.name == ''",
+            "style": {},
+            "action": "hide",
+        },
+    ]
+
+    dumped = JSONSerializer().dump_mapping(JSONSerializer().load_mapping(payload))
+    conditions = dumped["objects"][0]["conditions"]
+
+    assert conditions[0]["id"] == "high_flag"
+    assert conditions[0]["enabled"] is True
+    assert conditions[0]["condition"] == "flag == 'H'"
+    assert conditions[0]["style"]["color"] == "#dc2626"
+    assert conditions[0]["style"]["bold"] is True
+    assert conditions[1]["action"] == "hide"
+    assert dumped["objects"][0]["properties"]["conditions"] == conditions
+
+
 def sample_template() -> dict:
     return {
         "version": DEFAULT_REPORT_VERSION,

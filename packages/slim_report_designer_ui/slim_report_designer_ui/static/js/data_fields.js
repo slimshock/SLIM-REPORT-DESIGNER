@@ -74,6 +74,34 @@ export function resolveFormula(formula, sampleData = {}, context = {}) {
   return evaluateFormula(formula, sampleData, context).value;
 }
 
+export function evaluateCondition(condition, sampleData = {}, context = {}) {
+  const result = evaluateFormula(condition, sampleData, context);
+  return !result.error && formulaTruthy(result.value);
+}
+
+export function conditionalStyleResult(object, baseStyle = {}, sampleData = {}, context = {}) {
+  let style = { ...(baseStyle || {}) };
+  let hidden = false;
+  for (const rule of conditionRules(object)) {
+    if (rule.enabled === false || !String(rule.condition || "").trim()) {
+      continue;
+    }
+    if (!evaluateCondition(rule.condition, sampleData, context)) {
+      continue;
+    }
+    if (rule.style && typeof rule.style === "object" && !Array.isArray(rule.style)) {
+      style = { ...style, ...rule.style };
+    }
+    const action = typeof rule.action === "object"
+      ? rule.action?.type || rule.action?.name || ""
+      : rule.action || "";
+    if (String(action).toLowerCase() === "hide") {
+      hidden = true;
+    }
+  }
+  return { style, hidden };
+}
+
 export function resolveSystemBinding(path, context = {}) {
   if (path === "page.number") {
     return context.pageNumber ?? 1;
@@ -169,9 +197,34 @@ class FormulaParser {
   }
 
   parse() {
-    const value = this.comparison();
+    const value = this.logicalOr();
     this.expect("eof");
     return value;
+  }
+
+  logicalOr() {
+    let left = this.logicalAnd();
+    while (this.matchIdentifierValue("or")) {
+      const right = this.logicalAnd();
+      left = formulaTruthy(left) || formulaTruthy(right);
+    }
+    return left;
+  }
+
+  logicalAnd() {
+    let left = this.logicalNot();
+    while (this.matchIdentifierValue("and")) {
+      const right = this.logicalNot();
+      left = formulaTruthy(left) && formulaTruthy(right);
+    }
+    return left;
+  }
+
+  logicalNot() {
+    if (this.matchIdentifierValue("not")) {
+      return !formulaTruthy(this.logicalNot());
+    }
+    return this.comparison();
   }
 
   comparison() {
@@ -264,7 +317,7 @@ class FormulaParser {
     const args = [];
     if (!this.checkOperator(")")) {
       do {
-        args.push(this.comparison());
+        args.push(this.logicalOr());
       } while (this.matchOperator([","]));
     }
     this.expectOperator(")");
@@ -281,6 +334,14 @@ class FormulaParser {
 
   matchOperator(values) {
     if (this.peek().type !== "operator" || !values.includes(this.peek().value)) {
+      return false;
+    }
+    this.index += 1;
+    return true;
+  }
+
+  matchIdentifierValue(value) {
+    if (this.peek().type !== "identifier" || this.peek().value !== value) {
       return false;
     }
     this.index += 1;
@@ -412,6 +473,11 @@ function formulaTruthy(value) {
 
 function formulaText(value) {
   return value === null || value === undefined ? "" : String(value);
+}
+
+function conditionRules(object) {
+  const source = object?.conditions ?? object?.properties?.conditions;
+  return Array.isArray(source) ? source : [];
 }
 
 export function resolveGroupBinding(path, context = {}) {
