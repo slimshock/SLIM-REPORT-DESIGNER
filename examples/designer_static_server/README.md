@@ -18,6 +18,7 @@ http://127.0.0.1:8008/
 
 ## What Works In Static Mode
 
+- Frontend-only operation with no Python web framework
 - Visual designer canvas
 - Toolbox and object inspector
 - Data Fields panel and binding picker
@@ -37,3 +38,5 @@ http://127.0.0.1:8008/
 - Provider-backed render data
 
 Use the Flask example when you need preview/export integration.
+
+When no backend API is configured, Preview and Export PDF actions should show a backend-required message rather than silently failing.

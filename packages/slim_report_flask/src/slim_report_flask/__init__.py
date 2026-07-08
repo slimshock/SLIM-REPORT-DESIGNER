@@ -1,6 +1,6 @@
 """Flask adapter package for Slim Report Designer."""
 
-__version__ = "0.5.0a1"
+__version__ = "0.6.0a0"
 
 from .blueprint import create_blueprint
 from .extension import SlimReportDesigner

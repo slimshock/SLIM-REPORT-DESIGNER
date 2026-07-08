@@ -355,6 +355,24 @@ pdf_bytes = report.render_pdf(data)
 Framework adapters, CLI commands, designers, and future integrations should manipulate `Report`
 objects, then render or serialize at the boundary.
 
+## Template Normalization
+
+Use `normalize_template` when accepting template dictionaries from designer clients or examples:
+
+```python
+from slim_report_core import normalize_template
+
+template = normalize_template({
+    "metadata": {"name": "Lab Report"},
+    "page": {},
+    "objects": [],
+    "bands": [],
+})
+```
+
+It returns a new mapping with serializer defaults such as `version`, `metadata.title`,
+`metadata.name`, `page.unit`, `assets`, `objects`, and `bands`.
+
 ## Builder
 
 `ReportBuilder` remains available as an optional convenience API. It is not required for normal
