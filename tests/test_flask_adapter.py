@@ -75,6 +75,8 @@ def test_flask_adapter_serves_framework_agnostic_designer_ui(tmp_path: Path) -> 
     client = app.test_client()
 
     response = client.get("/report-designer/designer?template=lab-template")
+    default_response = client.get("/report-designer/designer")
+    conditional_response = client.get("/report-designer/designer?template=conditional_lab_result")
     script_response = client.get("/report-designer/designer-ui/js/designer.js")
     toolbar_response = client.get("/report-designer/designer-ui/js/toolbar.js")
     icons_response = client.get("/report-designer/designer-ui/js/icons.js")
@@ -83,6 +85,8 @@ def test_flask_adapter_serves_framework_agnostic_designer_ui(tmp_path: Path) -> 
 
     assert response.status_code == 200
     assert response.mimetype == "text/html"
+    assert default_response.status_code == 200
+    assert conditional_response.status_code == 200
     html = response.get_data(as_text=True)
     assert "Slim Report Designer" in html
     assert "Click a tool to add it to the page." in html
@@ -130,6 +134,15 @@ def test_flask_designer_api_loads_and_saves_templates(tmp_path: Path) -> None:
     assert save_response.status_code == 200
     assert save_response.get_json()["metadata"]["title"] == "Canvas Lab Result"
     assert designer.get_report("lab-template").metadata.title == "Canvas Lab Result"
+
+
+def test_flask_designer_api_unknown_template_returns_json_404(tmp_path: Path) -> None:
+    app, _designer = create_app(tmp_path)
+
+    response = app.test_client().get("/report-designer/api/templates/missing-template")
+
+    assert response.status_code == 404
+    assert "missing-template" in response.get_json()["error"]
 
 
 def test_flask_designer_api_save_preserves_repeating_template_data(tmp_path: Path) -> None:

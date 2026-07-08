@@ -547,6 +547,7 @@ def test_sample_templates_render_html_and_pdf() -> None:
         "lab_result",
         "repeating_lab_result",
         "grouped_lab_result",
+        "aggregate_grouped_lab_result",
         "computed_fields_lab_result",
         "conditional_lab_result",
         "table_lab_result",
@@ -556,14 +557,49 @@ def test_sample_templates_render_html_and_pdf() -> None:
             REPO_ROOT / f"examples/flask_app/sample_templates/{template_name}.json"
         )
 
-        html = render_html(report, sample_data())
-        pdf = render_pdf(report, sample_data())
+        data = report.data.get("sample") if isinstance(report.data.get("sample"), dict) else sample_data()
+        html = render_html(report, data)
+        pdf = render_pdf(report, data)
 
         assert "<!doctype html>" in html
         assert "slim-report-page" in html
         assert len(html) > 1000
         assert pdf.startswith(b"%PDF")
         assert len(pdf) > 1000
+
+
+def test_sample_templates_render_expected_content_with_embedded_data() -> None:
+    cases = {
+        "lab_result": ["LABORATORY RESULT", "250"],
+        "cerebro_cbc": ["Cerebro CBC Result"],
+        "repeating_lab_result": ["WBC", "HGB", "Nitrite"],
+        "table_lab_result": ["Table Laboratory Result", "WBC", "Nitrite"],
+        "grouped_lab_result": ["HEMATOLOGY", "CHEMISTRY", "URINALYSIS"],
+        "aggregate_grouped_lab_result": [
+            "HEMATOLOGY",
+            "CHEMISTRY",
+            "URINALYSIS",
+            "Count: 2",
+            "Total Tests:",
+            "Page 1 of 1",
+        ],
+        "computed_fields_lab_result": ["JUAN DELA CRUZ / 34 / Male", "HIGH"],
+        "conditional_lab_result": ["Manual Review", "126 mg/dL"],
+        "barcode_qr_lab_result": ["ORDER-1001", "repeating-linear-gradient"],
+    }
+
+    for template_name, expected_fragments in cases.items():
+        report = JSONSerializer().load(
+            REPO_ROOT / f"examples/flask_app/sample_templates/{template_name}.json"
+        )
+        data = report.data.get("sample") if isinstance(report.data.get("sample"), dict) else sample_data()
+
+        html = render_html(report, data)
+
+        assert "<!doctype html>" in html
+        for fragment in expected_fragments:
+            assert fragment in html, f"{template_name} missing {fragment!r}"
+        assert 'data-slim-object="group_name__group__row_0"' not in html
 
 
 def test_conditional_lab_result_sample_applies_rules_html_and_pdf() -> None:

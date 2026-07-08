@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import subprocess
 from pathlib import Path
 
@@ -383,6 +384,22 @@ def test_designer_static_ui_includes_canvas_controls() -> None:
     assert "undo" in toolbar_source
     assert "redo" in toolbar_source
     assert "canvas-zoom-shell" in index_source
+
+
+def test_designer_static_assets_and_module_imports_exist() -> None:
+    static_root = (
+        Path(__file__).resolve().parents[1]
+        / "packages/slim_report_designer_ui/slim_report_designer_ui/static"
+    )
+    assert (static_root / "index.html").is_file()
+    assert (static_root / "css/designer.css").is_file()
+    assert (static_root / "js/designer.js").is_file()
+
+    for module_path in (static_root / "js").glob("*.js"):
+        source = module_path.read_text(encoding="utf-8")
+        for match in re.finditer(r'from\s+["\'](\./[^"\']+)["\']', source):
+            imported = (module_path.parent / match.group(1)).resolve()
+            assert imported.is_file(), f"{module_path.name} imports missing {match.group(1)}"
 
 
 def test_designer_static_ui_locks_body_scroll_to_internal_panes() -> None:

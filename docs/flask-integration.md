@@ -16,6 +16,12 @@ Open:
 http://127.0.0.1:5000/report-designer/designer?template=lab_result
 http://127.0.0.1:5000/report-designer/designer?template=cerebro_cbc
 http://127.0.0.1:5000/report-designer/designer?template=repeating_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=table_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=grouped_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=aggregate_grouped_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=computed_fields_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=conditional_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=barcode_qr_lab_result
 ```
 
 ## Designer Route
@@ -57,6 +63,12 @@ Included examples:
 - `lab_result`
 - `cerebro_cbc`
 - `repeating_lab_result`
+- `table_lab_result`
+- `grouped_lab_result`
+- `aggregate_grouped_lab_result`
+- `computed_fields_lab_result`
+- `conditional_lab_result`
+- `barcode_qr_lab_result`
 
 ## Provider Data
 
@@ -93,6 +105,12 @@ Repeating Detail rows use array data. A Detail band can enable repeat settings w
 ```
 
 Field objects inside the repeating Detail band can use row-relative bindings. For a row in `results`, `test` resolves against the current row. `results[].test` also resolves against the current row when the band repeats over `results`.
+
+## Preview And Export Responses
+
+Preview returns `text/html`. PDF export returns `application/pdf` with a safe `Content-Disposition` filename. Preview/export failures return JSON with a clear `error` message and a status code appropriate to the failure.
+
+The response includes lightweight debug headers such as page count, object count, template name, and renderer name to make integration smoke checks easier.
 
 ## Rendering Boundary
 

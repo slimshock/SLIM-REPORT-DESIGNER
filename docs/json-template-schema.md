@@ -44,6 +44,7 @@ Page settings describe the canvas and exported page:
 - `background_color`
 - `transparent`
 - `pagination`
+- `print`
 
 Pagination settings are optional. Missing settings use the default values below:
 
@@ -60,6 +61,21 @@ Pagination settings are optional. Missing settings use the default values below:
 
 Basic pagination is used by HTML preview and PDF export for repeating Detail rows and Detail-band table rows.
 
+Print/export settings are optional:
+
+```json
+{
+  "print": {
+    "show_browser_print_button": true,
+    "default_filename": "report.pdf",
+    "pdf_title": "Report",
+    "pdf_author": "Slim Report Designer",
+    "pdf_subject": "",
+    "print_background": true
+  }
+}
+```
+
 ## Bands
 
 Bands group objects into report regions:
@@ -73,16 +89,38 @@ Bands group objects into report regions:
 - `visible`
 - `locked`
 - `repeat`
+- `group`
 
 Current common band types:
 
 - `page_header`
+- `group_header`
 - `detail`
+- `group_footer`
 - `page_footer`
 
 ## Band Repeat
 
 Only Detail band repeating is supported.
+
+## Band Group
+
+Group Header and Group Footer bands can carry group settings:
+
+```json
+{
+  "id": "group_header_results",
+  "type": "group_header",
+  "group": {
+    "id": "results_section",
+    "data_path": "results",
+    "field": "section",
+    "sort": "none"
+  }
+}
+```
+
+Group fields expose bindings such as `group.value`, `group.count`, and `group.sum.numeric_value`.
 
 ```json
 {
@@ -115,6 +153,9 @@ Objects are drawable report elements:
 - `height`
 - `locked`
 - `style`
+- `conditions`
+- `formula`
+- `formula_mode`
 
 Supported object types:
 
@@ -146,6 +187,8 @@ Field objects bind to render data:
 ```
 
 `source_path` is optional metadata used by designer workflows.
+
+Set `formula_mode` to `true` and provide `formula` to render a safe computed expression instead of a direct binding. Conditional formatting rules live in `conditions` and can apply style overrides or hide an object.
 
 ## Image Object
 

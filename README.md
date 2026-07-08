@@ -51,6 +51,7 @@ Implemented now:
 - Align, distribute, and layer tools
 - Lock and unlock
 - Report bands: Page Header, Detail, and Page Footer
+- Group Header and Group Footer bands
 - Data Fields panel
 - Field search and binding picker
 - Sample data editor
@@ -62,6 +63,12 @@ Implemented now:
 - Basic array-bound Table object
 - Barcode and QR code objects with designer, HTML preview, and PDF export support
 - Basic multi-page pagination for repeating Detail rows and Detail-band tables
+- Grouped reports with `group.value`, `group.count`, and group aggregates
+- Report aggregates such as `report.count.results` and `report.sum.results.value`
+- System variables such as `page.number`, `page.total_pages`, `date.today`, and `datetime.now`
+- Safe computed field formulas
+- Conditional formatting with style overrides and hide actions
+- Page print/export settings, safe PDF filenames, and PDF metadata
 - Flask-hosted preview and PDF export
 - CLI commands for validation, inspection, and rendering
 
@@ -69,7 +76,6 @@ Not implemented yet:
 
 - Advanced table features such as nested tables, merged cells, formulas, and grouped tables
 - Advanced pagination controls such as custom page breaks and widow/orphan rules
-- Group headers and footers
 - Django adapter
 - FastAPI adapter
 - Production packaging and public release
@@ -174,10 +180,14 @@ http://127.0.0.1:5000/report-designer/designer?template=lab_result
 http://127.0.0.1:5000/report-designer/designer?template=cerebro_cbc
 http://127.0.0.1:5000/report-designer/designer?template=repeating_lab_result
 http://127.0.0.1:5000/report-designer/designer?template=table_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=grouped_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=aggregate_grouped_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=computed_fields_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=conditional_lab_result
 http://127.0.0.1:5000/report-designer/designer?template=barcode_qr_lab_result
 ```
 
-The Flask example loads templates from `examples/flask_app/sample_templates/`. Preview works, PDF export works, and sample/provider data can be used for field rendering. The `repeating_lab_result` template demonstrates paginated repeating Detail rows, `table_lab_result` demonstrates the paginated basic Table object, and `barcode_qr_lab_result` demonstrates barcode/QR objects.
+The Flask example loads templates from `examples/flask_app/sample_templates/`. Preview works, PDF export works, and sample/provider data can be used for field rendering. The examples cover fixed lab reports, paginated repeating rows, basic tables, grouping, aggregates, formulas, conditional formatting, and barcode/QR objects.
 
 ## Serialization
 
@@ -225,6 +235,10 @@ The CLI accepts JSON files as input, but commands deserialize to `Report` before
 - [JSON template schema](docs/json-template-schema.md)
 - [Data Fields](docs/data-fields.md)
 - [Repeating Detail rows](docs/repeating-detail-rows.md)
+- [Grouping](docs/grouping.md)
+- [Aggregate and system fields](docs/aggregate-and-system-fields.md)
+- [Formulas](docs/formulas.md)
+- [Conditional formatting](docs/conditional-formatting.md)
 - [Public API](docs/public-api.md)
 - [Architecture](docs/architecture.md)
 - [Roadmap](docs/roadmap.md)

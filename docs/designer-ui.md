@@ -48,6 +48,10 @@ http://127.0.0.1:5000/report-designer/designer?template=lab_result
 http://127.0.0.1:5000/report-designer/designer?template=cerebro_cbc
 http://127.0.0.1:5000/report-designer/designer?template=repeating_lab_result
 http://127.0.0.1:5000/report-designer/designer?template=table_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=grouped_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=aggregate_grouped_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=computed_fields_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=conditional_lab_result
 http://127.0.0.1:5000/report-designer/designer?template=barcode_qr_lab_result
 ```
 
@@ -80,8 +84,13 @@ http://127.0.0.1:5000/report-designer/designer?template=barcode_qr_lab_result
 - Sample data editor
 - Placeholder/sample display toggle
 - Repeating Detail rows
+- Group Header and Group Footer bands
 - Basic array-bound tables
 - Barcode and QR code objects
+- Aggregate/system fields
+- Safe computed formulas
+- Conditional formatting rules
+- Print/export settings
 - Basic preview/export pagination for repeating Detail rows and Detail-band tables
 
 ## Local Version History
@@ -113,6 +122,6 @@ Flask mode:
 
 - Advanced table features such as nested tables, merged cells, formulas, grouped tables, and complex pagination are not implemented yet.
 - Custom page breaks, group pagination, and widow/orphan rules are not implemented yet.
-- Group headers/footers are not implemented yet.
+- Group pagination controls are basic; advanced keep-together and widow/orphan behavior are future work.
 - Barcode/QR objects render without additional frontend dependencies. Current built-in output uses deterministic fallback visuals rather than a full barcode/QR encoder for every symbology.
 - Django and FastAPI adapters are future work.

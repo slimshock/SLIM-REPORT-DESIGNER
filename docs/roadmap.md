@@ -26,12 +26,22 @@ Slim Report Designer is early alpha. The roadmap is intentionally practical and 
 - Basic Table Object
 - Basic pagination for repeating Detail rows and Detail-band tables
 - Barcode/QR objects
+- Group Header and Group Footer bands
+- Group and report aggregate fields
+- System variables including page numbers and date/time
+- Safe computed formulas
+- Conditional formatting
+- Print/export polish
 
 ## Next
 
 - Advanced table features
 - Advanced pagination controls
-- Group headers/footers
+- Asset manager
+- Advanced group pagination
+- Subreports
+- Template storage backends
+- Designer packaging
 - Django adapter
 - FastAPI adapter
 - Public release packaging

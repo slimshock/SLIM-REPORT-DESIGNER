@@ -19,12 +19,21 @@ http://127.0.0.1:8008/
 ## What Works In Static Mode
 
 - Visual designer canvas
+- Toolbox and object inspector
+- Data Fields panel and binding picker
 - JSON import/export
 - Local browser version history
 - Editing `data.sample`
 - Editing/preserving `data.fields`
 - Placeholder/sample data canvas toggle
+- Zoom, grid, snap, undo/redo, multi-select, and locking
+- Page, band, formula, conditional formatting, and print setting edits
 
-## Limitation
+## What Requires A Backend
 
-Static mode does not export PDF without a backend API. Use the Flask example when you need preview/export integration.
+- HTML preview through `slim_report_core`
+- PDF export
+- Server-side template storage
+- Provider-backed render data
+
+Use the Flask example when you need preview/export integration.

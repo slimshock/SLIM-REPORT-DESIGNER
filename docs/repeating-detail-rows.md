@@ -68,6 +68,6 @@ PDF export uses the same row data and row-relative binding behavior as HTML prev
 ## Current Limitations
 
 - Advanced pagination controls such as custom page breaks and widow/orphan rules are not implemented yet.
-- Group headers/footers are not implemented yet.
+- Group headers/footers can surround repeated Detail rows, but advanced keep-together and group pagination controls are future work.
 - Advanced table features are separate future work.
 - Only Detail band repeating is supported.
