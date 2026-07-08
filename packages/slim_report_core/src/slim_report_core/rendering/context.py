@@ -623,10 +623,16 @@ def resolve_system_binding(binding: str, data: Mapping[str, Any]) -> Any:
         return date.today().isoformat()
     if binding == "datetime.now":
         return datetime.now().strftime("%Y-%m-%d %H:%M")
-    if binding in {"page.number", "page.total_pages"}:
+    if binding in {"page.number", "page.index", "page.total_pages", "page.count"}:
         page = data.get("__slim_page__") if isinstance(data, Mapping) else None
         if isinstance(page, Mapping):
-            key = "number" if binding == "page.number" else "total_pages"
+            keys = {
+                "page.number": "number",
+                "page.index": "index",
+                "page.total_pages": "total_pages",
+                "page.count": "count",
+            }
+            key = keys[binding]
             return page.get(key, "")
         return ""
     return _MISSING
@@ -726,7 +732,9 @@ def context_with_page_numbers(
             **dict(context.data),
             "__slim_page__": {
                 "number": page_number,
+                "index": max(page_number - 1, 0),
                 "total_pages": total_pages,
+                "count": total_pages,
             },
         },
         page=context.page,

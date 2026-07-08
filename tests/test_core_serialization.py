@@ -40,6 +40,22 @@ def test_json_serializer_round_trips_payload_string() -> None:
     assert serializer.dump_mapping(loaded) == serializer.dump_mapping(report)
 
 
+def test_json_serializer_round_trips_page_print_settings() -> None:
+    payload = sample_template()
+    payload["page"]["print"] = {
+        "default_filename": "cbc-report.pdf",
+        "pdf_title": "CBC Report",
+        "pdf_author": "Cerebro",
+        "print_background": True,
+    }
+
+    report = JSONSerializer().load_mapping(payload)
+    dumped = JSONSerializer().dump_mapping(report)
+
+    assert report.page.print["default_filename"] == "cbc-report.pdf"
+    assert dumped["page"]["print"] == payload["page"]["print"]
+
+
 def test_json_serializer_loads_and_saves_file(tmp_path: Path) -> None:
     serializer = JSONSerializer()
     report = Report()

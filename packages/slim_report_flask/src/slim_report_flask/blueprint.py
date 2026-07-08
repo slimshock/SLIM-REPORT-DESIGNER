@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import json
 import mimetypes
+import re
 from typing import TYPE_CHECKING, Any
 
-from flask import Blueprint, Response, jsonify, request, url_for
+from flask import Blueprint, Response, current_app, jsonify, request, url_for
 
 from slim_report_core import ExporterError, Report, SlimReportError, create_default_template
 from slim_report_core.rendering.context import (
@@ -123,58 +124,72 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.post("/api/preview")
     def api_preview() -> Response:
-        request_payload = request.get_json(silent=True)
-        payload = request_template_payload(request_payload)
-        data = request_template_data(request_payload, payload, designer)
-        report = load_report_from_payload(normalize_template_payload(payload))
-        context = validate_api_report(report)
-        return Response(
-            report.render_html(data),
-            mimetype="text/html",
-            headers=render_debug_headers(context, data),
-        )
+        try:
+            request_payload = request.get_json(silent=True)
+            payload = request_template_payload(request_payload)
+            data = request_template_data(request_payload, payload, designer)
+            report = load_report_from_payload(normalize_template_payload(payload))
+            context = validate_api_report(report)
+            return Response(
+                report.render_html(data),
+                mimetype="text/html",
+                headers=render_debug_headers(context, data, renderer="html"),
+            )
+        except Exception as exc:
+            return render_failure_response(exc)
 
     @blueprint.post("/api/export/pdf")
     def api_export_pdf() -> Response:
-        request_payload = request.get_json(silent=True)
-        payload = request_template_payload(request_payload)
-        data = request_template_data(request_payload, payload, designer)
-        report = load_report_from_payload(normalize_template_payload(payload))
-        context = validate_api_report(report)
-        return Response(
-            report.render_pdf(data),
-            mimetype="application/pdf",
-            headers={
-                "Content-Disposition": 'attachment; filename="report-template.pdf"',
-                **render_debug_headers(context, data),
-            },
-        )
+        try:
+            request_payload = request.get_json(silent=True)
+            payload = request_template_payload(request_payload)
+            data = request_template_data(request_payload, payload, designer)
+            report = load_report_from_payload(normalize_template_payload(payload))
+            context = validate_api_report(report)
+            return Response(
+                report.render_pdf(data),
+                mimetype="application/pdf",
+                headers={
+                    "Content-Disposition": content_disposition(default_export_filename(report)),
+                    **render_debug_headers(context, data, renderer="pdf"),
+                },
+            )
+        except Exception as exc:
+            return render_failure_response(exc)
 
     @blueprint.get("/templates/<template_id>/preview/<record_id>")
     def preview(template_id: str, record_id: str) -> Response:
-        report = designer.get_report(template_id)
-        data = designer.resolve_data(template_id, record_id)
-        context = create_render_context(report)
-        return Response(
-            report.render_html(data),
-            mimetype="text/html",
-            headers=render_debug_headers(context, data),
-        )
+        try:
+            report = designer.get_report(template_id)
+            data = designer.resolve_data(template_id, record_id)
+            context = create_render_context(report)
+            return Response(
+                report.render_html(data),
+                mimetype="text/html",
+                headers=render_debug_headers(context, data, renderer="html"),
+            )
+        except Exception as exc:
+            return render_failure_response(exc)
 
     @blueprint.get("/templates/<template_id>/export/pdf/<record_id>")
     def export_pdf(template_id: str, record_id: str) -> Response:
-        report = designer.get_report(template_id)
-        data = designer.resolve_data(template_id, record_id)
-        context = create_render_context(report)
-        pdf = designer.export_pdf(template_id, record_id)
-        return Response(
-            pdf,
-            mimetype="application/pdf",
-            headers={
-                "Content-Disposition": f'attachment; filename="{template_id}-{record_id}.pdf"',
-                **render_debug_headers(context, data),
-            },
-        )
+        try:
+            report = designer.get_report(template_id)
+            data = designer.resolve_data(template_id, record_id)
+            context = create_render_context(report)
+            pdf = designer.export_pdf(template_id, record_id)
+            return Response(
+                pdf,
+                mimetype="application/pdf",
+                headers={
+                    "Content-Disposition": content_disposition(
+                        default_export_filename(report, f"{template_id}-{record_id}")
+                    ),
+                    **render_debug_headers(context, data, renderer="pdf"),
+                },
+            )
+        except Exception as exc:
+            return render_failure_response(exc)
 
     @blueprint.errorhandler(FileNotFoundError)
     def not_found(exc: FileNotFoundError) -> tuple[Response, int]:
@@ -197,6 +212,23 @@ def _status_for_core_error(exc: SlimReportError) -> int:
     return 400
 
 
+def render_failure_response(exc: Exception) -> tuple[Response, int]:
+    """Return a JSON preview/export error and log the stack trace."""
+    current_app.logger.exception("Slim report preview/export failed")
+    status = _status_for_exception(exc)
+    return jsonify({"error": str(exc), "type": type(exc).__name__}), status
+
+
+def _status_for_exception(exc: Exception) -> int:
+    if isinstance(exc, FileNotFoundError):
+        return 404
+    if isinstance(exc, ValueError):
+        return 400
+    if isinstance(exc, SlimReportError):
+        return _status_for_core_error(exc)
+    return 500
+
+
 def load_report_from_payload(payload: Any) -> Report:
     """Validate and normalize a template payload into a report."""
     if not isinstance(payload, dict):
@@ -214,7 +246,12 @@ def validate_api_report(report: Report) -> RenderContext:
     return context
 
 
-def render_debug_headers(context: RenderContext, data: Any | None = None) -> dict[str, str]:
+def render_debug_headers(
+    context: RenderContext,
+    data: Any | None = None,
+    *,
+    renderer: str = "html",
+) -> dict[str, str]:
     """Return lightweight debug headers for preview/export fidelity checks."""
     repeat = next(
         (
@@ -229,6 +266,8 @@ def render_debug_headers(context: RenderContext, data: Any | None = None) -> dic
     summary = pagination_summary(context, data)
     return {
         "X-Slim-Report-Page-Count": str(summary.page_count),
+        "X-Slim-Report-Template-Name": context.title,
+        "X-Slim-Report-Renderer": renderer,
         "X-Slim-Report-Object-Count": str(len(context.objects)),
         "X-Slim-Report-Page-Unit": context.page.unit,
         "X-Slim-Report-Page-Width": str(context.page.width_px),
@@ -241,6 +280,49 @@ def render_debug_headers(context: RenderContext, data: Any | None = None) -> dic
         "X-Slim-Report-Repeated-Row-Count": str(summary.repeated_row_count),
         "X-Slim-Report-Table-Row-Count": str(summary.table_row_count),
     }
+
+
+def print_settings_for_report(report: Report) -> dict[str, Any]:
+    """Return export settings with defaults applied."""
+    settings = dict(getattr(getattr(report, "page", None), "print", {}) or {})
+    title = str(getattr(report.metadata, "title", "") or "").strip()
+    settings.setdefault("show_browser_print_button", True)
+    settings.setdefault("default_filename", safe_pdf_filename(title or "report"))
+    settings.setdefault("pdf_title", title or "Untitled Report")
+    settings.setdefault("pdf_author", "Slim Report Designer")
+    settings.setdefault("print_background", True)
+    return settings
+
+
+def default_export_filename(report: Report, fallback: str = "report") -> str:
+    settings = print_settings_for_report(report)
+    return safe_pdf_filename(settings.get("default_filename") or fallback)
+
+
+def safe_pdf_filename(value: Any, fallback: str = "report.pdf") -> str:
+    """Return a Windows-safe PDF filename from arbitrary title text."""
+    raw = str(value or "").strip()
+    if raw.lower().endswith(".pdf"):
+        raw = raw[:-4]
+    slug = re.sub(r'[<>:"/\\|?*\x00-\x1f]+', " ", raw)
+    slug = re.sub(r"[^A-Za-z0-9._ -]+", " ", slug)
+    slug = re.sub(r"[\s_-]+", "-", slug).strip(" .-_")
+    reserved = {
+        "con",
+        "prn",
+        "aux",
+        "nul",
+        *(f"com{index}" for index in range(1, 10)),
+        *(f"lpt{index}" for index in range(1, 10)),
+    }
+    if not slug or slug.lower() in reserved:
+        fallback_slug = str(fallback or "report.pdf").removesuffix(".pdf")
+        slug = re.sub(r"[^A-Za-z0-9._-]+", "-", fallback_slug).strip(" .-_") or "report"
+    return f"{slug[:120]}.pdf"
+
+
+def content_disposition(filename: str) -> str:
+    return f'attachment; filename="{safe_pdf_filename(filename)}"'
 
 
 def request_template_payload(payload: Any | None = None) -> dict[str, Any]:

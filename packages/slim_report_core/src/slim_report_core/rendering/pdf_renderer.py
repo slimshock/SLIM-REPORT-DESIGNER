@@ -34,6 +34,7 @@ def render_pdf(report: Report, data: dict[str, Any] | None = None) -> bytes:
     context = create_render_context(report, data)
     buffer = BytesIO()
     canvas = canvas_class(buffer, pagesize=(context.page.width_pt, context.page.height_pt))
+    _apply_pdf_metadata(canvas, report)
     pages = build_render_pages(context)
     for page_index, page in enumerate(pages):
         page_number = page_index + 1
@@ -50,6 +51,24 @@ def render_pdf(report: Report, data: dict[str, Any] | None = None) -> bytes:
             canvas.showPage()
     canvas.save()
     return buffer.getvalue()
+
+
+def _apply_pdf_metadata(canvas: Any, report: Report) -> None:
+    settings = getattr(getattr(report, "page", None), "print", {}) or {}
+    title = str(settings.get("pdf_title") or getattr(report.metadata, "title", "") or "Untitled Report")
+    author = str(settings.get("pdf_author") or getattr(report.metadata, "author", "") or "Slim Report Designer")
+    subject = str(settings.get("pdf_subject") or getattr(report.metadata, "description", "") or "")
+    metadata = {
+        "setTitle": title,
+        "setAuthor": author,
+        "setCreator": "Slim Report Designer",
+    }
+    if subject:
+        metadata["setSubject"] = subject
+    for method_name, value in metadata.items():
+        setter = getattr(canvas, method_name, None)
+        if callable(setter):
+            setter(value)
 
 
 def _render_page_background(canvas: Any, context: RenderContext) -> None:

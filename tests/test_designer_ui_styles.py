@@ -189,8 +189,10 @@ const templateFields = await import('__MODULE_PATH__').then(({ getTemplateFields
 ));
 const virtualPaths = [
   'page.number',
+  'page.index',
   'date.today',
   'group.count',
+  'page.count',
   'report.count.results',
   'report.sum.results.value'
 ];
@@ -208,6 +210,12 @@ if (resolveBinding('report.sum.results.value', sample) !== 13.2) {
 }
 if (resolveBinding('page.total_pages', sample, { totalPages: 3 }) !== 3) {
   throw new Error('page total binding failed');
+}
+if (resolveBinding('page.index', sample, { pageNumber: 3 }) !== 2) {
+  throw new Error('page index binding failed');
+}
+if (resolveBinding('page.count', sample, { totalPages: 3 }) !== 3) {
+  throw new Error('page count binding failed');
 }
 const formulaContext = {
   rowData: { result: '7.10', unit: '10^9/L', flag: 'H', numeric_value: 7.1 },
@@ -283,7 +291,12 @@ import { previewTemplate, saveTemplate } from '__API_MODULE_PATH__';
 const template = normalizeTemplate({
   version: '0.1',
   metadata: { name: 'Repeating' },
-  page: { width: 595, height: 842, unit: 'px' },
+  page: {
+    width: 595,
+    height: 842,
+    unit: 'px',
+    print: { default_filename: 'Repeating Lab.pdf', pdf_author: 'QA' }
+  },
   bands: [{
     id: 'detail',
     type: 'detail',
@@ -297,6 +310,14 @@ const template = normalizeTemplate({
 const hasResultsField = template.data.fields.some((field) => field.path === 'results[].test');
 if (!template.data.sample.results || !hasResultsField) {
   throw new Error('normalizeTemplate did not preserve or infer data metadata');
+}
+if (
+  template.page.print.default_filename !== 'Repeating-Lab.pdf' ||
+  template.page.print.pdf_title !== 'Repeating' ||
+  template.page.print.pdf_author !== 'QA' ||
+  template.page.print.print_background !== true
+) {
+  throw new Error('normalizeTemplate did not preserve print settings');
 }
 
 global.window = {
@@ -362,6 +383,70 @@ def test_designer_static_ui_includes_canvas_controls() -> None:
     assert "undo" in toolbar_source
     assert "redo" in toolbar_source
     assert "canvas-zoom-shell" in index_source
+
+
+def test_designer_static_ui_locks_body_scroll_to_internal_panes() -> None:
+    css_source = (
+        Path(__file__).resolve().parents[1]
+        / "packages/slim_report_designer_ui/slim_report_designer_ui/static/css/designer.css"
+    ).read_text(encoding="utf-8")
+
+    assert "html,\nbody" in css_source
+    assert "overflow: hidden;" in css_source
+    assert "height: 100dvh;" in css_source
+    assert "max-height: 100dvh;" in css_source
+    assert "grid-template-rows: 44px minmax(0, 1fr) 30px;" in css_source
+    assert "overflow-y: auto;" in css_source
+    assert ".canvas-scroller" in css_source
+
+
+def test_designer_export_uses_backend_content_disposition_filename() -> None:
+    api_module_path = "./packages/slim_report_designer_ui/slim_report_designer_ui/static/js/api.js"
+    script = """
+import { exportPdf } from '__API_MODULE_PATH__';
+
+let downloaded = '';
+global.window = {
+  SLIM_REPORT_API_BASE: '/report-designer/api',
+  SLIM_REPORT_TEMPLATE_ID: 'lab',
+  location: { search: '?template=lab' }
+};
+global.URL = { createObjectURL: () => 'blob:pdf', revokeObjectURL: () => {} };
+global.document = {
+  createElement: () => ({
+    href: '',
+    download: '',
+    click() { downloaded = this.download; }
+  })
+};
+global.fetch = async () => ({
+  ok: true,
+  headers: { get: (name) => name === 'content-disposition' ? 'attachment; filename="CBC: Result.pdf"' : '' },
+  blob: async () => new Blob(['pdf'], { type: 'application/pdf' })
+});
+
+await exportPdf({
+  version: '0.1',
+  metadata: { title: 'Fallback' },
+  page: { width: 595, height: 842, unit: 'px' },
+  bands: [],
+  objects: [{ id: 'title', type: 'text', text: 'Report' }],
+  assets: []
+});
+if (downloaded !== 'CBC-Result.pdf') {
+  throw new Error(`download filename mismatch: ${downloaded}`);
+}
+""".replace("__API_MODULE_PATH__", api_module_path)
+
+    result = subprocess.run(
+        ["node", "--input-type=module", "-e", script],
+        cwd=Path(__file__).resolve().parents[1],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
 
 
 def test_designer_exposes_undo_redo_history_hooks() -> None:
@@ -882,6 +967,79 @@ if (blank.bands[1].y !== 120 || blank.bands[2].y !== expectedFooterY) {
   throw new Error('band layout was not recalculated');
 }
 """.replace("__MODULE_PATH__", module_path)
+
+    result = subprocess.run(
+        ["node", "--input-type=module", "-e", script],
+        cwd=Path(__file__).resolve().parents[1],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
+def test_designer_drag_delta_uses_live_object_band_for_header_objects() -> None:
+    canvas_module_path = "./packages/slim_report_designer_ui/slim_report_designer_ui/static/js/canvas.js"
+    objects_module_path = "./packages/slim_report_designer_ui/slim_report_designer_ui/static/js/objects.js"
+    script = """
+import { constrainedGroupDelta } from '__CANVAS_MODULE_PATH__';
+import { normalizeTemplate } from '__OBJECTS_MODULE_PATH__';
+
+const template = normalizeTemplate({
+  metadata: { name: 'Bands' },
+  page: { width: 595, height: 842, unit: 'px' },
+  bands: [
+    { id: 'page_header', type: 'page_header', y: 0, height: 100 },
+    { id: 'group_header_results', type: 'group_header', y: 100, height: 32 },
+    { id: 'detail', type: 'detail', y: 132, height: 648 },
+    { id: 'page_footer', type: 'page_footer', y: 780, height: 62 }
+  ],
+  objects: [
+    {
+      id: 'title',
+      type: 'text',
+      x: 40,
+      y: 30,
+      width: 240,
+      height: 28,
+      band: 'page_header',
+      properties: { band: 'page_header' }
+    },
+    {
+      id: 'group_name',
+      type: 'field',
+      x: 40,
+      y: 106,
+      width: 240,
+      height: 20,
+      band: 'group_header_results',
+      properties: { band: 'group_header_results' }
+    }
+  ],
+  assets: []
+});
+
+const headerSnapshot = { id: 'title', x: 40, y: 30, width: 240, height: 28 };
+const headerDelta = constrainedGroupDelta([headerSnapshot], 0, 5, template);
+if (headerDelta.dy !== 5) {
+  throw new Error(`page header drag was constrained as ${headerDelta.dy}`);
+}
+
+const groupSnapshot = { id: 'group_name', x: 40, y: 106, width: 240, height: 20 };
+const groupDelta = constrainedGroupDelta([groupSnapshot], 0, 3, template);
+if (groupDelta.dy !== 3) {
+  throw new Error(`group header drag was constrained as ${groupDelta.dy}`);
+}
+
+const cappedGroupDelta = constrainedGroupDelta([groupSnapshot], 0, 20, template);
+if (cappedGroupDelta.dy !== 6) {
+  throw new Error(`group header bottom clamp failed: ${cappedGroupDelta.dy}`);
+}
+""".replace("__CANVAS_MODULE_PATH__", canvas_module_path).replace(
+        "__OBJECTS_MODULE_PATH__",
+        objects_module_path,
+    )
 
     result = subprocess.run(
         ["node", "--input-type=module", "-e", script],

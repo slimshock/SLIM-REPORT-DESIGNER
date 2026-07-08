@@ -1,4 +1,4 @@
-import { createDefaultTemplate, normalizeTemplate, objectStyle } from "./objects.js";
+import { createDefaultTemplate, normalizeTemplate, objectStyle, safePdfFilename } from "./objects.js";
 import { conditionalStyleResult, ensureTemplateData, evaluateFormula, getArrayByPath, getFieldValue, getRowValue, resolveBinding } from "./data_fields.js";
 import { qrSvgMarkup } from "./qrcode.js";
 
@@ -73,7 +73,7 @@ export async function exportPdf(template) {
     throw new Error(await errorMessage(response, "PDF export failed"));
   }
   const blob = await response.blob();
-  downloadBlob(blob, "report-template.pdf");
+  downloadBlob(blob, filenameFromContentDisposition(response) || defaultPdfFilename(template));
 }
 
 function apiBase() {
@@ -142,11 +142,25 @@ function localPreviewHtml(template) {
   const bands = (template.bands || []).map((band) => localBandHtml(band, page.unit)).join("\n");
   const objects = localObjectsHtml(template, page.unit);
   const background = page.transparent ? "#fff" : page.background_color || "#fff";
+  const width = unitToPx(page.width || 595, page.unit);
+  const height = unitToPx(page.height || 842, page.unit);
+  const toolbar = page.print?.show_browser_print_button === false
+    ? ""
+    : '<div class="slim-report-preview-toolbar"><button class="slim-report-print-button" type="button" onclick="window.print()">Print</button></div>';
   return `<!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><title>${escapeHtml(template.metadata?.title || "Preview")}</title></head>
-<body style="margin:0;background:#e5e7eb;padding:24px;font-family:Arial,sans-serif">
-<div style="position:relative;margin:0 auto;background:${escapeHtml(background)};width:${unitToPx(page.width || 595, page.unit)}px;height:${unitToPx(page.height || 842, page.unit)}px">
+<head><meta charset="utf-8"><title>${escapeHtml(template.metadata?.title || "Preview")}</title>
+<style>
+@page { size: ${width}px ${height}px; margin: 0; }
+body { margin: 0; background: #e5e7eb; padding: 24px; font-family: Arial, sans-serif; }
+.slim-report-preview-toolbar { position: sticky; top: 0; z-index: 10; margin: -24px -24px 24px; padding: 12px 24px; background: rgba(255,255,255,0.96); border-bottom: 1px solid #d1d5db; }
+.slim-report-print-button { border: 1px solid #94a3b8; background: #fff; border-radius: 4px; padding: 6px 10px; font: 600 12px Arial, sans-serif; color: #111827; cursor: pointer; }
+.slim-report-page { position: relative; margin: 0 auto; break-after: page; page-break-after: always; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+@media print { body { background: #fff; padding: 0; } button, .slim-report-preview-toolbar, .slim-report-print-button { display: none !important; } .slim-report-page { margin: 0; box-shadow: none; } * { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+</style></head>
+<body>
+${toolbar}
+<div class="slim-report-page" style="background:${escapeHtml(background)};width:${width}px;height:${height}px">
 ${bands}
 ${objects}
 </div>
@@ -390,6 +404,21 @@ function downloadBlob(blob, filename) {
   link.download = filename;
   link.click();
   URL.revokeObjectURL(url);
+}
+
+function filenameFromContentDisposition(response) {
+  const header = response.headers?.get?.("content-disposition") || "";
+  const utf8Match = header.match(/filename\*=UTF-8''([^;]+)/i);
+  if (utf8Match) {
+    return safePdfFilename(decodeURIComponent(utf8Match[1]));
+  }
+  const match = header.match(/filename="?([^";]+)"?/i);
+  return match ? safePdfFilename(match[1]) : "";
+}
+
+function defaultPdfFilename(template) {
+  const print = template.page?.print || {};
+  return safePdfFilename(print.default_filename || template.metadata?.title || template.metadata?.name || "report");
 }
 
 async function errorMessage(response, fallback) {

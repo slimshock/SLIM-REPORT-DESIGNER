@@ -20,6 +20,7 @@ for package_src in (
 from slim_report_core import Band, Report  # noqa: E402
 from slim_report_core.serialization import JSONSerializer  # noqa: E402
 from slim_report_flask import SlimReportDesigner  # noqa: E402
+from slim_report_flask.blueprint import content_disposition, default_export_filename  # noqa: E402
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -577,7 +578,9 @@ def direct_template_export_pdf(template_id: str, record_id: str) -> Response:
         report.render_pdf(data),
         mimetype="application/pdf",
         headers={
-            "Content-Disposition": f'attachment; filename="{template_id}-{record_id}.pdf"',
+            "Content-Disposition": content_disposition(
+                default_export_filename(report, f"{template_id}-{record_id}")
+            ),
         },
     )
 

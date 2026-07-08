@@ -32,6 +32,15 @@ def render_html(report: Report, data: dict[str, Any] | None = None) -> str:
     page = context.page
     title = escape(context.title)
     page_background = "#fff" if page.transparent else escape(page.background_color, quote=True)
+    print_settings = getattr(report.page, "print", {}) or {}
+    show_print_button = bool(print_settings.get("show_browser_print_button", True))
+    print_toolbar = (
+        '  <div class="slim-report-preview-toolbar">'
+        '<button class="slim-report-print-button" type="button" onclick="window.print()">Print</button>'
+        "</div>\n"
+        if show_print_button
+        else ""
+    )
     pages = build_render_pages(context)
     page_html = "\n".join(
         render_html_page(plan, context, page_background, len(pages)) for plan in pages
@@ -44,21 +53,35 @@ def render_html(report: Report, data: dict[str, Any] | None = None) -> str:
         '  <meta charset="utf-8">\n'
         f"  <title>{title}</title>\n"
         "  <style>\n"
+        f"    @page {{ size: {page.width_px}px {page.height_px}px; margin: 0; }}\n"
+        "    html, body { width: 100%; min-height: 100%; }\n"
         "    body { margin: 0; background: #e5e7eb; font-family: Arial, sans-serif; }\n"
+        "    .slim-report-preview-toolbar { position: sticky; top: 0; z-index: 10; "
+        "padding: 12px 24px; background: rgba(255, 255, 255, 0.96); "
+        "border-bottom: 1px solid #d1d5db; }\n"
+        "    .slim-report-print-button { border: 1px solid #94a3b8; background: #fff; "
+        "border-radius: 4px; padding: 6px 10px; font: 600 12px Arial, sans-serif; "
+        "color: #111827; cursor: pointer; }\n"
         "    .slim-report-preview { padding: 24px; display: grid; gap: 24px; }\n"
         "    .slim-report-page { position: relative; margin: 0 auto; background: #fff; "
         "box-shadow: 0 2px 12px rgba(15, 23, 42, 0.18); overflow: hidden; "
-        "break-after: page; page-break-after: always; }\n"
+        "break-after: page; page-break-after: always; -webkit-print-color-adjust: exact; "
+        "print-color-adjust: exact; }\n"
         "    .slim-report-page:last-child { break-after: auto; page-break-after: auto; }\n"
         "    .slim-report-page-number { position: absolute; right: 12px; bottom: 8px; "
         "font: 10px Arial, sans-serif; color: #94a3b8; }\n"
         "    .slim-report-object { position: absolute; box-sizing: border-box; }\n"
-        "    @media print { body { background: #fff; } "
+        "    @media print { html, body { margin: 0; background: #fff; } "
+        ".slim-report-preview-toolbar, .slim-report-print-button, button { display: none !important; } "
         ".slim-report-preview { padding: 0; gap: 0; } "
-        ".slim-report-page { margin: 0; box-shadow: none; } }\n"
+        ".slim-report-page { margin: 0; box-shadow: none; break-after: page; "
+        "page-break-after: always; } "
+        ".slim-report-page:last-child { break-after: auto; page-break-after: auto; } "
+        "* { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }\n"
         "  </style>\n"
         "</head>\n"
         "<body>\n"
+        f"{print_toolbar}"
         '  <div class="slim-report-preview">\n'
         f"{page_html}"
         "  </div>\n"

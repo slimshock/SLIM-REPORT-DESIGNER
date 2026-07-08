@@ -5,6 +5,7 @@ import {
   addTableColumn,
   generateTableColumns,
   objectStyle,
+  normalizePrintSettings,
   getBandById,
   removeTableColumn,
   removeObjectCondition,
@@ -23,6 +24,7 @@ import {
   setObjectStyleValue,
   setObjectText,
   setPageOrientation,
+  setPagePrintValue,
   setPageSize,
   setPageUnit,
   setPageValue,
@@ -332,6 +334,10 @@ function commandGrid(commands) {
 
 function renderPageInspector(template, activeBandId = "detail", fields = []) {
   const page = template.page || {};
+  const print = normalizePrintSettings(
+    page.print || {},
+    template.metadata?.title || template.metadata?.name || "Untitled Report"
+  );
   const fragment = document.createDocumentFragment();
   fragment.appendChild(section("Page Properties", [
     fieldRow("report name", template.metadata?.title || template.metadata?.name || "", { name: "report_name" }),
@@ -370,6 +376,24 @@ function renderPageInspector(template, activeBandId = "detail", fields = []) {
     fieldRow("transparent", Boolean(page.transparent), {
       type: "checkbox",
       name: "page.transparent"
+    })
+  ]));
+  fragment.appendChild(section("Export", [
+    fieldRow("PDF filename", print.default_filename || "", {
+      name: "page.print.default_filename"
+    }),
+    fieldRow("PDF title", print.pdf_title || template.metadata?.title || template.metadata?.name || "", {
+      name: "page.print.pdf_title"
+    }),
+    fieldRow("PDF author", print.pdf_author || "Slim Report Designer", {
+      name: "page.print.pdf_author"
+    }),
+    fieldRow("PDF subject", print.pdf_subject || "", {
+      name: "page.print.pdf_subject"
+    }),
+    fieldRow("print backgrounds", Boolean(print.print_background ?? true), {
+      type: "checkbox",
+      name: "page.print.print_background"
     })
   ]));
   fragment.appendChild(renderBandInspector(template, activeBandId, fields));
@@ -1007,6 +1031,11 @@ function applyPageInput(template, input, activeBandId = "detail") {
   }
   if (input.name === "page.orientation") {
     setPageOrientation(template, String(value));
+    return;
+  }
+  if (input.name.startsWith("page.print.")) {
+    const key = input.name.slice("page.print.".length);
+    setPagePrintValue(template, key, value);
     return;
   }
   if (input.name.startsWith("page.")) {

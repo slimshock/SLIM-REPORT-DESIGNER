@@ -39,7 +39,7 @@ export function normalizeTemplate(template) {
     name: source.metadata?.name || title,
     title
   };
-  source.page = normalizePage(source.page || {});
+  source.page = normalizePage(source.page || {}, title);
   source.objects = Array.isArray(source.objects) ? source.objects.map(normalizeObject) : [];
   source.bands = normalizeBands(source);
   for (const object of source.objects) {
@@ -659,11 +659,23 @@ export function setPageValue(template, key, value) {
   template.page = normalizePage({
     ...(template.page || {}),
     [key]: value
-  });
+  }, templateTitle(template));
+}
+
+export function setPagePrintValue(template, key, value) {
+  const title = templateTitle(template);
+  const current = normalizePrintSettings(template.page?.print, title);
+  template.page = normalizePage({
+    ...(template.page || {}),
+    print: {
+      ...current,
+      [key]: value
+    }
+  }, title);
 }
 
 export function setPageSize(template, size) {
-  const page = normalizePage({ ...(template.page || {}), size });
+  const page = normalizePage({ ...(template.page || {}), size }, templateTitle(template));
   if (size !== "Custom") {
     const dimensions = paperDimensions(size, page.unit, page.orientation);
     page.width = dimensions.width;
@@ -673,8 +685,8 @@ export function setPageSize(template, size) {
 }
 
 export function setPageUnit(template, unit) {
-  const current = normalizePage(template.page || {});
-  const page = normalizePage({ ...current, unit });
+  const current = normalizePage(template.page || {}, templateTitle(template));
+  const page = normalizePage({ ...current, unit }, templateTitle(template));
   if (page.size !== "Custom") {
     const dimensions = paperDimensions(page.size, unit, page.orientation);
     page.width = dimensions.width;
@@ -684,7 +696,7 @@ export function setPageUnit(template, unit) {
 }
 
 export function setPageOrientation(template, orientation) {
-  const page = normalizePage({ ...(template.page || {}), orientation });
+  const page = normalizePage({ ...(template.page || {}), orientation }, templateTitle(template));
   if (page.size !== "Custom") {
     const dimensions = paperDimensions(page.size, page.unit, orientation);
     page.width = dimensions.width;
@@ -835,12 +847,12 @@ function recalculateStandardBands(template) {
   return template;
 }
 
-export function normalizePage(page) {
+export function normalizePage(page, title = "Untitled Report") {
   const size = page.size || "A4";
   const orientation = page.orientation === "landscape" ? "landscape" : "portrait";
   const unit = ["px", "mm", "in"].includes(page.unit) ? page.unit : "px";
   const fallback = paperDimensions(size, unit, orientation);
-  return {
+  const normalized = {
     size,
     orientation,
     unit,
@@ -853,6 +865,47 @@ export function normalizePage(page) {
     background_color: String(page.background_color || "#ffffff"),
     transparent: Boolean(page.transparent)
   };
+  if (page.print && typeof page.print === "object" && !Array.isArray(page.print)) {
+    normalized.print = normalizePrintSettings(page.print, title);
+  }
+  return normalized;
+}
+
+export function normalizePrintSettings(printSettings = {}, title = "Untitled Report") {
+  const defaults = defaultPrintSettings(title);
+  const source = printSettings && typeof printSettings === "object" && !Array.isArray(printSettings)
+    ? printSettings
+    : {};
+  return {
+    show_browser_print_button: Boolean(source.show_browser_print_button ?? defaults.show_browser_print_button),
+    default_filename: safePdfFilename(source.default_filename || defaults.default_filename),
+    pdf_title: String(source.pdf_title || defaults.pdf_title),
+    pdf_author: String(source.pdf_author || defaults.pdf_author),
+    pdf_subject: String(source.pdf_subject || defaults.pdf_subject),
+    print_background: Boolean(source.print_background ?? defaults.print_background)
+  };
+}
+
+export function defaultPrintSettings(title = "Untitled Report") {
+  const resolvedTitle = String(title || "Untitled Report").trim() || "Untitled Report";
+  return {
+    show_browser_print_button: true,
+    default_filename: safePdfFilename(resolvedTitle),
+    pdf_title: resolvedTitle,
+    pdf_author: "Slim Report Designer",
+    pdf_subject: "",
+    print_background: true
+  };
+}
+
+export function safePdfFilename(value = "report") {
+  const raw = String(value || "").trim().replace(/\.pdf$/i, "");
+  const slug = raw
+    .replace(/[<>:"/\\|?*\x00-\x1f]+/g, " ")
+    .replace(/[^A-Za-z0-9._ -]+/g, " ")
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^[ ._-]+|[ ._-]+$/g, "");
+  return `${(slug || "report").slice(0, 120)}.pdf`;
 }
 
 export function paperDimensions(size, unit, orientation) {

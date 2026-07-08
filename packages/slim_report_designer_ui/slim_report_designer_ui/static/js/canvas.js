@@ -840,13 +840,14 @@ function findObject(template, objectId) {
   return (template.objects || []).find((object) => object.id === objectId);
 }
 
-function constrainedGroupDelta(items, dx, dy, template) {
+export function constrainedGroupDelta(items, dx, dy, template) {
   const page = template.page || {};
   const pageWidth = Number(page.width) || 595;
   let adjustedDx = dx;
   let adjustedDy = dy;
   for (const item of items) {
-    const band = getBandForObject(template, item);
+    const liveObject = findObject(template, item.id);
+    const band = getBandForObject(template, liveObject || item);
     const bandTop = Number(band?.y) || 0;
     const bandHeight = Number(band?.height) || Number(page.height) || 842;
     const bandBottom = bandTop + bandHeight;

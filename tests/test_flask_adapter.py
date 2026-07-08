@@ -20,6 +20,7 @@ from flask import Flask  # noqa: E402
 from slim_report_core import Report, ReportObject  # noqa: E402
 from slim_report_core.serialization import JSONSerializer  # noqa: E402
 from slim_report_flask import SlimReportDesigner  # noqa: E402
+from slim_report_flask.blueprint import safe_pdf_filename  # noqa: E402
 from slim_report_flask import extension as extension_module  # noqa: E402
 
 
@@ -207,6 +208,8 @@ def test_flask_designer_api_previews_and_exports_posted_json(tmp_path: Path) -> 
     assert preview_response.status_code == 200
     assert preview_response.mimetype == "text/html"
     assert preview_response.headers["X-Slim-Report-Object-Count"] == "2"
+    assert preview_response.headers["X-Slim-Report-Template-Name"] == "API Preview"
+    assert preview_response.headers["X-Slim-Report-Renderer"] == "html"
     assert preview_response.headers["X-Slim-Report-Page-Unit"] == "px"
     assert preview_response.headers["X-Slim-Report-Page-Width"] == "595.0"
     assert preview_response.headers["X-Slim-Report-Page-Height"] == "842.0"
@@ -221,6 +224,8 @@ def test_flask_designer_api_previews_and_exports_posted_json(tmp_path: Path) -> 
     assert pdf_response.status_code == 200
     assert pdf_response.mimetype == "application/pdf"
     assert pdf_response.headers["X-Slim-Report-Object-Count"] == "2"
+    assert pdf_response.headers["X-Slim-Report-Renderer"] == "pdf"
+    assert pdf_response.headers["Content-Disposition"] == 'attachment; filename="API-Preview.pdf"'
     assert pdf_response.headers["X-Slim-Report-Page-Unit"] == "px"
     assert pdf_response.get_data().startswith(b"%PDF")
 
@@ -351,6 +356,26 @@ def test_flask_designer_api_rejects_empty_preview_and_export(tmp_path: Path) -> 
     assert "at least one object" in preview_response.get_json()["error"]
     assert pdf_response.status_code == 400
     assert "at least one object" in pdf_response.get_json()["error"]
+    assert pdf_response.get_json()["type"] == "ValueError"
+
+
+def test_flask_export_uses_page_print_filename_and_safe_slug(tmp_path: Path) -> None:
+    app, _designer = create_app(tmp_path)
+    payload = {
+        **template_payload(provider=None),
+        "metadata": {"name": "Unsafe Export"},
+    }
+    payload["page"]["print"] = {"default_filename": 'CBC: Result/July*08?.pdf'}
+
+    response = app.test_client().post("/report-designer/api/export/pdf", json=payload)
+
+    assert response.status_code == 200
+    assert response.headers["Content-Disposition"] == 'attachment; filename="CBC-Result-July-08.pdf"'
+
+
+def test_safe_pdf_filename_removes_windows_invalid_characters() -> None:
+    assert safe_pdf_filename('CBC: Result/July*08?.pdf') == "CBC-Result-July-08.pdf"
+    assert safe_pdf_filename("CON") == "report.pdf"
 
 
 def test_flask_designer_save_route_persists_template_json(tmp_path: Path) -> None:

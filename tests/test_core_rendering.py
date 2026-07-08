@@ -36,6 +36,9 @@ def test_html_rendering_contains_expected_patient_name() -> None:
 
     assert "<!doctype html>" in html
     assert "slim-report-page" in html
+    assert "@page { size:" in html
+    assert "print-color-adjust: exact" in html
+    assert ".slim-report-preview-toolbar" in html
     assert "Juan Dela Cruz" in html
     assert "width: 612.0px" in html
     assert "height: 792.0px" in html
@@ -159,6 +162,9 @@ def test_html_rendering_paginates_repeating_detail_rows() -> None:
     assert html.count('class="slim-report-page"') == summary.page_count
     assert html.count("LAB RESULT") == summary.page_count
     assert "Nitrite" in html
+    assert 'data-slim-object="page_index"' in html
+    assert 'data-slim-object="page_count"' in html
+    assert f">{summary.page_count}</div>" in html
 
 
 def test_grouping_helpers_group_preserve_order_and_sort() -> None:
@@ -208,10 +214,12 @@ def test_aggregate_binding_resolver_handles_group_and_report_values() -> None:
 
 
 def test_system_binding_resolver_handles_page_and_datetime_values() -> None:
-    data = {"__slim_page__": {"number": 2, "total_pages": 5}}
+    data = {"__slim_page__": {"number": 2, "index": 1, "total_pages": 5, "count": 5}}
 
     assert resolve_binding("page.number", data) == 2
+    assert resolve_binding("page.index", data) == 1
     assert resolve_binding("page.total_pages", data) == 5
+    assert resolve_binding("page.count", data) == 5
     assert resolve_binding("date.today", data)
     assert resolve_binding("datetime.now", data)
 
@@ -244,6 +252,23 @@ def test_pdf_rendering_paginates_repeating_detail_rows() -> None:
     page_count = pdf_page_count(long_pdf)
     if page_count is not None:
         assert page_count > 1
+
+
+def test_pdf_rendering_sets_export_metadata() -> None:
+    report = load_report()
+    report.page.print = {
+        "pdf_title": "Custom PDF Title",
+        "pdf_author": "QA Author",
+        "pdf_subject": "Export Polish",
+    }
+
+    metadata = pdf_metadata(render_pdf(report, sample_data()))
+
+    if metadata is None:
+        pytest.skip("pypdf is not installed")
+    assert metadata.title == "Custom PDF Title"
+    assert metadata.author == "QA Author"
+    assert metadata.subject == "Export Polish"
 
 
 def test_html_rendering_basic_table_object() -> None:
@@ -810,6 +835,26 @@ def repeating_report() -> Report:
                     "binding": "result",
                     "band": "detail",
                 },
+                {
+                    "id": "page_index",
+                    "type": "field",
+                    "x": 420,
+                    "y": 800,
+                    "width": 30,
+                    "height": 18,
+                    "binding": "page.index",
+                    "band": "page_footer",
+                },
+                {
+                    "id": "page_count",
+                    "type": "field",
+                    "x": 460,
+                    "y": 800,
+                    "width": 30,
+                    "height": 18,
+                    "binding": "page.count",
+                    "band": "page_footer",
+                },
             ],
             "bands": [
                 {
@@ -1109,3 +1154,14 @@ def pdf_page_count(pdf: bytes) -> int | None:
     from io import BytesIO
 
     return len(PdfReader(BytesIO(pdf)).pages)
+
+
+def pdf_metadata(pdf: bytes) -> object | None:
+    try:
+        from pypdf import PdfReader
+    except ImportError:
+        return None
+
+    from io import BytesIO
+
+    return PdfReader(BytesIO(pdf)).metadata

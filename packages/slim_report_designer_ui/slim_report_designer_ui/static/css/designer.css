@@ -24,10 +24,11 @@
 html,
 body {
   height: 100%;
+  margin: 0;
+  overflow: hidden;
 }
 
 body {
-  margin: 0;
   background: #202428;
   color: var(--text);
   font-family: Arial, Helvetica, sans-serif;
@@ -48,19 +49,27 @@ button {
   display: grid;
   grid-template-columns: 196px minmax(0, 1fr) 320px;
   grid-template-rows: 44px minmax(0, 1fr) 30px;
-  height: calc(100vh - 16px);
-  margin: 8px;
-  border: 1px solid #30363d;
-  border-radius: 9px;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  min-width: 0;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
   background: var(--bg);
   overflow: hidden;
 }
 
 .top-toolbar {
   grid-column: 1 / -1;
+  grid-row: 1;
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
+  min-height: 0;
   padding: 7px 14px;
   background: #fbfcfd;
   border-bottom: 1px solid var(--panel-border);
@@ -273,14 +282,22 @@ button {
 
 .toolbox,
 .inspector {
+  grid-row: 2;
+  min-width: 0;
   min-height: 0;
   background: var(--panel);
   border-right: 1px solid var(--panel-border);
   padding: 14px;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.toolbox {
+  grid-column: 1;
 }
 
 .inspector {
+  grid-column: 3;
   border-right: 0;
   border-left: 1px solid var(--panel-border);
 }
@@ -464,8 +481,11 @@ button {
 }
 
 .canvas-shell {
+  grid-column: 2;
+  grid-row: 2;
   min-width: 0;
   min-height: 0;
+  height: 100%;
   background:
     linear-gradient(45deg, rgba(203, 213, 225, 0.35) 25%, transparent 25%),
     linear-gradient(-45deg, rgba(203, 213, 225, 0.35) 25%, transparent 25%),
@@ -479,13 +499,18 @@ button {
 
 .canvas-scroller {
   display: grid;
+  width: 100%;
   height: 100%;
+  min-width: 0;
+  min-height: 0;
   overflow: auto;
   padding: 48px;
   place-items: start center;
 }
 
 .canvas-zoom-shell {
+  min-width: 0;
+  min-height: 0;
   transform-origin: top left;
 }
 
@@ -993,10 +1018,14 @@ button {
 
 .status-bar {
   grid-column: 1 / -1;
+  grid-row: 3;
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  min-width: 0;
+  min-height: 0;
   padding: 4px 14px;
   background: #ffffff;
   border-top: 1px solid var(--panel-border);

@@ -249,6 +249,7 @@ class Page:
     background_color: str = "#ffffff"
     transparent: bool = False
     pagination: dict[str, Any] = field(default_factory=dict)
+    print: dict[str, Any] = field(default_factory=dict)
     id: str | None = None
     size: str | None = None
     _report: Any = field(default=None, init=False, repr=False, compare=False)
@@ -276,6 +277,7 @@ class Page:
             background_color=str(mapping.get("background_color", "#ffffff")),
             transparent=bool(mapping.get("transparent", False)),
             pagination=_normalize_pagination(mapping.get("pagination")),
+            print=_normalize_print_settings(mapping.get("print")),
             id=_optional_str(mapping.get("id")),
             size=size,
         )
@@ -295,6 +297,8 @@ class Page:
         }
         if self.pagination:
             data["pagination"] = copy.deepcopy(self.pagination)
+        if self.print:
+            data["print"] = copy.deepcopy(self.print)
         if self.id:
             data["id"] = self.id
         if self.size:
@@ -316,6 +320,7 @@ class Page:
             background_color=self.background_color,
             transparent=self.transparent,
             pagination=copy.deepcopy(self.pagination),
+            print=copy.deepcopy(self.print),
             id=_clone_id("page", self.id, new_ids=new_ids),
             size=self.size,
         )
@@ -1631,6 +1636,25 @@ def _normalize_pagination(value: Any) -> dict[str, Any]:
         "repeat_page_footer": bool(value.get("repeat_page_footer", True)),
         "respect_margins": bool(value.get("respect_margins", True)),
     }
+
+
+def _normalize_print_settings(value: Any) -> dict[str, Any]:
+    if not isinstance(value, Mapping):
+        return {}
+    normalized: dict[str, Any] = {}
+    if "show_browser_print_button" in value:
+        normalized["show_browser_print_button"] = bool(value.get("show_browser_print_button"))
+    if "default_filename" in value:
+        normalized["default_filename"] = str(value.get("default_filename") or "")
+    if "pdf_title" in value:
+        normalized["pdf_title"] = str(value.get("pdf_title") or "")
+    if "pdf_author" in value:
+        normalized["pdf_author"] = str(value.get("pdf_author") or "")
+    if "pdf_subject" in value:
+        normalized["pdf_subject"] = str(value.get("pdf_subject") or "")
+    if "print_background" in value:
+        normalized["print_background"] = bool(value.get("print_background"))
+    return {key: item for key, item in normalized.items() if item != ""}
 
 
 def _style_parent(value: Any) -> Style | None:

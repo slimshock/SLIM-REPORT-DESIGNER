@@ -106,7 +106,10 @@ export function resolveSystemBinding(path, context = {}) {
   if (path === "page.number") {
     return context.pageNumber ?? 1;
   }
-  if (path === "page.total_pages") {
+  if (path === "page.index") {
+    return context.pageIndex ?? Math.max((context.pageNumber ?? 1) - 1, 0);
+  }
+  if (path === "page.total_pages" || path === "page.count") {
     return context.totalPages ?? 1;
   }
   if (path === "date.today") {
@@ -667,7 +670,9 @@ function withVirtualFields(template, fields) {
   const sampleData = template?.data?.sample || {};
   const generated = [
     { path: "page.number", label: "Page Number", type: "system", sample: "1" },
+    { path: "page.index", label: "Page Index", type: "system", sample: "0" },
     { path: "page.total_pages", label: "Total Pages", type: "system", sample: "1" },
+    { path: "page.count", label: "Page Count", type: "system", sample: "1" },
     { path: "date.today", label: "Today", type: "system", sample: formatDate(new Date()) },
     { path: "datetime.now", label: "Now", type: "system", sample: formatDateTime(new Date()) },
   ];
