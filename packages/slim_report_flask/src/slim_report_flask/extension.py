@@ -21,7 +21,13 @@ from slim_report_core.serialization import JSONSerializer
 
 from .blueprint import create_blueprint
 from .config import DEFAULT_CONFIG
-from .storage import FileSystemTemplateProvider, TemplateProvider, TemplateRecord, _record_from_summary
+from slim_report_core.storage import (
+    FileSystemTemplateProvider,
+    TemplateProvider,
+    TemplateRecord,
+    TemplateStorageError,
+    record_from_summary,
+)
 
 DataProvider = Callable[[str, Any, Any], Any]
 AuthHook = Callable[[], bool]
@@ -112,7 +118,7 @@ class SlimReportDesigner:
 
     def list_templates(self) -> list[TemplateRecord]:
         """Return saved report templates."""
-        return [_record_from_summary(item) for item in self._provider().list_templates()]
+        return [record_from_summary(item) for item in self._provider().list_templates()]
 
     def list_template_summaries(self) -> list[dict[str, Any]]:
         """Return API-friendly template summaries."""
@@ -167,12 +173,15 @@ class SlimReportDesigner:
             if isinstance(data, dict):
                 return data
         provider_name = self._provider_name(template_id, report)
-        if provider_name is None:
-            sample = getattr(report, "data", {}).get("sample")
-            if isinstance(sample, dict):
-                return sample
-            return {}
-        return self.providers.resolve(provider_name, record_id)
+        if provider_name is not None:
+            return self.providers.resolve(provider_name, record_id)
+        storage_sample = self._sample_data_from_provider(template_id)
+        if storage_sample:
+            return storage_sample
+        sample = getattr(report, "data", {}).get("sample")
+        if isinstance(sample, dict):
+            return sample
+        return {}
 
     def render_preview(self, template_id: str, record_id: str) -> str:
         """Render a report preview as HTML."""
@@ -253,6 +262,17 @@ class SlimReportDesigner:
         if hook is None:
             return True
         return bool(hook(template_id))
+
+    def _sample_data_from_provider(self, template_id: str) -> dict[str, Any]:
+        provider = self._provider()
+        get_sample_data = getattr(provider, "get_sample_data", None)
+        if get_sample_data is None:
+            return {}
+        try:
+            sample = get_sample_data(template_id)
+        except TemplateStorageError:
+            return {}
+        return dict(sample) if isinstance(sample, dict) else {}
 
 
 def _template_id(payload: dict[str, Any] | None) -> str:

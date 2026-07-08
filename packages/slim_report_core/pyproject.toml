@@ -26,5 +26,8 @@ dependencies = [
   "reportlab>=4.0",
 ]
 
+[project.optional-dependencies]
+sqlalchemy = ["SQLAlchemy>=1.4"]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/slim_report_core"]

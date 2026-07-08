@@ -8,8 +8,15 @@ import slim_report_core
 import slim_report_designer_ui
 import slim_report_flask
 from slim_report_core import JSONSerializer, normalize_template, render_html, render_pdf
+from slim_report_core.storage import (
+    FileSystemTemplateProvider as CoreFileSystemTemplateProvider,
+    SQLAlchemyTemplateProvider,
+    TemplateNotFoundError,
+    TemplateProvider as CoreTemplateProvider,
+)
 from slim_report_designer_ui import get_designer_static_path, static_file
-from slim_report_flask import SlimReportDesigner, create_blueprint
+from slim_report_flask import FileSystemTemplateProvider, SlimReportDesigner, TemplateProvider, create_blueprint
+from slim_report_flask import TemplateNotFoundError as FlaskTemplateNotFoundError
 
 
 def test_public_package_imports_are_stable() -> None:
@@ -20,6 +27,11 @@ def test_public_package_imports_are_stable() -> None:
     assert callable(render_pdf)
     assert callable(normalize_template)
     assert SlimReportDesigner is not None
+    assert TemplateProvider is CoreTemplateProvider
+    assert FileSystemTemplateProvider is CoreFileSystemTemplateProvider
+    assert FlaskTemplateNotFoundError is TemplateNotFoundError
+    assert SQLAlchemyTemplateProvider is not None
+    assert TemplateNotFoundError is not None
     assert callable(create_blueprint)
 
 

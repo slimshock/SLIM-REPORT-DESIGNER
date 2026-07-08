@@ -23,6 +23,7 @@ from slim_report_core import Report, ReportObject  # noqa: E402
 from slim_report_core.serialization import JSONSerializer  # noqa: E402
 from slim_report_flask import (  # noqa: E402
     FileSystemTemplateProvider,
+    SQLAlchemyTemplateProvider,
     SlimReportDesigner,
     TemplateProvider,
 )
@@ -149,6 +150,100 @@ def test_flask_adapter_supports_app_factory_custom_prefix_and_runtime_config(tmp
     assert list_response.get_json()["templates"][0]["name"] == "Lab Result"
     assert js_response.status_code == 200
     assert js_response.mimetype in {"application/javascript", "text/javascript"}
+
+
+def test_flask_adapter_supports_sqlalchemy_template_provider() -> None:
+    sqlalchemy = pytest.importorskip("sqlalchemy")
+    from sqlalchemy import Boolean, Column, DateTime, Integer, JSON, String, Text, create_engine
+    from sqlalchemy.orm import declarative_base, sessionmaker
+
+    base = declarative_base()
+
+    class ReportTemplate(base):  # type: ignore[valid-type,misc]
+        __tablename__ = "report_templates"
+
+        id = Column(Integer, primary_key=True)
+        template_id = Column(String(120), unique=True, nullable=False, index=True)
+        name = Column(String(255), nullable=False)
+        description = Column(Text, nullable=True)
+        category = Column(String(120), nullable=True)
+        template_json = Column(JSON, nullable=False)
+        sample_data_json = Column(JSON, nullable=True)
+        version = Column(Integer, default=1, nullable=False)
+        is_active = Column(Boolean, default=True, nullable=False)
+        created_at = Column(DateTime, nullable=True)
+        updated_at = Column(DateTime, nullable=True)
+
+    engine = create_engine("sqlite:///:memory:")
+    base.metadata.create_all(engine)
+    session = sessionmaker(bind=engine)()
+    provider = SQLAlchemyTemplateProvider(session, ReportTemplate, allow_save=True)
+    app = Flask(__name__)
+    app.config["TESTING"] = True
+    designer = SlimReportDesigner(template_provider=provider)
+    designer.init_app(app)
+    designer.create_template(template_payload(provider=None))
+    client = app.test_client()
+
+    list_response = client.get("/report-designer/api/templates")
+    get_response = client.get("/report-designer/api/templates/lab-template")
+    preview_response = client.post(
+        "/report-designer/api/preview",
+        json={
+            "template_id": "lab-template",
+            "template": get_response.get_json()["template"],
+            "data": {"patient": {"name": "DB Patient"}},
+        },
+    )
+
+    assert sqlalchemy is not None
+    assert list_response.status_code == 200
+    assert list_response.get_json()["templates"][0]["id"] == "lab-template"
+    assert get_response.status_code == 200
+    assert get_response.get_json()["template"]["metadata"]["title"] == "Lab Result"
+    assert preview_response.status_code == 200
+    assert "DB Patient" in preview_response.get_data(as_text=True)
+
+
+def test_flask_adapter_sqlalchemy_template_provider_saves_database_rows() -> None:
+    pytest.importorskip("sqlalchemy")
+    from sqlalchemy import Boolean, Column, DateTime, Integer, JSON, String, Text, create_engine
+    from sqlalchemy.orm import declarative_base, sessionmaker
+
+    base = declarative_base()
+
+    class ReportTemplate(base):  # type: ignore[valid-type,misc]
+        __tablename__ = "report_templates"
+
+        id = Column(Integer, primary_key=True)
+        template_id = Column(String(120), unique=True, nullable=False, index=True)
+        name = Column(String(255), nullable=False)
+        description = Column(Text, nullable=True)
+        category = Column(String(120), nullable=True)
+        template_json = Column(JSON, nullable=False)
+        sample_data_json = Column(JSON, nullable=True)
+        version = Column(Integer, default=1, nullable=False)
+        is_active = Column(Boolean, default=True, nullable=False)
+        created_at = Column(DateTime, nullable=True)
+        updated_at = Column(DateTime, nullable=True)
+
+    engine = create_engine("sqlite:///:memory:")
+    base.metadata.create_all(engine)
+    session = sessionmaker(bind=engine)()
+    provider = SQLAlchemyTemplateProvider(session, ReportTemplate, allow_save=True)
+    app = Flask(__name__)
+    app.config["TESTING"] = True
+    designer = SlimReportDesigner(template_provider=provider)
+    designer.init_app(app)
+    client = app.test_client()
+
+    create_response = client.post("/report-designer/api/templates/lab-template", json=template_payload())
+    saved_row = session.query(ReportTemplate).filter_by(template_id="lab-template").first()
+
+    assert create_response.status_code == 200
+    assert saved_row is not None
+    assert saved_row.name == "Lab Result"
+    assert provider.get_template("lab-template")["metadata"]["title"] == "Lab Result"
 
 
 def test_filesystem_template_provider_lists_gets_saves_and_rejects_traversal(tmp_path: Path) -> None:
@@ -416,6 +511,32 @@ def test_flask_designer_api_preview_falls_back_to_template_sample(tmp_path: Path
 
     assert response.status_code == 200
     assert "Sample Fallback" in response.get_data(as_text=True)
+
+
+def test_flask_designer_api_preview_falls_back_to_provider_sample_data(tmp_path: Path) -> None:
+    provider = FileSystemTemplateProvider(tmp_path / "templates", allow_save=True)
+    template = template_payload(provider=None)
+    template["data"] = {"sample": {"patient": {"name": "Provider Sample"}}}
+    provider.save_template("lab-template", template)
+    app = Flask(__name__)
+    app.config["TESTING"] = True
+    designer = SlimReportDesigner(template_provider=provider)
+    designer.init_app(app)
+
+    response = app.test_client().post(
+        "/report-designer/api/preview",
+        json={
+            "template_id": "lab-template",
+            "template": {
+                **template_payload(provider=None),
+                "data": {"sample": {"patient": {"name": "Posted Sample"}}},
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    assert "Provider Sample" in response.get_data(as_text=True)
+    assert "Posted Sample" not in response.get_data(as_text=True)
 
 
 def test_flask_designer_api_data_provider_exception_returns_clean_error(tmp_path: Path) -> None:

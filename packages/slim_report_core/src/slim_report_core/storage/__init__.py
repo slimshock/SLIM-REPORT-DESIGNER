@@ -1,26 +1,34 @@
-"""Backward-compatible storage exports for the Flask adapter."""
+"""Framework-agnostic template storage providers."""
 
 from __future__ import annotations
 
-from slim_report_core.storage import (
-    FileSystemTemplateProvider,
-    SQLAlchemyTemplateProvider,
+from importlib import import_module
+
+from .base import (
+    SAFE_TEMPLATE_ID_PATTERN,
+    TemplateProvider,
+    TemplateRecord,
+    record_from_summary,
+    template_metadata,
+    validate_template_id,
+)
+from .errors import (
     TemplateExistsError,
     TemplateIdError,
     TemplateNotFoundError,
     TemplatePermissionError,
-    TemplateProvider,
-    TemplateRecord,
     TemplateStorageError,
-    TemplateStore,
     TemplateValidationError,
-    record_from_summary,
-    validate_template_id,
 )
+from .filesystem import FileSystemTemplateProvider, TemplateStore
 
-_record_from_summary = record_from_summary
+SQLAlchemyTemplateProvider = import_module(
+    ".sqlalchemy",
+    __name__,
+).SQLAlchemyTemplateProvider
 
 __all__ = [
+    "SAFE_TEMPLATE_ID_PATTERN",
     "FileSystemTemplateProvider",
     "SQLAlchemyTemplateProvider",
     "TemplateExistsError",
@@ -32,7 +40,7 @@ __all__ = [
     "TemplateStorageError",
     "TemplateStore",
     "TemplateValidationError",
-    "_record_from_summary",
     "record_from_summary",
+    "template_metadata",
     "validate_template_id",
 ]

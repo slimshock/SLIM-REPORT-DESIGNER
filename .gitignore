@@ -10,9 +10,13 @@ dist/
 .eggs/
 pip-wheel-metadata/
 *.tmp.pdf
+*.pdf
 *.download
 downloads/
 browser-downloads/
+*.db
+*.sqlite
+*.sqlite3
 
 # Virtual environments
 .venv/

@@ -17,7 +17,8 @@ for package_src in (
     if str(package_src) not in sys.path:
         sys.path.insert(0, str(package_src))
 
-from slim_report_flask import FileSystemTemplateProvider, SlimReportDesigner  # noqa: E402
+from slim_report_core.storage import FileSystemTemplateProvider  # noqa: E402
+from slim_report_flask import SlimReportDesigner  # noqa: E402
 
 TEMPLATE_DIR = REPO_ROOT / "examples" / "flask_app" / "sample_templates"
 

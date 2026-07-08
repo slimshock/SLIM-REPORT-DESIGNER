@@ -23,6 +23,13 @@ from slim_report_core.rendering.context import (
 )
 from slim_report_core.rendering.pagination import pagination_summary
 from slim_report_core.serialization import JSONSerializer
+from slim_report_core.storage import (
+    TemplateIdError,
+    TemplateNotFoundError,
+    TemplatePermissionError,
+    TemplateStorageError,
+    TemplateValidationError,
+)
 from slim_report_designer_ui import static_file
 
 from .designer import render_designer_page, template_for_designer
@@ -266,6 +273,10 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
     def slim_report_error(exc: SlimReportError) -> tuple[Response, int]:
         return error_response("slim_report_error", str(exc), _status_for_core_error(exc))
 
+    @blueprint.errorhandler(TemplateStorageError)
+    def template_storage_error(exc: TemplateStorageError) -> tuple[Response, int]:
+        return error_response(_error_code_for_exception(exc), str(exc), _status_for_exception(exc))
+
     return blueprint
 
 
@@ -304,7 +315,15 @@ def error_response(
 def _error_code_for_exception(exc: Exception) -> str:
     if isinstance(exc, FileNotFoundError):
         return "template_not_found"
+    if isinstance(exc, TemplateNotFoundError):
+        return "template_not_found"
+    if isinstance(exc, TemplateIdError):
+        return "invalid_template_id"
+    if isinstance(exc, TemplateValidationError):
+        return "invalid_template"
     if isinstance(exc, PermissionError):
+        return "forbidden"
+    if isinstance(exc, TemplatePermissionError):
         return "forbidden"
     if isinstance(exc, ValueError):
         return "invalid_request"
@@ -316,8 +335,14 @@ def _error_code_for_exception(exc: Exception) -> str:
 def _status_for_exception(exc: Exception) -> int:
     if isinstance(exc, FileNotFoundError):
         return 404
+    if isinstance(exc, TemplateNotFoundError):
+        return 404
     if isinstance(exc, PermissionError):
         return 403
+    if isinstance(exc, TemplatePermissionError):
+        return 403
+    if isinstance(exc, TemplateValidationError):
+        return 400
     if isinstance(exc, ValueError):
         return 400
     if isinstance(exc, SlimReportError):

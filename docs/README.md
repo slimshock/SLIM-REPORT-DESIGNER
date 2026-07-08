@@ -9,6 +9,8 @@ Start with:
 - [Designer UI](designer-ui.md)
 - [Flask integration](flask-integration.md)
 - [Flask production integration](flask-production-integration.md)
+- [Template storage](template-storage.md)
+- [LIS Flask template storage](lis-flask-template-storage.md)
 - [JSON template schema](json-template-schema.md)
 - [Data Fields](data-fields.md)
 - [Repeating Detail rows](repeating-detail-rows.md)
@@ -45,6 +47,7 @@ Current implementation notes:
 - Drawable elements share one `ReportObject` inheritance model.
 - `ObjectFactory` is the shared construction point for report objects.
 - Serialization lives in `slim_report_core.serialization`.
+- Template storage providers live in `slim_report_core.storage`.
 - JSON is the first built-in serializer, not a required runtime model.
 - Domain validation lives on `Report.validate()`.
 - Low-level renderers receive `Report` objects, not JSON mappings.

@@ -17,7 +17,8 @@ python -m pip install -e packages/slim_report_flask
 
 ```python
 from flask import Flask
-from slim_report_flask import FileSystemTemplateProvider, SlimReportDesigner
+from slim_report_core.storage import FileSystemTemplateProvider
+from slim_report_flask import SlimReportDesigner
 
 app = Flask(__name__)
 designer = SlimReportDesigner(
@@ -51,7 +52,7 @@ With `url_prefix="/admin/reports"`, routes are served under:
 
 ## Template Provider
 
-`TemplateProvider` is the storage interface prepared for future database providers:
+`TemplateProvider` is the framework-agnostic storage interface in `slim_report_core.storage`:
 
 ```python
 class TemplateProvider:
@@ -64,6 +65,23 @@ class TemplateProvider:
 `FileSystemTemplateProvider` reads and writes `.json` templates from a directory. It validates
 template ids and prevents path traversal. Use `allow_save=False` when templates should be
 read-only in production.
+
+Database-backed Flask apps can use `SQLAlchemyTemplateProvider` with an app-owned model:
+
+```python
+from slim_report_core.storage import SQLAlchemyTemplateProvider
+
+provider = SQLAlchemyTemplateProvider(
+    session=db.session,
+    model=ReportTemplate,
+    allow_save=True,
+)
+
+designer = SlimReportDesigner(
+    template_provider=provider,
+    data_provider=data_provider,
+)
+```
 
 ## Data Provider
 
@@ -84,8 +102,9 @@ Preview/export data priority is:
 
 1. Explicit `data` in the request body.
 2. `data_provider`.
-3. `template.data.sample`.
-4. Empty dict.
+3. Provider sample data.
+4. `template.data.sample`.
+5. Empty dict.
 
 ## Auth And Permissions
 
@@ -130,4 +149,5 @@ proxy subpaths work when Flask URL generation is configured correctly.
 - 401 means your `auth_required` hook returned false.
 - 403 means a permission hook blocked the operation.
 - Save failures with read-only templates usually mean `FileSystemTemplateProvider(..., allow_save=False)`.
+- SQLAlchemy provider import errors usually mean the optional extra was not installed.
 - Preview/PDF failures return JSON with `ok: false`, `error`, and `error_detail`.

@@ -69,6 +69,8 @@ Implemented now:
 - Safe computed field formulas
 - Conditional formatting with style overrides and hide actions
 - Page print/export settings, safe PDF filenames, and PDF metadata
+- Framework-agnostic template storage providers
+- Filesystem and optional SQLAlchemy template storage
 - Flask-hosted preview and PDF export
 - CLI commands for validation, inspection, and rendering
 - Public convenience imports: `render_html`, `render_pdf`, and `normalize_template`
@@ -107,6 +109,8 @@ Not implemented yet:
 - Advanced pagination controls such as custom page breaks and widow/orphan rules
 - Django adapter
 - FastAPI adapter
+- Asset manager
+- Database migrations owned by Slim Report Designer
 - Production packaging and public release
 
 ## Screenshots
@@ -144,6 +148,11 @@ python -m pip install -e packages/slim_report_cli
 ```
 
 `slim_report_core` depends on ReportLab for PDF export. `slim_report_flask` depends on Flask and the designer UI package.
+SQLAlchemy is optional and only needed for database template storage:
+
+```bash
+python -m pip install -e "packages/slim_report_core[sqlalchemy]"
+```
 
 There is no root `pip install -e .` package yet; install the package folders directly.
 
@@ -234,6 +243,50 @@ Open:
 http://127.0.0.1:5001/admin/reports/designer?template=complete_sprint5_lab_report&order_id=ORD-2026-0001
 ```
 
+For SQLite-backed template storage with the framework-agnostic SQLAlchemy provider:
+
+```bash
+python examples/flask_database_app/app.py
+```
+
+Open:
+
+```text
+http://127.0.0.1:5000/report-designer/designer?template=complete_sprint5_lab_report&order_id=ORD-2026-0001
+```
+
+## Template Storage
+
+Preferred provider imports live in `slim_report_core.storage`:
+
+```python
+from slim_report_core.storage import FileSystemTemplateProvider, SQLAlchemyTemplateProvider
+from slim_report_flask import SlimReportDesigner
+
+designer = SlimReportDesigner(
+    template_provider=FileSystemTemplateProvider("sample_templates", allow_save=False),
+)
+```
+
+Database-backed apps can use their own SQLAlchemy model and session:
+
+```python
+provider = SQLAlchemyTemplateProvider(
+    session=db.session,
+    model=ReportTemplate,
+    allow_save=True,
+)
+
+designer = SlimReportDesigner(
+    template_provider=provider,
+    data_provider=lis_report_data_provider,
+)
+```
+
+The provider stores report template JSON, metadata, and optional sample data. The host application
+owns database migrations, LIS data queries, users, and permissions. Compatibility imports from
+`slim_report_flask` still work for existing Sprint 6.1 code.
+
 ## Serialization
 
 Use `JSONSerializer` when you want to load or save JSON:
@@ -286,6 +339,8 @@ The CLI accepts JSON files as input, but commands deserialize to `Report` before
 - [Designer UI](docs/designer-ui.md)
 - [Flask integration](docs/flask-integration.md)
 - [Flask production integration](docs/flask-production-integration.md)
+- [Template storage](docs/template-storage.md)
+- [LIS Flask template storage](docs/lis-flask-template-storage.md)
 - [JSON template schema](docs/json-template-schema.md)
 - [Data Fields](docs/data-fields.md)
 - [Repeating Detail rows](docs/repeating-detail-rows.md)

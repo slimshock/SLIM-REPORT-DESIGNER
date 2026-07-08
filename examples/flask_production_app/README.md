@@ -23,7 +23,7 @@ http://127.0.0.1:5001/admin/reports/designer?template=complete_sprint5_lab_repor
 
 - `create_app()` app factory pattern.
 - `SlimReportDesigner(...).init_app(app)`.
-- `FileSystemTemplateProvider` using existing JSON sample templates.
+- Core `FileSystemTemplateProvider` using existing JSON sample templates.
 - Custom URL prefix: `/admin/reports`.
 - `data_provider` hook for LIS-style `order_id` data resolution.
 - `auth_required` hook.
