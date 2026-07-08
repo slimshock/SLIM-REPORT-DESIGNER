@@ -349,6 +349,9 @@ function renderBand(band, unit = "px", activeBandId = "detail", settings = {}) {
   if (band.id === activeBandId) {
     element.classList.add("active");
   }
+  if (["group_header", "group_footer"].includes(band.type)) {
+    element.classList.add("group-band");
+  }
   if (band.visible === false) {
     element.classList.add("hidden-band");
   }
@@ -366,7 +369,10 @@ function renderBand(band, unit = "px", activeBandId = "detail", settings = {}) {
   const repeatText = band.id === "detail" && band.repeat?.enabled && settings.show_repeated_rows
     ? ` - Repeating Detail: ${band.repeat.data_path || "missing data path"}`
     : "";
-  label.textContent = `${band.name || band.id}${band.locked ? " - Locked" : ""}${repeatText}`;
+  const groupText = ["group_header", "group_footer"].includes(band.type)
+    ? `: ${band.group?.field || "missing field"}`
+    : "";
+  label.textContent = `${band.name || band.id}${groupText}${band.locked ? " - Locked" : ""}${repeatText}`;
   element.appendChild(label);
   return element;
 }

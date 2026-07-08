@@ -11,7 +11,9 @@ from slim_report_core.rendering.context import create_render_context
 from slim_report_core.rendering.pagination import (
     calculate_rows_per_page,
     get_available_detail_height,
+    group_rows,
     pagination_summary,
+    sort_groups,
 )
 from slim_report_core.serialization import JSONSerializer
 
@@ -99,6 +101,22 @@ def test_html_rendering_paginates_repeating_detail_rows() -> None:
     assert "Nitrite" in html
 
 
+def test_grouping_helpers_group_preserve_order_and_sort() -> None:
+    rows = [
+        {"section": "HEMATOLOGY", "test": "WBC"},
+        {"section": "HEMATOLOGY", "test": "HGB"},
+        {"section": "CHEMISTRY", "test": "FBS"},
+        {"test": "No Section"},
+    ]
+
+    groups = group_rows(rows, "section")
+
+    assert [group.key for group in groups] == ["HEMATOLOGY", "CHEMISTRY", ""]
+    assert [row["test"] for row in groups[0].rows] == ["WBC", "HGB"]
+    assert [group.key for group in sort_groups(groups, "asc")] == ["", "CHEMISTRY", "HEMATOLOGY"]
+    assert [group.key for group in sort_groups(groups, "desc")] == ["HEMATOLOGY", "CHEMISTRY", ""]
+
+
 def test_html_rendering_empty_repeating_detail_does_not_crash() -> None:
     report = repeating_report()
 
@@ -163,6 +181,26 @@ def test_html_rendering_basic_table_missing_data_path_does_not_crash() -> None:
 
     assert 'data-slim-object="results_table"' in html
     assert "<!doctype html>" in html
+
+
+def test_html_rendering_grouped_detail_rows() -> None:
+    report = grouped_report()
+
+    html = render_html(report, grouped_data())
+
+    assert "HEMATOLOGY" in html
+    assert "CHEMISTRY" in html
+    assert "WBC" in html
+    assert "FBS" in html
+    assert "Count:" in html
+    assert 'data-slim-object="group_count' in html
+
+
+def test_pdf_rendering_grouped_detail_rows() -> None:
+    pdf = render_pdf(grouped_report(), grouped_data())
+
+    assert pdf.startswith(b"%PDF")
+    assert len(pdf) > 1000
 
 
 def test_pdf_rendering_basic_table_object() -> None:
@@ -378,6 +416,7 @@ def test_sample_templates_render_html_and_pdf() -> None:
         "cerebro_cbc",
         "lab_result",
         "repeating_lab_result",
+        "grouped_lab_result",
         "table_lab_result",
         "barcode_qr_lab_result",
     ):
@@ -723,6 +762,113 @@ def table_report() -> Report:
                 }
             ],
             "bands": [],
+            "assets": [],
+        }
+    )
+
+
+def grouped_data() -> dict:
+    return {
+        "results": [
+            {"section": "HEMATOLOGY", "test": "WBC", "value": "7.10"},
+            {"section": "HEMATOLOGY", "test": "HGB", "value": "14.20"},
+            {"section": "CHEMISTRY", "test": "FBS", "value": "95"},
+        ]
+    }
+
+
+def grouped_report() -> Report:
+    return JSONSerializer().load_mapping(
+        {
+            "version": "1.0",
+            "metadata": {"title": "Grouped"},
+            "page": {"width": 595, "height": 842, "unit": "px"},
+            "objects": [
+                {
+                    "id": "group_name",
+                    "type": "field",
+                    "x": 40,
+                    "y": 108,
+                    "width": 180,
+                    "height": 18,
+                    "binding": "group.value",
+                    "band": "group_header_results",
+                },
+                {
+                    "id": "row_test",
+                    "type": "field",
+                    "x": 40,
+                    "y": 140,
+                    "width": 120,
+                    "height": 18,
+                    "binding": "test",
+                    "band": "detail",
+                },
+                {
+                    "id": "row_value",
+                    "type": "field",
+                    "x": 180,
+                    "y": 140,
+                    "width": 80,
+                    "height": 18,
+                    "binding": "value",
+                    "band": "detail",
+                },
+                {
+                    "id": "group_count_label",
+                    "type": "text",
+                    "x": 40,
+                    "y": 758,
+                    "width": 50,
+                    "height": 18,
+                    "text": "Count:",
+                    "band": "group_footer_results",
+                },
+                {
+                    "id": "group_count",
+                    "type": "field",
+                    "x": 90,
+                    "y": 758,
+                    "width": 50,
+                    "height": 18,
+                    "binding": "group.count",
+                    "band": "group_footer_results",
+                },
+            ],
+            "bands": [
+                {"id": "page_header", "type": "page_header", "y": 0, "height": 100},
+                {
+                    "id": "group_header_results",
+                    "type": "group_header",
+                    "y": 100,
+                    "height": 28,
+                    "group": {
+                        "id": "results_section",
+                        "data_path": "results",
+                        "field": "section",
+                        "sort": "none",
+                    },
+                },
+                {
+                    "id": "detail",
+                    "type": "detail",
+                    "y": 128,
+                    "height": 628,
+                    "repeat": {
+                        "enabled": True,
+                        "data_path": "results",
+                        "row_height": 24,
+                    },
+                },
+                {
+                    "id": "group_footer_results",
+                    "type": "group_footer",
+                    "y": 756,
+                    "height": 24,
+                    "group": {"id": "results_section"},
+                },
+                {"id": "page_footer", "type": "page_footer", "y": 780, "height": 62},
+            ],
             "assets": [],
         }
     )

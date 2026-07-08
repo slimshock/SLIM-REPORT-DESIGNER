@@ -62,6 +62,12 @@ export function createToolbar({ container, onCommand }) {
       actions: [
         ["history", "Version History", "icon-action", "View Version History", "", "history"]
       ]
+    },
+    {
+      label: "Bands",
+      actions: [
+        ["addGroup", "Add Group", "text-action", "Add group header and footer bands", "Group", "duplicate"]
+      ]
     }
   ];
 

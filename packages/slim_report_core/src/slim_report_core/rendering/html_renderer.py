@@ -16,6 +16,7 @@ from .context import (
     get_value_by_path,
     object_px,
     resolve_bound_object_value,
+    resolve_grouped_object_value,
     resolve_object_value,
     resolve_repeated_object_value,
 )
@@ -158,6 +159,8 @@ def context_with_row(context: RenderContext, row: dict[str, Any], data_path: str
 
 
 def _render_text(obj: RenderObject, context: RenderContext) -> str:
+    if _group_context(context) is not None:
+        return _html_box(obj, context, escape(resolve_grouped_object_value(obj, context.data)))
     return _html_box(obj, context, escape(resolve_object_value(obj, context.data)))
 
 
@@ -166,11 +169,19 @@ def _render_field(obj: RenderObject, context: RenderContext) -> str:
     repeat_path = (
         context.data.get("__slim_repeat_path__", "") if isinstance(context.data, dict) else ""
     )
-    if isinstance(row, dict):
+    if isinstance(row, dict) and _group_context(context) is not None:
+        value = resolve_grouped_object_value(obj, context.data, row, str(repeat_path))
+    elif isinstance(row, dict):
         value = resolve_repeated_object_value(obj, context.data, row, str(repeat_path))
+    elif _group_context(context) is not None:
+        value = resolve_grouped_object_value(obj, context.data)
     else:
         value = resolve_object_value(obj, context.data)
     return _html_box(obj, context, escape(value))
+
+
+def _group_context(context: RenderContext) -> Any | None:
+    return context.data.get("__slim_group__") if isinstance(context.data, dict) else None
 
 
 def _object_value(obj: RenderObject, context: RenderContext) -> str:

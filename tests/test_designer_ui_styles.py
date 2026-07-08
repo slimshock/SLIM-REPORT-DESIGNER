@@ -41,8 +41,7 @@ def test_inspector_alignment_controls_use_icons() -> None:
 
 def test_canvas_settings_helpers() -> None:
     module_path = (
-        "./packages/slim_report_designer_ui/"
-        "slim_report_designer_ui/static/js/canvas_settings.js"
+        "./packages/slim_report_designer_ui/slim_report_designer_ui/static/js/canvas_settings.js"
     )
     script = """
 import {
@@ -103,8 +102,7 @@ if (normalized.show_grid || normalized.snap_to_grid) {
 
 def test_data_field_helpers_infer_nested_and_array_paths() -> None:
     module_path = (
-        "./packages/slim_report_designer_ui/"
-        "slim_report_designer_ui/static/js/data_fields.js"
+        "./packages/slim_report_designer_ui/slim_report_designer_ui/static/js/data_fields.js"
     )
     script = """
 import {
@@ -186,13 +184,9 @@ if (
 
 def test_designer_normalization_and_save_preserve_template_data() -> None:
     objects_module_path = (
-        "./packages/slim_report_designer_ui/"
-        "slim_report_designer_ui/static/js/objects.js"
+        "./packages/slim_report_designer_ui/slim_report_designer_ui/static/js/objects.js"
     )
-    api_module_path = (
-        "./packages/slim_report_designer_ui/"
-        "slim_report_designer_ui/static/js/api.js"
-    )
+    api_module_path = "./packages/slim_report_designer_ui/slim_report_designer_ui/static/js/api.js"
     script = """
 import { normalizeTemplate } from '__OBJECTS_MODULE_PATH__';
 import { previewTemplate, saveTemplate } from '__API_MODULE_PATH__';
@@ -363,10 +357,7 @@ def test_inspector_live_input_preserves_focus() -> None:
 
 
 def test_designer_object_style_defaults_and_explicit_values() -> None:
-    module_path = (
-        "./packages/slim_report_designer_ui/"
-        "slim_report_designer_ui/static/js/objects.js"
-    )
+    module_path = "./packages/slim_report_designer_ui/slim_report_designer_ui/static/js/objects.js"
     script = """
 import { normalizeObject, objectStyle, setObjectStyleValue } from '__MODULE_PATH__';
 
@@ -425,10 +416,7 @@ if (!locked.locked || locked.properties.locked !== true) {
 
 
 def test_designer_page_and_image_defaults_roundtrip() -> None:
-    module_path = (
-        "./packages/slim_report_designer_ui/"
-        "slim_report_designer_ui/static/js/objects.js"
-    )
+    module_path = "./packages/slim_report_designer_ui/slim_report_designer_ui/static/js/objects.js"
     script = """
 import {
   createObject,
@@ -496,10 +484,7 @@ if (objectStyle(created).object_fit !== 'contain') {
 
 
 def test_designer_table_defaults_and_column_generation() -> None:
-    module_path = (
-        "./packages/slim_report_designer_ui/"
-        "slim_report_designer_ui/static/js/objects.js"
-    )
+    module_path = "./packages/slim_report_designer_ui/slim_report_designer_ui/static/js/objects.js"
     script = """
 import { createObject, generateTableColumns, normalizeTemplate } from '__MODULE_PATH__';
 
@@ -544,10 +529,7 @@ if (table.columns.length < 3 || table.columns[1].binding !== 'result') {
 
 
 def test_designer_barcode_and_qrcode_defaults() -> None:
-    module_path = (
-        "./packages/slim_report_designer_ui/"
-        "slim_report_designer_ui/static/js/objects.js"
-    )
+    module_path = "./packages/slim_report_designer_ui/slim_report_designer_ui/static/js/objects.js"
     script = """
 import { createObject, normalizeTemplate, objectStyle } from '__MODULE_PATH__';
 
@@ -620,11 +602,70 @@ def test_designer_qrcode_preview_uses_centered_square_content() -> None:
     assert "background-image:" not in qrcode_css
 
 
-def test_designer_band_helpers_normalize_and_clamp_objects() -> None:
-    module_path = (
-        "./packages/slim_report_designer_ui/"
-        "slim_report_designer_ui/static/js/objects.js"
+def test_designer_add_group_bands_preserves_group_metadata() -> None:
+    module_path = "./packages/slim_report_designer_ui/slim_report_designer_ui/static/js/objects.js"
+    script = """
+import {
+  addGroupBands,
+  getGroupField,
+  normalizeTemplate,
+  setBandGroupValue
+} from '__MODULE_PATH__';
+
+const template = normalizeTemplate({
+  metadata: { name: 'Grouped' },
+  page: { width: 595, height: 842, unit: 'px' },
+  objects: [],
+  bands: [
+    { id: 'page_header', type: 'page_header', y: 0, height: 100 },
+    {
+      id: 'detail',
+      type: 'detail',
+      y: 100,
+      height: 680,
+      repeat: { enabled: true, data_path: 'results', row_height: 24 }
+    },
+    { id: 'page_footer', type: 'page_footer', y: 780, height: 62 }
+  ],
+  data: {
+    sample: { results: [{ section: 'HEMATOLOGY', test: 'WBC' }] }
+  },
+  assets: []
+});
+
+const header = addGroupBands(template);
+if (!header || header.type !== 'group_header') {
+  throw new Error('group header was not created');
+}
+if (!template.bands.some((band) => band.type === 'group_footer')) {
+  throw new Error('group footer was not created');
+}
+if (getGroupField(template) !== 'section') {
+  throw new Error('group field was not inferred');
+}
+setBandGroupValue(template, header.id, 'sort', 'desc');
+if (header.group.sort !== 'desc') {
+  throw new Error('group sort was not preserved');
+}
+const normalized = normalizeTemplate(template);
+if (normalized.bands.find((band) => band.type === 'group_header').group.sort !== 'desc') {
+  throw new Error('group metadata did not normalize');
+}
+""".replace("__MODULE_PATH__", module_path)
+
+    result = subprocess.run(
+        ["node", "--input-type=module", "-e", script],
+        cwd=Path(__file__).resolve().parents[1],
+        text=True,
+        capture_output=True,
+        check=False,
     )
+
+    assert result.returncode == 0, result.stderr
+
+
+def test_designer_band_helpers_normalize_and_clamp_objects() -> None:
+    module_path = "./packages/slim_report_designer_ui/slim_report_designer_ui/static/js/objects.js"
     script = """
 import {
   assignObjectBand,

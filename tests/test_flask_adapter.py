@@ -612,6 +612,36 @@ def test_flask_preview_and_pdf_support_barcode_qr_template(tmp_path: Path) -> No
     assert len(pdf_response.get_data()) > 1000
 
 
+def test_flask_preview_and_pdf_support_grouped_template(tmp_path: Path) -> None:
+    app, designer = create_app(tmp_path)
+    designer.create_template(grouped_template_payload())
+
+    @designer.provider("grouped_lab_result")
+    def grouped_provider(record_id: str) -> dict[str, Any]:
+        return {
+            "order": {"id": record_id},
+            "results": [
+                {"section": "HEMATOLOGY", "test": "WBC", "value": "7.10"},
+                {"section": "HEMATOLOGY", "test": "HGB", "value": "14.20"},
+                {"section": "CHEMISTRY", "test": "FBS", "value": "95"},
+            ],
+        }
+
+    client = app.test_client()
+    preview_response = client.get("/report-designer/templates/grouped_lab_result/preview/ORDER-42")
+    pdf_response = client.get("/report-designer/templates/grouped_lab_result/export/pdf/ORDER-42")
+
+    assert preview_response.status_code == 200
+    html = preview_response.get_data(as_text=True)
+    assert "HEMATOLOGY" in html
+    assert "CHEMISTRY" in html
+    assert "WBC" in html
+    assert pdf_response.status_code == 200
+    assert pdf_response.mimetype == "application/pdf"
+    assert pdf_response.get_data().startswith(b"%PDF")
+    assert len(pdf_response.get_data()) > 1000
+
+
 def test_flask_adapter_returns_404_for_missing_template(tmp_path: Path) -> None:
     app, _designer = create_app(tmp_path)
 
@@ -771,6 +801,81 @@ def table_template_payload() -> dict[str, Any]:
         ],
         "bands": [],
         "data": {"sample": {"results": [{"test": "WBC", "result": "7.10", "unit": "10^9/L"}]}},
+        "assets": [],
+    }
+
+
+def grouped_template_payload() -> dict[str, Any]:
+    return {
+        "version": "1.0",
+        "metadata": {
+            "title": "Grouped Lab Result",
+            "custom": {"id": "grouped_lab_result", "provider": "grouped_lab_result"},
+        },
+        "page": {"width": 595, "height": 842, "unit": "px"},
+        "objects": [
+            {
+                "id": "group_name",
+                "type": "field",
+                "x": 40,
+                "y": 108,
+                "width": 160,
+                "height": 18,
+                "binding": "group.value",
+                "band": "group_header_results",
+            },
+            {
+                "id": "row_test",
+                "type": "field",
+                "x": 40,
+                "y": 140,
+                "width": 120,
+                "height": 18,
+                "binding": "test",
+                "band": "detail",
+            },
+            {
+                "id": "group_count",
+                "type": "field",
+                "x": 40,
+                "y": 758,
+                "width": 80,
+                "height": 18,
+                "binding": "group.count",
+                "band": "group_footer_results",
+            },
+        ],
+        "bands": [
+            {"id": "page_header", "type": "page_header", "y": 0, "height": 100},
+            {
+                "id": "group_header_results",
+                "type": "group_header",
+                "y": 100,
+                "height": 28,
+                "group": {
+                    "id": "results_section",
+                    "data_path": "results",
+                    "field": "section",
+                    "sort": "none",
+                },
+            },
+            {
+                "id": "detail",
+                "type": "detail",
+                "y": 128,
+                "height": 628,
+                "repeat": {"enabled": True, "data_path": "results", "row_height": 24},
+            },
+            {
+                "id": "group_footer_results",
+                "type": "group_footer",
+                "y": 756,
+                "height": 24,
+                "group": {"id": "results_section"},
+            },
+            {"id": "page_footer", "type": "page_footer", "y": 780, "height": 62},
+        ],
+        "data": {"sample": {"results": [{"section": "HEMATOLOGY", "test": "WBC"}]}},
         "assets": [],
     }
 

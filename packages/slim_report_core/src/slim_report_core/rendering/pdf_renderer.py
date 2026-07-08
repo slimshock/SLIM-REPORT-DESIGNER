@@ -18,6 +18,7 @@ from .context import (
     get_value_by_path,
     object_pt,
     resolve_bound_object_value,
+    resolve_grouped_object_value,
     resolve_object_value,
     resolve_repeated_object_value,
 )
@@ -132,7 +133,12 @@ def _render_band(canvas: Any, band: Any, context: RenderContext) -> None:
 
 
 def _render_text(canvas: Any, obj: RenderObject, context: RenderContext) -> None:
-    _draw_text(canvas, obj, context, resolve_object_value(obj, context.data))
+    value = (
+        resolve_grouped_object_value(obj, context.data)
+        if _group_context(context) is not None
+        else resolve_object_value(obj, context.data)
+    )
+    _draw_text(canvas, obj, context, value)
 
 
 def _render_field(canvas: Any, obj: RenderObject, context: RenderContext) -> None:
@@ -140,11 +146,19 @@ def _render_field(canvas: Any, obj: RenderObject, context: RenderContext) -> Non
     repeat_path = (
         context.data.get("__slim_repeat_path__", "") if isinstance(context.data, dict) else ""
     )
-    if isinstance(row, dict):
+    if isinstance(row, dict) and _group_context(context) is not None:
+        value = resolve_grouped_object_value(obj, context.data, row, str(repeat_path))
+    elif isinstance(row, dict):
         value = resolve_repeated_object_value(obj, context.data, row, str(repeat_path))
+    elif _group_context(context) is not None:
+        value = resolve_grouped_object_value(obj, context.data)
     else:
         value = resolve_object_value(obj, context.data)
     _draw_text(canvas, obj, context, value)
+
+
+def _group_context(context: RenderContext) -> Any | None:
+    return context.data.get("__slim_group__") if isinstance(context.data, dict) else None
 
 
 def _object_value(obj: RenderObject, context: RenderContext) -> str:

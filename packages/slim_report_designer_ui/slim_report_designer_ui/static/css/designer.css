@@ -580,6 +580,12 @@ button {
   );
 }
 
+.report-band.group-band {
+  background-color: rgba(15, 118, 110, 0.06);
+  border-top-color: rgba(15, 118, 110, 0.35);
+  border-bottom-color: rgba(15, 118, 110, 0.25);
+}
+
 .report-band.locked-band {
   color: #7f1d1d;
 }

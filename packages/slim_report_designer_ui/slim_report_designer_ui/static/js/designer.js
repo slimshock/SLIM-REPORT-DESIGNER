@@ -9,6 +9,7 @@ import {
 import { createInspector } from "./inspector.js";
 import {
   createObject,
+  addGroupBands,
   assignObjectBand,
   clampObjectToBand,
   duplicateObject,
@@ -296,6 +297,8 @@ async function handleCommand(command, payload = {}) {
       showLeftPanel("fields");
       elements.fieldSearch.focus();
       setStatus("Choose a field from the Fields panel");
+    } else if (command === "addGroup") {
+      addGroup();
     } else if (command === "zoomIn") {
       updateCanvasSettings({ zoom: zoomIn(state.canvasSettings.zoom) });
     } else if (command === "zoomOut") {
@@ -312,6 +315,15 @@ async function handleCommand(command, payload = {}) {
   } catch (error) {
     setStatus(error.message);
   }
+}
+
+function addGroup() {
+  recordUndo("Add group bands");
+  const groupHeader = addGroupBands(state.template);
+  state.activeBandId = groupHeader?.id || state.activeBandId;
+  state.selectedIds = [];
+  state.primarySelectedId = null;
+  markDirty("Group bands added");
 }
 
 function updateCanvasSettings(patch) {
@@ -1092,7 +1104,15 @@ function unitToPx(value, unit = "px") {
 
 function activeRepeatForBand(bandId) {
   const band = getBandById(state.template, bandId);
-  return band?.id === "detail" && band.repeat?.enabled ? band.repeat : null;
+  if (band?.id === "detail" && band.repeat?.enabled) {
+    return band.repeat;
+  }
+  if (["group_header", "group_footer"].includes(band?.type)) {
+    const detail = getBandById(state.template, "detail");
+    const dataPath = band.group?.data_path || detail?.repeat?.data_path || "";
+    return dataPath ? { enabled: true, data_path: dataPath } : null;
+  }
+  return null;
 }
 
 function rowRelativeBinding(path, repeatDataPath) {

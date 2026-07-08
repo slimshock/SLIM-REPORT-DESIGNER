@@ -201,40 +201,42 @@ def test_json_serializer_round_trips_basic_table_object() -> None:
 
 def test_json_serializer_round_trips_barcode_and_qrcode_objects() -> None:
     payload = sample_template()
-    payload["objects"].extend([
-        {
-            "id": "barcode_order_id",
-            "type": "barcode",
-            "x": 40,
-            "y": 160,
-            "width": 160,
-            "height": 48,
-            "value": "1234567890",
-            "binding": "order.id",
-            "format": "code128",
-            "show_text": True,
-            "style": {
-                "foreground_color": "#111827",
-                "background_color": "#ffffff",
-                "font_size": 8,
+    payload["objects"].extend(
+        [
+            {
+                "id": "barcode_order_id",
+                "type": "barcode",
+                "x": 40,
+                "y": 160,
+                "width": 160,
+                "height": 48,
+                "value": "1234567890",
+                "binding": "order.id",
+                "format": "code128",
+                "show_text": True,
+                "style": {
+                    "foreground_color": "#111827",
+                    "background_color": "#ffffff",
+                    "font_size": 8,
+                },
             },
-        },
-        {
-            "id": "qr_order_id",
-            "type": "qrcode",
-            "x": 220,
-            "y": 160,
-            "width": 80,
-            "height": 80,
-            "value": "https://example.com",
-            "binding": "order.id",
-            "error_correction": "M",
-            "style": {
-                "foreground_color": "#111827",
-                "background_color": "#ffffff",
+            {
+                "id": "qr_order_id",
+                "type": "qrcode",
+                "x": 220,
+                "y": 160,
+                "width": 80,
+                "height": 80,
+                "value": "https://example.com",
+                "binding": "order.id",
+                "error_correction": "M",
+                "style": {
+                    "foreground_color": "#111827",
+                    "background_color": "#ffffff",
+                },
             },
-        },
-    ])
+        ]
+    )
 
     dumped = JSONSerializer().dump_mapping(JSONSerializer().load_mapping(payload))
     barcode = next(item for item in dumped["objects"] if item["id"] == "barcode_order_id")
@@ -285,6 +287,43 @@ def test_json_serializer_round_trips_detail_repeat_settings() -> None:
         "preview_rows": 100,
         "empty_message": "No results",
     }
+
+
+def test_json_serializer_round_trips_group_bands() -> None:
+    payload = sample_template()
+    payload["bands"] = [
+        {
+            "id": "group_header_results",
+            "type": "group_header",
+            "name": "Group Header",
+            "y": 100,
+            "height": 28,
+            "group": {
+                "id": "results_section",
+                "data_path": "results",
+                "field": "section",
+                "sort": "asc",
+            },
+        },
+        {
+            "id": "group_footer_results",
+            "type": "group_footer",
+            "name": "Group Footer",
+            "y": 700,
+            "height": 24,
+            "group": {"id": "results_section"},
+        },
+    ]
+
+    dumped = JSONSerializer().dump_mapping(JSONSerializer().load_mapping(payload))
+
+    assert dumped["bands"][0]["group"] == {
+        "id": "results_section",
+        "data_path": "results",
+        "field": "section",
+        "sort": "asc",
+    }
+    assert dumped["bands"][1]["group"] == {"id": "results_section", "sort": "none"}
 
 
 def test_json_serializer_round_trips_page_pagination_settings() -> None:

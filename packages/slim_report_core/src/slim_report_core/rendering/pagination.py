@@ -11,6 +11,7 @@ from .context import (
     RenderContext,
     RenderObject,
     get_array_by_path,
+    get_row_value,
 )
 
 PAGINATION_DEFAULTS: dict[str, bool] = {
@@ -47,6 +48,8 @@ def build_render_pages(context: RenderContext) -> list[RenderPagePlan]:
     if not settings["enabled"]:
         return [single_page_plan(context)]
     if repeat:
+        if get_group_header_band(context):
+            return grouped_repeat_render_pages(context, repeat, settings)
         return repeat_render_pages(context, repeat, settings)
     if table is not None:
         return table_render_pages(context, table, settings)
@@ -72,6 +75,15 @@ def pagination_summary(context: RenderContext, data: Any | None = None) -> Pagin
         repeated_row_count=repeated_rows,
         table_row_count=table_rows,
     )
+
+
+@dataclass(frozen=True)
+class RowGroup:
+    """Rows grouped by one repeat field."""
+
+    key: str
+    rows: list[Any]
+    field: str
 
 
 def single_page_plan(context: RenderContext) -> RenderPagePlan:
@@ -137,6 +149,112 @@ def repeat_render_pages(
         pages.append(
             RenderPagePlan(page_index, bands_for_page(context, page_index, settings), objects)
         )
+    return pages or [single_page_plan(context)]
+
+
+def grouped_repeat_render_pages(
+    context: RenderContext,
+    repeat: dict[str, Any],
+    settings: dict[str, bool],
+) -> list[RenderPagePlan]:
+    """Build pages for a repeating Detail band grouped by one field."""
+    data_path = str(repeat.get("data_path", ""))
+    row_height = float(repeat.get("row_height", 22) or 22)
+    rows = get_array_by_path(context.data, data_path)
+    group_header = get_group_header_band(context)
+    group_footer = get_group_footer_band(context)
+    detail = get_detail_band(context)
+    detail_y = detail.y if detail else get_content_top(context)
+    groups = sort_groups(
+        group_rows(rows, get_group_field(context), data_path),
+        str((group_header.group if group_header else {}).get("sort", "none")),
+    )
+
+    if not rows or not groups:
+        objects = outside_objects_for_page(context, 0, settings)
+        objects.append((empty_repeat_object(context, repeat), context))
+        return [RenderPagePlan(0, bands_for_grouped_page(context, 0, settings), objects)]
+
+    detail_objects = [obj for obj in context.objects if obj.band == "detail"]
+    group_header_objects = [
+        obj for obj in context.objects if group_header and obj.band == group_header.id
+    ]
+    group_footer_objects = [
+        obj for obj in context.objects if group_footer and obj.band == group_footer.id
+    ]
+    pages: list[RenderPagePlan] = []
+    page_index = 0
+    cursor = get_content_top(context)
+    objects = outside_objects_for_page(context, page_index, settings)
+    bands = bands_for_grouped_page(context, page_index, settings)
+
+    def start_new_page() -> None:
+        nonlocal page_index, cursor, objects, bands
+        pages.append(RenderPagePlan(page_index, bands, objects))
+        page_index += 1
+        cursor = get_content_top(context)
+        objects = outside_objects_for_page(context, page_index, settings)
+        bands = bands_for_grouped_page(context, page_index, settings)
+
+    def ensure_space(height: float) -> None:
+        if cursor > get_content_top(context) and cursor + height > get_content_bottom(context):
+            start_new_page()
+
+    for group in groups:
+        group_context = context_with_group(context, group)
+        header_height = group_header.height if group_header and group_header.visible else 0.0
+        footer_height = group_footer.height if group_footer and group_footer.visible else 0.0
+        if group_header and group_header.visible:
+            ensure_space(header_height)
+            bands.append(
+                flow_band(group_header, cursor, f"__group_header_{page_index}_{len(pages)}")
+            )
+            for obj in group_header_objects:
+                objects.append((flow_object(obj, cursor, group_header.y), group_context))
+            cursor += header_height
+
+        for row_index, row in enumerate(group.rows):
+            ensure_space(row_height)
+            if (
+                row_index > 0
+                and cursor == get_content_top(context)
+                and group_header
+                and group_header.visible
+            ):
+                bands.append(
+                    flow_band(group_header, cursor, f"__group_header_{page_index}_{row_index}")
+                )
+                for obj in group_header_objects:
+                    objects.append((flow_object(obj, cursor, group_header.y), group_context))
+                cursor += header_height
+                ensure_space(row_height)
+            row_data = row if isinstance(row, dict) else {}
+            row_context = context_with_row_group(context, row_data, data_path, group)
+            for obj in detail_objects:
+                objects.append(
+                    (
+                        flow_object(
+                            obj,
+                            cursor,
+                            detail_y,
+                            suffix=f"__group_{safe_suffix(group.key)}_row_{row_index}",
+                        ),
+                        row_context,
+                    )
+                )
+            cursor += row_height
+
+        if group_footer and group_footer.visible:
+            ensure_space(footer_height)
+            bands.append(
+                flow_band(group_footer, cursor, f"__group_footer_{page_index}_{len(pages)}")
+            )
+            footer_context = context_with_group(context, group)
+            for obj in group_footer_objects:
+                objects.append((flow_object(obj, cursor, group_footer.y), footer_context))
+            cursor += footer_height
+
+    pages.append(RenderPagePlan(page_index, bands, objects))
     return pages or [single_page_plan(context)]
 
 
@@ -220,6 +338,23 @@ def get_footer_band(context: RenderContext) -> RenderBand | None:
     return next((band for band in context.bands if band.id == "page_footer"), None)
 
 
+def get_group_bands(context: RenderContext) -> list[RenderBand]:
+    return [band for band in context.bands if band.type in {"group_header", "group_footer"}]
+
+
+def get_group_header_band(context: RenderContext) -> RenderBand | None:
+    return next((band for band in context.bands if band.type == "group_header"), None)
+
+
+def get_group_footer_band(context: RenderContext) -> RenderBand | None:
+    return next((band for band in context.bands if band.type == "group_footer"), None)
+
+
+def get_group_field(context: RenderContext) -> str:
+    header = get_group_header_band(context)
+    return str((header.group if header else {}).get("field", ""))
+
+
 def get_content_top(context: RenderContext) -> float:
     detail = get_detail_band(context)
     if detail:
@@ -280,6 +415,18 @@ def bands_for_page(
     return bands
 
 
+def bands_for_grouped_page(
+    context: RenderContext,
+    page_index: int,
+    settings: dict[str, bool],
+) -> list[RenderBand]:
+    return [
+        band
+        for band in bands_for_page(context, page_index, settings)
+        if band.type not in {"group_header", "group_footer", "detail"}
+    ]
+
+
 def outside_objects_for_page(
     context: RenderContext,
     page_index: int,
@@ -312,6 +459,26 @@ def repeated_object(
             "y": obj.y + (local_row_index * row_height),
         }
     )
+
+
+def flow_object(
+    obj: RenderObject,
+    cursor_y: float,
+    band_y: float,
+    *,
+    suffix: str = "",
+) -> RenderObject:
+    return RenderObject(
+        **{
+            **obj.__dict__,
+            "id": f"{obj.id}{suffix}" if suffix else obj.id,
+            "y": cursor_y + (obj.y - band_y),
+        }
+    )
+
+
+def flow_band(band: RenderBand, y: float, suffix: str) -> RenderBand:
+    return RenderBand(**{**band.__dict__, "id": f"{band.id}{suffix}", "y": y})
 
 
 def empty_repeat_object(context: RenderContext, repeat: dict[str, Any]) -> RenderObject:
@@ -369,6 +536,47 @@ def context_with_row(context: RenderContext, row: dict[str, Any], data_path: str
     )
 
 
+def context_with_group(context: RenderContext, group: RowGroup) -> RenderContext:
+    return RenderContext(
+        report=context.report,
+        data={**dict(context.data), "__slim_group__": group_context_data(group)},
+        page=context.page,
+        bands=context.bands,
+        objects=context.objects,
+        title=context.title,
+    )
+
+
+def context_with_row_group(
+    context: RenderContext,
+    row: dict[str, Any],
+    data_path: str,
+    group: RowGroup,
+) -> RenderContext:
+    return RenderContext(
+        report=context.report,
+        data={
+            **dict(context.data),
+            "__slim_row__": row,
+            "__slim_repeat_path__": data_path,
+            "__slim_group__": group_context_data(group),
+        },
+        page=context.page,
+        bands=context.bands,
+        objects=context.objects,
+        title=context.title,
+    )
+
+
+def group_context_data(group: RowGroup) -> dict[str, Any]:
+    return {
+        "key": group.key,
+        "value": group.key,
+        "count": len(group.rows),
+        "field": group.field,
+    }
+
+
 def context_with_data(context: RenderContext, data: Any) -> RenderContext:
     return RenderContext(
         report=context.report,
@@ -394,3 +602,30 @@ def table_header_height(obj: RenderObject) -> float:
 def table_row_height(obj: RenderObject) -> float:
     row = obj.properties.get("row")
     return float(row.get("height", 22) if isinstance(row, dict) else 22)
+
+
+def group_rows(rows: list[Any], field: str, data_path: str = "") -> list[RowGroup]:
+    groups: list[RowGroup] = []
+    by_key: dict[str, RowGroup] = {}
+    for row in rows:
+        row_data = row if isinstance(row, dict) else {}
+        value = get_row_value(row_data, field, data_path) if field else ""
+        key = "" if value is None else str(value)
+        if key not in by_key:
+            by_key[key] = RowGroup(key=key, rows=[], field=field)
+            groups.append(by_key[key])
+        by_key[key].rows.append(row)
+    return groups
+
+
+def sort_groups(groups: list[RowGroup], sort: str = "none") -> list[RowGroup]:
+    if sort == "asc":
+        return sorted(groups, key=lambda group: group.key)
+    if sort == "desc":
+        return sorted(groups, key=lambda group: group.key, reverse=True)
+    return groups
+
+
+def safe_suffix(value: str) -> str:
+    suffix = "".join(char if char.isalnum() else "_" for char in value.lower()).strip("_")
+    return suffix or "ungrouped"

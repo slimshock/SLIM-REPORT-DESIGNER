@@ -146,6 +146,7 @@ class RenderBand:
     visible: bool = True
     locked: bool = False
     repeat: dict[str, Any] = field(default_factory=dict)
+    group: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -319,6 +320,7 @@ def _normalize_band(band: Band, page: RenderPage) -> RenderBand:
         visible=bool(getattr(band, "visible", True)),
         locked=bool(getattr(band, "locked", False)),
         repeat=dict(getattr(band, "repeat", {}) or {}),
+        group=dict(getattr(band, "group", {}) or {}),
     )
 
 
@@ -333,15 +335,43 @@ def _recalculate_standard_bands(bands: list[RenderBand], page: RenderPage) -> li
     min_detail = min(80.0, page_height)
     header_height = max(0.0, min(header.height, page_height - min_detail))
     footer_height = max(0.0, min(footer.height, page_height - header_height - min_detail))
-    detail_height = max(min_detail, page_height - header_height - footer_height)
+    group_header_height = sum(
+        band.height for band in bands if band.type == "group_header" and band.visible
+    )
+    group_footer_height = sum(
+        band.height for band in bands if band.type == "group_footer" and band.visible
+    )
+    detail_height = max(
+        min_detail,
+        page_height - header_height - footer_height - group_header_height - group_footer_height,
+    )
+    group_header_y = header_height
+    detail_y = header_height + group_header_height
+    group_footer_y = detail_y + detail_height
     replacements = {
         "page_header": RenderBand(**{**header.__dict__, "y": 0.0, "height": header_height}),
-        "detail": RenderBand(**{**detail.__dict__, "y": header_height, "height": detail_height}),
+        "detail": RenderBand(**{**detail.__dict__, "y": detail_y, "height": detail_height}),
         "page_footer": RenderBand(
-            **{**footer.__dict__, "y": header_height + detail_height, "height": footer_height}
+            **{
+                **footer.__dict__,
+                "y": group_footer_y + group_footer_height,
+                "height": footer_height,
+            }
         ),
     }
-    return [replacements.get(band.id, band) for band in bands]
+    resolved: list[RenderBand] = []
+    for band in bands:
+        if band.id in replacements:
+            resolved.append(replacements[band.id])
+        elif band.type == "group_header":
+            resolved.append(RenderBand(**{**band.__dict__, "y": group_header_y}))
+            group_header_y += band.height
+        elif band.type == "group_footer":
+            resolved.append(RenderBand(**{**band.__dict__, "y": group_footer_y}))
+            group_footer_y += band.height
+        else:
+            resolved.append(band)
+    return resolved
 
 
 def resolve_title(report: Report) -> str:
@@ -406,6 +436,27 @@ def resolve_repeated_object_value(
     return str(resolve_expression(obj.binding, data))
 
 
+def resolve_grouped_object_value(
+    obj: RenderObject,
+    data: Mapping[str, Any],
+    row: Mapping[str, Any] | None = None,
+    repeat_data_path: str = "",
+) -> str:
+    """Resolve text/field values against group, row, then global data."""
+    group_value = get_group_value(data, obj.binding)
+    if obj.type == "text":
+        return str(resolve_text(obj.text, _group_expression_data(data)))
+    if obj.type != "field":
+        return ""
+    if group_value not in ("", None):
+        return str(group_value)
+    if row is not None:
+        row_value = get_row_value(row, obj.binding, repeat_data_path)
+        if row_value not in ("", None):
+            return str(row_value)
+    return str(resolve_expression(obj.binding, _group_expression_data(data)))
+
+
 def resolve_bound_object_value(
     obj: RenderObject,
     data: Mapping[str, Any],
@@ -423,6 +474,22 @@ def resolve_bound_object_value(
             return str(value)
     value = obj.properties.get("value", "")
     return "" if value is None else str(value)
+
+
+def get_group_value(data: Mapping[str, Any], binding: str) -> Any:
+    group = data.get("__slim_group__") if isinstance(data, Mapping) else None
+    if not isinstance(group, Mapping):
+        return None
+    path = str(binding or "").strip()
+    key = group.get("key", "")
+    field = str(group.get("field", "") or "")
+    if path in {field, "group", "group.key", "group.value"}:
+        return key
+    if path in {"count", "group.count"}:
+        return group.get("count", 0)
+    if path == "group.field":
+        return field
+    return None
 
 
 def get_value_by_path(data: Any, path: str) -> Any:
@@ -460,6 +527,22 @@ def get_row_value(row: Mapping[str, Any], binding: str, repeat_data_path: str = 
         path = path[len(f"{repeat_path}[].") :]
     value = get_value_by_path(row, path)
     return "" if value is None else value
+
+
+def _group_expression_data(data: Mapping[str, Any]) -> dict[str, Any]:
+    resolved = dict(data)
+    group = data.get("__slim_group__") if isinstance(data, Mapping) else None
+    if isinstance(group, Mapping):
+        resolved["group"] = {
+            "key": group.get("key", ""),
+            "value": group.get("key", ""),
+            "count": group.get("count", 0),
+            "field": group.get("field", ""),
+        }
+        field = str(group.get("field", "") or "")
+        if field and field not in resolved:
+            resolved[field] = group.get("key", "")
+    return resolved
 
 
 def _style(obj: Any, properties: Mapping[str, Any]) -> dict[str, Any]:
@@ -549,6 +632,7 @@ _STYLE_KEYS = (
     "underline",
     "vertical_align",
 )
+
 
 def _bool(value: Any) -> bool:
     if isinstance(value, bool):

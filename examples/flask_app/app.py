@@ -324,6 +324,44 @@ def demo_lab_results() -> list[dict[str, str]]:
     ]
 
 
+def grouped_demo_lab_results() -> list[dict[str, str]]:
+    """Return lab rows with a section field for group header/footer demos."""
+    sections = {
+        "WBC": "HEMATOLOGY",
+        "RBC": "HEMATOLOGY",
+        "HGB": "HEMATOLOGY",
+        "HCT": "HEMATOLOGY",
+        "MCV": "HEMATOLOGY",
+        "MCH": "HEMATOLOGY",
+        "MCHC": "HEMATOLOGY",
+        "RDW-CV": "HEMATOLOGY",
+        "PLT": "HEMATOLOGY",
+        "MPV": "HEMATOLOGY",
+        "Neutrophils": "HEMATOLOGY",
+        "Lymphocytes": "HEMATOLOGY",
+        "Monocytes": "HEMATOLOGY",
+        "Eosinophils": "HEMATOLOGY",
+        "Basophils": "HEMATOLOGY",
+        "Glucose": "CHEMISTRY",
+        "BUN": "CHEMISTRY",
+        "Creatinine": "CHEMISTRY",
+        "Uric Acid": "CHEMISTRY",
+        "Total Cholesterol": "CHEMISTRY",
+        "Triglycerides": "CHEMISTRY",
+        "HDL": "CHEMISTRY",
+        "LDL": "CHEMISTRY",
+        "AST": "CHEMISTRY",
+        "ALT": "CHEMISTRY",
+        "Sodium": "CHEMISTRY",
+        "Potassium": "CHEMISTRY",
+        "Chloride": "CHEMISTRY",
+    }
+    rows = []
+    for row in demo_lab_results():
+        rows.append({**row, "section": sections.get(row["test"], "URINALYSIS")})
+    return rows
+
+
 @designer.provider("lab_result")
 def lab_result(record_id: str) -> dict[str, dict[str, str]]:
     return {
@@ -407,6 +445,13 @@ def repeating_lab_result(record_id: str) -> dict[str, object]:
     }
 
 
+@designer.provider("grouped_lab_result")
+def grouped_lab_result(record_id: str) -> dict[str, object]:
+    data = repeating_lab_result(record_id)
+    data["results"] = grouped_demo_lab_results()
+    return data
+
+
 @designer.provider("table_lab_result")
 def table_lab_result(record_id: str) -> dict[str, object]:
     return {
@@ -486,6 +531,7 @@ def ensure_sample_templates() -> None:
     ensure_report_template("lab_result", create_lab_result_report)
     ensure_report_template("cerebro_cbc", create_cerebro_cbc_report)
     ensure_report_template("repeating_lab_result", create_repeating_lab_result_report)
+    ensure_report_template("grouped_lab_result", create_grouped_lab_result_report)
     ensure_report_template("table_lab_result", create_table_lab_result_report)
     ensure_report_template("barcode_qr_lab_result", create_barcode_qr_lab_result_report)
 
@@ -903,6 +949,242 @@ def create_repeating_lab_result_report() -> Report:
             obj.properties["band"] = "detail"
             obj.properties["band_id"] = "detail"
     report.data = {"sample": repeating_lab_result("ORDER-1001")}
+    return report
+
+
+def create_grouped_lab_result_report() -> Report:
+    report = Report("Grouped Laboratory Result")
+    report.metadata(
+        description="Laboratory result template with group headers and footers.",
+        author="Slim Report Designer",
+        tags=["demo", "lab", "group"],
+        id="grouped_lab_result",
+        provider="grouped_lab_result",
+    )
+    page = report.page()
+    page.width = 595
+    page.height = 842
+    page.unit = "px"
+    report.bands = [
+        Band.from_dict(
+            {
+                "id": "page_header",
+                "type": "page_header",
+                "name": "Page Header",
+                "y": 0,
+                "height": 120,
+            }
+        ),
+        Band.from_dict(
+            {
+                "id": "group_header_results",
+                "type": "group_header",
+                "name": "Group Header",
+                "y": 120,
+                "height": 30,
+                "background_color": "#f3f4f6",
+                "group": {
+                    "id": "results_section",
+                    "data_path": "results",
+                    "field": "section",
+                    "sort": "none",
+                },
+            }
+        ),
+        Band.from_dict(
+            {
+                "id": "detail",
+                "type": "detail",
+                "name": "Detail",
+                "y": 150,
+                "height": 606,
+                "repeat": {
+                    "enabled": True,
+                    "data_path": "results",
+                    "row_height": 24,
+                    "preview_rows": 12,
+                    "empty_message": "No results",
+                },
+            }
+        ),
+        Band.from_dict(
+            {
+                "id": "group_footer_results",
+                "type": "group_footer",
+                "name": "Group Footer",
+                "y": 756,
+                "height": 24,
+                "group": {"id": "results_section"},
+            }
+        ),
+        Band.from_dict(
+            {
+                "id": "page_footer",
+                "type": "page_footer",
+                "name": "Page Footer",
+                "y": 780,
+                "height": 62,
+            }
+        ),
+    ]
+    page.text(
+        "GROUPED LABORATORY RESULT",
+        x=40,
+        y=30,
+        width=340,
+        height=28,
+        id="title",
+        font_size=20,
+        bold=True,
+        band="page_header",
+    )
+    page.field(
+        "patient.name",
+        x=40,
+        y=72,
+        width=220,
+        height=18,
+        id="patient_name",
+        font_size=12,
+        bold=True,
+        band="page_header",
+    )
+    page.field(
+        "order.id",
+        x=360,
+        y=72,
+        width=160,
+        height=18,
+        id="order_id",
+        font_size=12,
+        band="page_header",
+    )
+    page.field(
+        "group.value",
+        x=42,
+        y=126,
+        width=220,
+        height=18,
+        id="group_name",
+        font_size=12,
+        bold=True,
+        band="group_header_results",
+    )
+    page.text(
+        "TEST",
+        x=42,
+        y=152,
+        width=160,
+        height=18,
+        id="test_header",
+        font_size=11,
+        bold=True,
+        band="detail",
+    )
+    page.text(
+        "VALUE",
+        x=220,
+        y=152,
+        width=90,
+        height=18,
+        id="value_header",
+        font_size=11,
+        bold=True,
+        band="detail",
+    )
+    page.text(
+        "UNIT",
+        x=330,
+        y=152,
+        width=90,
+        height=18,
+        id="unit_header",
+        font_size=11,
+        bold=True,
+        band="detail",
+    )
+    page.text(
+        "FLAG",
+        x=450,
+        y=152,
+        width=70,
+        height=18,
+        id="flag_header",
+        font_size=11,
+        bold=True,
+        band="detail",
+    )
+    page.field(
+        "test", x=42, y=176, width=160, height=18, id="row_test", font_size=11, band="detail"
+    )
+    page.field(
+        "value", x=220, y=176, width=90, height=18, id="row_value", font_size=11, band="detail"
+    )
+    page.field(
+        "unit", x=330, y=176, width=90, height=18, id="row_unit", font_size=11, band="detail"
+    )
+    page.field(
+        "flag", x=450, y=176, width=70, height=18, id="row_flag", font_size=11, band="detail"
+    )
+    page.text(
+        "Count:",
+        x=42,
+        y=758,
+        width=50,
+        height=16,
+        id="group_count_label",
+        font_size=10,
+        bold=True,
+        band="group_footer_results",
+    )
+    page.field(
+        "group.count",
+        x=92,
+        y=758,
+        width=50,
+        height=16,
+        id="group_count",
+        font_size=10,
+        band="group_footer_results",
+    )
+    page.text(
+        "Generated by Slim Report Designer",
+        x=40,
+        y=802,
+        width=240,
+        height=16,
+        id="footer",
+        font_size=10,
+        band="page_footer",
+    )
+    object_bands = {
+        "title": "page_header",
+        "patient_name": "page_header",
+        "order_id": "page_header",
+        "group_name": "group_header_results",
+        "group_count_label": "group_footer_results",
+        "group_count": "group_footer_results",
+        "footer": "page_footer",
+    }
+    for obj in report.objects:
+        band_id = object_bands.get(obj.id, "detail")
+        obj.band_id = band_id
+        obj.properties["band"] = band_id
+        obj.properties["band_id"] = band_id
+    report.data = {
+        "sample": grouped_lab_result("ORDER-1001"),
+        "fields": [
+            {"path": "laboratory.name", "label": "Laboratory Name", "type": "string"},
+            {"path": "patient.name", "label": "Patient Name", "type": "string"},
+            {"path": "order.id", "label": "Order ID", "type": "string"},
+            {"path": "results[]", "label": "Results", "type": "array"},
+            {"path": "results[].section", "label": "Section", "type": "string"},
+            {"path": "results[].test", "label": "Test", "type": "string"},
+            {"path": "results[].value", "label": "Value", "type": "string"},
+            {"path": "results[].unit", "label": "Unit", "type": "string"},
+            {"path": "results[].flag", "label": "Flag", "type": "string"},
+        ],
+    }
     return report
 
 

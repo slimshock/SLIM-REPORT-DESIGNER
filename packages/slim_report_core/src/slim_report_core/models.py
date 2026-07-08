@@ -1375,6 +1375,7 @@ class Band:
     visible: bool = True
     locked: bool = False
     repeat: dict[str, Any] = field(default_factory=dict)
+    group: dict[str, Any] = field(default_factory=dict)
     properties: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
@@ -1397,6 +1398,7 @@ class Band:
             visible=bool(mapping.get("visible", True)),
             locked=bool(mapping.get("locked", False)),
             repeat=_normalize_repeat(mapping.get("repeat", properties.get("repeat"))),
+            group=_normalize_group(mapping.get("group", properties.get("group"))),
             properties=dict(properties),
         )
 
@@ -1406,6 +1408,8 @@ class Band:
             data.pop("name", None)
         if not self.repeat:
             data.pop("repeat", None)
+        if not self.group:
+            data.pop("group", None)
         return data
 
     def clone(self, *, new_ids: bool = True) -> Band:
@@ -1420,6 +1424,7 @@ class Band:
             visible=self.visible,
             locked=self.locked,
             repeat=copy.deepcopy(self.repeat),
+            group=copy.deepcopy(self.group),
             properties=copy.deepcopy(self.properties),
         )
 
@@ -1596,6 +1601,20 @@ def _normalize_repeat(value: Any) -> dict[str, Any]:
         "preview_rows": min(100, max(1, int(float(value.get("preview_rows", 10) or 10)))),
         "empty_message": str(value.get("empty_message", "No records")),
     }
+
+
+def _normalize_group(value: Any) -> dict[str, Any]:
+    if not isinstance(value, Mapping):
+        return {}
+    normalized = {
+        "id": str(value.get("id", "")),
+        "data_path": str(value.get("data_path", "")),
+        "field": str(value.get("field", "")),
+        "sort": str(value.get("sort", "none") or "none"),
+    }
+    if normalized["sort"] not in {"none", "asc", "desc"}:
+        normalized["sort"] = "none"
+    return {key: item for key, item in normalized.items() if item != ""}
 
 
 def _normalize_pagination(value: Any) -> dict[str, Any]:

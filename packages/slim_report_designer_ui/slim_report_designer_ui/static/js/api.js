@@ -166,6 +166,10 @@ function localObjectsHtml(template, unit = "px") {
   if (!repeat?.enabled || !repeat.data_path) {
     return (template.objects || []).map((object) => localObjectHtml(object, unit, sampleData)).join("\n");
   }
+  const groupHeader = (template.bands || []).find((band) => band.type === "group_header");
+  if (groupHeader?.group?.field) {
+    return localGroupedObjectsHtml(template, unit, sampleData, repeat, groupHeader);
+  }
   const rows = getArrayByPath(sampleData, repeat.data_path);
   const rowHeight = Number(repeat.row_height) || 22;
   const detailObjects = (template.objects || []).filter((object) => objectBandId(object) === "detail");
@@ -185,10 +189,54 @@ function localObjectsHtml(template, unit = "px") {
   return rendered.join("\n");
 }
 
-function localObjectHtml(object, unit = "px", sampleData = {}, rowData = null, repeatDataPath = "") {
+function localGroupedObjectsHtml(template, unit, sampleData, repeat, groupHeader) {
+  const rows = getArrayByPath(sampleData, repeat.data_path);
+  const detail = (template.bands || []).find((band) => band.id === "detail") || {};
+  const groupFooter = (template.bands || []).find((band) => band.type === "group_footer");
+  const rowHeight = Number(repeat.row_height) || 22;
+  const headerHeight = Number(groupHeader.height) || 0;
+  const footerHeight = groupFooter?.visible === false ? 0 : Number(groupFooter?.height) || 0;
+  let cursor = Number(groupHeader.y ?? detail.y ?? 0) || 0;
+  const rendered = (template.objects || [])
+    .filter((object) => !["detail", groupHeader.id, groupFooter?.id].includes(objectBandId(object)))
+    .map((object) => localObjectHtml(object, unit, sampleData));
+  if (rows.length === 0) {
+    rendered.push(localEmptyMessageHtml(template, repeat, unit));
+    return rendered.join("\n");
+  }
+  const groups = sortLocalGroups(groupLocalRows(rows, groupHeader.group.field, repeat.data_path), groupHeader.group.sort);
+  const groupHeaderObjects = (template.objects || []).filter((object) => objectBandId(object) === groupHeader.id);
+  const detailObjects = (template.objects || []).filter((object) => objectBandId(object) === "detail");
+  const groupFooterObjects = groupFooter
+    ? (template.objects || []).filter((object) => objectBandId(object) === groupFooter.id)
+    : [];
+  for (const group of groups) {
+    for (const object of groupHeaderObjects) {
+      rendered.push(localObjectHtml(flowObject(object, cursor, groupHeader.y), unit, sampleData, null, repeat.data_path, group));
+    }
+    cursor += headerHeight;
+    for (const row of group.rows) {
+      for (const object of detailObjects) {
+        rendered.push(localObjectHtml(flowObject(object, cursor, detail.y), unit, sampleData, row, repeat.data_path, group));
+      }
+      cursor += rowHeight;
+    }
+    if (groupFooter && groupFooter.visible !== false) {
+      for (const object of groupFooterObjects) {
+        rendered.push(localObjectHtml(flowObject(object, cursor, groupFooter.y), unit, sampleData, null, repeat.data_path, group));
+      }
+      cursor += footerHeight;
+    }
+  }
+  return rendered.join("\n");
+}
+
+function localObjectHtml(object, unit = "px", sampleData = {}, rowData = null, repeatDataPath = "", groupData = null) {
   const style = objectStyle(object);
   const fieldValue = object.type === "field"
-    ? rowData
+    ? groupData && groupValue(groupData, object.binding || object.properties?.binding || "") !== undefined
+      ? groupValue(groupData, object.binding || object.properties?.binding || "")
+      : rowData
       ? repeatedFieldValue(rowData, object.binding || object.properties?.binding || "", repeatDataPath, sampleData)
       : getFieldValue(sampleData, object.binding || object.properties?.binding || "")
     : undefined;
@@ -213,7 +261,7 @@ function localObjectHtml(object, unit = "px", sampleData = {}, rowData = null, r
     return `<div style="${imageBox}"><img src="${escapeHtml(src)}" alt="${escapeHtml(object.alt || object.properties?.alt || "")}" style="width:100%;height:100%;object-fit:${style.object_fit || "contain"};display:block"></div>`;
   }
   if (object.type === "barcode") {
-    const barcodeValue = boundObjectValue(object, sampleData, rowData, repeatDataPath) || "Barcode";
+    const barcodeValue = boundObjectValue(object, sampleData, rowData, repeatDataPath, groupData) || "Barcode";
     const foreground = style.foreground_color || "#111827";
     const background = style.background_color || "#ffffff";
     const bars = `height:100%;background:repeating-linear-gradient(90deg,${foreground} 0 2px,transparent 2px 4px,${foreground} 4px 5px,transparent 5px 9px)`;
@@ -223,7 +271,7 @@ function localObjectHtml(object, unit = "px", sampleData = {}, rowData = null, r
     return `<div style="${box};display:grid;grid-template-rows:minmax(0,1fr) auto;padding:2px;color:${foreground};background:${background}"><div style="${bars}"></div>${label}</div>`;
   }
   if (object.type === "qrcode") {
-    const qrValue = boundObjectValue(object, sampleData, rowData, repeatDataPath) || "QR Code";
+    const qrValue = boundObjectValue(object, sampleData, rowData, repeatDataPath, groupData) || "QR Code";
     const foreground = style.foreground_color || "#111827";
     const background = style.background_color || "#ffffff";
     const qrSize = Math.min(Number(object.width) || 0, Number(object.height) || 0);
@@ -235,8 +283,12 @@ function localObjectHtml(object, unit = "px", sampleData = {}, rowData = null, r
   return `<div style="${box}">${escapeHtml(value)}</div>`;
 }
 
-function boundObjectValue(object, sampleData = {}, rowData = null, repeatDataPath = "") {
+function boundObjectValue(object, sampleData = {}, rowData = null, repeatDataPath = "", groupData = null) {
   const binding = object.binding || object.properties?.binding || "";
+  const grouped = groupValue(groupData, binding);
+  if (grouped !== undefined && grouped !== null && grouped !== "") {
+    return String(grouped);
+  }
   if (binding) {
     const value = rowData
       ? repeatedFieldValue(rowData, binding, repeatDataPath, sampleData)
@@ -246,6 +298,55 @@ function boundObjectValue(object, sampleData = {}, rowData = null, repeatDataPat
     }
   }
   return String(object.value ?? object.properties?.value ?? "");
+}
+
+function groupLocalRows(rows, field, dataPath) {
+  const groups = [];
+  const byKey = new Map();
+  for (const row of rows) {
+    const key = String(getRowValue(row || {}, field, dataPath) ?? "");
+    if (!byKey.has(key)) {
+      const group = { key, field, rows: [] };
+      byKey.set(key, group);
+      groups.push(group);
+    }
+    byKey.get(key).rows.push(row);
+  }
+  return groups;
+}
+
+function sortLocalGroups(groups, sort = "none") {
+  if (sort === "asc") {
+    return groups.slice().sort((left, right) => left.key.localeCompare(right.key));
+  }
+  if (sort === "desc") {
+    return groups.slice().sort((left, right) => right.key.localeCompare(left.key));
+  }
+  return groups;
+}
+
+function groupValue(groupData, binding) {
+  if (!groupData) {
+    return undefined;
+  }
+  const path = String(binding || "");
+  if ([groupData.field, "group", "group.key", "group.value"].includes(path)) {
+    return groupData.key;
+  }
+  if (["count", "group.count"].includes(path)) {
+    return groupData.rows.length;
+  }
+  if (path === "group.field") {
+    return groupData.field;
+  }
+  return undefined;
+}
+
+function flowObject(object, cursor, bandY) {
+  return {
+    ...object,
+    y: cursor + ((Number(object.y) || 0) - (Number(bandY) || 0))
+  };
 }
 
 function repeatedFieldValue(rowData, binding, repeatDataPath, sampleData) {

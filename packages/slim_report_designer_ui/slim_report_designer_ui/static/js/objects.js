@@ -245,9 +245,57 @@ export function getBandById(template, bandId) {
   return (template.bands || []).find((band) => band.id === bandId) || null;
 }
 
+export function getGroupBands(template) {
+  return (template.bands || []).filter((band) => ["group_header", "group_footer"].includes(band.type));
+}
+
+export function getGroupHeaderBand(template) {
+  return (template.bands || []).find((band) => band.type === "group_header") || null;
+}
+
+export function getGroupFooterBand(template) {
+  return (template.bands || []).find((band) => band.type === "group_footer") || null;
+}
+
+export function getGroupField(template) {
+  return getGroupHeaderBand(template)?.group?.field || "";
+}
+
 export function getBandForObject(template, object) {
   const bandId = object?.band || object?.band_id || object?.properties?.band || "detail";
   return getBandById(template, bandId) || getBandById(template, "detail") || (template.bands || [])[0] || null;
+}
+
+export function addGroupBands(template) {
+  template.bands = Array.isArray(template.bands) ? template.bands : [];
+  const detail = getBandById(template, "detail") || template.bands[0] || bandRecord("detail", "detail", "Detail", 0, 500);
+  const repeat = detail.repeat || {};
+  const dataPath = repeat.data_path || firstArrayDataPath(template);
+  const fields = getArrayChildFields(template, dataPath);
+  const groupField = fields.find((field) => field.child_path === "section" || field.child_path === "group")
+    || fields[0]
+    || null;
+  const groupId = "result_group";
+  const existingIds = new Set(template.bands.map((band) => band.id));
+  if (!getGroupHeaderBand(template)) {
+    template.bands.push(bandRecord(uniqueBandId("group_header", existingIds), "group_header", "Group Header", detail.y, 28, {
+      background_color: "#f3f4f6",
+      group: {
+        id: groupId,
+        data_path: dataPath,
+        field: groupField?.child_path || "",
+        sort: "none"
+      }
+    }));
+  }
+  if (!getGroupFooterBand(template)) {
+    template.bands.push(bandRecord(uniqueBandId("group_footer", existingIds), "group_footer", "Group Footer", detail.y + detail.height, 24, {
+      group: { id: groupId },
+      visible: true
+    }));
+  }
+  template.bands = recalculateStandardBands(template).bands;
+  return getGroupHeaderBand(template);
 }
 
 export function assignObjectBand(template, object, bandId = null) {
@@ -294,6 +342,38 @@ export function setBandRepeatValue(template, bandId, key, value) {
     ...(band.repeat || {}),
     [key]: value
   });
+}
+
+export function setBandGroupValue(template, bandId, key, value) {
+  const band = getBandById(template, bandId);
+  if (!band || !["group_header", "group_footer"].includes(band.type)) {
+    return;
+  }
+  band.group = normalizeBandGroup({
+    ...(band.group || {}),
+    [key]: value
+  });
+  if (key === "id") {
+    for (const groupBand of getGroupBands(template)) {
+      groupBand.group = normalizeBandGroup({
+        ...(groupBand.group || {}),
+        id: String(value || "")
+      });
+    }
+  }
+  if (band.type === "group_header") {
+    const footer = getGroupFooterBand(template);
+    if (footer && !footer.group?.id) {
+      footer.group = normalizeBandGroup({ ...(footer.group || {}), id: band.group.id });
+    }
+  }
+}
+
+export function setGroupFooterVisible(template, visible) {
+  const footer = getGroupFooterBand(template);
+  if (footer) {
+    footer.visible = Boolean(visible);
+  }
 }
 
 export function clampObjectToBand(template, object) {
@@ -571,12 +651,25 @@ function bandRecord(id, type, name, y, height, patch = {}) {
   };
 }
 
+function uniqueBandId(prefix, existingIds) {
+  let index = 1;
+  let candidate = `${prefix}_${index}`;
+  while (existingIds.has(candidate)) {
+    index += 1;
+    candidate = `${prefix}_${index}`;
+  }
+  existingIds.add(candidate);
+  return candidate;
+}
+
 function normalizeBand(band, page, index) {
   const type = String(band.type || band.id || `band_${index + 1}`);
   const id = String(band.id || type);
   const names = {
     page_header: "Page Header",
+    group_header: "Group Header",
     detail: "Detail",
+    group_footer: "Group Footer",
     page_footer: "Page Footer"
   };
   const normalized = bandRecord(
@@ -595,6 +688,10 @@ function normalizeBand(band, page, index) {
   if (id === "detail" && repeat) {
     normalized.repeat = repeat;
   }
+  const group = normalizeBandGroup(band.group || band.properties?.group);
+  if (["group_header", "group_footer"].includes(type) && group) {
+    normalized.group = group;
+  }
   return normalized;
 }
 
@@ -611,6 +708,19 @@ function normalizeBandRepeat(repeat) {
   };
 }
 
+function normalizeBandGroup(group) {
+  if (!group || typeof group !== "object" || Array.isArray(group)) {
+    return null;
+  }
+  const normalized = {
+    id: String(group.id || ""),
+    data_path: String(group.data_path || ""),
+    field: String(group.field || ""),
+    sort: ["none", "asc", "desc"].includes(String(group.sort)) ? String(group.sort) : "none"
+  };
+  return normalized;
+}
+
 function recalculateStandardBands(template) {
   const bands = template.bands || [];
   const header = bands.find((band) => band.id === "page_header");
@@ -622,11 +732,25 @@ function recalculateStandardBands(template) {
   const pageHeight = Math.max(numberValue(template.page?.height, 842), 120);
   const minDetail = Math.min(80, pageHeight);
   header.height = Math.max(0, Math.min(Number(header.height) || 0, pageHeight - minDetail));
+  const groupHeaders = bands.filter((band) => band.type === "group_header" && band.visible !== false);
+  const groupFooters = bands.filter((band) => band.type === "group_footer" && band.visible !== false);
+  const groupHeaderHeight = groupHeaders.reduce((sum, band) => sum + (Number(band.height) || 0), 0);
+  const groupFooterHeight = groupFooters.reduce((sum, band) => sum + (Number(band.height) || 0), 0);
   footer.height = Math.max(0, Math.min(Number(footer.height) || 0, pageHeight - header.height - minDetail));
-  detail.height = Math.max(minDetail, pageHeight - header.height - footer.height);
+  detail.height = Math.max(minDetail, pageHeight - header.height - footer.height - groupHeaderHeight - groupFooterHeight);
   header.y = 0;
-  detail.y = header.height;
-  footer.y = header.height + detail.height;
+  let cursor = header.height;
+  for (const band of groupHeaders) {
+    band.y = cursor;
+    cursor += Number(band.height) || 0;
+  }
+  detail.y = cursor;
+  cursor += detail.height;
+  for (const band of groupFooters) {
+    band.y = cursor;
+    cursor += Number(band.height) || 0;
+  }
+  footer.y = cursor;
   return template;
 }
 

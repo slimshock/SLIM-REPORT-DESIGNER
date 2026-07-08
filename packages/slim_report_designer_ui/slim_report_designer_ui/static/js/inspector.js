@@ -7,7 +7,9 @@ import {
   getBandById,
   removeTableColumn,
   setBandValue,
+  setBandGroupValue,
   setBandRepeatValue,
+  setGroupFooterVisible,
   setObjectAlt,
   setObjectBand,
   setObjectBinding,
@@ -382,6 +384,9 @@ function renderBandInspector(template, activeBandId = "detail", fields = []) {
   if (band.id === "detail") {
     fragment.appendChild(section("Repeating Detail", repeatFields(band, fields)));
   }
+  if (["group_header", "group_footer"].includes(band.type)) {
+    fragment.appendChild(section("Group Properties", groupFields(template, band, fields)));
+  }
   return fragment;
 }
 
@@ -466,6 +471,37 @@ function repeatFields(band, fields) {
     }),
     fieldRow("empty message", repeat.empty_message || "No records", {
       name: "band.repeat.empty_message"
+    })
+  ];
+}
+
+function groupFields(template, band, fields) {
+  const detail = getBandById(template, "detail") || {};
+  const group = band.group || {};
+  const dataPath = group.data_path || detail.repeat?.data_path || "";
+  const footer = (template.bands || []).find((item) => item.type === "group_footer");
+  return [
+    fieldRow("group id", group.id || "result_group", {
+      name: "band.group.id"
+    }),
+    fieldRow("data path", dataPath, {
+      type: "select",
+      name: "band.group.data_path",
+      options: arrayPathOptions(fields, dataPath)
+    }),
+    fieldRow("group field", group.field || "", {
+      type: "select",
+      name: "band.group.field",
+      options: groupFieldOptions(template, dataPath, group.field || "")
+    }),
+    fieldRow("sort", group.sort || "none", {
+      type: "select",
+      name: "band.group.sort",
+      options: ["none", "asc", "desc"]
+    }),
+    fieldRow("show group footer", Boolean(footer?.visible ?? true), {
+      type: "checkbox",
+      name: "band.group.show_footer"
     })
   ];
 }
@@ -619,6 +655,15 @@ function arrayPathOptions(fields, current = "") {
   return options;
 }
 
+function groupFieldOptions(template, dataPath, current = "") {
+  const childFields = getArrayChildFields(template, dataPath).map((field) => field.child_path);
+  const options = ["", ...new Set(childFields)];
+  if (current && !options.includes(current)) {
+    options.push(current);
+  }
+  return options;
+}
+
 function fieldPickerRow(currentBinding, fields) {
   const options = ["", ...fields.map((field) => field.path)];
   const row = fieldRow("picker", currentBinding, {
@@ -725,6 +770,15 @@ function applyInput(template, object, input) {
 
 function applyPageInput(template, input, activeBandId = "detail") {
   const value = inputValue(input, input.type === "checkbox" ? input.checked : input.value);
+  if (input.name === "band.group.show_footer") {
+    setGroupFooterVisible(template, value);
+    return;
+  }
+  if (input.name.startsWith("band.group.")) {
+    const key = input.name.slice("band.group.".length);
+    setBandGroupValue(template, activeBandId, key, value);
+    return;
+  }
   if (input.name.startsWith("band.repeat.")) {
     const key = input.name.slice("band.repeat.".length);
     setBandRepeatValue(template, activeBandId, key, value);
