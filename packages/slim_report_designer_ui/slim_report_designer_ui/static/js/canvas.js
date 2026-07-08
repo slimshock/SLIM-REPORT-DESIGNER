@@ -1,6 +1,6 @@
 import { clampObjectToBand, getBandForObject, objectStyle } from "./objects.js";
 import { gridSizeForUnit, maybeSnap, screenDeltaToRealDelta } from "./canvas_settings.js";
-import { getArrayByPath, getFieldValue, getRowValue, resolveBinding } from "./data_fields.js";
+import { evaluateFormula, getArrayByPath, getFieldValue, getRowValue, resolveBinding } from "./data_fields.js";
 import { appendQrSvg } from "./qrcode.js";
 
 export function createCanvasController({
@@ -426,20 +426,23 @@ function renderObject(object, selectedIds = [], primarySelectedId = null, unit =
     element.textContent = object.text || object.properties?.text || "Text";
   } else if (object.type === "field") {
     const binding = object.binding || object.properties?.binding || "";
-    const sampleValue = options.showSampleData
-      ? resolveBinding(binding, options.sampleData, {
+    const formula = object.formula ?? object.properties?.formula ?? "";
+    const formulaMode = Boolean(object.formula_mode ?? object.properties?.formula_mode ?? false);
+    const context = {
         rowData: options.rowData,
         repeatDataPath: options.repeatDataPath,
         groupData: options.groupData,
         pageNumber: 1,
         totalPages: 1
-      })
+      };
+    const sampleValue = options.showSampleData
+      ? fieldPreviewValue({ binding, formula, formulaMode }, options.sampleData, context)
       : undefined;
     if (options.showSampleData && sampleValue !== undefined && sampleValue !== null && sampleValue !== "") {
       element.textContent = String(sampleValue);
     } else {
-      element.textContent = `{{ ${binding} }}`;
-      if (options.showSampleData && binding) {
+      element.textContent = formulaMode && formula ? `{{ formula: ${formula} }}` : `{{ ${binding} }}`;
+      if (options.showSampleData && (binding || formula)) {
         element.classList.add("unresolved-field");
       }
     }
@@ -517,6 +520,19 @@ function renderObject(object, selectedIds = [], primarySelectedId = null, unit =
 
 function repeatedFieldValue(rowData, binding, repeatDataPath, sampleData) {
   return resolveBinding(binding, sampleData, { rowData, repeatDataPath });
+}
+
+function fieldPreviewValue(field, sampleData = {}, context = {}) {
+  if (field.formulaMode && String(field.formula || "").trim()) {
+    const result = evaluateFormula(field.formula, sampleData, context);
+    if (!result.error) {
+      return result.value;
+    }
+    if (!field.binding) {
+      return "";
+    }
+  }
+  return resolveBinding(field.binding, sampleData, context);
 }
 
 function renderTablePreview(object, options = {}) {

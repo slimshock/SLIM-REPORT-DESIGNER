@@ -10,6 +10,7 @@ from datetime import date, datetime
 from typing import Any
 
 from ..exceptions import ReportValidationError
+from ..formula import evaluate_formula_result
 from ..models import Band, Object, Page
 from ..report import Report
 
@@ -128,6 +129,8 @@ class RenderObject:
     height: float
     text: str = ""
     binding: str = ""
+    formula: str = ""
+    formula_mode: bool = False
     style: dict[str, Any] = field(default_factory=dict)
     band: str = "detail"
     locked: bool = False
@@ -280,6 +283,8 @@ def normalize_object(obj: Object) -> RenderObject:
         height=height,
         text=str(getattr(obj, "text", "") or properties.get("text", "")),
         binding=str(binding_expression or ""),
+        formula=str(properties.get("formula", getattr(obj, "formula", "")) or ""),
+        formula_mode=_bool(properties.get("formula_mode", getattr(obj, "formula_mode", False))),
         style=style,
         band=str(band),
         locked=_bool(properties.get("locked", getattr(obj, "locked", False))),
@@ -418,7 +423,7 @@ def resolve_object_value(obj: RenderObject, data: Mapping[str, Any]) -> str:
     if obj.type == "text":
         return resolve_binding_text(obj.text, data)
     if obj.type == "field":
-        return value_to_text(resolve_binding(obj.binding, data))
+        return resolve_field_object_value(obj, data)
     return ""
 
 
@@ -433,9 +438,7 @@ def resolve_repeated_object_value(
         return resolve_binding_text(obj.text, data, row=row, repeat_data_path=repeat_data_path)
     if obj.type != "field":
         return ""
-    return value_to_text(
-        resolve_binding(obj.binding, data, row=row, repeat_data_path=repeat_data_path)
-    )
+    return resolve_field_object_value(obj, data, row=row, repeat_data_path=repeat_data_path)
 
 
 def resolve_grouped_object_value(
@@ -449,6 +452,32 @@ def resolve_grouped_object_value(
         return resolve_binding_text(obj.text, data, row=row, repeat_data_path=repeat_data_path)
     if obj.type != "field":
         return ""
+    return resolve_field_object_value(obj, data, row=row, repeat_data_path=repeat_data_path)
+
+
+def resolve_field_object_value(
+    obj: RenderObject,
+    data: Mapping[str, Any],
+    *,
+    row: Mapping[str, Any] | None = None,
+    repeat_data_path: str = "",
+) -> str:
+    """Resolve a field object using formula mode first when enabled."""
+    if obj.formula_mode and obj.formula.strip():
+        result = evaluate_formula_result(
+            obj.formula,
+            data,
+            resolver=lambda identifier: resolve_binding(
+                identifier,
+                data,
+                row=row,
+                repeat_data_path=repeat_data_path,
+            ),
+        )
+        if result.ok:
+            return value_to_text(result.value)
+        if not obj.binding:
+            return ""
     return value_to_text(
         resolve_binding(obj.binding, data, row=row, repeat_data_path=repeat_data_path)
     )

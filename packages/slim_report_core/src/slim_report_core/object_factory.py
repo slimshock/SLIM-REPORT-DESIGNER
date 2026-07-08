@@ -375,6 +375,10 @@ class ObjectFactory:
             for key in ("value", "error_correction"):
                 if key in mapping:
                     properties[key] = mapping[key]
+        if object_type == "field":
+            for key in ("formula", "formula_mode"):
+                if key in mapping:
+                    properties[key] = mapping[key]
         target_class = object_class or _object_class(object_type)
         common = {
             "id": _required_str(mapping, "id", context="Report object"),

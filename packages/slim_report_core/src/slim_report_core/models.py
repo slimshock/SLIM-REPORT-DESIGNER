@@ -952,6 +952,11 @@ class Object:
         if self.binding is not None:
             data["binding"] = self.binding.expression
             data["properties"]["binding"] = self.binding.expression
+        elif "binding" in data["properties"]:
+            data["binding"] = data["properties"]["binding"]
+        for key in ("formula", "formula_mode"):
+            if key in data["properties"]:
+                data[key] = data["properties"][key]
         if self.style.resolved_values():
             data["style"] = self.style.to_dict()
             data["properties"]["style"] = self.style.to_dict()

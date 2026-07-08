@@ -1,5 +1,5 @@
 import { icon } from "./icons.js";
-import { fieldExists, getArrayChildFields, getFieldValue, getRowValue, normalizeArrayFieldPath, normalizeFieldPath, resolveBinding } from "./data_fields.js";
+import { evaluateFormula, fieldExists, getArrayChildFields, getFieldValue, getRowValue, normalizeArrayFieldPath, normalizeFieldPath, resolveBinding } from "./data_fields.js";
 import {
   addTableColumn,
   generateTableColumns,
@@ -13,6 +13,8 @@ import {
   setObjectAlt,
   setObjectBand,
   setObjectBinding,
+  setObjectFormula,
+  setObjectFormulaMode,
   setObjectPropertyValue,
   setObjectSource,
   setObjectStyleValue,
@@ -415,27 +417,48 @@ function textStyleFields(object) {
 
 function fieldContentFields(object, template, fields, sampleData) {
   const binding = normalizeFieldPath(object.binding || object.properties?.binding || "");
+  const formula = String(object.formula ?? object.properties?.formula ?? "");
+  const formulaMode = Boolean(object.formula_mode ?? object.properties?.formula_mode ?? false);
   const repeat = repeatForObject(template, object);
   const row = repeat?.array?.[0] || {};
+  const context = {
+    rowData: repeat ? row : null,
+    repeatDataPath: repeat?.dataPath || "",
+    groupData: sampleGroupData(template, object, repeat),
+    pageNumber: 1,
+    totalPages: 1
+  };
   const rows = [
     fieldRow("binding", binding),
     fieldPickerRow(binding, fields, object, template),
-    commandGrid([["chooseField", "Choose Field"]])
+    commandGrid([["chooseField", "Choose Field"]]),
+    fieldRow("formula mode", formulaMode, { type: "checkbox", name: "formula_mode" }),
+    fieldRow("formula", formula, { type: "textarea", name: "formula", rows: 3 })
   ];
-  const sampleValue = resolveBinding(binding, sampleData, {
-    rowData: repeat ? row : null,
-    repeatDataPath: repeat?.dataPath || "",
-    pageNumber: 1,
-    totalPages: 1
-  });
+  const formulaResult = formulaMode && formula.trim()
+    ? evaluateFormula(formula, sampleData, context)
+    : { value: "", error: "" };
+  const sampleValue = formulaMode && formula.trim() && !formulaResult.error
+    ? formulaResult.value
+    : resolveBinding(binding, sampleData, context);
   const sample = document.createElement("p");
   sample.className = "field-sample-preview";
-  sample.textContent = `Sample: ${
+  sample.textContent = `${formulaMode ? "Formula sample" : "Sample"}: ${
     sampleValue === undefined || sampleValue === null || sampleValue === ""
       ? "No sample value"
       : String(sampleValue)
   }`;
   rows.push(sample);
+  if (formulaMode && formulaResult.error) {
+    const warning = document.createElement("p");
+    warning.className = "field-warning";
+    warning.textContent = `Formula warning: ${formulaResult.error}`;
+    rows.push(warning);
+  }
+  const examples = document.createElement("p");
+  examples.className = "field-sample-preview";
+  examples.textContent = "Examples: concat(result, ' ', unit); if(flag == 'H', 'HIGH', 'NORMAL'); number(numeric_value, 2); default(patient.middle_name, '')";
+  rows.push(examples);
   if (repeat) {
     const note = document.createElement("p");
     note.className = "field-sample-preview";
@@ -449,6 +472,21 @@ function fieldContentFields(object, template, fields, sampleData) {
     rows.push(warning);
   }
   return rows;
+}
+
+function sampleGroupData(template, object, repeat) {
+  const band = getBandById(template, object.band || object.band_id || "detail");
+  if (!["group_header", "group_footer"].includes(band?.type)) {
+    return null;
+  }
+  const group = band.group || {};
+  const rows = repeat?.array || [];
+  const field = group.field || "";
+  return {
+    key: rows.length > 0 ? getRowValue(rows[0], field, repeat?.dataPath || "") : "",
+    field,
+    rows
+  };
 }
 
 function repeatFields(band, fields) {
@@ -752,6 +790,14 @@ function applyInput(template, object, input) {
     setObjectBinding(object, normalizeFieldPath(value));
     return;
   }
+  if (input.name === "formula") {
+    setObjectFormula(object, String(value));
+    return;
+  }
+  if (input.name === "formula_mode") {
+    setObjectFormulaMode(object, Boolean(value));
+    return;
+  }
   if (input.name === "value") {
     setObjectPropertyValue(object, "value", String(value));
     return;
@@ -848,6 +894,9 @@ function inputValue(input, value) {
 }
 
 function shouldPreserveInspectorFocus(input) {
+  if (input instanceof HTMLTextAreaElement) {
+    return true;
+  }
   if (!(input instanceof HTMLInputElement)) {
     return false;
   }
@@ -917,9 +966,16 @@ function fieldRow(labelText, value, options = {}) {
   label.htmlFor = `inspector-${name}`;
   label.textContent = labelText;
 
-  const input = options.type === "select" ? document.createElement("select") : document.createElement("input");
+  const input = options.type === "select"
+    ? document.createElement("select")
+    : options.type === "textarea"
+    ? document.createElement("textarea")
+    : document.createElement("input");
   input.id = `inspector-${name}`;
   input.name = name;
+  if (input instanceof HTMLTextAreaElement) {
+    input.rows = Number(options.rows) || 3;
+  }
   if (input instanceof HTMLInputElement) {
     input.type = options.type || "text";
     if (options.accept) {

@@ -106,6 +106,7 @@ def test_data_field_helpers_infer_nested_and_array_paths() -> None:
     )
     script = """
 import {
+  evaluateFormula,
   fieldExists,
   flattenDataPaths,
   getArrayChildFields,
@@ -205,6 +206,33 @@ if (resolveBinding('report.sum.results.value', sample) !== 13.2) {
 }
 if (resolveBinding('page.total_pages', sample, { totalPages: 3 }) !== 3) {
   throw new Error('page total binding failed');
+}
+const formulaContext = {
+  rowData: { result: '7.10', unit: '10^9/L', flag: 'H', numeric_value: 7.1 },
+  repeatDataPath: 'results',
+  groupData,
+  pageNumber: 2,
+  totalPages: 3
+};
+if (evaluateFormula("concat(result, ' ', unit)", sample, formulaContext).value !== '7.10 10^9/L') {
+  throw new Error('formula concat failed');
+}
+if (evaluateFormula("if(flag == 'H', 'HIGH', 'NORMAL')", sample, formulaContext).value !== 'HIGH') {
+  throw new Error('formula if failed');
+}
+if (evaluateFormula('number(numeric_value, 2)', sample, formulaContext).value !== '7.10') {
+  throw new Error('formula number failed');
+}
+const pageFormula = evaluateFormula(
+  "concat('Page ', page.number, ' of ', page.total_pages)",
+  sample,
+  formulaContext
+);
+if (pageFormula.value !== 'Page 2 of 3') {
+  throw new Error('formula page binding failed');
+}
+if (!evaluateFormula("__import__('os')", sample, formulaContext).error) {
+  throw new Error('unsafe formula should fail');
 }
 """.replace("__MODULE_PATH__", module_path)
 

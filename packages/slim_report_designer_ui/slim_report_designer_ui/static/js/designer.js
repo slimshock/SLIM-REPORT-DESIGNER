@@ -645,6 +645,7 @@ function renderFieldsPanel() {
     elements.fieldsList.appendChild(empty);
     return;
   }
+  elements.fieldsList.appendChild(formulaExamplesPanel());
   for (const [groupName, groupFields] of Object.entries(groupFieldsByRoot(fields))) {
     const group = document.createElement("section");
     group.className = "field-group";
@@ -657,6 +658,28 @@ function renderFieldsPanel() {
     }
     elements.fieldsList.appendChild(group);
   }
+}
+
+function formulaExamplesPanel() {
+  const panel = document.createElement("section");
+  panel.className = "field-group formula-examples";
+  const title = document.createElement("div");
+  title.className = "field-group-title";
+  title.textContent = "Formula Examples";
+  const examples = document.createElement("div");
+  examples.className = "formula-example-list";
+  for (const formula of [
+    "concat(result, ' ', unit)",
+    "if(flag == 'H', 'HIGH', 'NORMAL')",
+    "number(numeric_value, 2)",
+    "default(patient.middle_name, '')"
+  ]) {
+    const item = document.createElement("code");
+    item.textContent = formula;
+    examples.appendChild(item);
+  }
+  panel.append(title, examples);
+  return panel;
 }
 
 function fieldListItem(field) {

@@ -362,6 +362,19 @@ def grouped_demo_lab_results() -> list[dict[str, str]]:
     return rows
 
 
+def computed_demo_lab_results() -> list[dict[str, object]]:
+    """Return grouped rows with numeric values for computed field demos."""
+    rows: list[dict[str, object]] = []
+    for row in grouped_demo_lab_results():
+        try:
+            numeric_value = float(str(row["value"]).replace(",", ""))
+        except ValueError:
+            numeric_value = 0.0
+        flag = "H" if row["test"] in {"Glucose", "Total Cholesterol"} else row["flag"]
+        rows.append({**row, "flag": flag, "numeric_value": numeric_value})
+    return rows
+
+
 @designer.provider("lab_result")
 def lab_result(record_id: str) -> dict[str, dict[str, str]]:
     return {
@@ -452,6 +465,13 @@ def grouped_lab_result(record_id: str) -> dict[str, object]:
     return data
 
 
+@designer.provider("computed_fields_lab_result")
+def computed_fields_lab_result(record_id: str) -> dict[str, object]:
+    data = repeating_lab_result(record_id)
+    data["results"] = computed_demo_lab_results()
+    return data
+
+
 @designer.provider("table_lab_result")
 def table_lab_result(record_id: str) -> dict[str, object]:
     return {
@@ -532,6 +552,7 @@ def ensure_sample_templates() -> None:
     ensure_report_template("cerebro_cbc", create_cerebro_cbc_report)
     ensure_report_template("repeating_lab_result", create_repeating_lab_result_report)
     ensure_report_template("grouped_lab_result", create_grouped_lab_result_report)
+    ensure_report_template("computed_fields_lab_result", create_computed_fields_lab_result_report)
     ensure_report_template("table_lab_result", create_table_lab_result_report)
     ensure_report_template("barcode_qr_lab_result", create_barcode_qr_lab_result_report)
 
@@ -589,6 +610,11 @@ def create_lab_result_report() -> Report:
     page.field("result.PLT", x=180, y=298, width=120, height=20, id="plt_value", font_size=12)
     report.data = {"sample": lab_result("ORDER-1001")}
     return report
+
+
+def create_computed_fields_lab_result_report() -> Report:
+    """Load the computed fields sample template."""
+    return JSONSerializer().load(BASE_DIR / "sample_templates/computed_fields_lab_result.json")
 
 
 def create_cerebro_cbc_report() -> Report:

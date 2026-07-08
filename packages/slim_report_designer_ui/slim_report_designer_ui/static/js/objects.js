@@ -80,6 +80,16 @@ export function normalizeObject(object) {
     normalized.binding = String(object.binding);
     normalized.properties.binding = normalized.binding;
   }
+  const formula = object.formula ?? object.properties?.formula;
+  const formulaMode = object.formula_mode ?? object.properties?.formula_mode;
+  if (formula !== undefined) {
+    normalized.formula = String(formula);
+    normalized.properties.formula = normalized.formula;
+  }
+  if (formulaMode !== undefined) {
+    normalized.formula_mode = Boolean(formulaMode);
+    normalized.properties.formula_mode = normalized.formula_mode;
+  }
   if (object.source_path !== undefined || object.properties?.source_path !== undefined) {
     normalized.source_path = String(object.source_path ?? object.properties?.source_path ?? "");
     normalized.properties.source_path = normalized.source_path;
@@ -137,8 +147,12 @@ export function createObject(type, template) {
     base.width = 140;
     base.height = 20;
     base.binding = "";
+    base.formula = "";
+    base.formula_mode = false;
     base.text = "{{  }}";
     base.properties.binding = base.binding;
+    base.properties.formula = base.formula;
+    base.properties.formula_mode = base.formula_mode;
     base.properties.text = base.text;
     base.properties.style = { font_size: 14 };
   } else if (type === "line") {
@@ -488,6 +502,18 @@ export function setObjectBinding(object, value) {
   if (object.type === "field") {
     setObjectText(object, binding ? `{{ ${binding} }}` : "{{  }}");
   }
+}
+
+export function setObjectFormula(object, value) {
+  object.formula = String(value);
+  object.properties = object.properties || {};
+  object.properties.formula = object.formula;
+}
+
+export function setObjectFormulaMode(object, value) {
+  object.formula_mode = Boolean(value);
+  object.properties = object.properties || {};
+  object.properties.formula_mode = object.formula_mode;
 }
 
 export function setObjectSource(object, value) {

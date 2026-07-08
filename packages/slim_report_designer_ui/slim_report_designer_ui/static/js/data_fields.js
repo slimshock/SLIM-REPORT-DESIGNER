@@ -56,6 +56,24 @@ export function resolveBinding(binding, sampleData = {}, context = {}) {
   return value === undefined || value === null ? "" : value;
 }
 
+export function evaluateFormula(formula, sampleData = {}, context = {}) {
+  const source = String(formula || "").trim();
+  if (!source) {
+    return { value: "", error: "" };
+  }
+  try {
+    const parser = new FormulaParser(tokenizeFormula(source), sampleData, context);
+    const value = parser.parse();
+    return { value, error: "" };
+  } catch (error) {
+    return { value: "", error: error instanceof Error ? error.message : String(error) };
+  }
+}
+
+export function resolveFormula(formula, sampleData = {}, context = {}) {
+  return evaluateFormula(formula, sampleData, context).value;
+}
+
 export function resolveSystemBinding(path, context = {}) {
   if (path === "page.number") {
     return context.pageNumber ?? 1;
@@ -70,6 +88,330 @@ export function resolveSystemBinding(path, context = {}) {
     return formatDateTime(new Date());
   }
   return undefined;
+}
+
+function tokenizeFormula(source) {
+  const tokens = [];
+  let index = 0;
+  while (index < source.length) {
+    const char = source[index];
+    if (/\s/.test(char)) {
+      index += 1;
+      continue;
+    }
+    if (char === "'" || char === "\"") {
+      const quote = char;
+      let value = "";
+      index += 1;
+      while (index < source.length && source[index] !== quote) {
+        if (source[index] === "\\" && index + 1 < source.length) {
+          value += source[index + 1];
+          index += 2;
+        } else {
+          value += source[index];
+          index += 1;
+        }
+      }
+      if (source[index] !== quote) {
+        throw new Error("Unterminated string literal");
+      }
+      tokens.push({ type: "string", value });
+      index += 1;
+      continue;
+    }
+    if (/\d/.test(char) || (char === "." && /\d/.test(source[index + 1] || ""))) {
+      let raw = char;
+      index += 1;
+      while (index < source.length && /[\d.]/.test(source[index])) {
+        raw += source[index];
+        index += 1;
+      }
+      const value = Number(raw);
+      if (!Number.isFinite(value)) {
+        throw new Error("Invalid number literal");
+      }
+      tokens.push({ type: "number", value });
+      continue;
+    }
+    const two = source.slice(index, index + 2);
+    if (["==", "!=", ">=", "<="].includes(two)) {
+      tokens.push({ type: "operator", value: two });
+      index += 2;
+      continue;
+    }
+    if ("+-*/%><(),".includes(char)) {
+      tokens.push({ type: "operator", value: char });
+      index += 1;
+      continue;
+    }
+    if (/[A-Za-z_]/.test(char)) {
+      let value = char;
+      index += 1;
+      while (index < source.length && /[A-Za-z0-9_.]/.test(source[index])) {
+        value += source[index];
+        index += 1;
+      }
+      tokens.push({ type: "identifier", value });
+      continue;
+    }
+    throw new Error(`Unsupported token: ${char}`);
+  }
+  tokens.push({ type: "eof", value: "" });
+  return tokens;
+}
+
+class FormulaParser {
+  constructor(tokens, sampleData, context) {
+    this.tokens = tokens;
+    this.sampleData = sampleData || {};
+    this.context = context || {};
+    this.index = 0;
+  }
+
+  parse() {
+    const value = this.comparison();
+    this.expect("eof");
+    return value;
+  }
+
+  comparison() {
+    let left = this.additive();
+    while (this.matchOperator(["==", "!=", ">", ">=", "<", "<="])) {
+      const operator = this.previous().value;
+      const right = this.additive();
+      left = compareFormulaValues(left, right, operator);
+    }
+    return left;
+  }
+
+  additive() {
+    let left = this.multiplicative();
+    while (this.matchOperator(["+", "-"])) {
+      const operator = this.previous().value;
+      const right = this.multiplicative();
+      left = operator === "+" ? addFormulaValues(left, right) : numericFormulaValues(left, right, (a, b) => a - b);
+    }
+    return left;
+  }
+
+  multiplicative() {
+    let left = this.unary();
+    while (this.matchOperator(["*", "/", "%"])) {
+      const operator = this.previous().value;
+      const right = this.unary();
+      if (operator === "*") {
+        left = numericFormulaValues(left, right, (a, b) => a * b);
+      } else if (operator === "/") {
+        left = numericFormulaValues(left, right, (a, b) => {
+          if (b === 0) {
+            throw new Error("Division by zero");
+          }
+          return a / b;
+        });
+      } else {
+        left = numericFormulaValues(left, right, (a, b) => {
+          if (b === 0) {
+            throw new Error("Modulo by zero");
+          }
+          return a % b;
+        });
+      }
+    }
+    return left;
+  }
+
+  unary() {
+    if (this.matchOperator(["-", "+"])) {
+      const operator = this.previous().value;
+      const value = formulaNumber(this.unary());
+      if (value === null) {
+        throw new Error("Unary operator requires a number");
+      }
+      return operator === "-" ? -value : value;
+    }
+    return this.primary();
+  }
+
+  primary() {
+    if (this.match("number") || this.match("string")) {
+      return this.previous().value;
+    }
+    if (this.match("identifier")) {
+      const identifier = this.previous().value;
+      if (identifier === "true") {
+        return true;
+      }
+      if (identifier === "false") {
+        return false;
+      }
+      if (identifier === "null") {
+        return null;
+      }
+      if (this.matchOperator(["("])) {
+        return this.call(identifier);
+      }
+      return resolveBinding(identifier, this.sampleData, this.context);
+    }
+    if (this.matchOperator(["("])) {
+      const value = this.comparison();
+      this.expectOperator(")");
+      return value;
+    }
+    throw new Error("Expected formula expression");
+  }
+
+  call(name) {
+    const args = [];
+    if (!this.checkOperator(")")) {
+      do {
+        args.push(this.comparison());
+      } while (this.matchOperator([","]));
+    }
+    this.expectOperator(")");
+    return callFormulaFunction(name, args);
+  }
+
+  match(type) {
+    if (!this.check(type)) {
+      return false;
+    }
+    this.index += 1;
+    return true;
+  }
+
+  matchOperator(values) {
+    if (this.peek().type !== "operator" || !values.includes(this.peek().value)) {
+      return false;
+    }
+    this.index += 1;
+    return true;
+  }
+
+  check(type) {
+    return this.peek().type === type;
+  }
+
+  checkOperator(value) {
+    return this.peek().type === "operator" && this.peek().value === value;
+  }
+
+  expect(type) {
+    if (!this.match(type)) {
+      throw new Error(`Expected ${type}`);
+    }
+  }
+
+  expectOperator(value) {
+    if (!this.matchOperator([value])) {
+      throw new Error(`Expected ${value}`);
+    }
+  }
+
+  peek() {
+    return this.tokens[this.index] || { type: "eof", value: "" };
+  }
+
+  previous() {
+    return this.tokens[this.index - 1] || { type: "eof", value: "" };
+  }
+}
+
+function callFormulaFunction(name, args) {
+  const functions = {
+    concat: (...values) => values.map(formulaText).join(""),
+    upper: (value = "") => formulaText(value).toUpperCase(),
+    lower: (value = "") => formulaText(value).toLowerCase(),
+    title: (value = "") => formulaText(value).replace(/\w\S*/g, (part) => part[0].toUpperCase() + part.slice(1).toLowerCase()),
+    trim: (value = "") => formulaText(value).trim(),
+    number: (value, decimals = 0) => {
+      const number = formulaNumber(value);
+      const places = formulaNumber(decimals);
+      if (number === null || places === null) {
+        return "";
+      }
+      return number.toFixed(Math.max(0, Math.min(Number.parseInt(places, 10) || 0, 10)));
+    },
+    default: (value, fallback = "") => value === "" || value === null || value === undefined ? fallback : value,
+    if: (condition, trueValue = "", falseValue = "") => formulaTruthy(condition) ? trueValue : falseValue,
+    contains: (value, text) => formulaText(value).includes(formulaText(text)),
+    starts_with: (value, text) => formulaText(value).startsWith(formulaText(text)),
+    ends_with: (value, text) => formulaText(value).endsWith(formulaText(text))
+  };
+  const fn = functions[name];
+  if (!fn) {
+    throw new Error(`Unsupported function: ${name}`);
+  }
+  return fn(...args);
+}
+
+function addFormulaValues(left, right) {
+  const leftNumber = formulaNumber(left);
+  const rightNumber = formulaNumber(right);
+  if (leftNumber !== null && rightNumber !== null) {
+    return normalizeFormulaNumber(leftNumber + rightNumber);
+  }
+  return `${formulaText(left)}${formulaText(right)}`;
+}
+
+function numericFormulaValues(left, right, operation) {
+  const leftNumber = formulaNumber(left);
+  const rightNumber = formulaNumber(right);
+  if (leftNumber === null || rightNumber === null) {
+    throw new Error("Operator requires numbers");
+  }
+  return normalizeFormulaNumber(operation(leftNumber, rightNumber));
+}
+
+function compareFormulaValues(left, right, operator) {
+  if (operator === "==") {
+    return left === right;
+  }
+  if (operator === "!=") {
+    return left !== right;
+  }
+  const leftNumber = formulaNumber(left);
+  const rightNumber = formulaNumber(right);
+  const a = leftNumber !== null && rightNumber !== null ? leftNumber : formulaText(left);
+  const b = leftNumber !== null && rightNumber !== null ? rightNumber : formulaText(right);
+  if (operator === ">") {
+    return a > b;
+  }
+  if (operator === ">=") {
+    return a >= b;
+  }
+  if (operator === "<") {
+    return a < b;
+  }
+  if (operator === "<=") {
+    return a <= b;
+  }
+  throw new Error("Unsupported comparison");
+}
+
+function formulaNumber(value) {
+  if (typeof value === "boolean" || value === null || value === undefined) {
+    return null;
+  }
+  const number = Number(String(value).replace(/,/g, "").trim());
+  return Number.isFinite(number) ? number : null;
+}
+
+function normalizeFormulaNumber(value) {
+  return Number.isInteger(value) ? Number.parseInt(value, 10) : value;
+}
+
+function formulaTruthy(value) {
+  if (value === "" || value === null || value === undefined || value === false) {
+    return false;
+  }
+  if (typeof value === "string" && ["false", "0", "no"].includes(value.trim().toLowerCase())) {
+    return false;
+  }
+  return Boolean(value);
+}
+
+function formulaText(value) {
+  return value === null || value === undefined ? "" : String(value);
 }
 
 export function resolveGroupBinding(path, context = {}) {

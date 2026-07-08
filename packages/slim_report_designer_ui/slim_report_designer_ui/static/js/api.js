@@ -1,5 +1,5 @@
 import { createDefaultTemplate, normalizeTemplate, objectStyle } from "./objects.js";
-import { ensureTemplateData, getArrayByPath, getFieldValue, getRowValue, resolveBinding } from "./data_fields.js";
+import { ensureTemplateData, evaluateFormula, getArrayByPath, getFieldValue, getRowValue, resolveBinding } from "./data_fields.js";
 import { qrSvgMarkup } from "./qrcode.js";
 
 export async function loadTemplate() {
@@ -234,17 +234,22 @@ function localGroupedObjectsHtml(template, unit, sampleData, repeat, groupHeader
 function localObjectHtml(object, unit = "px", sampleData = {}, rowData = null, repeatDataPath = "", groupData = null) {
   const style = objectStyle(object);
   const binding = object.binding || object.properties?.binding || "";
+  const formula = object.formula ?? object.properties?.formula ?? "";
+  const formulaMode = Boolean(object.formula_mode ?? object.properties?.formula_mode ?? false);
+  const fieldContext = {
+    rowData,
+    repeatDataPath,
+    groupData,
+    pageNumber: 1,
+    totalPages: 1
+  };
   const fieldValue = object.type === "field"
-    ? resolveBinding(binding, sampleData, {
-      rowData,
-      repeatDataPath,
-      groupData,
-      pageNumber: 1,
-      totalPages: 1
-    })
+    ? fieldObjectValue({ binding, formula, formulaMode }, sampleData, fieldContext)
     : undefined;
   const value = object.type === "field"
-    ? fieldValue === undefined || fieldValue === null ? `{{ ${object.binding || object.properties?.binding || ""} }}` : String(fieldValue)
+    ? fieldValue === undefined || fieldValue === null
+      ? formulaMode && formula ? `{{ formula: ${formula} }}` : `{{ ${object.binding || object.properties?.binding || ""} }}`
+      : String(fieldValue)
     : object.type === "text"
     ? resolveTextValue(object.text || object.properties?.text || "", sampleData, rowData, repeatDataPath, groupData)
     : "";
@@ -303,6 +308,19 @@ function boundObjectValue(object, sampleData = {}, rowData = null, repeatDataPat
     }
   }
   return String(object.value ?? object.properties?.value ?? "");
+}
+
+function fieldObjectValue(field, sampleData = {}, context = {}) {
+  if (field.formulaMode && String(field.formula || "").trim()) {
+    const result = evaluateFormula(field.formula, sampleData, context);
+    if (!result.error) {
+      return result.value;
+    }
+    if (!field.binding) {
+      return "";
+    }
+  }
+  return resolveBinding(field.binding, sampleData, context);
 }
 
 function resolveTextValue(text, sampleData = {}, rowData = null, repeatDataPath = "", groupData = null) {

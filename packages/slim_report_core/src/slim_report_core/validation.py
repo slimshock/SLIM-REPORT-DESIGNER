@@ -216,6 +216,13 @@ def _validate_object_binding(
 ) -> None:
     if obj.type == "field":
         expression = getattr(obj.binding, "expression", "") if obj.binding is not None else ""
+        properties = getattr(obj, "properties", {}) or {}
+        formula = str(properties.get("formula", getattr(obj, "formula", "")) or "")
+        formula_mode = bool(properties.get("formula_mode", getattr(obj, "formula_mode", False)))
+        if formula_mode and _has_text(formula):
+            if _has_text(expression):
+                _validate_expression(expression, result, f"{path}.binding")
+            return
         if not _has_text(expression):
             result.add_error(
                 "binding.required",

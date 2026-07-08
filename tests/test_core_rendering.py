@@ -462,6 +462,7 @@ def test_sample_templates_render_html_and_pdf() -> None:
         "lab_result",
         "repeating_lab_result",
         "grouped_lab_result",
+        "computed_fields_lab_result",
         "table_lab_result",
         "barcode_qr_lab_result",
     ):
@@ -477,6 +478,25 @@ def test_sample_templates_render_html_and_pdf() -> None:
         assert len(html) > 1000
         assert pdf.startswith(b"%PDF")
         assert len(pdf) > 1000
+
+
+def test_computed_fields_sample_renders_formulas_html_and_pdf() -> None:
+    report = JSONSerializer().load(
+        REPO_ROOT / "examples/flask_app/sample_templates/computed_fields_lab_result.json"
+    )
+    data = report.data["sample"]
+
+    html = render_html(report, data)
+    pdf = render_pdf(report, data)
+
+    assert "JUAN DELA CRUZ / 34 / Male" in html
+    assert "7.10 10^9/L" in html
+    assert "126.00" in html
+    assert "HIGH" in html
+    assert "Group Count: 3" in html
+    assert "Page 1 of 1" in html
+    assert pdf.startswith(b"%PDF")
+    assert len(pdf) > 1000
 
 
 def test_banded_template_renders_band_backgrounds_html_and_pdf() -> None:
