@@ -18,6 +18,28 @@ REPORT_TEMPLATE_KEYS = (
 )
 
 
+def normalize_template_mapping(data: Mapping[str, Any]) -> dict[str, Any]:
+    """Return a serializer-ready copy of a report template mapping."""
+    normalized = dict(data)
+    metadata = dict(normalized.get("metadata") or {})
+    if "title" not in metadata and metadata.get("name"):
+        metadata["title"] = metadata["name"]
+    if "name" not in metadata and metadata.get("title"):
+        metadata["name"] = metadata["title"]
+    if "custom" not in metadata and metadata.get("template_id"):
+        metadata["custom"] = {"id": str(metadata["template_id"])}
+
+    normalized["metadata"] = metadata
+    normalized.setdefault("version", "0.1")
+    normalized.setdefault("page", {"size": "A4", "orientation": "portrait"})
+    normalized["page"] = dict(normalized["page"])
+    normalized["page"].setdefault("unit", "px")
+    normalized.setdefault("objects", [])
+    normalized.setdefault("bands", [])
+    normalized.setdefault("assets", [])
+    return normalized
+
+
 def validate_template_mapping(data: Mapping[str, Any]) -> None:
     """Validate that data has the minimum report template structure."""
     missing_keys = [key for key in REPORT_TEMPLATE_KEYS if key not in data]
@@ -33,4 +55,3 @@ def validate_template_mapping(data: Mapping[str, Any]) -> None:
     ensure_list(data["objects"], context="Report objects")
     ensure_list(data["bands"], context="Report bands")
     ensure_list(data["assets"], context="Report assets")
-

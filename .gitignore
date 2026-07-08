@@ -9,6 +9,10 @@ dist/
 *.egg-info/
 .eggs/
 pip-wheel-metadata/
+*.tmp.pdf
+*.download
+downloads/
+browser-downloads/
 
 # Virtual environments
 .venv/

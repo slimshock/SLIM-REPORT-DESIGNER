@@ -6,6 +6,18 @@ This project follows semantic versioning once public releases begin.
 
 ## [Unreleased]
 
+### Changed
+
+- Bumped package versions to the Sprint 6 development baseline `0.6.0a0`.
+- Added `normalize_template` to the core public API and use it before JSON serializer validation.
+- Added designer UI `get_designer_static_path()` resource helper.
+- Expanded package/public API smoke tests and designer static package-data checks.
+- Documented the multi-package editable install flow for Sprint 6.
+
+### Fixed
+
+- Template loading now tolerates missing serializer defaults such as `assets` and missing metadata title/name mirrors.
+
 ## 0.5.0-alpha - Sprint 5
 
 ### Added

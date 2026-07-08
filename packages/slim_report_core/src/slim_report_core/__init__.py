@@ -1,8 +1,8 @@
 """Framework-agnostic core package for Slim Report Designer."""
 
-__version__ = "0.5.0a1"
+__version__ = "0.6.0a0"
 
-from .api import render_html, render_pdf
+from .api import normalize_template, render_html, render_pdf
 from .builder import ObjectBuilder, PageBuilder, ReportBuilder, StyleBuilder
 from .constants import DEFAULT_REPORT_VERSION
 from .data import DataContext, DataProviderRegistry
@@ -128,6 +128,7 @@ __all__ = [
     "create_default_exporter_registry",
     "create_default_template",
     "create_default_widget_registry",
+    "normalize_template",
     "render_html",
     "render_pdf",
     "resolve_expression",

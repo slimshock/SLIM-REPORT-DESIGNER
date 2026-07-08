@@ -14,7 +14,7 @@ It includes:
 
 The designer UI is plain HTML, CSS, and JavaScript. It has no React, no Vue, no npm build step, and no frontend framework dependency.
 
-The project is not production-ready yet. Contributions, issues, and feedback are welcome while the public API and template format continue to mature.
+The project is not production-ready yet. Sprint 6 starts the packaging and public API baseline, but the API and template format may still change before a stable release.
 
 Suggested repository description:
 
@@ -71,6 +71,7 @@ Implemented now:
 - Page print/export settings, safe PDF filenames, and PDF metadata
 - Flask-hosted preview and PDF export
 - CLI commands for validation, inspection, and rendering
+- Public convenience imports: `render_html`, `render_pdf`, and `normalize_template`
 
 Current supported objects:
 
@@ -133,7 +134,7 @@ The designer UI is framework-agnostic static HTML/CSS/JavaScript. Framework adap
 
 ## Installation
 
-Install local packages in editable mode from the repository root:
+This repository uses a multi-package layout. Install the local packages you need in editable mode from the repository root:
 
 ```bash
 python -m pip install -e packages/slim_report_core
@@ -143,6 +144,8 @@ python -m pip install -e packages/slim_report_cli
 ```
 
 `slim_report_core` depends on ReportLab for PDF export. `slim_report_flask` depends on Flask and the designer UI package.
+
+There is no root `pip install -e .` package yet; install the package folders directly.
 
 For development tools:
 
@@ -210,12 +213,13 @@ http://127.0.0.1:5000/report-designer/designer?template=repeating_lab_result
 http://127.0.0.1:5000/report-designer/designer?template=table_lab_result
 http://127.0.0.1:5000/report-designer/designer?template=grouped_lab_result
 http://127.0.0.1:5000/report-designer/designer?template=aggregate_grouped_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=complete_sprint5_lab_report
 http://127.0.0.1:5000/report-designer/designer?template=computed_fields_lab_result
 http://127.0.0.1:5000/report-designer/designer?template=conditional_lab_result
 http://127.0.0.1:5000/report-designer/designer?template=barcode_qr_lab_result
 ```
 
-The Flask example loads templates from `examples/flask_app/sample_templates/`. Preview works, PDF export works, and sample/provider data can be used for field rendering. The examples cover fixed lab reports, paginated repeating rows, basic tables, grouping, aggregates, formulas, conditional formatting, and barcode/QR objects.
+The Flask example loads templates from `examples/flask_app/sample_templates/`. Preview works, PDF export works, and sample/provider data can be used for field rendering. The examples cover fixed lab reports, paginated repeating rows, basic tables, grouping, aggregates, formulas, conditional formatting, barcode/QR objects, and a complete Sprint 5 demo template.
 
 ## Serialization
 
@@ -242,6 +246,14 @@ data = {"patient": {"name": "Juan Dela Cruz"}}
 
 html = render_html(report, data)
 pdf_bytes = render_pdf(report, data)
+```
+
+Use `normalize_template` when accepting loose JSON from tools, examples, or designer clients:
+
+```python
+from slim_report_core import normalize_template
+
+template = normalize_template({"metadata": {"name": "Lab"}, "page": {}, "objects": [], "bands": []})
 ```
 
 ## CLI

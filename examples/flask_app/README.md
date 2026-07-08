@@ -27,6 +27,8 @@ python -m pip install -e packages/slim_report_flask
 python examples/flask_app/app.py
 ```
 
+Install package folders directly from the repository root. The repository root itself is a workspace, not an installable Python package.
+
 ## Designer URLs
 
 ```text
@@ -36,6 +38,7 @@ http://127.0.0.1:5000/report-designer/designer?template=repeating_lab_result
 http://127.0.0.1:5000/report-designer/designer?template=table_lab_result
 http://127.0.0.1:5000/report-designer/designer?template=grouped_lab_result
 http://127.0.0.1:5000/report-designer/designer?template=aggregate_grouped_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=complete_sprint5_lab_report
 http://127.0.0.1:5000/report-designer/designer?template=computed_fields_lab_result
 http://127.0.0.1:5000/report-designer/designer?template=conditional_lab_result
 http://127.0.0.1:5000/report-designer/designer?template=barcode_qr_lab_result
@@ -60,6 +63,8 @@ http://127.0.0.1:5000/report-designer/templates/grouped_lab_result/preview/sampl
 http://127.0.0.1:5000/report-designer/templates/grouped_lab_result/export/pdf/sample
 http://127.0.0.1:5000/report-designer/templates/aggregate_grouped_lab_result/preview/sample
 http://127.0.0.1:5000/report-designer/templates/aggregate_grouped_lab_result/export/pdf/sample
+http://127.0.0.1:5000/report-designer/templates/complete_sprint5_lab_report/preview/sample
+http://127.0.0.1:5000/report-designer/templates/complete_sprint5_lab_report/export/pdf/sample
 http://127.0.0.1:5000/report-designer/templates/computed_fields_lab_result/preview/sample
 http://127.0.0.1:5000/report-designer/templates/computed_fields_lab_result/export/pdf/sample
 http://127.0.0.1:5000/report-designer/templates/conditional_lab_result/preview/sample
@@ -84,6 +89,7 @@ Included templates:
 - `table_lab_result`
 - `grouped_lab_result`
 - `aggregate_grouped_lab_result`
+- `complete_sprint5_lab_report`
 - `computed_fields_lab_result`
 - `conditional_lab_result`
 - `barcode_qr_lab_result`
@@ -111,3 +117,9 @@ Templates can also include `data.sample` for preview/export. The designer API pr
 - This example uses local JSON files for template storage.
 - Advanced pagination controls, nested groups, subreports, and advanced table features are future work.
 - Static designer mode can edit/import/export JSON, but PDF export requires a backend such as this Flask app.
+
+## Troubleshooting
+
+- If CSS or JavaScript is missing, confirm `slim_report_designer_ui` is installed or available on `PYTHONPATH`.
+- If preview or PDF export fails for a template, first try the direct `/preview/sample` route to isolate render data issues.
+- If port 5000 is already in use, stop the existing process or run the app with a different Flask port.

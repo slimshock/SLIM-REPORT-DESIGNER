@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "slim-report-fastapi"
-version = "0.5.0a1"
+version = "0.6.0a0"
 description = "Future FastAPI adapter for Slim Report Designer."
 readme = "../../README.md"
 requires-python = ">=3.10"
@@ -20,7 +20,7 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-  "slim-report-core==0.5.0a1",
+  "slim-report-core==0.6.0a0",
 ]
 
 [project.optional-dependencies]

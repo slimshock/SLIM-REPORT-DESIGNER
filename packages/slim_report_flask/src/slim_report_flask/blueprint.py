@@ -9,7 +9,13 @@ from typing import TYPE_CHECKING, Any
 
 from flask import Blueprint, Response, current_app, jsonify, request, url_for
 
-from slim_report_core import ExporterError, Report, SlimReportError, create_default_template
+from slim_report_core import (
+    ExporterError,
+    Report,
+    SlimReportError,
+    create_default_template,
+    normalize_template,
+)
 from slim_report_core.rendering.context import (
     RenderContext,
     create_render_context,
@@ -363,21 +369,7 @@ def request_template_data(
 
 def normalize_template_payload(payload: dict[str, Any]) -> dict[str, Any]:
     """Normalize designer JSON into the core serializer shape."""
-    normalized = dict(payload)
-    metadata = dict(normalized.get("metadata") or {})
-    if "title" not in metadata and metadata.get("name"):
-        metadata["title"] = metadata["name"]
-    if "name" not in metadata and metadata.get("title"):
-        metadata["name"] = metadata["title"]
-    normalized["metadata"] = metadata
-    normalized.setdefault("version", "0.1")
-    normalized.setdefault("page", {"size": "A4", "orientation": "portrait"})
-    normalized["page"] = dict(normalized["page"])
-    normalized["page"].setdefault("unit", "px")
-    normalized.setdefault("objects", [])
-    normalized.setdefault("bands", [])
-    normalized.setdefault("assets", [])
-    return normalized
+    return normalize_template(payload)
 
 
 def _static_response(asset_path: str) -> Response:

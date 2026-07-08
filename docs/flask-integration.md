@@ -19,6 +19,7 @@ http://127.0.0.1:5000/report-designer/designer?template=repeating_lab_result
 http://127.0.0.1:5000/report-designer/designer?template=table_lab_result
 http://127.0.0.1:5000/report-designer/designer?template=grouped_lab_result
 http://127.0.0.1:5000/report-designer/designer?template=aggregate_grouped_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=complete_sprint5_lab_report
 http://127.0.0.1:5000/report-designer/designer?template=computed_fields_lab_result
 http://127.0.0.1:5000/report-designer/designer?template=conditional_lab_result
 http://127.0.0.1:5000/report-designer/designer?template=barcode_qr_lab_result
@@ -66,6 +67,7 @@ Included examples:
 - `table_lab_result`
 - `grouped_lab_result`
 - `aggregate_grouped_lab_result`
+- `complete_sprint5_lab_report`
 - `computed_fields_lab_result`
 - `conditional_lab_result`
 - `barcode_qr_lab_result`
