@@ -14,6 +14,8 @@ Start with:
 - [LIS integration hardening](lis-integration-hardening.md)
 - [Asset Manager](asset-manager.md)
 - [LIS Asset Management](lis-asset-management.md)
+- [Advanced Table Designer](advanced-table-designer.md)
+- [LIS Table Layouts](lis-table-layouts.md)
 - [JSON template schema](json-template-schema.md)
 - [Data Fields](data-fields.md)
 - [Repeating Detail rows](repeating-detail-rows.md)

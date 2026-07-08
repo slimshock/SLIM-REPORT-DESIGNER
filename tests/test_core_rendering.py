@@ -359,6 +359,46 @@ def test_html_rendering_basic_table_object() -> None:
     assert "background: #e5e7eb" in html
 
 
+def test_html_rendering_advanced_table_aliases_conditionals_and_sections() -> None:
+    report = advanced_table_report()
+
+    html = render_html(report, advanced_table_data())
+
+    assert 'data-slim-object="advanced_table"' in html
+    assert "Hemoglobin" in html
+    assert "Red Cell Indices" in html
+    assert "slim-report-table-section-row" in html
+    assert "background: #fee2e2" in html
+    assert "color: #b91c1c" in html
+    assert "background: #dbeafe" in html
+    assert "color: #1d4ed8" in html
+    assert "border-bottom: 1.0px solid #e2e8f0" in html
+    assert "border-right: 1.0px solid #e2e8f0" in html
+
+
+def test_html_rendering_table_auto_height_uses_fixed_row_heights() -> None:
+    report = fixed_height_table_report(auto_height=True, object_height=400)
+
+    html = render_html(report, fixed_height_table_data())
+
+    assert 'data-slim-object="fixed_height_table"' in html
+    assert "top: 180.0px; width: 300.0px; height: 100.0px" in html
+    assert "width: 100%; height: 100%; border-collapse" not in html
+    assert html.count("height: 24.0px;") == 6
+    assert "height: 28.0px;" in html
+
+
+def test_html_rendering_table_fixed_container_does_not_stretch_rows() -> None:
+    report = fixed_height_table_report(auto_height=False, object_height=400)
+
+    html = render_html(report, fixed_height_table_data())
+
+    assert "top: 180.0px; width: 300.0px; height: 400.0px" in html
+    assert "width: 100%; height: 100%; border-collapse" not in html
+    assert html.count("height: 24.0px;") == 6
+    assert "height: 28.0px;" in html
+
+
 def test_html_rendering_paginates_basic_table_object() -> None:
     report = table_report()
 
@@ -411,6 +451,23 @@ def test_pdf_rendering_basic_table_object() -> None:
     report = table_report()
 
     pdf = render_pdf(report, table_data())
+
+    assert pdf.startswith(b"%PDF")
+    assert len(pdf) > 1000
+
+
+def test_pdf_rendering_advanced_table_aliases_conditionals_and_sections() -> None:
+    pdf = render_pdf(advanced_table_report(), advanced_table_data())
+
+    assert pdf.startswith(b"%PDF")
+    assert len(pdf) > 1000
+
+
+def test_pdf_rendering_table_auto_height_fixed_rows_does_not_crash() -> None:
+    pdf = render_pdf(
+        fixed_height_table_report(auto_height=True, object_height=400),
+        fixed_height_table_data(),
+    )
 
     assert pdf.startswith(b"%PDF")
     assert len(pdf) > 1000
@@ -1124,6 +1181,160 @@ def table_report() -> Report:
                             "width": 80,
                             "align": "left",
                         },
+                    ],
+                }
+            ],
+            "bands": [],
+            "assets": [],
+        }
+    )
+
+
+def advanced_table_data() -> dict:
+    return {
+        "results": [
+            {
+                "test_name": "Hemoglobin",
+                "result": "180",
+                "unit": "g/L",
+                "normal_values": "135 - 175",
+                "flag": "HIGH",
+            },
+            {"row_type": "section", "label": "Red Cell Indices"},
+            {
+                "test_name": "Platelet",
+                "result": "128",
+                "unit": "10^9/L",
+                "normal_values": "150 - 400",
+                "flag": "LOW",
+            },
+        ]
+    }
+
+
+def advanced_table_report() -> Report:
+    return JSONSerializer().load_mapping(
+        {
+            "version": "1.0",
+            "metadata": {"title": "Advanced Table"},
+            "page": {"width": 595, "height": 842, "unit": "px"},
+            "objects": [
+                {
+                    "id": "advanced_table",
+                    "type": "table",
+                    "x": 40,
+                    "y": 180,
+                    "width": 420,
+                    "height": 160,
+                    "dataSource": "results",
+                    "showHeader": True,
+                    "headerHeight": 24,
+                    "rowHeight": 22,
+                    "headerStyle": {
+                        "backgroundColor": "#f3f4f6",
+                        "textColor": "#111827",
+                        "fontSize": 9,
+                        "fontWeight": "bold",
+                    },
+                    "bodyStyle": {
+                        "backgroundColor": "#ffffff",
+                        "alternate_background_color": "#f8fafc",
+                        "textColor": "#111827",
+                        "fontSize": 9,
+                    },
+                    "border": {"show": True, "width": 1, "color": "#cbd5e1"},
+                    "grid": {
+                        "showHorizontal": True,
+                        "showVertical": True,
+                        "width": 1,
+                        "color": "#e2e8f0",
+                    },
+                    "sectionStyle": {
+                        "backgroundColor": "#ecfdf5",
+                        "textColor": "#047857",
+                        "fontSize": 9,
+                        "fontWeight": "bold",
+                    },
+                    "conditionalFormatting": [
+                        {
+                            "column": "result",
+                            "when": "flag == 'HIGH'",
+                            "style": {
+                                "textColor": "#b91c1c",
+                                "backgroundColor": "#fee2e2",
+                                "fontWeight": "bold",
+                            },
+                        },
+                        {
+                            "column": "result",
+                            "when": "flag == 'LOW'",
+                            "style": {
+                                "textColor": "#1d4ed8",
+                                "backgroundColor": "#dbeafe",
+                                "fontWeight": "bold",
+                            },
+                        },
+                    ],
+                    "columns": [
+                        {"id": "test_name", "title": "Test", "field": "test_name", "width": 120},
+                        {
+                            "id": "result",
+                            "title": "Result",
+                            "field": "result",
+                            "width": 80,
+                            "align": "right",
+                            "fontWeight": "bold",
+                        },
+                        {"id": "unit", "title": "Unit", "field": "unit", "width": 80},
+                        {
+                            "id": "normal_values",
+                            "title": "Normal",
+                            "field": "normal_values",
+                            "width": 120,
+                            "fontSize": 8,
+                            "wrap": True,
+                        },
+                    ],
+                }
+            ],
+            "bands": [],
+            "assets": [],
+        }
+    )
+
+
+def fixed_height_table_data() -> dict:
+    return {
+        "results": [
+            {"test": "WBC", "result": "7.10"},
+            {"test": "RBC", "result": "5.02"},
+            {"test": "HGB", "result": "14.20"},
+        ]
+    }
+
+
+def fixed_height_table_report(*, auto_height: bool, object_height: int) -> Report:
+    return JSONSerializer().load_mapping(
+        {
+            "version": "1.0",
+            "metadata": {"title": "Fixed Table Rows"},
+            "page": {"width": 595, "height": 842, "unit": "px"},
+            "objects": [
+                {
+                    "id": "fixed_height_table",
+                    "type": "table",
+                    "x": 40,
+                    "y": 180,
+                    "width": 300,
+                    "height": object_height,
+                    "dataSource": "results",
+                    "autoHeight": auto_height,
+                    "showHeader": True,
+                    "headerHeight": 28,
+                    "rowHeight": 24,
+                    "columns": [
+                        {"id": "test", "title": "Test", "field": "test", "width": 150},
+                        {"id": "result", "title": "Result", "field": "result", "width": 90},
                     ],
                 }
             ],

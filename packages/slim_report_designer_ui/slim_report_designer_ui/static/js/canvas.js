@@ -1,6 +1,14 @@
 import { clampObjectToBand, getBandForObject, objectStyle } from "./objects.js";
 import { gridSizeForUnit, maybeSnap, screenDeltaToRealDelta } from "./canvas_settings.js";
-import { conditionalStyleResult, evaluateFormula, getArrayByPath, getFieldValue, getRowValue, resolveBinding } from "./data_fields.js";
+import {
+  conditionalStyleResult,
+  evaluateCondition,
+  evaluateFormula,
+  getArrayByPath,
+  getFieldValue,
+  getRowValue,
+  resolveBinding
+} from "./data_fields.js";
 import { appendQrSvg } from "./qrcode.js";
 
 export function createCanvasController({
@@ -496,7 +504,11 @@ function renderObject(object, selectedIds = [], primarySelectedId = null, unit =
     element.style.display = "block";
     element.style.color = "";
     element.style.fontSize = "";
-    element.appendChild(renderTablePreview(object, options));
+    const table = renderTablePreview(object, options);
+    if (table.dataset.renderHeight) {
+      element.style.height = `${unitToPx(Number(table.dataset.renderHeight) || 0, unit)}px`;
+    }
+    element.appendChild(table);
   } else if (object.type === "barcode") {
     element.classList.add("barcode-object");
     element.style.display = "grid";
@@ -569,7 +581,7 @@ function renderTablePreview(object, options = {}) {
   const table = document.createElement("table");
   table.className = "table-preview";
   table.style.borderColor = spec.border.color;
-  table.style.borderWidth = `${spec.border.width}px`;
+  table.style.borderWidth = spec.border.show ? `${spec.border.width}px` : "0";
   table.style.background = objectStyle(object).background_color || "#ffffff";
 
   const colgroup = document.createElement("colgroup");
@@ -591,7 +603,8 @@ function renderTablePreview(object, options = {}) {
       th.style.color = spec.header.color;
       th.style.fontSize = `${spec.header.font_size}px`;
       th.style.fontWeight = spec.header.bold ? "700" : "400";
-      th.style.textAlign = column.align;
+      th.style.textAlign = column.header_align || spec.header.align || "left";
+      applyTableGridStyles(th, spec.grid);
       tr.appendChild(th);
     }
     thead.appendChild(tr);
@@ -600,31 +613,55 @@ function renderTablePreview(object, options = {}) {
 
   const tbody = document.createElement("tbody");
   const headerHeight = spec.header.visible ? spec.header.height : 0;
-  const maxRows = Math.max(1, Math.floor((Number(object.height) - headerHeight) / Math.max(spec.row.height, 1)));
-  const visibleRows = options.showSampleData ? rows.slice(0, maxRows) : [];
+  const maxRows = Math.max(0, Math.floor((Number(object.height) - headerHeight) / Math.max(spec.row.height, 1)));
+  const visibleRows = options.showSampleData
+    ? spec.auto_height ? rows : rows.slice(0, maxRows)
+    : [];
   const bodyRows = visibleRows.length > 0
     ? visibleRows
-    : Array.from({ length: Math.min(maxRows, 4) }, () => ({}));
+    : options.showSampleData ? [] : [{}];
   for (const [rowIndex, row] of bodyRows.entries()) {
+    const rowData = row && typeof row === "object" ? row : {};
     const tr = document.createElement("tr");
+    if (isSectionTableRow(rowData)) {
+      const td = document.createElement("td");
+      td.colSpan = spec.columns.length;
+      td.textContent = sectionTableLabel(rowData);
+      td.style.height = `${spec.row.height}px`;
+      td.style.background = spec.section.background_color;
+      td.style.color = spec.section.color;
+      td.style.fontSize = `${spec.section.font_size}px`;
+      td.style.fontWeight = spec.section.bold ? "700" : "400";
+      td.style.textAlign = spec.section.align;
+      applyTableGridStyles(td, spec.grid);
+      tr.appendChild(td);
+      tbody.appendChild(tr);
+      continue;
+    }
     const rowBackground = rowIndex % 2 === 1
       ? spec.row.alternate_background_color
       : spec.row.background_color;
     for (const column of spec.columns) {
+      const cellStyle = tableCellStyle(spec, column, rowData, options.sampleData || {});
       const td = document.createElement("td");
       td.textContent = options.showSampleData && visibleRows.length > 0
-        ? tableCellValue(column, row, spec.data_path, options.sampleData)
+        ? tableCellValue(column, rowData, spec.data_path, options.sampleData)
         : `{{ ${column.binding} }}`;
       td.style.height = `${spec.row.height}px`;
-      td.style.background = rowBackground;
-      td.style.color = spec.row.color;
-      td.style.fontSize = `${spec.row.font_size}px`;
-      td.style.textAlign = column.align;
+      td.style.background = cellStyle.background_color || rowBackground;
+      td.style.color = cellStyle.color;
+      td.style.fontSize = `${cellStyle.font_size}px`;
+      td.style.fontWeight = cellStyle.bold ? "700" : "400";
+      td.style.textAlign = cellStyle.align;
+      td.style.whiteSpace = cellStyle.wrap ? "normal" : "nowrap";
+      applyTableGridStyles(td, spec.grid);
       tr.appendChild(td);
     }
     tbody.appendChild(tr);
   }
   table.appendChild(tbody);
+  const renderHeight = headerHeight + (bodyRows.length * spec.row.height);
+  table.dataset.renderHeight = String(spec.auto_height ? renderHeight : Number(object.height) || renderHeight);
   return table;
 }
 
@@ -681,9 +718,27 @@ function objectPreviewValue(object, options = {}) {
 }
 
 function tableSpec(object) {
+  const properties = object.properties || {};
+  const headerStyle = tableStyleAliases(object.headerStyle || properties.headerStyle || {});
+  Object.assign(headerStyle, tableStyleAliases(object.header_style || properties.header_style || {}));
+  Object.assign(headerStyle, object.header || properties.header || {});
+  const bodyStyle = tableStyleAliases(object.bodyStyle || properties.bodyStyle || {});
+  Object.assign(bodyStyle, tableStyleAliases(object.body_style || properties.body_style || {}));
+  Object.assign(bodyStyle, object.row || properties.row || {});
+  const sectionStyle = tableStyleAliases(object.sectionStyle || properties.sectionStyle || {});
+  Object.assign(sectionStyle, tableStyleAliases(object.section_style || properties.section_style || {}));
   return {
-    data_path: object.data_path || object.properties?.data_path || "",
-    columns: normalizeTableColumns(object.columns || object.properties?.columns),
+    data_path: (
+      object.data_path ||
+      object.dataSource ||
+      object.data_source ||
+      properties.data_path ||
+      properties.dataSource ||
+      properties.data_source ||
+      properties.binding ||
+      ""
+    ),
+    columns: normalizeTableColumns(object.columns || properties.columns),
     header: {
       visible: true,
       height: 24,
@@ -691,7 +746,10 @@ function tableSpec(object) {
       color: "#111827",
       font_size: 10,
       bold: true,
-      ...(object.header || object.properties?.header || {})
+      align: "left",
+      ...headerStyle,
+      ...optionalBoolean("visible", object.showHeader ?? properties.showHeader),
+      ...optionalNumber("height", object.headerHeight ?? properties.headerHeight)
     },
     row: {
       height: 22,
@@ -699,13 +757,36 @@ function tableSpec(object) {
       alternate_background_color: "#f9fafb",
       color: "#111827",
       font_size: 10,
-      ...(object.row || object.properties?.row || {})
+      bold: false,
+      align: "left",
+      ...bodyStyle,
+      ...optionalNumber("height", object.rowHeight ?? properties.rowHeight)
     },
+    auto_height: Boolean(object.autoHeight ?? object.auto_height ?? properties.autoHeight ?? properties.auto_height ?? true),
     border: {
+      show: true,
       width: 1,
       color: "#d1d5db",
-      ...(object.border || object.properties?.border || {})
-    }
+      ...(object.border || properties.border || {})
+    },
+    grid: {
+      show_horizontal: false,
+      show_vertical: false,
+      width: 1,
+      color: "#d1d5db",
+      ...normalizeTableGrid(object.grid || properties.grid || {})
+    },
+    section: {
+      background_color: "#ffffff",
+      color: "#111827",
+      font_size: 10,
+      bold: true,
+      align: "left",
+      ...sectionStyle
+    },
+    conditional_formatting: Array.isArray(object.conditionalFormatting)
+      ? object.conditionalFormatting
+      : Array.isArray(properties.conditionalFormatting) ? properties.conditionalFormatting : []
   };
 }
 
@@ -719,14 +800,135 @@ function normalizeTableColumns(columns) {
       ];
   return source.map((column, index) => {
     const binding = String(column.binding || column.field || column.id || `column_${index + 1}`);
+    const style = tableStyleAliases(column);
+    const label = String(column.label || column.title || binding);
     return {
       id: String(column.id || binding),
-      label: String(column.label || binding),
+      label,
+      title: label,
       binding,
+      field: binding,
       width: Math.max(20, Number(column.width) || 120),
-      align: ["left", "center", "right"].includes(String(column.align)) ? String(column.align) : "left"
+      align: ["left", "center", "right"].includes(String(column.align)) ? String(column.align) : "left",
+      header_align: ["left", "center", "right"].includes(String(column.header_align))
+        ? String(column.header_align)
+        : "",
+      font_size: Number(style.font_size || column.fontSize || 0) || undefined,
+      bold: Boolean(style.bold),
+      color: style.color || column.color || "",
+      wrap: Boolean(column.wrap)
     };
   });
+}
+
+function tableStyleAliases(style) {
+  const resolved = { ...(style || {}) };
+  if ("fontSize" in resolved && !("font_size" in resolved)) {
+    resolved.font_size = resolved.fontSize;
+  }
+  if ("fontWeight" in resolved && !("font_weight" in resolved)) {
+    resolved.font_weight = resolved.fontWeight;
+  }
+  if ("backgroundColor" in resolved && !("background_color" in resolved)) {
+    resolved.background_color = resolved.backgroundColor;
+  }
+  if ("textColor" in resolved && !("color" in resolved)) {
+    resolved.color = resolved.textColor;
+  }
+  if ("font_weight" in resolved && !("bold" in resolved)) {
+    resolved.bold = tableFontWeightIsBold(resolved.font_weight);
+  }
+  if ("font_size" in resolved) {
+    resolved.font_size = Number(resolved.font_size) || 10;
+  }
+  return resolved;
+}
+
+function normalizeTableGrid(grid) {
+  const resolved = { ...(grid || {}) };
+  if ("showHorizontal" in resolved) {
+    resolved.show_horizontal = Boolean(resolved.showHorizontal);
+  }
+  if ("showVertical" in resolved) {
+    resolved.show_vertical = Boolean(resolved.showVertical);
+  }
+  return resolved;
+}
+
+function tableFontWeightIsBold(value) {
+  if (typeof value === "boolean") {
+    return value;
+  }
+  return ["bold", "700", "800", "900", "true"].includes(String(value || "").trim().toLowerCase());
+}
+
+function optionalBoolean(key, value) {
+  return value === undefined || value === null ? {} : { [key]: Boolean(value) };
+}
+
+function optionalNumber(key, value) {
+  return value === undefined || value === null ? {} : { [key]: Number(value) || 0 };
+}
+
+function isSectionTableRow(row) {
+  return String(row.row_type || row.type || "").trim().toLowerCase() === "section";
+}
+
+function sectionTableLabel(row) {
+  return String(row.label || row.title || row.section || "");
+}
+
+function tableCellStyle(spec, column, row, sampleData) {
+  const style = {
+    color: spec.row.color,
+    background_color: spec.row.background_color,
+    font_size: spec.row.font_size,
+    bold: spec.row.bold,
+    align: column.align || spec.row.align,
+    wrap: column.wrap
+  };
+  for (const key of ["color", "font_size", "bold", "align", "wrap"]) {
+    if (column[key] !== undefined && column[key] !== "") {
+      style[key] = column[key];
+    }
+  }
+  Object.assign(style, conditionalTableCellStyle(spec, column, row, sampleData));
+  return style;
+}
+
+function conditionalTableCellStyle(spec, column, row, sampleData) {
+  const resolved = {};
+  const rules = Array.isArray(spec.conditional_formatting) ? spec.conditional_formatting : [];
+  for (const rule of rules) {
+    if (!rule || typeof rule !== "object") {
+      continue;
+    }
+    const columnId = String(rule.column || rule.column_id || "").trim();
+    if (columnId && ![String(column.id), String(column.binding)].includes(columnId)) {
+      continue;
+    }
+    const condition = String(rule.when || rule.condition || "").trim();
+    if (!condition) {
+      continue;
+    }
+    if (evaluateCondition(condition, { ...sampleData, ...row, row, column })) {
+      Object.assign(resolved, tableStyleAliases(rule.style || {}));
+    }
+  }
+  return resolved;
+}
+
+function applyTableGridStyles(cell, grid) {
+  const width = Number(grid.width) || 0;
+  if (width <= 0) {
+    return;
+  }
+  if (grid.show_horizontal) {
+    cell.style.borderBottom = `${width}px solid ${grid.color}`;
+  }
+  if (grid.show_vertical) {
+    cell.style.borderRight = `${width}px solid ${grid.color}`;
+  }
 }
 
 function tableCellValue(column, row, dataPath, sampleData) {

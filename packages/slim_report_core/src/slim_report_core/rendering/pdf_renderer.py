@@ -8,6 +8,7 @@ from typing import Any
 
 from ..assets.resolver import ResolvedImageSource, resolve_image_source
 from ..exceptions import ExporterError, ReportValidationError
+from ..formula import evaluate_condition
 from ..report import Report
 from .context import (
     RenderContext,
@@ -411,7 +412,7 @@ def _draw_qr_placeholder(
 
 
 def _render_table(canvas: Any, obj: RenderObject, context: RenderContext) -> None:
-    x, y, width, height = object_pt(obj, context.page.unit)
+    x, y, width, object_height = object_pt(obj, context.page.unit)
     spec = _table_spec(obj)
     columns = spec["columns"]
     rows_override = obj.properties.get("__slim_table_rows__")
@@ -427,16 +428,32 @@ def _render_table(canvas: Any, obj: RenderObject, context: RenderContext) -> Non
         if spec["header"].get("visible", True)
         else 0
     )
-    border_width = _table_length_pt(spec["border"].get("width", 1), context)
+    border_width = (
+        _table_length_pt(spec["border"].get("width", 1), context)
+        if spec["border"].get("show", True)
+        else 0
+    )
     col_widths = _table_column_widths(columns, width)
+    auto_height = bool(spec.get("auto_height", True))
+    if auto_height:
+        visible_rows = rows
+    else:
+        available_height = max(object_height - header_height, 0)
+        max_rows = max(0, int(available_height // max(row_height, 1)))
+        visible_rows = rows[:max_rows]
+    has_empty_message = not visible_rows and bool(str(spec.get("empty_message", "")))
+    content_height = header_height + (
+        (len(visible_rows) + (1 if has_empty_message else 0)) * row_height
+    )
+    render_height = content_height if auto_height else object_height
     table_top = y
-    table_bottom = y + height
+    table_bottom = y + render_height
     cursor_y = table_top
 
     background = obj.style.get("background_color", "#ffffff")
     if not _is_transparent(background):
         _set_fill_color(canvas, background)
-        canvas.rect(x, _pdf_y(context, table_bottom), width, height, stroke=0, fill=1)
+        canvas.rect(x, _pdf_y(context, table_bottom), width, render_height, stroke=0, fill=1)
 
     if spec["header"].get("visible", True) and header_height > 0:
         _draw_table_row(
@@ -451,16 +468,29 @@ def _render_table(canvas: Any, obj: RenderObject, context: RenderContext) -> Non
             text_color=spec["header"].get("color", "#111827"),
             font_size=spec["header"].get("font_size", 10),
             bold=bool(spec["header"].get("bold", True)),
-            aligns=[str(column.get("align", "left")) for column in columns],
-            border_color=spec["border"].get("color", "#d1d5db"),
-            border_width=border_width,
+            aligns=[
+                str(column.get("header_align") or spec["header"].get("align", "left"))
+                for column in columns
+            ],
+            grid=spec["grid"],
         )
         cursor_y += header_height
 
-    available_height = max(table_bottom - cursor_y, 0)
-    max_rows = max(0, int(available_height // max(row_height, 1)))
-    for row_index, row in enumerate(rows[:max_rows]):
+    for row_index, row in enumerate(visible_rows):
         row_data = row if isinstance(row, dict) else {}
+        if _is_section_table_row(row_data):
+            _draw_table_section_row(
+                canvas,
+                context,
+                x,
+                cursor_y,
+                width,
+                row_height,
+                row_data,
+                spec,
+            )
+            cursor_y += row_height
+            continue
         fill = (
             spec["row"].get("alternate_background_color")
             if (row_offset + row_index) % 2 == 1
@@ -481,35 +511,37 @@ def _render_table(canvas: Any, obj: RenderObject, context: RenderContext) -> Non
             fill_color=fill or "#ffffff",
             text_color=spec["row"].get("color", "#111827"),
             font_size=spec["row"].get("font_size", 10),
-            bold=False,
+            bold=bool(spec["row"].get("bold", False)),
             aligns=[str(column.get("align", "left")) for column in columns],
-            border_color=spec["border"].get("color", "#d1d5db"),
-            border_width=border_width,
+            grid=spec["grid"],
+            cell_styles=[
+                _table_resolved_cell_style(column, row_data, spec, context)
+                for column in columns
+            ],
         )
         cursor_y += row_height
 
-    if not rows:
+    if has_empty_message:
         _draw_table_row(
             canvas,
             context,
             x,
             cursor_y,
             [width],
-            max(row_height, available_height),
+            row_height,
             [str(spec.get("empty_message", ""))],
             fill_color=spec["row"].get("background_color", "#ffffff"),
             text_color="#64748b",
             font_size=spec["row"].get("font_size", 10),
             bold=False,
             aligns=["center"],
-            border_color=spec["border"].get("color", "#d1d5db"),
-            border_width=border_width,
+            grid=spec["grid"],
         )
 
     if border_width > 0:
         canvas.setLineWidth(border_width)
         _set_stroke_color(canvas, spec["border"].get("color", "#d1d5db"))
-        canvas.rect(x, _pdf_y(context, y + height), width, height, stroke=1, fill=0)
+        canvas.rect(x, _pdf_y(context, y + render_height), width, render_height, stroke=1, fill=0)
 
 
 def _draw_table_row(
@@ -526,15 +558,19 @@ def _draw_table_row(
     font_size: Any,
     bold: bool,
     aligns: list[str],
-    border_color: Any,
-    border_width: float,
+    grid: dict[str, Any],
+    cell_styles: list[dict[str, Any]] | None = None,
 ) -> None:
     cursor_x = x
-    font_name = "Helvetica-Bold" if bold else "Helvetica"
-    resolved_font_size = _font_size_pt(font_size, context)
     for index, col_width in enumerate(col_widths):
-        if not _is_transparent(fill_color):
-            _set_fill_color(canvas, fill_color)
+        cell_style = cell_styles[index] if cell_styles and index < len(cell_styles) else {}
+        cell_fill = cell_style.get("background_color", fill_color)
+        cell_color = cell_style.get("color", text_color)
+        cell_font_size = _font_size_pt(cell_style.get("font_size", font_size), context)
+        cell_bold = bool(cell_style.get("bold", bold))
+        font_name = "Helvetica-Bold" if cell_bold else "Helvetica"
+        if not _is_transparent(cell_fill):
+            _set_fill_color(canvas, cell_fill)
             canvas.rect(
                 cursor_x,
                 _pdf_y(context, top_y + height),
@@ -543,31 +579,73 @@ def _draw_table_row(
                 stroke=0,
                 fill=1,
             )
-        if border_width > 0:
-            canvas.setLineWidth(border_width)
-            _set_stroke_color(canvas, border_color)
-            canvas.rect(
-                cursor_x,
-                _pdf_y(context, top_y + height),
-                col_width,
-                height,
-                stroke=1,
-                fill=0,
-            )
+        _draw_table_grid(canvas, context, cursor_x, top_y, col_width, height, grid)
         value = values[index] if index < len(values) else ""
-        canvas.setFont(font_name, resolved_font_size)
-        _set_fill_color(canvas, text_color)
+        canvas.setFont(font_name, cell_font_size)
+        _set_fill_color(canvas, cell_color)
         padding = 4
-        text_width = canvas.stringWidth(value, font_name, resolved_font_size)
+        text_width = canvas.stringWidth(value, font_name, cell_font_size)
         align = aligns[index] if index < len(aligns) else "left"
+        align = str(cell_style.get("align", align))
         text_x = cursor_x + padding
         if align == "center":
             text_x = cursor_x + max((col_width - text_width) / 2, padding)
         elif align == "right":
             text_x = cursor_x + max(col_width - text_width - padding, padding)
-        baseline = _pdf_y(context, top_y + (height / 2) - (resolved_font_size / 2)) - 1
+        baseline = _pdf_y(context, top_y + (height / 2) - (cell_font_size / 2)) - 1
         canvas.drawString(text_x, baseline, str(value))
         cursor_x += col_width
+
+
+def _draw_table_section_row(
+    canvas: Any,
+    context: RenderContext,
+    x: float,
+    top_y: float,
+    width: float,
+    height: float,
+    row: dict[str, Any],
+    spec: dict[str, Any],
+) -> None:
+    style = spec["section"]
+    fill = style.get("background_color", "#ffffff")
+    if not _is_transparent(fill):
+        _set_fill_color(canvas, fill)
+        canvas.rect(x, _pdf_y(context, top_y + height), width, height, stroke=0, fill=1)
+    _draw_table_grid(canvas, context, x, top_y, width, height, spec["grid"])
+    font_size = _font_size_pt(style.get("font_size", 10), context)
+    font_name = "Helvetica-Bold" if style.get("bold", True) else "Helvetica"
+    text = str(row.get("label") or row.get("title") or row.get("section") or "")
+    canvas.setFont(font_name, font_size)
+    _set_fill_color(canvas, style.get("color", "#111827"))
+    padding = 4
+    text_x = x + padding
+    if style.get("align") == "center":
+        text_x = x + max((width - canvas.stringWidth(text, font_name, font_size)) / 2, padding)
+    elif style.get("align") == "right":
+        text_x = x + max(width - canvas.stringWidth(text, font_name, font_size) - padding, padding)
+    baseline = _pdf_y(context, top_y + (height / 2) - (font_size / 2)) - 1
+    canvas.drawString(text_x, baseline, text)
+
+
+def _draw_table_grid(
+    canvas: Any,
+    context: RenderContext,
+    x: float,
+    top_y: float,
+    width: float,
+    height: float,
+    grid: dict[str, Any],
+) -> None:
+    line_width = _table_length_pt(grid.get("width", 1), context)
+    if line_width <= 0:
+        return
+    canvas.setLineWidth(line_width)
+    _set_stroke_color(canvas, grid.get("color", "#d1d5db"))
+    if grid.get("show_horizontal", False):
+        canvas.line(x, _pdf_y(context, top_y + height), x + width, _pdf_y(context, top_y + height))
+    if grid.get("show_vertical", False):
+        canvas.line(x + width, _pdf_y(context, top_y), x + width, _pdf_y(context, top_y + height))
 
 
 def _table_length_pt(value: Any, context: RenderContext) -> float:
@@ -625,8 +703,24 @@ def _table_spec(obj: RenderObject) -> dict[str, Any]:
                 "align": "left",
             },
         ]
+    header = _normalize_table_style_mapping(_dict_value(properties.get("headerStyle")))
+    header.update(_normalize_table_style_mapping(_dict_value(properties.get("header_style"))))
+    header.update(_dict_value(properties.get("header")))
+    row = _normalize_table_style_mapping(_dict_value(properties.get("bodyStyle")))
+    row.update(_normalize_table_style_mapping(_dict_value(properties.get("body_style"))))
+    row.update(_dict_value(properties.get("row")))
+    border = _dict_value(properties.get("border"))
+    grid = _normalize_grid(_dict_value(properties.get("grid")))
+    section = _normalize_table_style_mapping(_dict_value(properties.get("sectionStyle")))
+    section.update(_normalize_table_style_mapping(_dict_value(properties.get("section_style"))))
     return {
-        "data_path": str(properties.get("data_path") or properties.get("binding") or ""),
+        "data_path": str(
+            properties.get("data_path")
+            or properties.get("dataSource")
+            or properties.get("data_source")
+            or properties.get("binding")
+            or ""
+        ),
         "columns": [_normalize_table_column(column, index) for index, column in enumerate(columns)],
         "header": {
             "visible": True,
@@ -635,7 +729,9 @@ def _table_spec(obj: RenderObject) -> dict[str, Any]:
             "color": "#111827",
             "font_size": 10,
             "bold": True,
-            **_dict_value(properties.get("header")),
+            **header,
+            **_optional_bool("visible", properties.get("showHeader")),
+            **_optional_number("height", properties.get("headerHeight")),
         },
         "row": {
             "height": 22,
@@ -643,34 +739,175 @@ def _table_spec(obj: RenderObject) -> dict[str, Any]:
             "alternate_background_color": "#f9fafb",
             "color": "#111827",
             "font_size": 10,
-            **_dict_value(properties.get("row")),
+            **row,
+            **_optional_number("height", properties.get("rowHeight")),
         },
         "border": {
+            "show": True,
             "width": 1,
             "color": "#d1d5db",
-            **_dict_value(properties.get("border")),
+            **border,
         },
+        "grid": {
+            "show_horizontal": False,
+            "show_vertical": False,
+            "width": 1,
+            "color": "#d1d5db",
+            **grid,
+        },
+        "section": {
+            "background_color": "#ffffff",
+            "color": "#111827",
+            "font_size": 10,
+            "bold": True,
+            "align": "left",
+            **section,
+        },
+        "conditional_formatting": _table_condition_rules(properties),
+        "auto_height": bool(properties.get("autoHeight", properties.get("auto_height", True))),
         "empty_message": str(properties.get("empty_message", "")),
     }
 
 
 def _normalize_table_column(column: Any, index: int) -> dict[str, Any]:
     mapping = _dict_value(column)
+    style = _normalize_table_style_mapping(mapping)
     binding = str(
         mapping.get("binding") or mapping.get("field") or mapping.get("id") or f"column_{index + 1}"
     )
-    label = mapping.get("label") or binding.replace("_", " ").title() or f"Column {index + 1}"
-    return {
+    label = (
+        mapping.get("label")
+        or mapping.get("title")
+        or binding.replace("_", " ").title()
+        or f"Column {index + 1}"
+    )
+    normalized = {
         "id": str(mapping.get("id") or binding or f"column_{index + 1}"),
         "label": str(label),
+        "title": str(label),
+        "field": binding,
         "binding": binding,
         "width": float(mapping.get("width", 120) or 120),
         "align": str(mapping.get("align", "left") or "left"),
+        "bold": style.get("bold", _font_weight_is_bold(mapping.get("fontWeight"))),
+        "wrap": bool(mapping.get("wrap", False)),
     }
+    if style.get("font_size", mapping.get("font_size", mapping.get("fontSize"))) not in (None, ""):
+        normalized["font_size"] = style.get(
+            "font_size",
+            mapping.get("font_size", mapping.get("fontSize")),
+        )
+    if style.get("color", mapping.get("color")):
+        normalized["color"] = style.get("color", mapping.get("color"))
+    return normalized
 
 
 def _dict_value(value: Any) -> dict[str, Any]:
     return dict(value) if isinstance(value, dict) else {}
+
+
+def _is_section_table_row(row: dict[str, Any]) -> bool:
+    return str(row.get("row_type") or row.get("type") or "").strip().lower() == "section"
+
+
+def _table_resolved_cell_style(
+    column: dict[str, Any],
+    row: dict[str, Any],
+    spec: dict[str, Any],
+    context: RenderContext,
+) -> dict[str, Any]:
+    style = {
+        "color": spec["row"].get("color", "#111827"),
+        "background_color": spec["row"].get("background_color", "#ffffff"),
+        "font_size": spec["row"].get("font_size", 10),
+        "bold": spec["row"].get("bold", False),
+        "align": column.get("align", spec["row"].get("align", "left")),
+        "wrap": column.get("wrap", False),
+    }
+    for key in ("color", "background_color", "font_size", "bold", "align", "wrap"):
+        if key in column:
+            style[key] = column[key]
+    style.update(_table_conditional_style(row, column, spec, context))
+    return style
+
+
+def _table_conditional_style(
+    row: dict[str, Any],
+    column: dict[str, Any],
+    spec: dict[str, Any],
+    context: RenderContext,
+) -> dict[str, Any]:
+    resolved: dict[str, Any] = {}
+    rules = spec.get("conditional_formatting")
+    if not isinstance(rules, list):
+        return resolved
+    data = {**dict(context.data), **row, "row": row, "column": column}
+    for rule in rules:
+        if not isinstance(rule, dict):
+            continue
+        column_id = str(rule.get("column") or rule.get("column_id") or "").strip()
+        if column_id and column_id not in {str(column.get("id")), str(column.get("binding"))}:
+            continue
+        condition = str(rule.get("when") or rule.get("condition") or "").strip()
+        if not condition:
+            continue
+        if evaluate_condition(
+            condition,
+            data,
+            resolver=lambda identifier: get_value_by_path(data, identifier),
+        ):
+            style = rule.get("style")
+            if isinstance(style, dict):
+                resolved.update(_normalize_table_style_mapping(style))
+    return resolved
+
+
+def _normalize_table_style_mapping(mapping: dict[str, Any]) -> dict[str, Any]:
+    resolved = dict(mapping)
+    aliases = {
+        "fontSize": "font_size",
+        "fontWeight": "font_weight",
+        "backgroundColor": "background_color",
+        "textColor": "color",
+    }
+    for source, target in aliases.items():
+        if source in resolved and target not in resolved:
+            resolved[target] = resolved[source]
+    if "font_weight" in resolved and "bold" not in resolved:
+        resolved["bold"] = _font_weight_is_bold(resolved["font_weight"])
+    if "font_size" in resolved:
+        resolved["font_size"] = float(resolved.get("font_size") or 10)
+    return resolved
+
+
+def _normalize_grid(mapping: dict[str, Any]) -> dict[str, Any]:
+    resolved = dict(mapping)
+    if "showHorizontal" in resolved:
+        resolved["show_horizontal"] = bool(resolved["showHorizontal"])
+    if "showVertical" in resolved:
+        resolved["show_vertical"] = bool(resolved["showVertical"])
+    return resolved
+
+
+def _table_condition_rules(properties: dict[str, Any]) -> list[dict[str, Any]]:
+    rules = properties.get("conditionalFormatting", properties.get("conditional_formatting", []))
+    return list(rules) if isinstance(rules, list) else []
+
+
+def _optional_bool(key: str, value: Any) -> dict[str, bool]:
+    return {key: bool(value)} if value is not None else {}
+
+
+def _optional_number(key: str, value: Any) -> dict[str, float]:
+    if value is None:
+        return {}
+    return {key: float(value or 0)}
+
+
+def _font_weight_is_bold(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    return str(value or "").strip().lower() in {"bold", "700", "800", "900", "true"}
 
 
 def _image_reader(source: str | ResolvedImageSource) -> Any | None:

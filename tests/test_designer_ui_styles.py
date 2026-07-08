@@ -777,6 +777,9 @@ if (table.type !== 'table' || table.width !== 500 || table.height !== 220) {
 if (table.data_path !== 'results') {
   throw new Error('table did not select first array data path');
 }
+if (table.autoHeight !== true || table.properties.autoHeight !== true) {
+  throw new Error('table auto height default invalid');
+}
 if (!table.columns.some((column) => column.binding === 'test')) {
   throw new Error('table columns were not inferred');
 }
@@ -785,6 +788,107 @@ table.properties.columns = [];
 generateTableColumns(template, table);
 if (table.columns.length < 3 || table.columns[1].binding !== 'result') {
   throw new Error('table column generation failed');
+}
+""".replace("__MODULE_PATH__", module_path)
+
+    result = subprocess.run(
+        ["node", "--input-type=module", "-e", script],
+        cwd=Path(__file__).resolve().parents[1],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+
+
+def test_designer_advanced_table_aliases_presets_and_column_edits() -> None:
+    module_path = "./packages/slim_report_designer_ui/slim_report_designer_ui/static/js/objects.js"
+    script = """
+import {
+  applyTablePreset,
+  moveTableColumn,
+  normalizeTemplate,
+  setTableColumnValue,
+  setTableGridValue
+} from '__MODULE_PATH__';
+
+const template = normalizeTemplate({
+  metadata: { name: 'Advanced Table Test' },
+  page: { width: 595, height: 842, unit: 'px' },
+  objects: [{
+    id: 'results_table',
+    type: 'table',
+    dataSource: 'results',
+    autoHeight: true,
+    showHeader: true,
+    headerHeight: 24,
+    rowHeight: 22,
+    headerStyle: { fontSize: 9, fontWeight: 'bold' },
+    bodyStyle: { fontSize: 9 },
+    grid: { showHorizontal: true },
+    columns: [
+      { id: 'test_name', title: 'Test', field: 'test_name', width: 150 },
+      { id: 'result', title: 'Result', field: 'result', width: 90, fontWeight: 'bold' }
+    ]
+  }],
+  bands: [{ id: 'detail', type: 'detail', y: 0, height: 842 }],
+  data: {
+    sample: {
+      results: [{ test_name: 'Hemoglobin', result: '180', flag: 'HIGH' }]
+    }
+  },
+  assets: []
+});
+
+const table = template.objects[0];
+if (table.data_path !== 'results' || table.dataSource !== 'results') {
+  throw new Error('table dataSource alias was not normalized');
+}
+if (table.autoHeight !== true || table.properties.autoHeight !== true) {
+  throw new Error('table autoHeight alias was not normalized');
+}
+if (table.columns[0].label !== 'Test' || table.columns[0].binding !== 'test_name') {
+  throw new Error('table column title/field aliases were not normalized');
+}
+if (table.header.font_size !== 9 || !table.header.bold || table.headerHeight !== 24) {
+  throw new Error('table header aliases were not normalized');
+}
+if (table.row.font_size !== 9 || table.rowHeight !== 22) {
+  throw new Error('table body aliases were not normalized');
+}
+if (!table.grid.show_horizontal) {
+  throw new Error('table grid alias was not normalized');
+}
+
+setTableColumnValue(table, 0, 'binding', 'result');
+if (table.columns[0].binding !== 'result' || table.columns[0].field !== 'result') {
+  throw new Error('table column binding edit failed');
+}
+setTableColumnValue(table, 0, 'font_size', 8);
+setTableColumnValue(table, 0, 'bold', true);
+setTableColumnValue(table, 0, 'wrap', true);
+if (table.columns[0].font_size !== 8 || !table.columns[0].bold || !table.columns[0].wrap) {
+  throw new Error('table column style edit failed');
+}
+moveTableColumn(table, 0, 1);
+if (table.columns[1].binding !== 'result') {
+  throw new Error('table column move failed');
+}
+setTableGridValue(table, 'show_vertical', true);
+if (!table.grid.show_vertical || !table.properties.grid.show_vertical) {
+  throw new Error('table grid edit failed');
+}
+
+applyTablePreset(table, 'hematology_right');
+if (table.data_path !== 'right_results' || table.columns[0].binding !== 'test_name') {
+  throw new Error('table preset did not apply data path or columns');
+}
+if (!table.conditionalFormatting.some((rule) => rule.when === "flag == 'HIGH'")) {
+  throw new Error('table preset did not include conditional formatting');
+}
+if (table.sectionStyle.background_color !== '#ecfdf5') {
+  throw new Error('table preset did not include section styling');
 }
 """.replace("__MODULE_PATH__", module_path)
 

@@ -7,6 +7,7 @@ from typing import Any
 
 from ..assets.resolver import resolve_image_source
 from ..exceptions import ReportValidationError
+from ..formula import evaluate_condition
 from ..report import Report
 from .context import (
     RenderContext,
@@ -454,7 +455,7 @@ def _qr_svg(value: str, style: str, foreground: str, background: str) -> str:
 
 
 def _render_table(obj: RenderObject, context: RenderContext) -> str:
-    x, y, width, height = object_px(obj, context.page.unit)
+    x, y, width, object_height = object_px(obj, context.page.unit)
     spec = _table_spec(obj)
     columns = spec["columns"]
     rows_override = obj.properties.get("__slim_table_rows__")
@@ -468,10 +469,19 @@ def _render_table(obj: RenderObject, context: RenderContext) -> str:
     header_height = (
         float(spec["header"].get("height", 24) or 24) if spec["header"].get("visible", True) else 0
     )
-    available_height = max(height - header_height, 0)
-    max_rows = max(0, int(available_height // max(row_height, 1)))
-    visible_rows = rows[:max_rows]
+    auto_height = bool(spec.get("auto_height", True))
+    if auto_height:
+        visible_rows = rows
+    else:
+        available_height = max(object_height - header_height, 0)
+        max_rows = max(0, int(available_height // max(row_height, 1)))
+        visible_rows = rows[:max_rows]
+    empty = escape(str(spec.get("empty_message", "")))
+    empty_row_count = 1 if not visible_rows and empty else 0
+    content_height = header_height + ((len(visible_rows) + empty_row_count) * row_height)
+    render_height = content_height if auto_height else object_height
     border_width = float(spec["border"].get("width", 1) or 0)
+    border_width = border_width if spec["border"].get("show", True) else 0
     border_color = escape(str(spec["border"].get("color", "#d1d5db")), quote=True)
     radius = float(obj.style.get("border_radius", 0) or 0)
     background = escape(str(obj.style.get("background_color", "#ffffff")), quote=True)
@@ -487,7 +497,7 @@ def _render_table(obj: RenderObject, context: RenderContext) -> str:
         header_cells = "".join(
             _table_cell(
                 column.get("label", column.get("binding", "")),
-                align=str(column.get("align", "left")),
+                align=str(column.get("header_align") or spec["header"].get("align", "left")),
                 tag="th",
                 style=(
                     f"height: {header_height}px; "
@@ -495,6 +505,7 @@ def _render_table(obj: RenderObject, context: RenderContext) -> str:
                     f"color: {escape(str(spec['header'].get('color', '#111827')), quote=True)}; "
                     f"font-size: {float(spec['header'].get('font_size', 10) or 10)}px; "
                     f"font-weight: {'700' if spec['header'].get('bold', True) else '400'};"
+                    f"{_table_cell_border_style(spec)}"
                 ),
             )
             for column in columns
@@ -504,43 +515,37 @@ def _render_table(obj: RenderObject, context: RenderContext) -> str:
         body_rows = []
         for row_index, row in enumerate(visible_rows):
             row_data = row if isinstance(row, dict) else {}
+            if _is_section_table_row(row_data):
+                body_rows.append(_table_section_row(row_data, spec, len(columns), row_height))
+                continue
             row_bg = (
                 spec["row"].get("alternate_background_color")
                 if (row_offset + row_index) % 2 == 1
                 else spec["row"].get("background_color", "#ffffff")
             )
             cells = "".join(
-                _table_cell(
-                    _table_cell_value(column, row_data, spec["data_path"], context),
-                    align=str(column.get("align", "left")),
-                    style=(
-                        f"height: {row_height}px; "
-                        f"background: {escape(str(row_bg or '#ffffff'), quote=True)}; "
-                        f"color: {escape(str(spec['row'].get('color', '#111827')), quote=True)}; "
-                        f"font-size: {float(spec['row'].get('font_size', 10) or 10)}px;"
-                    ),
-                )
+                _table_body_cell(column, row_data, spec, context, row_bg, row_height)
                 for column in columns
             )
             body_rows.append(f"<tr>{cells}</tr>")
         body_html = f"<tbody>{''.join(body_rows)}</tbody>"
-    else:
-        empty = escape(str(spec.get("empty_message", "")))
-        empty_height = max(row_height, available_height)
+    elif empty:
         empty_font_size = float(spec["row"].get("font_size", 10) or 10)
         body_html = (
             f'<tbody><tr><td colspan="{len(columns)}" '
-            f'style="height: {empty_height}px; '
+            f'style="height: {row_height}px; '
             f"color: #64748b; font-size: {empty_font_size}px; "
-            'text-align: center;">'
+            f"text-align: center; {_table_cell_border_style(spec)}\">"
             f"{empty}</td></tr></tbody>"
         )
+    else:
+        body_html = "<tbody></tbody>"
     table_style = (
-        "width: 100%; height: 100%; border-collapse: collapse; table-layout: fixed; "
+        "width: 100%; border-collapse: collapse; table-layout: fixed; "
         f"border: {border_width}px solid {border_color};"
     )
     wrapper_style = (
-        f"{_position_style(x, y, width, height)} "
+        f"{_position_style(x, y, width, render_height)} "
         f"background: {background}; border-radius: {radius}px; overflow: hidden;"
     )
     object_id = escape(obj.id, quote=True)
@@ -592,6 +597,128 @@ def _table_cell(value: object, *, align: str, style: str, tag: str = "td") -> st
     )
 
 
+def _table_body_cell(
+    column: dict[str, object],
+    row: dict[str, object],
+    spec: dict[str, object],
+    context: RenderContext,
+    row_background: object,
+    row_height: float,
+) -> str:
+    style = _table_resolved_cell_style(column, row, spec, context)
+    color = escape(str(style.get("color", spec["row"].get("color", "#111827"))), quote=True)
+    background = escape(str(style.get("background_color", row_background or "#ffffff")), quote=True)
+    font_size = float(style.get("font_size", spec["row"].get("font_size", 10)) or 10)
+    bold = bool(style.get("bold", False))
+    align = str(style.get("align", column.get("align", spec["row"].get("align", "left"))))
+    wrap = bool(style.get("wrap", column.get("wrap", False)))
+    white_space = "normal" if wrap else "nowrap"
+    return _table_cell(
+        _table_cell_value(column, row, spec["data_path"], context),
+        align=align,
+        style=(
+            f"height: {row_height}px; "
+            f"background: {background}; "
+            f"color: {color}; "
+            f"font-size: {font_size}px; "
+            f"font-weight: {'700' if bold else '400'}; "
+            f"white-space: {white_space}; "
+            f"{_table_cell_border_style(spec)}"
+        ),
+    )
+
+
+def _table_section_row(
+    row: dict[str, object],
+    spec: dict[str, object],
+    column_count: int,
+    row_height: float,
+) -> str:
+    section_style = spec["section"]
+    label = escape(str(row.get("label") or row.get("title") or row.get("section") or ""))
+    return (
+        f'<tr class="slim-report-table-section-row"><td colspan="{column_count}" '
+        f'style="height: {row_height}px; '
+        f"background: {escape(str(section_style.get('background_color', '#ffffff')), quote=True)}; "
+        f"color: {escape(str(section_style.get('color', '#111827')), quote=True)}; "
+        f"font-size: {float(section_style.get('font_size', 10) or 10)}px; "
+        f"font-weight: {'700' if section_style.get('bold', True) else '400'}; "
+        f"text-align: {escape(str(section_style.get('align', 'left')), quote=True)}; "
+        f"{_table_cell_border_style(spec)}"
+        f'">{label}</td></tr>'
+    )
+
+
+def _is_section_table_row(row: dict[str, object]) -> bool:
+    return str(row.get("row_type") or row.get("type") or "").strip().lower() == "section"
+
+
+def _table_cell_border_style(spec: dict[str, object]) -> str:
+    grid = spec["grid"]
+    width = float(grid.get("width", 1) or 0)
+    if width <= 0:
+        return ""
+    color = escape(str(grid.get("color", "#d1d5db")), quote=True)
+    styles = []
+    if grid.get("show_horizontal", False):
+        styles.append(f"border-bottom: {width}px solid {color};")
+    if grid.get("show_vertical", False):
+        styles.append(f"border-right: {width}px solid {color};")
+    return " ".join(styles)
+
+
+def _table_resolved_cell_style(
+    column: dict[str, object],
+    row: dict[str, object],
+    spec: dict[str, object],
+    context: RenderContext,
+) -> dict[str, object]:
+    style = {
+        "color": spec["row"].get("color", "#111827"),
+        "background_color": spec["row"].get("background_color", "#ffffff"),
+        "font_size": spec["row"].get("font_size", 10),
+        "bold": spec["row"].get("bold", False),
+        "align": column.get("align", spec["row"].get("align", "left")),
+        "wrap": column.get("wrap", False),
+    }
+    for key in ("color", "background_color", "font_size", "bold", "align", "wrap"):
+        if key in column:
+            style[key] = column[key]
+    style.update(_table_conditional_style(row, column, spec, context))
+    return style
+
+
+def _table_conditional_style(
+    row: dict[str, object],
+    column: dict[str, object],
+    spec: dict[str, object],
+    context: RenderContext,
+) -> dict[str, object]:
+    resolved: dict[str, object] = {}
+    rules = spec.get("conditional_formatting")
+    if not isinstance(rules, list):
+        return resolved
+    data = {**dict(context.data), **row, "row": row, "column": column}
+    for rule in rules:
+        if not isinstance(rule, dict):
+            continue
+        column_id = str(rule.get("column") or rule.get("column_id") or "").strip()
+        if column_id and column_id not in {str(column.get("id")), str(column.get("binding"))}:
+            continue
+        condition = str(rule.get("when") or rule.get("condition") or "").strip()
+        if not condition:
+            continue
+        if evaluate_condition(
+            condition,
+            data,
+            resolver=lambda identifier: get_value_by_path(data, identifier),
+        ):
+            style = rule.get("style")
+            if isinstance(style, dict):
+                resolved.update(_normalize_table_style_mapping(style))
+    return resolved
+
+
 def _table_cell_value(
     column: dict[str, object],
     row: dict[str, object],
@@ -639,8 +766,24 @@ def _table_spec(obj: RenderObject) -> dict[str, object]:
                 "align": "left",
             },
         ]
+    header = _normalize_table_style_mapping(_dict_value(properties.get("headerStyle")))
+    header.update(_normalize_table_style_mapping(_dict_value(properties.get("header_style"))))
+    header.update(_dict_value(properties.get("header")))
+    row = _normalize_table_style_mapping(_dict_value(properties.get("bodyStyle")))
+    row.update(_normalize_table_style_mapping(_dict_value(properties.get("body_style"))))
+    row.update(_dict_value(properties.get("row")))
+    border = _dict_value(properties.get("border"))
+    grid = _normalize_grid(_dict_value(properties.get("grid")))
+    section = _normalize_table_style_mapping(_dict_value(properties.get("sectionStyle")))
+    section.update(_normalize_table_style_mapping(_dict_value(properties.get("section_style"))))
     return {
-        "data_path": str(properties.get("data_path") or properties.get("binding") or ""),
+        "data_path": str(
+            properties.get("data_path")
+            or properties.get("dataSource")
+            or properties.get("data_source")
+            or properties.get("binding")
+            or ""
+        ),
         "columns": [_normalize_table_column(column, index) for index, column in enumerate(columns)],
         "header": {
             "visible": True,
@@ -649,7 +792,9 @@ def _table_spec(obj: RenderObject) -> dict[str, object]:
             "color": "#111827",
             "font_size": 10,
             "bold": True,
-            **_dict_value(properties.get("header")),
+            **header,
+            **_optional_bool("visible", properties.get("showHeader")),
+            **_optional_number("height", properties.get("headerHeight")),
         },
         "row": {
             "height": 22,
@@ -657,34 +802,119 @@ def _table_spec(obj: RenderObject) -> dict[str, object]:
             "alternate_background_color": "#f9fafb",
             "color": "#111827",
             "font_size": 10,
-            **_dict_value(properties.get("row")),
+            **row,
+            **_optional_number("height", properties.get("rowHeight")),
         },
         "border": {
+            "show": True,
             "width": 1,
             "color": "#d1d5db",
-            **_dict_value(properties.get("border")),
+            **border,
         },
+        "grid": {
+            "show_horizontal": False,
+            "show_vertical": False,
+            "width": 1,
+            "color": "#d1d5db",
+            **grid,
+        },
+        "section": {
+            "background_color": "#ffffff",
+            "color": "#111827",
+            "font_size": 10,
+            "bold": True,
+            "align": "left",
+            **section,
+        },
+        "conditional_formatting": _table_condition_rules(properties),
+        "auto_height": bool(properties.get("autoHeight", properties.get("auto_height", True))),
         "empty_message": str(properties.get("empty_message", "")),
     }
 
 
 def _normalize_table_column(column: object, index: int) -> dict[str, object]:
     mapping = _dict_value(column)
+    style = _normalize_table_style_mapping(mapping)
     binding = str(
         mapping.get("binding") or mapping.get("field") or mapping.get("id") or f"column_{index + 1}"
     )
-    label = mapping.get("label") or binding.replace("_", " ").title() or f"Column {index + 1}"
-    return {
+    label = (
+        mapping.get("label")
+        or mapping.get("title")
+        or binding.replace("_", " ").title()
+        or f"Column {index + 1}"
+    )
+    normalized = {
         "id": str(mapping.get("id") or binding or f"column_{index + 1}"),
         "label": str(label),
+        "title": str(label),
+        "field": binding,
         "binding": binding,
         "width": float(mapping.get("width", 120) or 120),
         "align": str(mapping.get("align", "left") or "left"),
+        "bold": style.get("bold", _font_weight_is_bold(mapping.get("fontWeight"))),
+        "wrap": bool(mapping.get("wrap", False)),
     }
+    if style.get("font_size", mapping.get("font_size", mapping.get("fontSize"))) not in (None, ""):
+        normalized["font_size"] = style.get(
+            "font_size",
+            mapping.get("font_size", mapping.get("fontSize")),
+        )
+    if style.get("color", mapping.get("color")):
+        normalized["color"] = style.get("color", mapping.get("color"))
+    return normalized
 
 
 def _dict_value(value: object) -> dict[str, object]:
     return dict(value) if isinstance(value, dict) else {}
+
+
+def _normalize_table_style_mapping(mapping: dict[str, object]) -> dict[str, object]:
+    resolved = dict(mapping)
+    aliases = {
+        "fontSize": "font_size",
+        "fontWeight": "font_weight",
+        "backgroundColor": "background_color",
+        "textColor": "color",
+    }
+    for source, target in aliases.items():
+        if source in resolved and target not in resolved:
+            resolved[target] = resolved[source]
+    if "font_weight" in resolved and "bold" not in resolved:
+        resolved["bold"] = _font_weight_is_bold(resolved["font_weight"])
+    if "font_size" in resolved:
+        resolved["font_size"] = float(resolved.get("font_size") or 10)
+    return resolved
+
+
+def _normalize_grid(mapping: dict[str, object]) -> dict[str, object]:
+    resolved = dict(mapping)
+    if "showHorizontal" in resolved:
+        resolved["show_horizontal"] = bool(resolved["showHorizontal"])
+    if "showVertical" in resolved:
+        resolved["show_vertical"] = bool(resolved["showVertical"])
+    return resolved
+
+
+def _table_condition_rules(properties: dict[str, object]) -> list[dict[str, object]]:
+    rules = properties.get("conditionalFormatting", properties.get("conditional_formatting", []))
+    return list(rules) if isinstance(rules, list) else []
+
+
+def _optional_bool(key: str, value: object) -> dict[str, bool]:
+    return {key: bool(value)} if value is not None else {}
+
+
+def _optional_number(key: str, value: object) -> dict[str, float]:
+    if value is None:
+        return {}
+    return {key: float(value or 0)}
+
+
+def _font_weight_is_bold(value: object) -> bool:
+    if isinstance(value, bool):
+        return value
+    return str(value or "").strip().lower() in {"bold", "700", "800", "900", "true"}
 
 
 def _is_transparent(value: object) -> bool:

@@ -362,7 +362,24 @@ class ObjectFactory:
 
         object_type = _required_str(mapping, "type", context="Report object")
         if object_type == "table":
-            for key in ("data_path", "header", "row", "border", "columns"):
+            for key in (
+                "data_path",
+                "dataSource",
+                "autoHeight",
+                "auto_height",
+                "showHeader",
+                "rowHeight",
+                "headerHeight",
+                "header",
+                "row",
+                "border",
+                "grid",
+                "headerStyle",
+                "bodyStyle",
+                "sectionStyle",
+                "conditionalFormatting",
+                "columns",
+            ):
                 if key in mapping:
                     properties[key] = mapping[key]
         if object_type == "barcode":

@@ -19,6 +19,7 @@ This project follows semantic versioning once public releases begin.
 - Added LIS integration hardening documentation for GitHub installs, PyMySQL storage, auth hooks, and patient portal safety.
 - Added LIS hematology sample templates for filesystem/database/LIS preview testing.
 - Added Sprint 6.4 asset provider interface, filesystem asset provider, asset ID validation, image `assetId` rendering, Flask asset routes, LIS asset docs, and a sample asset template.
+- Added Sprint 6.5 advanced Table designer support with schema aliases, presets, richer column editing, grid controls, conditional formatting, section rows, two-column hematology sample data, and LIS table docs.
 - Expanded package/public API smoke tests and designer static package-data checks.
 - Documented the multi-package editable install flow for Sprint 6.
 

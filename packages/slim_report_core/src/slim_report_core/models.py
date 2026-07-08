@@ -1368,7 +1368,24 @@ class TableObject(Object):
     def to_dict(self) -> dict[str, Any]:
         data = super().to_dict()
         properties = data.setdefault("properties", {})
-        for key in ("data_path", "header", "row", "border", "columns"):
+        for key in (
+            "data_path",
+            "dataSource",
+            "autoHeight",
+            "auto_height",
+            "showHeader",
+            "rowHeight",
+            "headerHeight",
+            "header",
+            "row",
+            "border",
+            "grid",
+            "headerStyle",
+            "bodyStyle",
+            "sectionStyle",
+            "conditionalFormatting",
+            "columns",
+        ):
             if key in properties:
                 data[key] = copy.deepcopy(properties[key])
         if "binding" in properties and "data_path" not in data:

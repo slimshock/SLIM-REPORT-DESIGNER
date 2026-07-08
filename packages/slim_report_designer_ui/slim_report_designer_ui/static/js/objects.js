@@ -193,11 +193,13 @@ export function createObject(type, template) {
     base.width = 500;
     base.height = 220;
     base.data_path = firstArrayDataPath(template);
+    base.autoHeight = true;
     base.header = defaultTableHeader();
     base.row = defaultTableRow();
     base.border = defaultTableBorder();
     base.columns = tableColumnsForDataPath(template, base.data_path);
     base.properties.data_path = base.data_path;
+    base.properties.autoHeight = base.autoHeight;
     base.properties.header = base.header;
     base.properties.row = base.row;
     base.properties.border = base.border;
@@ -615,8 +617,10 @@ export function setObjectPropertyValue(object, key, value) {
 export function setTableDataPath(object, value) {
   const dataPath = normalizeArrayFieldPath(value);
   object.data_path = dataPath;
+  object.dataSource = dataPath;
   object.properties = object.properties || {};
   object.properties.data_path = dataPath;
+  object.properties.dataSource = dataPath;
 }
 
 export function generateTableColumns(template, object) {
@@ -645,13 +649,34 @@ export function removeTableColumn(object, index) {
   setTableColumns(object, columns.length ? columns : defaultTableColumns());
 }
 
+export function moveTableColumn(object, index, direction) {
+  const columns = normalizedTableColumns(object).slice();
+  const target = index + direction;
+  if (index < 0 || index >= columns.length || target < 0 || target >= columns.length) {
+    return;
+  }
+  [columns[index], columns[target]] = [columns[target], columns[index]];
+  setTableColumns(object, columns);
+}
+
 export function setTableColumnValue(object, index, key, value) {
   const columns = normalizedTableColumns(object).slice();
   const column = { ...(columns[index] || {}) };
   if (key === "width") {
     column.width = Math.max(20, Math.round(Number(value) || 20));
+  } else if (key === "font_size") {
+    column.font_size = Math.max(6, Math.round(Number(value) || 10));
+    column.fontSize = column.font_size;
+  } else if (key === "bold" || key === "wrap") {
+    column[key] = Boolean(value);
   } else if (key === "align") {
     column.align = ["left", "center", "right"].includes(String(value)) ? String(value) : "left";
+  } else if (key === "label" || key === "title") {
+    column.label = String(value);
+    column.title = column.label;
+  } else if (key === "binding" || key === "field") {
+    column.binding = String(value);
+    column.field = column.binding;
   } else {
     column[key] = String(value);
   }
@@ -675,6 +700,66 @@ export function setTableSectionValue(object, sectionName, key, value) {
   object[sectionName] = next;
   object.properties = object.properties || {};
   object.properties[sectionName] = next;
+  if (sectionName === "header") {
+    object.showHeader = Boolean(next.visible);
+    object.headerHeight = Number(next.height) || 0;
+    object.properties.showHeader = object.showHeader;
+    object.properties.headerHeight = object.headerHeight;
+  }
+  if (sectionName === "row") {
+    object.rowHeight = Number(next.height) || 0;
+    object.properties.rowHeight = object.rowHeight;
+  }
+}
+
+export function setTableGridValue(object, key, value) {
+  const current = normalizedTableSection(object, "grid");
+  const next = {
+    ...current,
+    [key]: ["show_horizontal", "show_vertical", "showHorizontal", "showVertical"].includes(key)
+      ? Boolean(value)
+      : key === "width"
+        ? Number(value) || 0
+        : String(value)
+  };
+  next.showHorizontal = Boolean(next.show_horizontal ?? next.showHorizontal);
+  next.showVertical = Boolean(next.show_vertical ?? next.showVertical);
+  next.show_horizontal = next.showHorizontal;
+  next.show_vertical = next.showVertical;
+  object.grid = next;
+  object.properties = object.properties || {};
+  object.properties.grid = next;
+}
+
+export function applyTablePreset(object, presetName) {
+  const preset = tablePreset(presetName);
+  if (!preset) {
+    return;
+  }
+  object.properties = object.properties || {};
+  if (preset.data_path !== undefined) {
+    object.data_path = preset.data_path;
+    object.dataSource = preset.data_path;
+    object.properties.data_path = preset.data_path;
+    object.properties.dataSource = preset.data_path;
+  }
+  if (preset.columns) {
+    setTableColumns(object, preset.columns);
+  }
+  for (const key of [
+    "header",
+    "row",
+    "border",
+    "grid",
+    "sectionStyle",
+    "conditionalFormatting",
+    "autoHeight"
+  ]) {
+    if (preset[key] !== undefined) {
+      object[key] = structuredClone(preset[key]);
+      object.properties[key] = structuredClone(preset[key]);
+    }
+  }
 }
 
 export function setPageValue(template, key, value) {
@@ -1036,17 +1121,74 @@ function normalizeConditionRules(conditions) {
 
 function normalizeTableObject(normalized, source) {
   const properties = source.properties || {};
-  const dataPath = normalizeArrayFieldPath(source.data_path ?? properties.data_path ?? source.binding ?? properties.binding ?? "");
+  const dataPath = normalizeArrayFieldPath(
+    source.data_path
+      ?? source.dataSource
+      ?? properties.data_path
+      ?? properties.dataSource
+      ?? source.binding
+      ?? properties.binding
+      ?? ""
+  );
   normalized.data_path = dataPath;
+  normalized.dataSource = dataPath;
   normalized.properties.data_path = dataPath;
-  normalized.header = normalizeTableSection(source.header ?? properties.header, defaultTableHeader());
-  normalized.row = normalizeTableSection(source.row ?? properties.row, defaultTableRow());
+  normalized.properties.dataSource = dataPath;
+  normalized.autoHeight = Boolean(
+    source.autoHeight ?? source.auto_height ?? properties.autoHeight ?? properties.auto_height ?? true
+  );
+  normalized.properties.autoHeight = normalized.autoHeight;
+  normalized.header = normalizeTableSection(
+    {
+      ...tableStyleAliases(source.headerStyle ?? properties.headerStyle),
+      ...(source.header ?? properties.header ?? {})
+    },
+    {
+      ...defaultTableHeader(),
+      ...(source.showHeader !== undefined || properties.showHeader !== undefined
+        ? { visible: Boolean(source.showHeader ?? properties.showHeader) }
+        : {}),
+      ...(source.headerHeight !== undefined || properties.headerHeight !== undefined
+        ? { height: Number(source.headerHeight ?? properties.headerHeight) || 24 }
+        : {})
+    }
+  );
+  normalized.row = normalizeTableSection(
+    {
+      ...tableStyleAliases(source.bodyStyle ?? properties.bodyStyle),
+      ...(source.row ?? properties.row ?? {})
+    },
+    {
+      ...defaultTableRow(),
+      ...(source.rowHeight !== undefined || properties.rowHeight !== undefined
+        ? { height: Number(source.rowHeight ?? properties.rowHeight) || 22 }
+        : {})
+    }
+  );
   normalized.border = normalizeTableSection(source.border ?? properties.border, defaultTableBorder());
+  normalized.grid = normalizeTableSection(source.grid ?? properties.grid, defaultTableGrid());
+  normalized.sectionStyle = normalizeTableSection(
+    tableStyleAliases(source.sectionStyle ?? properties.sectionStyle),
+    defaultTableSectionStyle()
+  );
   normalized.columns = normalizeTableColumns(source.columns ?? properties.columns);
   normalized.properties.header = normalized.header;
   normalized.properties.row = normalized.row;
   normalized.properties.border = normalized.border;
+  normalized.properties.grid = normalized.grid;
+  normalized.properties.sectionStyle = normalized.sectionStyle;
   normalized.properties.columns = normalized.columns;
+  normalized.showHeader = Boolean(normalized.header.visible);
+  normalized.headerHeight = Number(normalized.header.height) || 24;
+  normalized.rowHeight = Number(normalized.row.height) || 22;
+  normalized.properties.showHeader = normalized.showHeader;
+  normalized.properties.headerHeight = normalized.headerHeight;
+  normalized.properties.rowHeight = normalized.rowHeight;
+  const rules = source.conditionalFormatting ?? properties.conditionalFormatting;
+  if (Array.isArray(rules)) {
+    normalized.conditionalFormatting = rules.map((rule) => ({ ...rule }));
+    normalized.properties.conditionalFormatting = normalized.conditionalFormatting;
+  }
   if (source.empty_message !== undefined || properties.empty_message !== undefined) {
     normalized.empty_message = String(source.empty_message ?? properties.empty_message ?? "");
     normalized.properties.empty_message = normalized.empty_message;
@@ -1089,7 +1231,9 @@ function tableColumnsForDataPath(template, dataPath) {
   return fields.map((field, index) => normalizeTableColumn({
     id: field.child_path || `column_${index + 1}`,
     label: field.label || field.child_path,
+    title: field.label || field.child_path,
     binding: field.child_path,
+    field: field.child_path,
     source_path: field.path,
     width: defaultColumnWidth(field.child_path),
     align: defaultColumnAlign(field.child_path)
@@ -1145,8 +1289,30 @@ function defaultTableRow() {
 
 function defaultTableBorder() {
   return {
+    show: true,
     width: 1,
     color: "#d1d5db"
+  };
+}
+
+function defaultTableGrid() {
+  return {
+    show_horizontal: false,
+    show_vertical: false,
+    showHorizontal: false,
+    showVertical: false,
+    width: 1,
+    color: "#d1d5db"
+  };
+}
+
+function defaultTableSectionStyle() {
+  return {
+    font_size: 10,
+    bold: true,
+    background_color: "#ffffff",
+    color: "#111827",
+    align: "left"
   };
 }
 
@@ -1170,14 +1336,28 @@ function normalizeTableColumns(columns) {
 function normalizeTableColumn(column, index = 0) {
   const source = column && typeof column === "object" ? column : {};
   const binding = String(source.binding || source.field || source.id || `column_${index + 1}`);
-  return {
+  const label = String(source.label || source.title || labelForBinding(binding) || `Column ${index + 1}`);
+  const bold = source.bold ?? tableFontWeightIsBold(source.fontWeight ?? source.font_weight);
+  const normalized = {
     id: String(source.id || binding || `column_${index + 1}`),
-    label: String(source.label || labelForBinding(binding) || `Column ${index + 1}`),
+    label,
+    title: label,
     binding,
+    field: binding,
     width: Math.max(20, Math.round(Number(source.width) || 120)),
     align: ["left", "center", "right"].includes(String(source.align)) ? String(source.align) : "left",
+    bold: Boolean(bold),
+    fontWeight: Boolean(bold) ? "bold" : "normal",
+    color: source.color ? String(source.color) : "",
+    wrap: Boolean(source.wrap),
     ...(source.source_path ? { source_path: String(source.source_path) } : {})
   };
+  const fontSize = Number(source.font_size ?? source.fontSize);
+  if (Number.isFinite(fontSize) && fontSize > 0) {
+    normalized.font_size = fontSize;
+    normalized.fontSize = fontSize;
+  }
+  return normalized;
 }
 
 function normalizedTableSection(object, sectionName) {
@@ -1185,15 +1365,105 @@ function normalizedTableSection(object, sectionName) {
     ? defaultTableHeader()
     : sectionName === "row"
       ? defaultTableRow()
-      : defaultTableBorder();
+      : sectionName === "grid"
+        ? defaultTableGrid()
+        : sectionName === "sectionStyle"
+          ? defaultTableSectionStyle()
+          : defaultTableBorder();
   return normalizeTableSection(object[sectionName] ?? object.properties?.[sectionName], defaults);
 }
 
 function normalizeTableSection(value, defaults) {
-  return {
+  const normalized = {
     ...defaults,
-    ...(value && typeof value === "object" ? value : {})
+    ...(value && typeof value === "object" ? tableStyleAliases(value) : {})
   };
+  if ("showHorizontal" in normalized || "show_horizontal" in normalized) {
+    normalized.show_horizontal = Boolean(
+      normalized.showHorizontal !== undefined ? normalized.showHorizontal : normalized.show_horizontal
+    );
+    normalized.showHorizontal = normalized.show_horizontal;
+  }
+  if ("showVertical" in normalized || "show_vertical" in normalized) {
+    normalized.show_vertical = Boolean(
+      normalized.showVertical !== undefined ? normalized.showVertical : normalized.show_vertical
+    );
+    normalized.showVertical = normalized.show_vertical;
+  }
+  return normalized;
+}
+
+function tableStyleAliases(value = {}) {
+  const source = value && typeof value === "object" && !Array.isArray(value) ? { ...value } : {};
+  if (source.fontSize !== undefined && source.font_size === undefined) {
+    source.font_size = source.fontSize;
+  }
+  if (source.backgroundColor !== undefined && source.background_color === undefined) {
+    source.background_color = source.backgroundColor;
+  }
+  if (source.textColor !== undefined && source.color === undefined) {
+    source.color = source.textColor;
+  }
+  if (source.fontWeight !== undefined && source.bold === undefined) {
+    source.bold = tableFontWeightIsBold(source.fontWeight);
+  }
+  return source;
+}
+
+function tableFontWeightIsBold(value) {
+  if (typeof value === "boolean") {
+    return value;
+  }
+  return ["bold", "700", "800", "900", "true"].includes(String(value || "").toLowerCase());
+}
+
+function tablePreset(name) {
+  const flaggedRules = [
+    { when: "flag == 'HIGH'", style: { color: "#dc2626", fontWeight: "bold" } },
+    { when: "flag == 'LOW'", style: { color: "#2563eb", fontWeight: "bold" } },
+    { when: "flag == 'CRITICAL'", style: { color: "#dc2626", fontWeight: "bold" } }
+  ];
+  const commonResultsColumns = [
+    { id: "test_name", title: "Test", field: "test_name", width: 180, align: "left" },
+    { id: "result", title: "Result", field: "result", width: 80, align: "right", bold: true },
+    { id: "normal_values", title: "Normal Values", field: "normal_values", width: 150, align: "left" },
+    { id: "flag", title: "Flag", field: "flag", width: 60, align: "center", bold: true }
+  ];
+  const presets = {
+    basic_results: {
+      columns: [
+        { id: "test", title: "Test", field: "test", width: 150, align: "left" },
+        { id: "result", title: "Result", field: "result", width: 90, align: "center" },
+        { id: "unit", title: "Unit", field: "unit", width: 80, align: "left" },
+        { id: "reference", title: "Reference", field: "reference", width: 130, align: "left" }
+      ]
+    },
+    hematology_left: {
+      data_path: "left_results",
+      columns: commonResultsColumns,
+      conditionalFormatting: flaggedRules
+    },
+    hematology_right: {
+      data_path: "right_results",
+      columns: commonResultsColumns,
+      sectionStyle: {
+        ...defaultTableSectionStyle(),
+        background_color: "#ecfdf5",
+        color: "#047857"
+      },
+      conditionalFormatting: flaggedRules
+    },
+    chemistry: {
+      data_path: "results",
+      columns: commonResultsColumns,
+      conditionalFormatting: flaggedRules
+    },
+    flagged_results: {
+      columns: commonResultsColumns,
+      conditionalFormatting: flaggedRules
+    }
+  };
+  return presets[name] || null;
 }
 
 function labelForBinding(binding) {

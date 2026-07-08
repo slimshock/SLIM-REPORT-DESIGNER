@@ -321,7 +321,9 @@ def repeat_rows_per_page(
 def table_rows_per_page(context: RenderContext, table: RenderObject) -> int:
     """Calculate basic table rows that fit in the table and above the footer."""
     top = table.y
-    available = max(min(table.height, get_content_bottom(context) - top), 0)
+    page_available = get_content_bottom(context) - top
+    available = page_available if table_auto_height(table) else min(table.height, page_available)
+    available = max(available, 0)
     header_height = table_header_height(table)
     row_height = table_row_height(table)
     return calculate_rows_per_page(row_height, max(available - header_height, row_height))
@@ -626,19 +628,35 @@ def context_with_data(context: RenderContext, data: Any) -> RenderContext:
 
 
 def table_data_path(obj: RenderObject) -> str:
-    return str(obj.properties.get("data_path") or obj.properties.get("binding") or "")
+    return str(
+        obj.properties.get("data_path")
+        or obj.properties.get("dataSource")
+        or obj.properties.get("data_source")
+        or obj.properties.get("binding")
+        or ""
+    )
 
 
 def table_header_height(obj: RenderObject) -> float:
     header = obj.properties.get("header")
     if isinstance(header, dict) and header.get("visible", True) is False:
         return 0.0
+    if obj.properties.get("showHeader") is False:
+        return 0.0
+    if obj.properties.get("headerHeight") is not None:
+        return float(obj.properties.get("headerHeight") or 0)
     return float(header.get("height", 24) if isinstance(header, dict) else 24)
 
 
 def table_row_height(obj: RenderObject) -> float:
     row = obj.properties.get("row")
+    if obj.properties.get("rowHeight") is not None:
+        return float(obj.properties.get("rowHeight") or 22)
     return float(row.get("height", 22) if isinstance(row, dict) else 22)
+
+
+def table_auto_height(obj: RenderObject) -> bool:
+    return bool(obj.properties.get("autoHeight", obj.properties.get("auto_height", True)))
 
 
 def group_rows(rows: list[Any], field: str, data_path: str = "") -> list[RowGroup]:

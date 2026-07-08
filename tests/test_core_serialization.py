@@ -215,6 +215,67 @@ def test_json_serializer_round_trips_basic_table_object() -> None:
     assert table["border"]["color"] == "#d1d5db"
 
 
+def test_json_serializer_round_trips_advanced_table_aliases() -> None:
+    payload = sample_template()
+    payload["objects"].append(
+        {
+            "id": "advanced_results_table",
+            "type": "table",
+            "x": 40,
+            "y": 180,
+            "width": 515,
+            "height": 260,
+            "dataSource": "results",
+            "autoHeight": True,
+            "showHeader": True,
+            "headerHeight": 24,
+            "rowHeight": 22,
+            "headerStyle": {"backgroundColor": "#f3f4f6", "fontWeight": "bold"},
+            "bodyStyle": {"fontSize": 9},
+            "sectionStyle": {"backgroundColor": "#ecfdf5"},
+            "border": {"show": True, "width": 1, "color": "#d1d5db"},
+            "grid": {"showHorizontal": True, "showVertical": True},
+            "conditionalFormatting": [
+                {
+                    "column": "result",
+                    "when": "flag == 'HIGH'",
+                    "style": {"textColor": "#b91c1c"},
+                }
+            ],
+            "columns": [
+                {"id": "test_name", "title": "Test", "field": "test_name", "width": 150},
+                {
+                    "id": "result",
+                    "title": "Result",
+                    "field": "result",
+                    "width": 90,
+                    "fontSize": 9,
+                    "fontWeight": "bold",
+                    "wrap": True,
+                },
+            ],
+        }
+    )
+
+    report = JSONSerializer().load_mapping(payload)
+    dumped = JSONSerializer().dump_mapping(report)
+    table = next(item for item in dumped["objects"] if item["id"] == "advanced_results_table")
+
+    assert table["dataSource"] == "results"
+    assert table["autoHeight"] is True
+    assert table["showHeader"] is True
+    assert table["headerHeight"] == 24
+    assert table["rowHeight"] == 22
+    assert table["headerStyle"]["backgroundColor"] == "#f3f4f6"
+    assert table["bodyStyle"]["fontSize"] == 9
+    assert table["sectionStyle"]["backgroundColor"] == "#ecfdf5"
+    assert table["border"]["show"] is True
+    assert table["grid"]["showHorizontal"] is True
+    assert table["conditionalFormatting"][0]["column"] == "result"
+    assert table["columns"][0]["title"] == "Test"
+    assert table["columns"][1]["field"] == "result"
+
+
 def test_json_serializer_round_trips_barcode_and_qrcode_objects() -> None:
     payload = sample_template()
     payload["objects"].extend(

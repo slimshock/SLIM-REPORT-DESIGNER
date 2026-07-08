@@ -37,7 +37,7 @@ Implemented now:
 - JSON template serialization through `JSONSerializer`
 - HTML preview renderer
 - ReportLab PDF renderer
-- Text, field, line, rectangle, image, barcode, QR code, and basic table objects
+- Text, field, line, rectangle, image, barcode, QR code, and table objects
 - Visual designer canvas
 - Drag and drop
 - Resize handles
@@ -60,9 +60,10 @@ Implemented now:
 - `template.data.fields` support
 - Repeating Detail rows
 - Row-relative bindings for repeating data
-- Basic array-bound Table object
+- Array-bound Table object with column editor, presets, grid controls, style aliases, section rows, and conditional formatting
 - Barcode and QR code objects with designer, HTML preview, and PDF export support
 - Basic multi-page pagination for repeating Detail rows and Detail-band tables
+- Advanced Table schema aliases for LIS-friendly JSON templates
 - Grouped reports with `group.value`, `group.count`, and group aggregates
 - Report aggregates such as `report.count.results` and `report.sum.results.value`
 - System variables such as `page.number`, `page.total_pages`, `date.today`, and `datetime.now`
@@ -109,7 +110,7 @@ Current supported report features:
 
 Not implemented yet:
 
-- Advanced table features such as nested tables, merged cells, formulas, and grouped tables
+- Advanced table features such as nested tables, merged cells, per-cell formulas, and grouped table objects
 - Advanced pagination controls such as custom page breaks and widow/orphan rules
 - Django adapter
 - FastAPI adapter
@@ -182,6 +183,8 @@ python -m pip install -e "packages/slim_report_core[sqlalchemy]"
 There is no root `pip install -e .` package yet; install the package folders directly.
 
 See `docs/lis-integration-hardening.md` for Flask LIS/PyMySQL deployment guidance.
+See `docs/advanced-table-designer.md` for the Sprint 6.5 table schema and
+`docs/lis-table-layouts.md` for two-column LIS table layout guidance.
 
 For development tools:
 

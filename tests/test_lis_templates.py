@@ -40,3 +40,13 @@ def test_lis_sample_templates_load_and_render() -> None:
             assert "/report-designer/assets/clinic_logo" in html
             assert "/report-designer/assets/pathologist_signature" in html
             assert 'data-slim-object="empty_signature_slot"' in html
+        if path.name == "lab_result_hematology_two_column.json":
+            assert 'data-slim-object="left_table"' in html
+            assert 'data-slim-object="right_table"' in html
+            assert "Hemoglobin" in html
+            assert "HIGH" in html
+            assert "LOW" in html
+            assert "Red Cell Indices" in html
+            assert "slim-report-table-section-row" in html
+            assert "background: #fee2e2" in html
+            assert "background: #dbeafe" in html
