@@ -1,6 +1,7 @@
 {
   "version": "1.0",
   "metadata": {
+    "name": "Barcode QR Laboratory Result",
     "title": "Barcode QR Laboratory Result",
     "description": "Laboratory result template with barcode and QR code objects.",
     "author": "Slim Report Designer",

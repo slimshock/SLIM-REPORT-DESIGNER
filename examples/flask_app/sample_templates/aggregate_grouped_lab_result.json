@@ -1,6 +1,7 @@
 {
   "version": "1.0",
   "metadata": {
+    "name": "Aggregate Grouped Laboratory Result",
     "title": "Aggregate Grouped Laboratory Result",
     "description": "Laboratory result template demonstrating group, report, and page aggregate fields.",
     "author": "Slim Report Designer",

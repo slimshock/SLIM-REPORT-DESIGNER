@@ -15,6 +15,8 @@ Start with:
 - [Aggregate and system fields](aggregate-and-system-fields.md)
 - [Formulas](formulas.md)
 - [Conditional formatting](conditional-formatting.md)
+- [Sprint 5 release notes](release-notes-sprint-5.md)
+- [Sprint 5 merge checklist](merge-checklist-sprint-5.md)
 - [Roadmap](roadmap.md)
 - [Domain model](domain-model.md)
 - [Object model](object-model.md)

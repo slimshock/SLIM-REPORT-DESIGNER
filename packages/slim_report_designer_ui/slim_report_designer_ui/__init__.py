@@ -7,6 +7,8 @@ from importlib.resources.abc import Traversable
 
 __all__ = ["static_file", "static_root"]
 
+__version__ = "0.5.0a1"
+
 
 def static_root() -> Traversable:
     """Return the package resource root for static designer files."""

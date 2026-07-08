@@ -1,6 +1,7 @@
 {
   "version": "1.0",
   "metadata": {
+    "name": "Conditional Laboratory Result",
     "title": "Conditional Laboratory Result",
     "description": "Laboratory result template demonstrating object conditional formatting.",
     "author": "Slim Report Designer",

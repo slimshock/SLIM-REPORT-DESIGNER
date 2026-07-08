@@ -1,6 +1,6 @@
 """Framework-agnostic core package for Slim Report Designer."""
 
-__version__ = "0.0.0"
+__version__ = "0.5.0a1"
 
 from .api import render_html, render_pdf
 from .builder import ObjectBuilder, PageBuilder, ReportBuilder, StyleBuilder

@@ -1,6 +1,7 @@
 {
   "version": "1.0",
   "metadata": {
+    "name": "Cerebro CBC Result",
     "title": "Cerebro CBC Result",
     "description": "Cerebro Diagnostic System CBC report demo.",
     "author": "Slim Report Designer",

@@ -1,6 +1,7 @@
 {
   "version": "0.1",
   "metadata": {
+    "name": "Table Laboratory Result",
     "title": "Table Laboratory Result",
     "description": "Laboratory result template using the basic table object.",
     "author": "Slim Report Designer",

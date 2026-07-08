@@ -1,6 +1,7 @@
 {
   "version": "1.0",
   "metadata": {
+    "name": "Grouped Laboratory Result",
     "title": "Grouped Laboratory Result",
     "description": "Laboratory result template with group headers and footers.",
     "author": "Slim Report Designer",

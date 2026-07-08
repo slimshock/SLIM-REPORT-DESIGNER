@@ -1,6 +1,7 @@
 {
   "version": "1.0",
   "metadata": {
+    "name": "Computed Fields Laboratory Result",
     "title": "Computed Fields Laboratory Result",
     "description": "Laboratory result template demonstrating safe computed fields.",
     "author": "Slim Report Designer",

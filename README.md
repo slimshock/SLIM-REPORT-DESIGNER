@@ -1,6 +1,6 @@
 # Slim Report Designer
 
-Slim Report Designer is an early-alpha, framework-agnostic Python report designer and rendering toolkit.
+Slim Report Designer is an early-alpha / pre-release, framework-agnostic Python report designer and rendering toolkit.
 
 It includes:
 
@@ -71,6 +71,34 @@ Implemented now:
 - Page print/export settings, safe PDF filenames, and PDF metadata
 - Flask-hosted preview and PDF export
 - CLI commands for validation, inspection, and rendering
+
+Current supported objects:
+
+- Text
+- Field
+- Line
+- Rectangle
+- Image
+- Table
+- Barcode
+- QR Code
+
+Current supported report features:
+
+- Page Header
+- Detail
+- Page Footer
+- Group Header
+- Group Footer
+- Repeating Detail rows
+- Table object
+- Pagination
+- Data Fields panel
+- Binding picker
+- Aggregate/system variables
+- Safe formulas/computed fields
+- Conditional formatting
+- Print/export settings
 
 Not implemented yet:
 
