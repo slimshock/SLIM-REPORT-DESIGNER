@@ -1,0 +1,318 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "name": "Aggregate Grouped Laboratory Result",
+    "title": "Aggregate Grouped Laboratory Result",
+    "description": "Laboratory result template demonstrating group, report, and page aggregate fields.",
+    "author": "Slim Report Designer",
+    "tags": ["demo", "lab", "group", "aggregate"],
+    "custom": {
+      "id": "aggregate_grouped_lab_result"
+    }
+  },
+  "page": {
+    "id": "page_1",
+    "width": 595,
+    "height": 842,
+    "unit": "px",
+    "orientation": "portrait",
+    "background_color": "#ffffff",
+    "transparent": false,
+    "print": {
+      "default_filename": "aggregate-grouped-lab-result.pdf",
+      "pdf_title": "Aggregate Grouped Laboratory Result",
+      "pdf_author": "Slim Report Designer",
+      "print_background": true
+    }
+  },
+  "objects": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 40,
+      "y": 30,
+      "width": 360,
+      "height": 28,
+      "text": "AGGREGATE GROUPED LAB RESULT",
+      "style": {"font_size": 18, "bold": true},
+      "band": "page_header",
+      "band_id": "page_header",
+      "properties": {
+        "text": "AGGREGATE GROUPED LAB RESULT",
+        "band": "page_header",
+        "band_id": "page_header",
+        "style": {"font_size": 18, "bold": true}
+      }
+    },
+    {
+      "id": "patient_name",
+      "type": "field",
+      "x": 40,
+      "y": 68,
+      "width": 260,
+      "height": 18,
+      "binding": "patient.name",
+      "style": {"font_size": 11, "bold": true},
+      "band": "page_header",
+      "band_id": "page_header",
+      "properties": {
+        "binding": "patient.name",
+        "band": "page_header",
+        "band_id": "page_header",
+        "style": {"font_size": 11, "bold": true}
+      }
+    },
+    {
+      "id": "group_name",
+      "type": "field",
+      "x": 40,
+      "y": 108,
+      "width": 180,
+      "height": 20,
+      "binding": "group.value",
+      "style": {"font_size": 12, "bold": true, "background_color": "#f3f4f6"},
+      "band": "group_header_results",
+      "band_id": "group_header_results",
+      "properties": {
+        "binding": "group.value",
+        "band": "group_header_results",
+        "band_id": "group_header_results",
+        "style": {"font_size": 12, "bold": true, "background_color": "#f3f4f6"}
+      }
+    },
+    {
+      "id": "group_count",
+      "type": "field",
+      "x": 240,
+      "y": 108,
+      "width": 70,
+      "height": 20,
+      "formula": "concat('Count: ', group.count)",
+      "formula_mode": true,
+      "style": {"font_size": 10, "bold": true},
+      "band": "group_header_results",
+      "band_id": "group_header_results",
+      "properties": {
+        "formula": "concat('Count: ', group.count)",
+        "formula_mode": true,
+        "band": "group_header_results",
+        "band_id": "group_header_results",
+        "style": {"font_size": 10, "bold": true}
+      }
+    },
+    {
+      "id": "group_sum",
+      "type": "field",
+      "x": 325,
+      "y": 108,
+      "width": 95,
+      "height": 20,
+      "formula": "concat('Sum: ', group.sum.numeric_value)",
+      "formula_mode": true,
+      "style": {"font_size": 10},
+      "band": "group_header_results",
+      "band_id": "group_header_results",
+      "properties": {
+        "formula": "concat('Sum: ', group.sum.numeric_value)",
+        "formula_mode": true,
+        "band": "group_header_results",
+        "band_id": "group_header_results",
+        "style": {"font_size": 10}
+      }
+    },
+    {
+      "id": "group_avg",
+      "type": "field",
+      "x": 430,
+      "y": 108,
+      "width": 95,
+      "height": 20,
+      "formula": "concat('Avg: ', group.avg.numeric_value)",
+      "formula_mode": true,
+      "style": {"font_size": 10},
+      "band": "group_header_results",
+      "band_id": "group_header_results",
+      "properties": {
+        "formula": "concat('Avg: ', group.avg.numeric_value)",
+        "formula_mode": true,
+        "band": "group_header_results",
+        "band_id": "group_header_results",
+        "style": {"font_size": 10}
+      }
+    },
+    {
+      "id": "test_header",
+      "type": "text",
+      "x": 40,
+      "y": 144,
+      "width": 160,
+      "height": 18,
+      "text": "TEST",
+      "style": {"font_size": 10, "bold": true},
+      "band": "detail",
+      "band_id": "detail",
+      "properties": {"text": "TEST", "band": "detail", "band_id": "detail", "style": {"font_size": 10, "bold": true}}
+    },
+    {
+      "id": "value_header",
+      "type": "text",
+      "x": 220,
+      "y": 144,
+      "width": 110,
+      "height": 18,
+      "text": "VALUE",
+      "style": {"font_size": 10, "bold": true},
+      "band": "detail",
+      "band_id": "detail",
+      "properties": {"text": "VALUE", "band": "detail", "band_id": "detail", "style": {"font_size": 10, "bold": true}}
+    },
+    {
+      "id": "row_test",
+      "type": "field",
+      "x": 40,
+      "y": 168,
+      "width": 160,
+      "height": 18,
+      "binding": "test",
+      "style": {"font_size": 10},
+      "band": "detail",
+      "band_id": "detail",
+      "properties": {"binding": "test", "band": "detail", "band_id": "detail", "style": {"font_size": 10}}
+    },
+    {
+      "id": "row_value",
+      "type": "field",
+      "x": 220,
+      "y": 168,
+      "width": 110,
+      "height": 18,
+      "formula": "concat(numeric_value, ' ', unit)",
+      "formula_mode": true,
+      "style": {"font_size": 10},
+      "band": "detail",
+      "band_id": "detail",
+      "properties": {
+        "formula": "concat(numeric_value, ' ', unit)",
+        "formula_mode": true,
+        "band": "detail",
+        "band_id": "detail",
+        "style": {"font_size": 10}
+      }
+    },
+    {
+      "id": "report_count_label",
+      "type": "text",
+      "x": 40,
+      "y": 792,
+      "width": 80,
+      "height": 18,
+      "text": "Total Tests:",
+      "style": {"font_size": 10, "bold": true},
+      "band": "page_footer",
+      "band_id": "page_footer",
+      "properties": {"text": "Total Tests:", "band": "page_footer", "band_id": "page_footer", "style": {"font_size": 10, "bold": true}}
+    },
+    {
+      "id": "report_count",
+      "type": "field",
+      "x": 122,
+      "y": 792,
+      "width": 40,
+      "height": 18,
+      "binding": "report.count.results",
+      "style": {"font_size": 10},
+      "band": "page_footer",
+      "band_id": "page_footer",
+      "properties": {"binding": "report.count.results", "band": "page_footer", "band_id": "page_footer", "style": {"font_size": 10}}
+    },
+    {
+      "id": "report_sum",
+      "type": "field",
+      "x": 200,
+      "y": 792,
+      "width": 160,
+      "height": 18,
+      "formula": "concat('Report Sum: ', report.sum.results.numeric_value)",
+      "formula_mode": true,
+      "style": {"font_size": 10},
+      "band": "page_footer",
+      "band_id": "page_footer",
+      "properties": {
+        "formula": "concat('Report Sum: ', report.sum.results.numeric_value)",
+        "formula_mode": true,
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "style": {"font_size": 10}
+      }
+    },
+    {
+      "id": "page_number",
+      "type": "field",
+      "x": 480,
+      "y": 792,
+      "width": 70,
+      "height": 18,
+      "formula": "concat('Page ', page.number, ' of ', page.total_pages)",
+      "formula_mode": true,
+      "style": {"font_size": 10, "align": "right"},
+      "band": "page_footer",
+      "band_id": "page_footer",
+      "properties": {
+        "formula": "concat('Page ', page.number, ' of ', page.total_pages)",
+        "formula_mode": true,
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "style": {"font_size": 10, "align": "right"}
+      }
+    }
+  ],
+  "bands": [
+    {"id": "page_header", "type": "page_header", "name": "Page Header", "y": 0, "height": 100, "background_color": "transparent", "visible": true, "locked": false, "properties": {}},
+    {
+      "id": "group_header_results",
+      "type": "group_header",
+      "name": "Group Header",
+      "y": 100,
+      "height": 36,
+      "background_color": "#f3f4f6",
+      "visible": true,
+      "locked": false,
+      "group": {"id": "results_section", "data_path": "results", "field": "section", "sort": "none"},
+      "properties": {}
+    },
+    {
+      "id": "detail",
+      "type": "detail",
+      "name": "Detail",
+      "y": 136,
+      "height": 644,
+      "background_color": "transparent",
+      "visible": true,
+      "locked": false,
+      "repeat": {"enabled": true, "data_path": "results", "row_height": 24, "preview_rows": 12, "empty_message": "No results"},
+      "properties": {}
+    },
+    {"id": "page_footer", "type": "page_footer", "name": "Page Footer", "y": 780, "height": 62, "background_color": "transparent", "visible": true, "locked": false, "properties": {}}
+  ],
+  "assets": [],
+  "data": {
+    "sample": {
+      "patient": {"name": "JUAN DELA CRUZ"},
+      "results": [
+        {"section": "HEMATOLOGY", "test": "WBC", "numeric_value": "7.10", "unit": "10^9/L"},
+        {"section": "HEMATOLOGY", "test": "HGB", "numeric_value": "11.20", "unit": "g/dL"},
+        {"section": "CHEMISTRY", "test": "Glucose", "numeric_value": "126", "unit": "mg/dL"},
+        {"section": "CHEMISTRY", "test": "Creatinine", "numeric_value": "0.92", "unit": "mg/dL"},
+        {"section": "URINALYSIS", "test": "Nitrite", "numeric_value": "0", "unit": ""}
+      ]
+    },
+    "fields": [
+      {"path": "patient.name", "label": "Patient Name", "type": "string", "sample": "JUAN DELA CRUZ"},
+      {"path": "results[]", "label": "Results", "type": "array"},
+      {"path": "results[].section", "label": "Section", "type": "string", "sample": "HEMATOLOGY"},
+      {"path": "results[].test", "label": "Test", "type": "string", "sample": "WBC"},
+      {"path": "results[].numeric_value", "label": "Numeric Value", "type": "number", "sample": "7.10"},
+      {"path": "results[].unit", "label": "Unit", "type": "string", "sample": "10^9/L"}
+    ]
+  }
+}

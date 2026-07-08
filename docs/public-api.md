@@ -197,7 +197,7 @@ page.rectangle(x=40, y=140, width=520, height=120)
 
 ### `page.image(...)`
 
-Adds an image placeholder object:
+Adds an image object:
 
 ```python
 page.image("logo.png", x=40, y=40, width=120, height=60)
@@ -205,7 +205,7 @@ page.image("logo.png", x=40, y=40, width=120, height=60)
 
 ### `page.barcode(...)`
 
-Adds a barcode placeholder object:
+Adds a barcode object. HTML preview and PDF export render a barcode visual and optional text label:
 
 ```python
 page.barcode("ABC123", x=40, y=120, width=200, height=60)
@@ -213,7 +213,7 @@ page.barcode("ABC123", x=40, y=120, width=200, height=60)
 
 ### `page.qrcode(...)`
 
-Adds a QR code placeholder object:
+Adds a QR code object. HTML preview and PDF export render a deterministic QR-style visual:
 
 ```python
 page.qrcode("https://example.test", x=40, y=200, width=100, height=100)
@@ -221,16 +221,16 @@ page.qrcode("https://example.test", x=40, y=200, width=100, height=100)
 
 ### `page.table(...)`
 
-Adds a table placeholder object:
+Adds a basic array-bound table object:
 
 ```python
 page.table(
-    binding="results",
+    data_path="results",
     x=40,
     y=320,
     width=520,
     height=200,
-    columns=[{"label": "Test", "field": "name"}],
+    columns=[{"label": "Test", "binding": "test"}],
 )
 ```
 

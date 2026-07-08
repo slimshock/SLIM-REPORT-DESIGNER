@@ -1,6 +1,6 @@
 """Framework-agnostic core package for Slim Report Designer."""
 
-__version__ = "0.0.0"
+__version__ = "0.5.0a1"
 
 from .api import render_html, render_pdf
 from .builder import ObjectBuilder, PageBuilder, ReportBuilder, StyleBuilder
@@ -57,6 +57,7 @@ from .validation import ReportValidationIssue, ReportValidationResult
 from .widgets import (
     BaseWidget,
     FieldWidget,
+    ImageWidget,
     LineWidget,
     RectangleWidget,
     TextWidget,
@@ -83,6 +84,7 @@ __all__ = [
     "FieldWidget",
     "HTMLExporter",
     "ImageObject",
+    "ImageWidget",
     "JSONSerializer",
     "Layer",
     "LineObject",

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "slim-report-core"
-version = "0.0.0"
+version = "0.5.0a1"
 description = "Framework-agnostic core for Slim Report Designer."
 readme = "../../README.md"
 requires-python = ">=3.10"

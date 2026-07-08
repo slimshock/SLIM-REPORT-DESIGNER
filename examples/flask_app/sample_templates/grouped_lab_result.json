@@ -1,0 +1,1064 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "name": "Grouped Laboratory Result",
+    "title": "Grouped Laboratory Result",
+    "description": "Laboratory result template with group headers and footers.",
+    "author": "Slim Report Designer",
+    "tags": [
+      "demo",
+      "lab",
+      "group"
+    ],
+    "custom": {
+      "id": "grouped_lab_result",
+      "provider": "grouped_lab_result"
+    }
+  },
+  "page": {
+    "width": 595,
+    "height": 842,
+    "unit": "px",
+    "orientation": "portrait",
+    "margin_top": 0.5,
+    "margin_right": 0.5,
+    "margin_bottom": 0.5,
+    "margin_left": 0.5,
+    "background_color": "#ffffff",
+    "transparent": false,
+    "id": "page_1"
+  },
+  "objects": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 40,
+      "y": 30,
+      "width": 340,
+      "height": 28,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "GROUPED LABORATORY RESULT",
+        "page_id": "page_1",
+        "band": "page_header",
+        "band_id": "page_header",
+        "style": {
+          "font_size": 20,
+          "bold": true,
+          "band": "page_header"
+        }
+      },
+      "text": "GROUPED LABORATORY RESULT",
+      "style": {
+        "font_size": 20,
+        "bold": true,
+        "band": "page_header"
+      },
+      "band": "page_header",
+      "band_id": "page_header"
+    },
+    {
+      "id": "patient_name",
+      "type": "field",
+      "x": 40,
+      "y": 72,
+      "width": 220,
+      "height": 18,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "patient.name",
+        "page_id": "page_1",
+        "band": "page_header",
+        "band_id": "page_header",
+        "style": {
+          "font_size": 12,
+          "bold": true,
+          "band": "page_header"
+        }
+      },
+      "binding": "patient.name",
+      "style": {
+        "font_size": 12,
+        "bold": true,
+        "band": "page_header"
+      },
+      "band": "page_header",
+      "band_id": "page_header"
+    },
+    {
+      "id": "order_id",
+      "type": "field",
+      "x": 360,
+      "y": 72,
+      "width": 160,
+      "height": 18,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "order.id",
+        "page_id": "page_1",
+        "band": "page_header",
+        "band_id": "page_header",
+        "style": {
+          "font_size": 12,
+          "band": "page_header"
+        }
+      },
+      "binding": "order.id",
+      "style": {
+        "font_size": 12,
+        "band": "page_header"
+      },
+      "band": "page_header",
+      "band_id": "page_header"
+    },
+    {
+      "id": "generated_date",
+      "type": "field",
+      "x": 360,
+      "y": 96,
+      "width": 140,
+      "height": 18,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "date.today",
+        "page_id": "page_1",
+        "band": "page_header",
+        "band_id": "page_header",
+        "style": {
+          "font_size": 10,
+          "band": "page_header"
+        }
+      },
+      "binding": "date.today",
+      "style": {
+        "font_size": 10,
+        "band": "page_header"
+      },
+      "band": "page_header",
+      "band_id": "page_header"
+    },
+    {
+      "id": "group_name",
+      "type": "field",
+      "x": 42,
+      "y": 126,
+      "width": 220,
+      "height": 18,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "group.value",
+        "page_id": "page_1",
+        "band": "group_header_results",
+        "band_id": "group_header_results",
+        "style": {
+          "font_size": 12,
+          "bold": true,
+          "band": "group_header_results"
+        }
+      },
+      "binding": "group.value",
+      "style": {
+        "font_size": 12,
+        "bold": true,
+        "band": "group_header_results"
+      },
+      "band": "group_header_results",
+      "band_id": "group_header_results"
+    },
+    {
+      "id": "test_header",
+      "type": "text",
+      "x": 42,
+      "y": 152,
+      "width": 160,
+      "height": 18,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "TEST",
+        "page_id": "page_1",
+        "band": "detail",
+        "band_id": "detail",
+        "style": {
+          "font_size": 11,
+          "bold": true,
+          "band": "detail"
+        }
+      },
+      "text": "TEST",
+      "style": {
+        "font_size": 11,
+        "bold": true,
+        "band": "detail"
+      },
+      "band": "detail",
+      "band_id": "detail"
+    },
+    {
+      "id": "value_header",
+      "type": "text",
+      "x": 220,
+      "y": 152,
+      "width": 90,
+      "height": 18,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "VALUE",
+        "page_id": "page_1",
+        "band": "detail",
+        "band_id": "detail",
+        "style": {
+          "font_size": 11,
+          "bold": true,
+          "band": "detail"
+        }
+      },
+      "text": "VALUE",
+      "style": {
+        "font_size": 11,
+        "bold": true,
+        "band": "detail"
+      },
+      "band": "detail",
+      "band_id": "detail"
+    },
+    {
+      "id": "unit_header",
+      "type": "text",
+      "x": 330,
+      "y": 152,
+      "width": 90,
+      "height": 18,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "UNIT",
+        "page_id": "page_1",
+        "band": "detail",
+        "band_id": "detail",
+        "style": {
+          "font_size": 11,
+          "bold": true,
+          "band": "detail"
+        }
+      },
+      "text": "UNIT",
+      "style": {
+        "font_size": 11,
+        "bold": true,
+        "band": "detail"
+      },
+      "band": "detail",
+      "band_id": "detail"
+    },
+    {
+      "id": "flag_header",
+      "type": "text",
+      "x": 450,
+      "y": 152,
+      "width": 70,
+      "height": 18,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "FLAG",
+        "page_id": "page_1",
+        "band": "detail",
+        "band_id": "detail",
+        "style": {
+          "font_size": 11,
+          "bold": true,
+          "band": "detail"
+        }
+      },
+      "text": "FLAG",
+      "style": {
+        "font_size": 11,
+        "bold": true,
+        "band": "detail"
+      },
+      "band": "detail",
+      "band_id": "detail"
+    },
+    {
+      "id": "row_test",
+      "type": "field",
+      "x": 42,
+      "y": 176,
+      "width": 160,
+      "height": 18,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "test",
+        "page_id": "page_1",
+        "band": "detail",
+        "band_id": "detail",
+        "style": {
+          "font_size": 11,
+          "band": "detail"
+        }
+      },
+      "binding": "test",
+      "style": {
+        "font_size": 11,
+        "band": "detail"
+      },
+      "band": "detail",
+      "band_id": "detail"
+    },
+    {
+      "id": "row_value",
+      "type": "field",
+      "x": 220,
+      "y": 176,
+      "width": 90,
+      "height": 18,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "value",
+        "page_id": "page_1",
+        "band": "detail",
+        "band_id": "detail",
+        "style": {
+          "font_size": 11,
+          "band": "detail"
+        }
+      },
+      "binding": "value",
+      "style": {
+        "font_size": 11,
+        "band": "detail"
+      },
+      "band": "detail",
+      "band_id": "detail"
+    },
+    {
+      "id": "row_unit",
+      "type": "field",
+      "x": 330,
+      "y": 176,
+      "width": 90,
+      "height": 18,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "unit",
+        "page_id": "page_1",
+        "band": "detail",
+        "band_id": "detail",
+        "style": {
+          "font_size": 11,
+          "band": "detail"
+        }
+      },
+      "binding": "unit",
+      "style": {
+        "font_size": 11,
+        "band": "detail"
+      },
+      "band": "detail",
+      "band_id": "detail"
+    },
+    {
+      "id": "row_flag",
+      "type": "field",
+      "x": 450,
+      "y": 176,
+      "width": 70,
+      "height": 18,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "flag",
+        "page_id": "page_1",
+        "band": "detail",
+        "band_id": "detail",
+        "style": {
+          "font_size": 11,
+          "band": "detail"
+        }
+      },
+      "binding": "flag",
+      "style": {
+        "font_size": 11,
+        "band": "detail"
+      },
+      "band": "detail",
+      "band_id": "detail"
+    },
+    {
+      "id": "group_count_label",
+      "type": "text",
+      "x": 42,
+      "y": 758,
+      "width": 50,
+      "height": 16,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "Count:",
+        "page_id": "page_1",
+        "band": "group_footer_results",
+        "band_id": "group_footer_results",
+        "style": {
+          "font_size": 10,
+          "bold": true,
+          "band": "group_footer_results"
+        }
+      },
+      "text": "Count:",
+      "style": {
+        "font_size": 10,
+        "bold": true,
+        "band": "group_footer_results"
+      },
+      "band": "group_footer_results",
+      "band_id": "group_footer_results"
+    },
+    {
+      "id": "group_count",
+      "type": "field",
+      "x": 92,
+      "y": 758,
+      "width": 50,
+      "height": 16,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "group.count",
+        "page_id": "page_1",
+        "band": "group_footer_results",
+        "band_id": "group_footer_results",
+        "style": {
+          "font_size": 10,
+          "band": "group_footer_results"
+        }
+      },
+      "binding": "group.count",
+      "style": {
+        "font_size": 10,
+        "band": "group_footer_results"
+      },
+      "band": "group_footer_results",
+      "band_id": "group_footer_results"
+    },
+    {
+      "id": "group_sum_label",
+      "type": "text",
+      "x": 160,
+      "y": 758,
+      "width": 70,
+      "height": 16,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "Sum:",
+        "page_id": "page_1",
+        "band": "group_footer_results",
+        "band_id": "group_footer_results",
+        "style": {
+          "font_size": 10,
+          "bold": true,
+          "band": "group_footer_results"
+        }
+      },
+      "text": "Sum:",
+      "style": {
+        "font_size": 10,
+        "bold": true,
+        "band": "group_footer_results"
+      },
+      "band": "group_footer_results",
+      "band_id": "group_footer_results"
+    },
+    {
+      "id": "group_sum_value",
+      "type": "field",
+      "x": 230,
+      "y": 758,
+      "width": 80,
+      "height": 16,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "group.sum.value",
+        "page_id": "page_1",
+        "band": "group_footer_results",
+        "band_id": "group_footer_results",
+        "style": {
+          "font_size": 10,
+          "band": "group_footer_results"
+        }
+      },
+      "binding": "group.sum.value",
+      "style": {
+        "font_size": 10,
+        "band": "group_footer_results"
+      },
+      "band": "group_footer_results",
+      "band_id": "group_footer_results"
+    },
+    {
+      "id": "footer",
+      "type": "text",
+      "x": 40,
+      "y": 802,
+      "width": 240,
+      "height": 16,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "Generated by Slim Report Designer",
+        "page_id": "page_1",
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "style": {
+          "font_size": 10,
+          "band": "page_footer"
+        }
+      },
+      "text": "Generated by Slim Report Designer",
+      "style": {
+        "font_size": 10,
+        "band": "page_footer"
+      },
+      "band": "page_footer",
+      "band_id": "page_footer"
+    },
+    {
+      "id": "page_number",
+      "type": "field",
+      "x": 420,
+      "y": 802,
+      "width": 32,
+      "height": 16,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "page.number",
+        "page_id": "page_1",
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "style": {
+          "font_size": 10,
+          "align": "right",
+          "band": "page_footer"
+        }
+      },
+      "binding": "page.number",
+      "style": {
+        "font_size": 10,
+        "align": "right",
+        "band": "page_footer"
+      },
+      "band": "page_footer",
+      "band_id": "page_footer"
+    },
+    {
+      "id": "total_pages",
+      "type": "field",
+      "x": 462,
+      "y": 802,
+      "width": 48,
+      "height": 16,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "page.total_pages",
+        "page_id": "page_1",
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "style": {
+          "font_size": 10,
+          "align": "right",
+          "band": "page_footer"
+        }
+      },
+      "binding": "page.total_pages",
+      "style": {
+        "font_size": 10,
+        "align": "right",
+        "band": "page_footer"
+      },
+      "band": "page_footer",
+      "band_id": "page_footer"
+    }
+  ],
+  "bands": [
+    {
+      "id": "page_header",
+      "type": "page_header",
+      "name": "Page Header",
+      "y": 0.0,
+      "height": 120.0,
+      "background_color": "transparent",
+      "visible": true,
+      "locked": false,
+      "properties": {}
+    },
+    {
+      "id": "group_header_results",
+      "type": "group_header",
+      "name": "Group Header",
+      "y": 120.0,
+      "height": 30.0,
+      "background_color": "#f3f4f6",
+      "visible": true,
+      "locked": false,
+      "group": {
+        "id": "results_section",
+        "data_path": "results",
+        "field": "section",
+        "sort": "none"
+      },
+      "properties": {}
+    },
+    {
+      "id": "detail",
+      "type": "detail",
+      "name": "Detail",
+      "y": 150.0,
+      "height": 606.0,
+      "background_color": "transparent",
+      "visible": true,
+      "locked": false,
+      "repeat": {
+        "enabled": true,
+        "data_path": "results",
+        "row_height": 24,
+        "preview_rows": 12,
+        "empty_message": "No results"
+      },
+      "properties": {}
+    },
+    {
+      "id": "group_footer_results",
+      "type": "group_footer",
+      "name": "Group Footer",
+      "y": 756.0,
+      "height": 24.0,
+      "background_color": "transparent",
+      "visible": true,
+      "locked": false,
+      "group": {
+        "id": "results_section",
+        "sort": "none"
+      },
+      "properties": {}
+    },
+    {
+      "id": "page_footer",
+      "type": "page_footer",
+      "name": "Page Footer",
+      "y": 780.0,
+      "height": 62.0,
+      "background_color": "transparent",
+      "visible": true,
+      "locked": false,
+      "properties": {}
+    }
+  ],
+  "assets": [],
+  "data": {
+    "sample": {
+      "laboratory": {
+        "name": "Cerebro Diagnostic System",
+        "address": "Cagayan de Oro City, Philippines"
+      },
+      "patient": {
+        "name": "JUAN DELA CRUZ",
+        "patient_no": "P-00001234",
+        "age": "34",
+        "sex": "Male",
+        "dob": "1992-04-18"
+      },
+      "order": {
+        "id": "ORDER-1001",
+        "date": "2026-07-06",
+        "physician": "Dr. Maria Santos",
+        "section": "Hematology"
+      },
+      "results": [
+        {
+          "test": "WBC",
+          "result": "7.10",
+          "value": "7.10",
+          "unit": "10^9/L",
+          "reference": "4.00 - 10.00",
+          "flag": "N",
+          "section": "HEMATOLOGY"
+        },
+        {
+          "test": "RBC",
+          "result": "5.02",
+          "value": "5.02",
+          "unit": "10^12/L",
+          "reference": "4.50 - 5.90",
+          "flag": "N",
+          "section": "HEMATOLOGY"
+        },
+        {
+          "test": "HGB",
+          "result": "14.20",
+          "value": "14.20",
+          "unit": "g/dL",
+          "reference": "13.00 - 17.00",
+          "flag": "N",
+          "section": "HEMATOLOGY"
+        },
+        {
+          "test": "HCT",
+          "result": "42.80",
+          "value": "42.80",
+          "unit": "%",
+          "reference": "40.00 - 50.00",
+          "flag": "N",
+          "section": "HEMATOLOGY"
+        },
+        {
+          "test": "MCV",
+          "result": "85.30",
+          "value": "85.30",
+          "unit": "fL",
+          "reference": "80.00 - 100.00",
+          "flag": "N",
+          "section": "HEMATOLOGY"
+        },
+        {
+          "test": "MCH",
+          "result": "28.30",
+          "value": "28.30",
+          "unit": "pg",
+          "reference": "27.00 - 32.00",
+          "flag": "N",
+          "section": "HEMATOLOGY"
+        },
+        {
+          "test": "MCHC",
+          "result": "33.20",
+          "value": "33.20",
+          "unit": "g/dL",
+          "reference": "32.00 - 36.00",
+          "flag": "N",
+          "section": "HEMATOLOGY"
+        },
+        {
+          "test": "RDW-CV",
+          "result": "13.10",
+          "value": "13.10",
+          "unit": "%",
+          "reference": "11.50 - 14.50",
+          "flag": "N",
+          "section": "HEMATOLOGY"
+        },
+        {
+          "test": "PLT",
+          "result": "265",
+          "value": "265",
+          "unit": "10^9/L",
+          "reference": "150 - 400",
+          "flag": "N",
+          "section": "HEMATOLOGY"
+        },
+        {
+          "test": "MPV",
+          "result": "9.40",
+          "value": "9.40",
+          "unit": "fL",
+          "reference": "7.50 - 11.50",
+          "flag": "N",
+          "section": "HEMATOLOGY"
+        },
+        {
+          "test": "Neutrophils",
+          "result": "58",
+          "value": "58",
+          "unit": "%",
+          "reference": "50 - 70",
+          "flag": "N",
+          "section": "HEMATOLOGY"
+        },
+        {
+          "test": "Lymphocytes",
+          "result": "32",
+          "value": "32",
+          "unit": "%",
+          "reference": "20 - 40",
+          "flag": "N",
+          "section": "HEMATOLOGY"
+        },
+        {
+          "test": "Monocytes",
+          "result": "6",
+          "value": "6",
+          "unit": "%",
+          "reference": "2 - 8",
+          "flag": "N",
+          "section": "HEMATOLOGY"
+        },
+        {
+          "test": "Eosinophils",
+          "result": "3",
+          "value": "3",
+          "unit": "%",
+          "reference": "1 - 4",
+          "flag": "N",
+          "section": "HEMATOLOGY"
+        },
+        {
+          "test": "Basophils",
+          "result": "1",
+          "value": "1",
+          "unit": "%",
+          "reference": "0 - 1",
+          "flag": "N",
+          "section": "HEMATOLOGY"
+        },
+        {
+          "test": "Glucose",
+          "result": "94",
+          "value": "94",
+          "unit": "mg/dL",
+          "reference": "70 - 99",
+          "flag": "N",
+          "section": "CHEMISTRY"
+        },
+        {
+          "test": "BUN",
+          "result": "14",
+          "value": "14",
+          "unit": "mg/dL",
+          "reference": "7 - 20",
+          "flag": "N",
+          "section": "CHEMISTRY"
+        },
+        {
+          "test": "Creatinine",
+          "result": "0.92",
+          "value": "0.92",
+          "unit": "mg/dL",
+          "reference": "0.70 - 1.30",
+          "flag": "N",
+          "section": "CHEMISTRY"
+        },
+        {
+          "test": "Uric Acid",
+          "result": "5.80",
+          "value": "5.80",
+          "unit": "mg/dL",
+          "reference": "3.50 - 7.20",
+          "flag": "N",
+          "section": "CHEMISTRY"
+        },
+        {
+          "test": "Total Cholesterol",
+          "result": "182",
+          "value": "182",
+          "unit": "mg/dL",
+          "reference": "< 200",
+          "flag": "N",
+          "section": "CHEMISTRY"
+        },
+        {
+          "test": "Triglycerides",
+          "result": "118",
+          "value": "118",
+          "unit": "mg/dL",
+          "reference": "< 150",
+          "flag": "N",
+          "section": "CHEMISTRY"
+        },
+        {
+          "test": "HDL",
+          "result": "48",
+          "value": "48",
+          "unit": "mg/dL",
+          "reference": "> 40",
+          "flag": "N",
+          "section": "CHEMISTRY"
+        },
+        {
+          "test": "LDL",
+          "result": "110",
+          "value": "110",
+          "unit": "mg/dL",
+          "reference": "< 130",
+          "flag": "N",
+          "section": "CHEMISTRY"
+        },
+        {
+          "test": "AST",
+          "result": "24",
+          "value": "24",
+          "unit": "U/L",
+          "reference": "0 - 40",
+          "flag": "N",
+          "section": "CHEMISTRY"
+        },
+        {
+          "test": "ALT",
+          "result": "29",
+          "value": "29",
+          "unit": "U/L",
+          "reference": "0 - 41",
+          "flag": "N",
+          "section": "CHEMISTRY"
+        },
+        {
+          "test": "Sodium",
+          "result": "139",
+          "value": "139",
+          "unit": "mmol/L",
+          "reference": "135 - 145",
+          "flag": "N",
+          "section": "CHEMISTRY"
+        },
+        {
+          "test": "Potassium",
+          "result": "4.20",
+          "value": "4.20",
+          "unit": "mmol/L",
+          "reference": "3.50 - 5.10",
+          "flag": "N",
+          "section": "CHEMISTRY"
+        },
+        {
+          "test": "Chloride",
+          "result": "102",
+          "value": "102",
+          "unit": "mmol/L",
+          "reference": "98 - 107",
+          "flag": "N",
+          "section": "CHEMISTRY"
+        },
+        {
+          "test": "Urine Color",
+          "result": "Yellow",
+          "value": "Yellow",
+          "unit": "",
+          "reference": "Yellow",
+          "flag": "N",
+          "section": "URINALYSIS"
+        },
+        {
+          "test": "Urine Clarity",
+          "result": "Clear",
+          "value": "Clear",
+          "unit": "",
+          "reference": "Clear",
+          "flag": "N",
+          "section": "URINALYSIS"
+        },
+        {
+          "test": "Specific Gravity",
+          "result": "1.020",
+          "value": "1.020",
+          "unit": "",
+          "reference": "1.005 - 1.030",
+          "flag": "N",
+          "section": "URINALYSIS"
+        },
+        {
+          "test": "Urine pH",
+          "result": "6.0",
+          "value": "6.0",
+          "unit": "",
+          "reference": "5.0 - 8.0",
+          "flag": "N",
+          "section": "URINALYSIS"
+        },
+        {
+          "test": "Protein",
+          "result": "Negative",
+          "value": "Negative",
+          "unit": "",
+          "reference": "Negative",
+          "flag": "N",
+          "section": "URINALYSIS"
+        },
+        {
+          "test": "Glucose Urine",
+          "result": "Negative",
+          "value": "Negative",
+          "unit": "",
+          "reference": "Negative",
+          "flag": "N",
+          "section": "URINALYSIS"
+        },
+        {
+          "test": "Ketones",
+          "result": "Negative",
+          "value": "Negative",
+          "unit": "",
+          "reference": "Negative",
+          "flag": "N",
+          "section": "URINALYSIS"
+        },
+        {
+          "test": "Nitrite",
+          "result": "Negative",
+          "value": "Negative",
+          "unit": "",
+          "reference": "Negative",
+          "flag": "N",
+          "section": "URINALYSIS"
+        }
+      ]
+    },
+    "fields": [
+      {
+        "path": "laboratory.name",
+        "label": "Laboratory Name",
+        "type": "string"
+      },
+      {
+        "path": "patient.name",
+        "label": "Patient Name",
+        "type": "string"
+      },
+      {
+        "path": "order.id",
+        "label": "Order ID",
+        "type": "string"
+      },
+      {
+        "path": "results[]",
+        "label": "Results",
+        "type": "array"
+      },
+      {
+        "path": "results[].section",
+        "label": "Section",
+        "type": "string"
+      },
+      {
+        "path": "results[].test",
+        "label": "Test",
+        "type": "string"
+      },
+      {
+        "path": "results[].value",
+        "label": "Value",
+        "type": "string"
+      },
+      {
+        "path": "results[].unit",
+        "label": "Unit",
+        "type": "string"
+      },
+      {
+        "path": "results[].flag",
+        "label": "Flag",
+        "type": "string"
+      }
+    ]
+  }
+}

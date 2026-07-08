@@ -15,6 +15,7 @@ from slim_report_core import (
 )
 from slim_report_core.exporters import create_default_exporter_registry
 from slim_report_core.widgets import (
+    ImageWidget,
     RectangleWidget,
     TextWidget,
     create_default_widget_registry,
@@ -24,9 +25,10 @@ from slim_report_core.widgets import (
 def test_default_widget_registry_contains_builtin_widgets() -> None:
     registry = create_default_widget_registry()
 
-    assert registry.list() == ["field", "line", "rectangle", "text"]
+    assert registry.list() == ["field", "image", "line", "rectangle", "text"]
     assert registry.get("text") is not None
     assert registry.get("field") is not None
+    assert registry.get("image") is not None
     assert registry.get("line") is not None
     assert registry.get("rectangle") is not None
 
@@ -66,6 +68,16 @@ def test_widget_validate_rejects_wrong_type() -> None:
         widget.validate(obj)
 
 
+def test_image_widget_renders_placeholder_without_source() -> None:
+    widget = ImageWidget()
+    obj = ReportObject(id="logo", type="image", width=80, height=40)
+
+    html = widget.render_html(obj, {}, {})
+
+    assert "Image" in html
+    assert 'data-slim-object="logo"' in html
+
+
 def test_html_exporter_renders_absolute_positioned_report() -> None:
     report = Report()
     report.template.metadata.title = "Patient Report"
@@ -93,6 +105,7 @@ def test_html_exporter_renders_absolute_positioned_report() -> None:
     )
     report.add_object(ReportObject(id="rule", type="line", x=1, y=2, width=4, height=0))
     report.add_object(ReportObject(id="box", type="rectangle", x=1, y=2.5, width=4, height=1))
+    report.add_object(ReportObject(id="logo", type="image", x=1, y=4, width=1, height=1))
 
     html = HTMLExporter().export(
         report,
@@ -106,6 +119,7 @@ def test_html_exporter_renders_absolute_positioned_report() -> None:
     assert ">12.8<" in html
     assert "<svg" in html
     assert 'data-slim-object="box"' in html
+    assert 'data-slim-object="logo"' in html
 
 
 def test_html_exporter_supports_a4_landscape() -> None:

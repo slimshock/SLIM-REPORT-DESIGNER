@@ -27,7 +27,7 @@ def test_report_validate_returns_structured_errors_without_raising() -> None:
 
 
 def test_report_validate_checks_page_size_and_orientation() -> None:
-    report = Report(pages=[Page(size="legal", orientation="diagonal", unit="parsec", width=0)])
+    report = Report(pages=[Page(size="tabloid", orientation="diagonal", unit="parsec", width=0)])
 
     codes = {error.code for error in report.validate().errors}
 
@@ -53,6 +53,18 @@ def test_report_validate_checks_objects_unique_ids_and_bindings() -> None:
     assert "object.type.unsupported" in codes
     assert "object.width.invalid" in codes
     assert "binding.expression.unsupported_function" in codes
+
+
+def test_report_validate_accepts_repeating_array_bindings() -> None:
+    report = Report()
+    report.objects = [
+        Object(id="row_test", type="field", binding="results[].test"),
+        Object(id="row_value", type="field", binding="results[0].value"),
+    ]
+
+    errors = report.validate().errors
+
+    assert [error for error in errors if error.path.endswith(".binding")] == []
 
 
 def test_report_validate_checks_styles_and_assets() -> None:

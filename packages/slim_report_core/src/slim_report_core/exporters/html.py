@@ -7,7 +7,7 @@ from typing import Any
 from ..exceptions import ExporterError, ReportValidationError
 from ..rendering import render_html
 from ..report import Report
-from .base import BaseExporter
+from .base import BaseExporter, _page_size_values
 
 
 class HTMLExporter(BaseExporter):
@@ -45,8 +45,11 @@ def _report_with_overrides(report: Any, page_size: str | None, orientation: str 
 
     page = prepared.page
     if page_size is not None:
+        width, height, unit = _page_size_values(page_size)
         page.size = page_size
-        page.unit = page.unit or "px"
+        page.unit = unit
+        page.width = width
+        page.height = height
     if orientation is not None:
         page.orientation = orientation
     return prepared

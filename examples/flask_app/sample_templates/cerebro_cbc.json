@@ -1,6 +1,7 @@
 {
   "version": "1.0",
   "metadata": {
+    "name": "Cerebro CBC Result",
     "title": "Cerebro CBC Result",
     "description": "Cerebro Diagnostic System CBC report demo.",
     "author": "Slim Report Designer",
@@ -24,7 +25,9 @@
     "margin_right": 0.5,
     "margin_bottom": 0.5,
     "margin_left": 0.5,
-    "id": "page_1"
+    "background_color": "#ffffff",
+    "transparent": false,
+    "size": "A4"
   },
   "objects": [
     {
@@ -37,21 +40,25 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "CEREBRO",
         "page_id": "page_1",
         "style": {
-          "font_size": 27,
-          "color": "#0B79C9"
-        }
+          "color": "#0B79C9",
+          "font_size": 27
+        },
+        "text": "CEREBRO",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "CEREBRO",
       "style": {
-        "font_size": 27,
-        "color": "#0B79C9"
-      }
+        "color": "#0B79C9",
+        "font_size": 27
+      },
+      "band_id": "detail"
     },
     {
-      "id": "cerebro_logo_subtitle",
+      "id": "cerebro_subtitle",
       "type": "text",
       "x": 18.0,
       "y": 56.0,
@@ -60,18 +67,22 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "DIAGNOSTIC SYSTEM",
         "page_id": "page_1",
         "style": {
-          "font_size": 10,
-          "color": "#E53935"
-        }
+          "color": "#E53935",
+          "font_size": 10
+        },
+        "text": "DIAGNOSTIC SYSTEM",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "DIAGNOSTIC SYSTEM",
       "style": {
-        "font_size": 10,
-        "color": "#E53935"
-      }
+        "color": "#E53935",
+        "font_size": 10
+      },
+      "band_id": "detail"
     },
     {
       "id": "clinic_name",
@@ -83,21 +94,25 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Cerebro Diagnostic System",
         "page_id": "page_1",
         "style": {
-          "font_size": 26,
-          "bold": true
-        }
+          "bold": true,
+          "font_size": 26
+        },
+        "text": "Cerebro Diagnostic System",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Cerebro Diagnostic System",
       "style": {
-        "font_size": 26,
-        "bold": true
-      }
+        "bold": true,
+        "font_size": 26
+      },
+      "band_id": "detail"
     },
     {
-      "id": "clinic_address_1",
+      "id": "clinic_address",
       "type": "text",
       "x": 171.0,
       "y": 35.0,
@@ -106,37 +121,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Alwana Business Park, Zone 4 Cugman, Cagayan de Oro City",
         "page_id": "page_1",
         "style": {
           "font_size": 10
-        }
+        },
+        "text": "Alwana Business Park, Zone 4 Cugman, Cagayan de Oro City",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Alwana Business Park, Zone 4 Cugman, Cagayan de Oro City",
       "style": {
         "font_size": 10
-      }
-    },
-    {
-      "id": "clinic_address_2",
-      "type": "text",
-      "x": 171.0,
-      "y": 48.0,
-      "width": 250.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "text": "Misamis Oriental 9000",
-        "page_id": "page_1",
-        "style": {
-          "font_size": 10
-        }
       },
-      "text": "Misamis Oriental 9000",
-      "style": {
-        "font_size": 10
-      }
+      "band_id": "detail"
     },
     {
       "id": "clinic_contact",
@@ -148,16 +146,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Contact No.: +639 260 235 049, +639 222 979 774",
         "page_id": "page_1",
         "style": {
           "font_size": 10
-        }
+        },
+        "text": "Contact No.: +639 260 235 049, +639 222 979 774",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Contact No.: +639 260 235 049, +639 222 979 774",
       "style": {
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "clinic_email",
@@ -169,21 +171,25 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Email Address: cerebro.info@gmail.com",
         "page_id": "page_1",
         "style": {
           "font_size": 10
-        }
+        },
+        "text": "Email Address: cerebro.info@gmail.com",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Email Address: cerebro.info@gmail.com",
       "style": {
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "header_rule",
       "type": "line",
-      "x": 14.0,
+      "x": 10.0,
       "y": 90.0,
       "width": 624.0,
       "height": 0.0,
@@ -193,38 +199,46 @@
         "page_id": "page_1",
         "style": {
           "stroke_width": 1
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
         "stroke_width": 1
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "patient_name_label",
       "type": "text",
-      "x": 14.0,
-      "y": 98.0,
+      "x": 20.0,
+      "y": 100.0,
       "width": 96.0,
       "height": 12.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Patient Name:",
         "page_id": "page_1",
         "style": {
           "font_size": 10
-        }
+        },
+        "text": "Patient Name:",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Patient Name:",
       "style": {
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "patient_name_value",
       "type": "field",
-      "x": 110.0,
-      "y": 98.0,
+      "x": 100.0,
+      "y": 100.0,
       "width": 180.0,
       "height": 12.0,
       "z_index": 0,
@@ -233,42 +247,50 @@
         "binding": "patient.name",
         "page_id": "page_1",
         "style": {
-          "font_size": 10,
-          "bold": true
-        }
+          "bold": true,
+          "font_size": 10
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "patient.name",
       "style": {
-        "font_size": 10,
-        "bold": true
-      }
+        "bold": true,
+        "font_size": 10
+      },
+      "band_id": "detail"
     },
     {
       "id": "age_label",
       "type": "text",
-      "x": 14.0,
-      "y": 111.0,
+      "x": 20.0,
+      "y": 110.0,
       "width": 96.0,
       "height": 12.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Age:",
         "page_id": "page_1",
         "style": {
           "font_size": 10
-        }
+        },
+        "text": "Age:",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Age:",
       "style": {
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "age_value",
       "type": "field",
-      "x": 110.0,
-      "y": 111.0,
+      "x": 100.0,
+      "y": 110.0,
       "width": 180.0,
       "height": 12.0,
       "z_index": 0,
@@ -277,42 +299,50 @@
         "binding": "patient.age",
         "page_id": "page_1",
         "style": {
-          "font_size": 10,
-          "bold": true
-        }
+          "bold": true,
+          "font_size": 10
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "patient.age",
       "style": {
-        "font_size": 10,
-        "bold": true
-      }
+        "bold": true,
+        "font_size": 10
+      },
+      "band_id": "detail"
     },
     {
       "id": "dob_label",
       "type": "text",
-      "x": 14.0,
-      "y": 124.0,
+      "x": 20.0,
+      "y": 120.0,
       "width": 96.0,
       "height": 12.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "DOB:",
         "page_id": "page_1",
         "style": {
           "font_size": 10
-        }
+        },
+        "text": "DOB:",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "DOB:",
       "style": {
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "dob_value",
       "type": "field",
-      "x": 110.0,
-      "y": 124.0,
+      "x": 100.0,
+      "y": 120.0,
       "width": 180.0,
       "height": 12.0,
       "z_index": 0,
@@ -321,42 +351,50 @@
         "binding": "patient.dob",
         "page_id": "page_1",
         "style": {
-          "font_size": 10,
-          "bold": true
-        }
+          "bold": true,
+          "font_size": 10
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "patient.dob",
       "style": {
-        "font_size": 10,
-        "bold": true
-      }
+        "bold": true,
+        "font_size": 10
+      },
+      "band_id": "detail"
     },
     {
       "id": "sex_label",
       "type": "text",
-      "x": 14.0,
-      "y": 137.0,
+      "x": 20.0,
+      "y": 130.0,
       "width": 96.0,
       "height": 12.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Sex:",
         "page_id": "page_1",
         "style": {
           "font_size": 10
-        }
+        },
+        "text": "Sex:",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Sex:",
       "style": {
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "sex_value",
       "type": "field",
-      "x": 110.0,
-      "y": 137.0,
+      "x": 100.0,
+      "y": 130.0,
       "width": 180.0,
       "height": 12.0,
       "z_index": 0,
@@ -365,103 +403,19 @@
         "binding": "patient.sex",
         "page_id": "page_1",
         "style": {
-          "font_size": 10,
-          "bold": true
-        }
+          "bold": true,
+          "font_size": 10
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "patient.sex",
       "style": {
-        "font_size": 10,
-        "bold": true
-      }
-    },
-    {
-      "id": "physician_label",
-      "type": "text",
-      "x": 14.0,
-      "y": 150.0,
-      "width": 96.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "text": "Physician:",
-        "page_id": "page_1",
-        "style": {
-          "font_size": 10
-        }
-      },
-      "text": "Physician:",
-      "style": {
+        "bold": true,
         "font_size": 10
-      }
-    },
-    {
-      "id": "physician_value",
-      "type": "field",
-      "x": 110.0,
-      "y": 150.0,
-      "width": 180.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "binding": "patient.physician",
-        "page_id": "page_1",
-        "style": {
-          "font_size": 10,
-          "bold": true
-        }
       },
-      "binding": "patient.physician",
-      "style": {
-        "font_size": 10,
-        "bold": true
-      }
-    },
-    {
-      "id": "clinical_diagnosis_label",
-      "type": "text",
-      "x": 14.0,
-      "y": 163.0,
-      "width": 96.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "text": "Clinical Diagnosis:",
-        "page_id": "page_1",
-        "style": {
-          "font_size": 10
-        }
-      },
-      "text": "Clinical Diagnosis:",
-      "style": {
-        "font_size": 10
-      }
-    },
-    {
-      "id": "clinical_diagnosis_value",
-      "type": "field",
-      "x": 110.0,
-      "y": 163.0,
-      "width": 180.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "binding": "patient.clinical_diagnosis",
-        "page_id": "page_1",
-        "style": {
-          "font_size": 10,
-          "bold": true
-        }
-      },
-      "binding": "patient.clinical_diagnosis",
-      "style": {
-        "font_size": 10,
-        "bold": true
-      }
+      "band_id": "detail"
     },
     {
       "id": "order_no_label",
@@ -473,16 +427,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Order No.:",
         "page_id": "page_1",
         "style": {
           "font_size": 10
-        }
+        },
+        "text": "Order No.:",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Order No.:",
       "style": {
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "order_no_value",
@@ -497,15 +455,19 @@
         "binding": "order.id",
         "page_id": "page_1",
         "style": {
-          "font_size": 10,
-          "bold": true
-        }
+          "bold": true,
+          "font_size": 10
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "order.id",
       "style": {
-        "font_size": 10,
-        "bold": true
-      }
+        "bold": true,
+        "font_size": 10
+      },
+      "band_id": "detail"
     },
     {
       "id": "source_label",
@@ -517,16 +479,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Source:",
         "page_id": "page_1",
         "style": {
           "font_size": 10
-        }
+        },
+        "text": "Source:",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Source:",
       "style": {
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "source_value",
@@ -541,59 +507,19 @@
         "binding": "order.source",
         "page_id": "page_1",
         "style": {
-          "font_size": 10,
-          "bold": true
-        }
+          "bold": true,
+          "font_size": 10
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "order.source",
       "style": {
-        "font_size": 10,
-        "bold": true
-      }
-    },
-    {
-      "id": "room_no_label",
-      "type": "text",
-      "x": 330.0,
-      "y": 124.0,
-      "width": 98.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "text": "Room No.:",
-        "page_id": "page_1",
-        "style": {
-          "font_size": 10
-        }
-      },
-      "text": "Room No.:",
-      "style": {
+        "bold": true,
         "font_size": 10
-      }
-    },
-    {
-      "id": "room_no_value",
-      "type": "field",
-      "x": 428.0,
-      "y": 124.0,
-      "width": 185.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "binding": "order.room_no",
-        "page_id": "page_1",
-        "style": {
-          "font_size": 10,
-          "bold": true
-        }
       },
-      "binding": "order.room_no",
-      "style": {
-        "font_size": 10,
-        "bold": true
-      }
+      "band_id": "detail"
     },
     {
       "id": "date_received_label",
@@ -605,16 +531,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Date Received:",
         "page_id": "page_1",
         "style": {
           "font_size": 10
-        }
+        },
+        "text": "Date Received:",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Date Received:",
       "style": {
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "date_received_value",
@@ -629,103 +559,19 @@
         "binding": "order.received",
         "page_id": "page_1",
         "style": {
-          "font_size": 10,
-          "bold": true
-        }
+          "bold": true,
+          "font_size": 10
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "order.received",
       "style": {
-        "font_size": 10,
-        "bold": true
-      }
-    },
-    {
-      "id": "date_checked_in_label",
-      "type": "text",
-      "x": 330.0,
-      "y": 150.0,
-      "width": 98.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "text": "Date Checked-In:",
-        "page_id": "page_1",
-        "style": {
-          "font_size": 10
-        }
-      },
-      "text": "Date Checked-In:",
-      "style": {
+        "bold": true,
         "font_size": 10
-      }
-    },
-    {
-      "id": "date_checked_in_value",
-      "type": "field",
-      "x": 428.0,
-      "y": 150.0,
-      "width": 185.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "binding": "order.checked_in",
-        "page_id": "page_1",
-        "style": {
-          "font_size": 10,
-          "bold": true
-        }
       },
-      "binding": "order.checked_in",
-      "style": {
-        "font_size": 10,
-        "bold": true
-      }
-    },
-    {
-      "id": "date_released_label",
-      "type": "text",
-      "x": 330.0,
-      "y": 163.0,
-      "width": 98.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "text": "Date Released:",
-        "page_id": "page_1",
-        "style": {
-          "font_size": 10
-        }
-      },
-      "text": "Date Released:",
-      "style": {
-        "font_size": 10
-      }
-    },
-    {
-      "id": "date_released_value",
-      "type": "field",
-      "x": 428.0,
-      "y": 163.0,
-      "width": 185.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "binding": "order.released",
-        "page_id": "page_1",
-        "style": {
-          "font_size": 10,
-          "bold": true
-        }
-      },
-      "binding": "order.released",
-      "style": {
-        "font_size": 10,
-        "bold": true
-      }
+      "band_id": "detail"
     },
     {
       "id": "date_printed_label",
@@ -737,16 +583,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Date Printed:",
         "page_id": "page_1",
         "style": {
           "font_size": 10
-        }
+        },
+        "text": "Date Printed:",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Date Printed:",
       "style": {
         "font_size": 10
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "date_printed_value",
@@ -761,45 +611,53 @@
         "binding": "order.printed",
         "page_id": "page_1",
         "style": {
-          "font_size": 10,
-          "bold": true
-        }
+          "bold": true,
+          "font_size": 10
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "order.printed",
       "style": {
-        "font_size": 10,
-        "bold": true
-      }
+        "bold": true,
+        "font_size": 10
+      },
+      "band_id": "detail"
     },
     {
-      "id": "section_hematology",
+      "id": "section",
       "type": "text",
       "x": 0.0,
-      "y": 198.0,
+      "y": 205.0,
       "width": 651.0,
       "height": 16.0,
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "HEMATOLOGY",
         "page_id": "page_1",
         "style": {
-          "font_size": 12,
+          "align": "center",
           "bold": true,
           "color": "#9AA0A6",
-          "align": "center"
-        }
+          "font_size": 12
+        },
+        "text": "HEMATOLOGY",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "HEMATOLOGY",
       "style": {
-        "font_size": 12,
+        "align": "center",
         "bold": true,
         "color": "#9AA0A6",
-        "align": "center"
-      }
+        "font_size": 12
+      },
+      "band_id": "detail"
     },
     {
-      "id": "test_name_header",
+      "id": "test_header",
       "type": "text",
       "x": 16.0,
       "y": 232.0,
@@ -808,18 +666,22 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "TEST NAME",
         "page_id": "page_1",
         "style": {
-          "font_size": 10,
-          "bold": true
-        }
+          "bold": true,
+          "font_size": 10
+        },
+        "text": "TEST NAME",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "TEST NAME",
       "style": {
-        "font_size": 10,
-        "bold": true
-      }
+        "bold": true,
+        "font_size": 10
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_header",
@@ -831,18 +693,22 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "RESULT",
         "page_id": "page_1",
         "style": {
-          "font_size": 10,
-          "bold": true
-        }
+          "bold": true,
+          "font_size": 10
+        },
+        "text": "RESULT",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "RESULT",
       "style": {
-        "font_size": 10,
-        "bold": true
-      }
+        "bold": true,
+        "font_size": 10
+      },
+      "band_id": "detail"
     },
     {
       "id": "unit_header",
@@ -854,18 +720,22 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "UNIT",
         "page_id": "page_1",
         "style": {
-          "font_size": 10,
-          "bold": true
-        }
+          "bold": true,
+          "font_size": 10
+        },
+        "text": "UNIT",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "UNIT",
       "style": {
-        "font_size": 10,
-        "bold": true
-      }
+        "bold": true,
+        "font_size": 10
+      },
+      "band_id": "detail"
     },
     {
       "id": "range_header",
@@ -877,21 +747,25 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "REFERENCE RANGE",
         "page_id": "page_1",
         "style": {
-          "font_size": 10,
-          "bold": true
-        }
+          "bold": true,
+          "font_size": 10
+        },
+        "text": "REFERENCE RANGE",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "REFERENCE RANGE",
       "style": {
-        "font_size": 10,
-        "bold": true
-      }
+        "bold": true,
+        "font_size": 10
+      },
+      "band_id": "detail"
     },
     {
-      "id": "flags_header",
+      "id": "flag_header",
       "type": "text",
       "x": 570.0,
       "y": 232.0,
@@ -900,18 +774,22 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "FLAGS",
         "page_id": "page_1",
         "style": {
-          "font_size": 10,
-          "bold": true
-        }
+          "bold": true,
+          "font_size": 10
+        },
+        "text": "FLAGS",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "FLAGS",
       "style": {
-        "font_size": 10,
-        "bold": true
-      }
+        "bold": true,
+        "font_size": 10
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_0_test",
@@ -923,18 +801,22 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "White Blood Cell Count",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": false
-        }
+          "bold": false,
+          "font_size": 9
+        },
+        "text": "White Blood Cell Count",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "White Blood Cell Count",
       "style": {
-        "font_size": 9,
-        "bold": false
-      }
+        "bold": false,
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_0_value",
@@ -949,17 +831,21 @@
         "binding": "results.wbc",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "align": "center",
           "color": "#FF0000",
-          "align": "center"
-        }
+          "font_size": 9
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "results.wbc",
       "style": {
-        "font_size": 9,
+        "align": "center",
         "color": "#FF0000",
-        "align": "center"
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_0_unit",
@@ -971,16 +857,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "x10^9/L",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "x10^9/L",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "x10^9/L",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_0_range",
@@ -992,16 +882,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "5-14.5",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "5-14.5",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "5-14.5",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_0_flag",
@@ -1013,20 +907,24 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "HIGH",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": true,
           "color": "#FF0000",
-          "bold": true
-        }
+          "font_size": 9
+        },
+        "text": "HIGH",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "HIGH",
       "style": {
-        "font_size": 9,
+        "bold": true,
         "color": "#FF0000",
-        "bold": true
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_1_test",
@@ -1038,18 +936,22 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Red Blood Cell Count",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": false
-        }
+          "bold": false,
+          "font_size": 9
+        },
+        "text": "Red Blood Cell Count",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Red Blood Cell Count",
       "style": {
-        "font_size": 9,
-        "bold": false
-      }
+        "bold": false,
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_1_value",
@@ -1064,17 +966,21 @@
         "binding": "results.rbc",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "align": "center",
           "color": "#000000",
-          "align": "center"
-        }
+          "font_size": 9
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "results.rbc",
       "style": {
-        "font_size": 9,
+        "align": "center",
         "color": "#000000",
-        "align": "center"
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_1_unit",
@@ -1086,16 +992,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "x10^12/L",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "x10^12/L",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "x10^12/L",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_1_range",
@@ -1107,16 +1017,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "3.9 - 5.3",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "3.9 - 5.3",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "3.9 - 5.3",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_1_flag",
@@ -1128,19 +1042,23 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": false,
           "color": "#000000",
-          "bold": false
-        }
+          "font_size": 9
+        },
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
-        "font_size": 9,
+        "bold": false,
         "color": "#000000",
-        "bold": false
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_2_test",
@@ -1152,18 +1070,22 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Hemoglobin",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": false
-        }
+          "bold": false,
+          "font_size": 9
+        },
+        "text": "Hemoglobin",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Hemoglobin",
       "style": {
-        "font_size": 9,
-        "bold": false
-      }
+        "bold": false,
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_2_value",
@@ -1178,17 +1100,21 @@
         "binding": "results.hgb",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "align": "center",
           "color": "#003BFF",
-          "align": "center"
-        }
+          "font_size": 9
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "results.hgb",
       "style": {
-        "font_size": 9,
+        "align": "center",
         "color": "#003BFF",
-        "align": "center"
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_2_unit",
@@ -1200,16 +1126,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "g/dL",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "g/dL",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "g/dL",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_2_range",
@@ -1221,16 +1151,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "11.5 - 13.5",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "11.5 - 13.5",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "11.5 - 13.5",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_2_flag",
@@ -1242,20 +1176,24 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "LOW",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": true,
           "color": "#003BFF",
-          "bold": true
-        }
+          "font_size": 9
+        },
+        "text": "LOW",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "LOW",
       "style": {
-        "font_size": 9,
+        "bold": true,
         "color": "#003BFF",
-        "bold": true
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_3_test",
@@ -1267,18 +1205,22 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Hematocrit",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": false
-        }
+          "bold": false,
+          "font_size": 9
+        },
+        "text": "Hematocrit",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Hematocrit",
       "style": {
-        "font_size": 9,
-        "bold": false
-      }
+        "bold": false,
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_3_value",
@@ -1293,17 +1235,21 @@
         "binding": "results.hct",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "align": "center",
           "color": "#003BFF",
-          "align": "center"
-        }
+          "font_size": 9
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "results.hct",
       "style": {
-        "font_size": 9,
+        "align": "center",
         "color": "#003BFF",
-        "align": "center"
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_3_unit",
@@ -1315,16 +1261,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "%",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "%",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "%",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_3_range",
@@ -1336,16 +1286,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "34 - 40",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "34 - 40",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "34 - 40",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_3_flag",
@@ -1357,20 +1311,24 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "LOW",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": true,
           "color": "#003BFF",
-          "bold": true
-        }
+          "font_size": 9
+        },
+        "text": "LOW",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "LOW",
       "style": {
-        "font_size": 9,
+        "bold": true,
         "color": "#003BFF",
-        "bold": true
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_4_test",
@@ -1382,18 +1340,22 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "MCV",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": false
-        }
+          "bold": false,
+          "font_size": 9
+        },
+        "text": "MCV",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "MCV",
       "style": {
-        "font_size": 9,
-        "bold": false
-      }
+        "bold": false,
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_4_value",
@@ -1408,17 +1370,21 @@
         "binding": "results.mcv",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "align": "center",
           "color": "#000000",
-          "align": "center"
-        }
+          "font_size": 9
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "results.mcv",
       "style": {
-        "font_size": 9,
+        "align": "center",
         "color": "#000000",
-        "align": "center"
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_4_unit",
@@ -1430,16 +1396,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "c.u.",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "c.u.",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "c.u.",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_4_range",
@@ -1451,16 +1421,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "75 - 87",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "75 - 87",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "75 - 87",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_4_flag",
@@ -1472,19 +1446,23 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": false,
           "color": "#000000",
-          "bold": false
-        }
+          "font_size": 9
+        },
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
-        "font_size": 9,
+        "bold": false,
         "color": "#000000",
-        "bold": false
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_5_test",
@@ -1496,18 +1474,22 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "MCH",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": false
-        }
+          "bold": false,
+          "font_size": 9
+        },
+        "text": "MCH",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "MCH",
       "style": {
-        "font_size": 9,
-        "bold": false
-      }
+        "bold": false,
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_5_value",
@@ -1522,17 +1504,21 @@
         "binding": "results.mch",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "align": "center",
           "color": "#000000",
-          "align": "center"
-        }
+          "font_size": 9
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "results.mch",
       "style": {
-        "font_size": 9,
+        "align": "center",
         "color": "#000000",
-        "align": "center"
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_5_unit",
@@ -1544,16 +1530,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "uug",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "uug",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "uug",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_5_range",
@@ -1565,16 +1555,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "24 - 30",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "24 - 30",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "24 - 30",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_5_flag",
@@ -1586,19 +1580,23 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": false,
           "color": "#000000",
-          "bold": false
-        }
+          "font_size": 9
+        },
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
-        "font_size": 9,
+        "bold": false,
         "color": "#000000",
-        "bold": false
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_6_test",
@@ -1610,18 +1608,22 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "MCHC",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": false
-        }
+          "bold": false,
+          "font_size": 9
+        },
+        "text": "MCHC",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "MCHC",
       "style": {
-        "font_size": 9,
-        "bold": false
-      }
+        "bold": false,
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_6_value",
@@ -1636,17 +1638,21 @@
         "binding": "results.mchc",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "align": "center",
           "color": "#000000",
-          "align": "center"
-        }
+          "font_size": 9
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "results.mchc",
       "style": {
-        "font_size": 9,
+        "align": "center",
         "color": "#000000",
-        "align": "center"
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_6_unit",
@@ -1658,16 +1664,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "g/dL",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "g/dL",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "g/dL",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_6_range",
@@ -1679,16 +1689,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "31-37",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "31-37",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "31-37",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_6_flag",
@@ -1700,19 +1714,23 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": false,
           "color": "#000000",
-          "bold": false
-        }
+          "font_size": 9
+        },
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
-        "font_size": 9,
+        "bold": false,
         "color": "#000000",
-        "bold": false
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_7_test",
@@ -1724,18 +1742,22 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "RDW",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": false
-        }
+          "bold": false,
+          "font_size": 9
+        },
+        "text": "RDW",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "RDW",
       "style": {
-        "font_size": 9,
-        "bold": false
-      }
+        "bold": false,
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_7_value",
@@ -1750,17 +1772,21 @@
         "binding": "results.rdw",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "align": "center",
           "color": "#000000",
-          "align": "center"
-        }
+          "font_size": 9
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "results.rdw",
       "style": {
-        "font_size": 9,
+        "align": "center",
         "color": "#000000",
-        "align": "center"
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_7_unit",
@@ -1772,16 +1798,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "%",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "%",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "%",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_7_range",
@@ -1793,16 +1823,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "11 - 16",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "11 - 16",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "11 - 16",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_7_flag",
@@ -1814,19 +1848,23 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": false,
           "color": "#000000",
-          "bold": false
-        }
+          "font_size": 9
+        },
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
-        "font_size": 9,
+        "bold": false,
         "color": "#000000",
-        "bold": false
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_8_test",
@@ -1838,18 +1876,22 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Differential Count",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": true
-        }
+          "bold": true,
+          "font_size": 9
+        },
+        "text": "Differential Count",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Differential Count",
       "style": {
-        "font_size": 9,
-        "bold": true
-      }
+        "bold": true,
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_8_unit",
@@ -1861,15 +1903,19 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_8_range",
@@ -1881,15 +1927,19 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_8_flag",
@@ -1901,19 +1951,23 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": false,
           "color": "#000000",
-          "bold": false
-        }
+          "font_size": 9
+        },
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
-        "font_size": 9,
+        "bold": false,
         "color": "#000000",
-        "bold": false
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_9_test",
@@ -1925,18 +1979,22 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Neutrophils",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": false
-        }
+          "bold": false,
+          "font_size": 9
+        },
+        "text": "Neutrophils",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Neutrophils",
       "style": {
-        "font_size": 9,
-        "bold": false
-      }
+        "bold": false,
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_9_value",
@@ -1951,17 +2009,21 @@
         "binding": "results.neutrophils",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "align": "center",
           "color": "#000000",
-          "align": "center"
-        }
+          "font_size": 9
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "results.neutrophils",
       "style": {
-        "font_size": 9,
+        "align": "center",
         "color": "#000000",
-        "align": "center"
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_9_unit",
@@ -1973,16 +2035,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "%",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "%",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "%",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_9_range",
@@ -1994,16 +2060,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "50 - 70",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "50 - 70",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "50 - 70",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_9_flag",
@@ -2015,19 +2085,23 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": false,
           "color": "#000000",
-          "bold": false
-        }
+          "font_size": 9
+        },
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
-        "font_size": 9,
+        "bold": false,
         "color": "#000000",
-        "bold": false
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_10_test",
@@ -2039,18 +2113,22 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Lymphocytes",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": false
-        }
+          "bold": false,
+          "font_size": 9
+        },
+        "text": "Lymphocytes",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Lymphocytes",
       "style": {
-        "font_size": 9,
-        "bold": false
-      }
+        "bold": false,
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_10_value",
@@ -2065,17 +2143,21 @@
         "binding": "results.lymphocytes",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "align": "center",
           "color": "#000000",
-          "align": "center"
-        }
+          "font_size": 9
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "results.lymphocytes",
       "style": {
-        "font_size": 9,
+        "align": "center",
         "color": "#000000",
-        "align": "center"
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_10_unit",
@@ -2087,16 +2169,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "%",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "%",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "%",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_10_range",
@@ -2108,16 +2194,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "20 - 40",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "20 - 40",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "20 - 40",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_10_flag",
@@ -2129,19 +2219,23 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": false,
           "color": "#000000",
-          "bold": false
-        }
+          "font_size": 9
+        },
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
-        "font_size": 9,
+        "bold": false,
         "color": "#000000",
-        "bold": false
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_11_test",
@@ -2153,18 +2247,22 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Monocytes",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": false
-        }
+          "bold": false,
+          "font_size": 9
+        },
+        "text": "Monocytes",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Monocytes",
       "style": {
-        "font_size": 9,
-        "bold": false
-      }
+        "bold": false,
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_11_value",
@@ -2179,17 +2277,21 @@
         "binding": "results.monocytes",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "align": "center",
           "color": "#000000",
-          "align": "center"
-        }
+          "font_size": 9
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "results.monocytes",
       "style": {
-        "font_size": 9,
+        "align": "center",
         "color": "#000000",
-        "align": "center"
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_11_unit",
@@ -2201,16 +2303,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "%",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "%",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "%",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_11_range",
@@ -2222,16 +2328,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "3 - 9",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "3 - 9",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "3 - 9",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_11_flag",
@@ -2243,19 +2353,23 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": false,
           "color": "#000000",
-          "bold": false
-        }
+          "font_size": 9
+        },
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
-        "font_size": 9,
+        "bold": false,
         "color": "#000000",
-        "bold": false
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_12_test",
@@ -2267,18 +2381,22 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Basophils",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": false
-        }
+          "bold": false,
+          "font_size": 9
+        },
+        "text": "Basophils",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Basophils",
       "style": {
-        "font_size": 9,
-        "bold": false
-      }
+        "bold": false,
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_12_value",
@@ -2293,17 +2411,21 @@
         "binding": "results.basophils",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "align": "center",
           "color": "#000000",
-          "align": "center"
-        }
+          "font_size": 9
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "results.basophils",
       "style": {
-        "font_size": 9,
+        "align": "center",
         "color": "#000000",
-        "align": "center"
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_12_unit",
@@ -2315,16 +2437,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "%",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "%",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "%",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_12_range",
@@ -2336,16 +2462,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "0 - 0.5",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "0 - 0.5",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "0 - 0.5",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_12_flag",
@@ -2357,19 +2487,23 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": false,
           "color": "#000000",
-          "bold": false
-        }
+          "font_size": 9
+        },
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
-        "font_size": 9,
+        "bold": false,
         "color": "#000000",
-        "bold": false
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_13_test",
@@ -2381,18 +2515,22 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Total (%)",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": false
-        }
+          "bold": false,
+          "font_size": 9
+        },
+        "text": "Total (%)",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Total (%)",
       "style": {
-        "font_size": 9,
-        "bold": false
-      }
+        "bold": false,
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_13_value",
@@ -2407,17 +2545,21 @@
         "binding": "results.total",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "align": "center",
           "color": "#000000",
-          "align": "center"
-        }
+          "font_size": 9
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "results.total",
       "style": {
-        "font_size": 9,
+        "align": "center",
         "color": "#000000",
-        "align": "center"
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_13_unit",
@@ -2429,15 +2571,19 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_13_range",
@@ -2449,15 +2595,19 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_13_flag",
@@ -2469,19 +2619,23 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": false,
           "color": "#000000",
-          "bold": false
-        }
+          "font_size": 9
+        },
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
-        "font_size": 9,
+        "bold": false,
         "color": "#000000",
-        "bold": false
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_14_test",
@@ -2493,18 +2647,22 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Platelet Count",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": false
-        }
+          "bold": false,
+          "font_size": 9
+        },
+        "text": "Platelet Count",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Platelet Count",
       "style": {
-        "font_size": 9,
-        "bold": false
-      }
+        "bold": false,
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_14_value",
@@ -2519,17 +2677,21 @@
         "binding": "results.platelet",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "align": "center",
           "color": "#000000",
-          "align": "center"
-        }
+          "font_size": 9
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "binding": "results.platelet",
       "style": {
-        "font_size": 9,
+        "align": "center",
         "color": "#000000",
-        "align": "center"
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_14_unit",
@@ -2541,16 +2703,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "x10^9/L",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "x10^9/L",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "x10^9/L",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_14_range",
@@ -2562,16 +2728,20 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "150 - 450",
         "page_id": "page_1",
         "style": {
           "font_size": 9
-        }
+        },
+        "text": "150 - 450",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "150 - 450",
       "style": {
         "font_size": 9
-      }
+      },
+      "band_id": "detail"
     },
     {
       "id": "result_14_flag",
@@ -2583,19 +2753,23 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
+          "bold": false,
           "color": "#000000",
-          "bold": false
-        }
+          "font_size": 9
+        },
+        "text": "",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
-        "font_size": 9,
+        "bold": false,
         "color": "#000000",
-        "bold": false
-      }
+        "font_size": 9
+      },
+      "band_id": "detail"
     },
     {
       "id": "performed_name",
@@ -2607,43 +2781,24 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Cerebro Diagnostic System",
         "page_id": "page_1",
         "style": {
-          "font_size": 7,
+          "align": "center",
           "bold": true,
-          "align": "center"
-        }
+          "font_size": 7
+        },
+        "text": "Cerebro Diagnostic System",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Cerebro Diagnostic System",
       "style": {
-        "font_size": 7,
+        "align": "center",
         "bold": true,
-        "align": "center"
-      }
-    },
-    {
-      "id": "performed_license",
-      "type": "text",
-      "x": 52.0,
-      "y": 681.0,
-      "width": 150.0,
-      "height": 10.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "text": "License No.: 0000",
-        "page_id": "page_1",
-        "style": {
-          "font_size": 7,
-          "align": "center"
-        }
+        "font_size": 7
       },
-      "text": "License No.: 0000",
-      "style": {
-        "font_size": 7,
-        "align": "center"
-      }
+      "band_id": "detail"
     },
     {
       "id": "performed_line",
@@ -2658,37 +2813,18 @@
         "page_id": "page_1",
         "style": {
           "stroke_width": 1
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
         "stroke_width": 1
-      }
-    },
-    {
-      "id": "performed_by",
-      "type": "text",
-      "x": 72.0,
-      "y": 698.0,
-      "width": 92.0,
-      "height": 10.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "text": "Performed By",
-        "page_id": "page_1",
-        "style": {
-          "font_size": 7,
-          "align": "center"
-        }
       },
-      "text": "Performed By",
-      "style": {
-        "font_size": 7,
-        "align": "center"
-      }
+      "band_id": "detail"
     },
     {
-      "id": "validated_name",
+      "id": "validator",
       "type": "text",
       "x": 276.0,
       "y": 672.0,
@@ -2697,43 +2833,24 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "Dummy LAB_ENCODER",
         "page_id": "page_1",
         "style": {
-          "font_size": 7,
+          "align": "center",
           "bold": true,
-          "align": "center"
-        }
+          "font_size": 7
+        },
+        "text": "Dummy LAB_ENCODER",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "Dummy LAB_ENCODER",
       "style": {
-        "font_size": 7,
+        "align": "center",
         "bold": true,
-        "align": "center"
-      }
-    },
-    {
-      "id": "validated_license",
-      "type": "text",
-      "x": 276.0,
-      "y": 681.0,
-      "width": 130.0,
-      "height": 10.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "text": "License No.: DMYROLE2",
-        "page_id": "page_1",
-        "style": {
-          "font_size": 7,
-          "align": "center"
-        }
+        "font_size": 7
       },
-      "text": "License No.: DMYROLE2",
-      "style": {
-        "font_size": 7,
-        "align": "center"
-      }
+      "band_id": "detail"
     },
     {
       "id": "validated_line",
@@ -2748,58 +2865,18 @@
         "page_id": "page_1",
         "style": {
           "stroke_width": 1
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
         "stroke_width": 1
-      }
-    },
-    {
-      "id": "validated_by",
-      "type": "text",
-      "x": 282.0,
-      "y": 698.0,
-      "width": 90.0,
-      "height": 10.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "text": "Validated By",
-        "page_id": "page_1",
-        "style": {
-          "font_size": 7,
-          "align": "center"
-        }
       },
-      "text": "Validated By",
-      "style": {
-        "font_size": 7,
-        "align": "center"
-      }
+      "band_id": "detail"
     },
     {
-      "id": "pathologist_signature",
-      "type": "text",
-      "x": 482.0,
-      "y": 646.0,
-      "width": 130.0,
-      "height": 26.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "text": "M. Torregosa",
-        "page_id": "page_1",
-        "style": {
-          "font_size": 18
-        }
-      },
-      "text": "M. Torregosa",
-      "style": {
-        "font_size": 18
-      }
-    },
-    {
-      "id": "pathologist_name",
+      "id": "pathologist",
       "type": "text",
       "x": 473.0,
       "y": 672.0,
@@ -2808,43 +2885,24 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "MARY ANN R. TORREGOSA, M.D.",
         "page_id": "page_1",
         "style": {
-          "font_size": 7,
+          "align": "center",
           "bold": true,
-          "align": "center"
-        }
+          "font_size": 7
+        },
+        "text": "MARY ANN R. TORREGOSA, M.D.",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "MARY ANN R. TORREGOSA, M.D.",
       "style": {
-        "font_size": 7,
+        "align": "center",
         "bold": true,
-        "align": "center"
-      }
-    },
-    {
-      "id": "pathologist_license",
-      "type": "text",
-      "x": 473.0,
-      "y": 681.0,
-      "width": 150.0,
-      "height": 10.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "text": "License No.: 0057674",
-        "page_id": "page_1",
-        "style": {
-          "font_size": 7,
-          "align": "center"
-        }
+        "font_size": 7
       },
-      "text": "License No.: 0057674",
-      "style": {
-        "font_size": 7,
-        "align": "center"
-      }
+      "band_id": "detail"
     },
     {
       "id": "pathologist_line",
@@ -2859,84 +2917,15 @@
         "page_id": "page_1",
         "style": {
           "stroke_width": 1
-        }
+        },
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "style": {
         "stroke_width": 1
-      }
-    },
-    {
-      "id": "pathologist_role",
-      "type": "text",
-      "x": 502.0,
-      "y": 698.0,
-      "width": 90.0,
-      "height": 10.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "text": "Pathologist",
-        "page_id": "page_1",
-        "style": {
-          "font_size": 7,
-          "align": "center"
-        }
       },
-      "text": "Pathologist",
-      "style": {
-        "font_size": 7,
-        "align": "center"
-      }
-    },
-    {
-      "id": "consult_note",
-      "type": "text",
-      "x": 192.0,
-      "y": 718.0,
-      "width": 270.0,
-      "height": 11.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "text": "\"Please consult your doctors for clinical & interpretation of the result\"",
-        "page_id": "page_1",
-        "style": {
-          "font_size": 7,
-          "color": "#004CFF",
-          "align": "center"
-        }
-      },
-      "text": "\"Please consult your doctors for clinical & interpretation of the result\"",
-      "style": {
-        "font_size": 7,
-        "color": "#004CFF",
-        "align": "center"
-      }
-    },
-    {
-      "id": "signed_note",
-      "type": "text",
-      "x": 244.0,
-      "y": 728.0,
-      "width": 160.0,
-      "height": 11.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "text": "**Results Electronically Signed**",
-        "page_id": "page_1",
-        "style": {
-          "font_size": 7,
-          "color": "#004CFF",
-          "align": "center"
-        }
-      },
-      "text": "**Results Electronically Signed**",
-      "style": {
-        "font_size": 7,
-        "color": "#004CFF",
-        "align": "center"
-      }
+      "band_id": "detail"
     },
     {
       "id": "page_count",
@@ -2948,20 +2937,31 @@
       "z_index": 0,
       "visible": true,
       "properties": {
-        "text": "1 of 1",
         "page_id": "page_1",
         "style": {
-          "font_size": 9,
-          "bold": true
-        }
+          "bold": true,
+          "font_size": 9
+        },
+        "text": "1 of 1",
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false
       },
       "text": "1 of 1",
       "style": {
-        "font_size": 9,
-        "bold": true
-      }
+        "bold": true,
+        "font_size": 9
+      },
+      "band_id": "detail"
     }
   ],
-  "bands": [],
+  "bands": [
+    {
+      "id": "detail",
+      "type": "detail",
+      "height": 842.0,
+      "properties": {}
+    }
+  ],
   "assets": []
 }

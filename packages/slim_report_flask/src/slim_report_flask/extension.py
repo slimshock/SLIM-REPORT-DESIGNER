@@ -99,6 +99,9 @@ class SlimReportDesigner:
         report = self.get_report(template_id)
         provider_name = self._provider_name(template_id, report)
         if provider_name is None:
+            sample = getattr(report, "data", {}).get("sample")
+            if isinstance(sample, dict):
+                return sample
             return {}
         return self.providers.resolve(provider_name, record_id)
 

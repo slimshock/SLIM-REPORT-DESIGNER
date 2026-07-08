@@ -67,6 +67,29 @@ def test_report_clone_generates_new_ids_and_remaps_references() -> None:
     assert cloned.objects[0].properties["style_id"] == next(iter(cloned.styles))
 
 
+def test_report_clone_preserves_band_repeat_settings() -> None:
+    report = Report(
+        bands=[
+            Band(
+                id="detail",
+                type="detail",
+                repeat={
+                    "enabled": True,
+                    "data_path": "results",
+                    "row_height": 24,
+                    "preview_rows": 10,
+                    "empty_message": "No results",
+                },
+            )
+        ]
+    )
+
+    cloned = report.clone(new_ids=False)
+
+    assert cloned.bands[0].repeat == report.bands[0].repeat
+    assert cloned.bands[0].repeat is not report.bands[0].repeat
+
+
 def test_report_clone_can_preserve_ids() -> None:
     report = Report(
         pages=[Page(id="page_main")],

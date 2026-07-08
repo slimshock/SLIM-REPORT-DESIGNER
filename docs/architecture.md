@@ -69,10 +69,10 @@ orchestration. They do not duplicate core rendering logic.
 ## Designer Boundary
 
 ```text
-Designer state
+Static Designer UI
     |
     v
-Report + Page + ReportObject
+JSON template <-> Report + Page + ReportObject
     |
     +-- ObjectFactory for object creation
     +-- Report.validate() for repair feedback
@@ -80,9 +80,7 @@ Report + Page + ReportObject
 Serializer only when saving
 ```
 
-The current Flask designer edits JSON text as an interim interface. The target designer hydrates a
-`Report`, mutates pages and objects through the domain API, and serializes only at the persistence
-boundary.
+The current Canvas designer is a framework-agnostic static HTML/CSS/JavaScript package. It edits the JSON template shape used by `JSONSerializer`, while framework adapters such as Flask provide load, save, preview, and PDF export APIs. Rendering still flows through `Report` and `slim_report_core`.
 
 ## Object Model
 

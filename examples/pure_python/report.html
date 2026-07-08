@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Pure Python Report</title>
+  <style>
+    @page { size: 816.0px 1056.0px; margin: 0; }
+    html, body { width: 100%; min-height: 100%; }
+    body { margin: 0; background: #e5e7eb; font-family: Arial, sans-serif; }
+    .slim-report-preview-toolbar { position: sticky; top: 0; z-index: 10; padding: 12px 24px; background: rgba(255, 255, 255, 0.96); border-bottom: 1px solid #d1d5db; }
+    .slim-report-print-button { border: 1px solid #94a3b8; background: #fff; border-radius: 4px; padding: 6px 10px; font: 600 12px Arial, sans-serif; color: #111827; cursor: pointer; }
+    .slim-report-preview { padding: 24px; display: grid; gap: 24px; }
+    .slim-report-page { position: relative; margin: 0 auto; background: #fff; box-shadow: 0 2px 12px rgba(15, 23, 42, 0.18); overflow: hidden; break-after: page; page-break-after: always; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .slim-report-page:last-child { break-after: auto; page-break-after: auto; }
+    .slim-report-page-number { position: absolute; right: 12px; bottom: 8px; font: 10px Arial, sans-serif; color: #94a3b8; }
+    .slim-report-object { position: absolute; box-sizing: border-box; }
+    @media print { html, body { margin: 0; background: #fff; } .slim-report-preview-toolbar, .slim-report-print-button, button { display: none !important; } .slim-report-preview { padding: 0; gap: 0; } .slim-report-page { margin: 0; box-shadow: none; break-after: page; page-break-after: always; } .slim-report-page:last-child { break-after: auto; page-break-after: auto; } * { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+  </style>
+</head>
+<body>
+  <div class="slim-report-preview-toolbar"><button class="slim-report-print-button" type="button" onclick="window.print()">Print</button></div>
+  <div class="slim-report-preview">
+    <div class="slim-report-page" data-slim-page="1" style="width: 816.0px; height: 1056.0px; background: #ffffff;">
+      <div class="slim-report-band" data-slim-band="detail" style="position: absolute; left: 0; top: 0px; width: 100%; height: 1056.0px; box-sizing: border-box; background: transparent;"></div>
+      <div class="slim-report-object" data-slim-object="title" style="left: 50.0px; top: 40.0px; width: 500.0px; height: 32.0px; display: flex; justify-content: flex-start; align-items: flex-start; font-family: Arial; font-size: 22.0px; line-height: 1.2; font-weight: 700; font-style: normal; text-decoration: none; color: #111827; background: transparent; text-align: left; overflow: hidden; white-space: pre-wrap;">PURE PYTHON REPORT</div>
+      <div class="slim-report-object" data-slim-object="patient_name" style="left: 50.0px; top: 90.0px; width: 300.0px; height: 22.0px; display: flex; justify-content: flex-start; align-items: flex-start; font-family: Arial; font-size: 13.0px; line-height: 1.2; font-weight: 400; font-style: normal; text-decoration: none; color: #111827; background: transparent; text-align: left; overflow: hidden; white-space: pre-wrap;">JUAN DELA CRUZ</div>
+      <div class="slim-report-page-number">Page 1</div>
+    </div>
+  </div>
+</body>
+</html>

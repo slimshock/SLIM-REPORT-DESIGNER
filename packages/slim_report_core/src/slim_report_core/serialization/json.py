@@ -45,6 +45,7 @@ class JSONSerializer(BaseSerializer):
             layers=layers,
             styles=styles,
             assets=assets,
+            data=dict(data.get("data", {})) if isinstance(data.get("data"), Mapping) else {},
         )
 
     def dump_mapping(self, report: Report) -> dict[str, Any]:
@@ -65,6 +66,8 @@ class JSONSerializer(BaseSerializer):
             data["styles"] = {
                 style_id: style.to_dict() for style_id, style in report.styles.items()
             }
+        if getattr(report, "data", None):
+            data["data"] = dict(report.data)
         return data
 
     def loads(self, payload: str | bytes | bytearray) -> Report:

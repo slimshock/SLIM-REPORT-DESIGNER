@@ -25,6 +25,7 @@ from .utils import ensure_mapping
 
 _STYLE_KEYS = (
     "align",
+    "background_color",
     "bold",
     "border_color",
     "border_width",
@@ -32,8 +33,17 @@ _STYLE_KEYS = (
     "fill_color",
     "font_family",
     "font_size",
+    "foreground_color",
+    "italic",
+    "line_height",
     "line_width",
+    "object_fit",
+    "opacity",
+    "border_radius",
+    "stroke_color",
     "stroke_width",
+    "underline",
+    "vertical_align",
 )
 
 if TYPE_CHECKING:
@@ -236,6 +246,10 @@ class Page:
     unit: str = DEFAULT_PAGE_UNIT
     orientation: str = DEFAULT_PAGE_ORIENTATION
     margin: Margin = field(default_factory=Margin)
+    background_color: str = "#ffffff"
+    transparent: bool = False
+    pagination: dict[str, Any] = field(default_factory=dict)
+    print: dict[str, Any] = field(default_factory=dict)
     id: str | None = None
     size: str | None = None
     _report: Any = field(default=None, init=False, repr=False, compare=False)
@@ -260,6 +274,10 @@ class Page:
             unit=unit,
             orientation=str(mapping.get("orientation", DEFAULT_PAGE_ORIENTATION)),
             margin=margin,
+            background_color=str(mapping.get("background_color", "#ffffff")),
+            transparent=bool(mapping.get("transparent", False)),
+            pagination=_normalize_pagination(mapping.get("pagination")),
+            print=_normalize_print_settings(mapping.get("print")),
             id=_optional_str(mapping.get("id")),
             size=size,
         )
@@ -274,7 +292,13 @@ class Page:
             "margin_right": self.margin.right,
             "margin_bottom": self.margin.bottom,
             "margin_left": self.margin.left,
+            "background_color": self.background_color,
+            "transparent": self.transparent,
         }
+        if self.pagination:
+            data["pagination"] = copy.deepcopy(self.pagination)
+        if self.print:
+            data["print"] = copy.deepcopy(self.print)
         if self.id:
             data["id"] = self.id
         if self.size:
@@ -293,6 +317,10 @@ class Page:
             unit=self.unit,
             orientation=self.orientation,
             margin=self.margin.clone(),
+            background_color=self.background_color,
+            transparent=self.transparent,
+            pagination=copy.deepcopy(self.pagination),
+            print=copy.deepcopy(self.print),
             id=_clone_id("page", self.id, new_ids=new_ids),
             size=self.size,
         )
@@ -428,11 +456,7 @@ class Page:
         return resolved
 
     def _extract_style_values(self, properties: dict[str, Any]) -> dict[str, Any]:
-        return {
-            key: properties.pop(key)
-            for key in tuple(properties)
-            if key in _STYLE_KEYS
-        }
+        return {key: properties.pop(key) for key in tuple(properties) if key in _STYLE_KEYS}
 
     def field(
         self,
@@ -635,7 +659,11 @@ class Page:
         width: float = 300.0,
         height: float = 100.0,
         binding: str | None = None,
+        data_path: str | None = None,
         columns: list[Mapping[str, Any]] | None = None,
+        header: Mapping[str, Any] | None = None,
+        row: Mapping[str, Any] | None = None,
+        border: Mapping[str, Any] | None = None,
         position: Position | Mapping[str, Any] | None = None,
         size: Size | Mapping[str, Any] | None = None,
         id: str | None = None,
@@ -653,7 +681,11 @@ class Page:
                 width=width,
                 height=height,
                 binding=binding,
+                data_path=data_path,
                 columns=columns,
+                header=header,
+                row=row,
+                border=border,
                 position=position,
                 size=size,
                 style=style,
@@ -873,6 +905,10 @@ class Object:
             )
         if not self.style.resolved_values() and isinstance(self.properties.get("style"), Mapping):
             self.style = Style.from_dict(self.properties["style"])
+        if self.band_id is None:
+            self.band_id = _optional_str(
+                self.properties.get("band", self.properties.get("band_id"))
+            )
 
     @property
     def position(self) -> Position:
@@ -921,10 +957,16 @@ class Object:
         if self.binding is not None:
             data["binding"] = self.binding.expression
             data["properties"]["binding"] = self.binding.expression
+        elif "binding" in data["properties"]:
+            data["binding"] = data["properties"]["binding"]
+        for key in ("formula", "formula_mode", "conditions"):
+            if key in data["properties"]:
+                data[key] = data["properties"][key]
         if self.style.resolved_values():
             data["style"] = self.style.to_dict()
             data["properties"]["style"] = self.style.to_dict()
         if self.band_id is not None:
+            data["band"] = self.band_id
             data["band_id"] = self.band_id
         if self.layer_id is not None:
             data["layer_id"] = self.layer_id
@@ -1152,7 +1194,7 @@ class ImageObject(Object):
 
 
 class BarcodeObject(Object):
-    """Barcode placeholder report object."""
+    """Barcode report object."""
 
     def __init__(
         self,
@@ -1166,6 +1208,7 @@ class BarcodeObject(Object):
         position: Position | Mapping[str, Any] | None = None,
         size: Size | Mapping[str, Any] | None = None,
         symbology: str = "code128",
+        show_text: bool | None = None,
         style: Style | Mapping[str, Any] | None = None,
         band_id: str | None = None,
         layer_id: str | None = None,
@@ -1176,6 +1219,9 @@ class BarcodeObject(Object):
         merged_properties = dict(properties or {})
         merged_properties["value"] = value
         merged_properties["symbology"] = symbology
+        merged_properties["format"] = symbology
+        if show_text is not None:
+            merged_properties["show_text"] = bool(show_text)
         super().__init__(
             id=id,
             type="barcode",
@@ -1193,9 +1239,21 @@ class BarcodeObject(Object):
             properties=merged_properties,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        data = super().to_dict()
+        properties = data.setdefault("properties", {})
+        for key in ("value", "binding", "show_text"):
+            if key in properties:
+                data[key] = copy.deepcopy(properties[key])
+        symbology = properties.get("format", properties.get("symbology", "code128"))
+        data["format"] = str(symbology)
+        properties["format"] = str(symbology)
+        properties["symbology"] = str(symbology)
+        return data
+
 
 class QRCodeObject(Object):
-    """QR code placeholder report object."""
+    """QR code report object."""
 
     def __init__(
         self,
@@ -1208,6 +1266,7 @@ class QRCodeObject(Object):
         height: float = 100.0,
         position: Position | Mapping[str, Any] | None = None,
         size: Size | Mapping[str, Any] | None = None,
+        error_correction: str = "M",
         style: Style | Mapping[str, Any] | None = None,
         band_id: str | None = None,
         layer_id: str | None = None,
@@ -1217,6 +1276,7 @@ class QRCodeObject(Object):
     ) -> None:
         merged_properties = dict(properties or {})
         merged_properties["value"] = value
+        merged_properties["error_correction"] = str(error_correction or "M")
         super().__init__(
             id=id,
             type="qrcode",
@@ -1234,9 +1294,19 @@ class QRCodeObject(Object):
             properties=merged_properties,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        data = super().to_dict()
+        properties = data.setdefault("properties", {})
+        for key in ("value", "binding", "error_correction"):
+            if key in properties:
+                data[key] = copy.deepcopy(properties[key])
+        data.setdefault("error_correction", "M")
+        properties.setdefault("error_correction", data["error_correction"])
+        return data
+
 
 class TableObject(Object):
-    """Table placeholder report object."""
+    """Basic array-bound table report object."""
 
     def __init__(
         self,
@@ -1247,7 +1317,11 @@ class TableObject(Object):
         width: float = 300.0,
         height: float = 100.0,
         binding: str | None = None,
+        data_path: str | None = None,
         columns: list[Mapping[str, Any]] | None = None,
+        header: Mapping[str, Any] | None = None,
+        row: Mapping[str, Any] | None = None,
+        border: Mapping[str, Any] | None = None,
         position: Position | Mapping[str, Any] | None = None,
         size: Size | Mapping[str, Any] | None = None,
         style: Style | Mapping[str, Any] | None = None,
@@ -1260,8 +1334,16 @@ class TableObject(Object):
         merged_properties = dict(properties or {})
         if binding is not None:
             merged_properties["binding"] = binding
+        if data_path is not None:
+            merged_properties["data_path"] = data_path
         if columns is not None:
             merged_properties["columns"] = [dict(column) for column in columns]
+        if header is not None:
+            merged_properties["header"] = dict(header)
+        if row is not None:
+            merged_properties["row"] = dict(row)
+        if border is not None:
+            merged_properties["border"] = dict(border)
         super().__init__(
             id=id,
             type="table",
@@ -1279,6 +1361,16 @@ class TableObject(Object):
             properties=merged_properties,
         )
 
+    def to_dict(self) -> dict[str, Any]:
+        data = super().to_dict()
+        properties = data.setdefault("properties", {})
+        for key in ("data_path", "header", "row", "border", "columns"):
+            if key in properties:
+                data[key] = copy.deepcopy(properties[key])
+        if "binding" in properties and "data_path" not in data:
+            data["data_path"] = properties["binding"]
+        return data
+
 
 @dataclass
 class Band:
@@ -1286,28 +1378,63 @@ class Band:
 
     id: str
     type: str
+    name: str | None = None
+    y: float = 0.0
     height: float = 0.0
+    background_color: str = "transparent"
+    visible: bool = True
+    locked: bool = False
+    repeat: dict[str, Any] = field(default_factory=dict)
+    group: dict[str, Any] = field(default_factory=dict)
     properties: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> Band:
         mapping = ensure_mapping(data, context="Report band")
+        raw_properties = mapping.get("properties", {})
+        properties = ensure_mapping(raw_properties or {}, context="Report band properties")
         return cls(
             id=_required_str(mapping, "id", context="Report band"),
             type=_required_str(mapping, "type", context="Report band"),
+            name=_optional_str(mapping.get("name")),
+            y=float(mapping.get("y", mapping.get("top", 0.0))),
             height=float(mapping.get("height", 0.0)),
-            properties=dict(mapping.get("properties", {})),
+            background_color=str(
+                mapping.get(
+                    "background_color",
+                    properties.get("background_color", "transparent"),
+                )
+            ),
+            visible=bool(mapping.get("visible", True)),
+            locked=bool(mapping.get("locked", False)),
+            repeat=_normalize_repeat(mapping.get("repeat", properties.get("repeat"))),
+            group=_normalize_group(mapping.get("group", properties.get("group"))),
+            properties=dict(properties),
         )
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        data = asdict(self)
+        if self.name is None:
+            data.pop("name", None)
+        if not self.repeat:
+            data.pop("repeat", None)
+        if not self.group:
+            data.pop("group", None)
+        return data
 
     def clone(self, *, new_ids: bool = True) -> Band:
         """Return a deep clone of this band."""
         return Band(
             id=_clone_id("band", self.id, new_ids=new_ids),
             type=self.type,
+            name=self.name,
+            y=self.y,
             height=self.height,
+            background_color=self.background_color,
+            visible=self.visible,
+            locked=self.locked,
+            repeat=copy.deepcopy(self.repeat),
+            group=copy.deepcopy(self.group),
             properties=copy.deepcopy(self.properties),
         )
 
@@ -1397,6 +1524,7 @@ class ReportTemplate:
     objects: list[Object] = field(default_factory=list)
     bands: list[Band] = field(default_factory=list)
     assets: list[Asset] = field(default_factory=list)
+    data: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> ReportTemplate:
@@ -1409,10 +1537,15 @@ class ReportTemplate:
             objects=[Object.from_dict(item) for item in mapping["objects"]],
             bands=[Band.from_dict(item) for item in mapping["bands"]],
             assets=[Asset.from_dict(item) for item in mapping["assets"]],
+            data=(
+                copy.deepcopy(mapping.get("data", {}))
+                if isinstance(mapping.get("data"), Mapping)
+                else {}
+            ),
         )
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        data = {
             "version": self.version,
             "metadata": self.metadata.to_dict(),
             "page": self.page.to_dict(),
@@ -1420,6 +1553,9 @@ class ReportTemplate:
             "bands": [item.to_dict() for item in self.bands],
             "assets": [item.to_dict() for item in self.assets],
         }
+        if self.data:
+            data["data"] = copy.deepcopy(self.data)
+        return data
 
 
 def clone_model(value: Any) -> Any:
@@ -1465,6 +1601,62 @@ def _page_margin(mapping: Mapping[str, Any]) -> Margin:
     )
 
 
+def _normalize_repeat(value: Any) -> dict[str, Any]:
+    if not isinstance(value, Mapping):
+        return {}
+    return {
+        "enabled": bool(value.get("enabled", False)),
+        "data_path": str(value.get("data_path", "")),
+        "row_height": max(8, int(float(value.get("row_height", 22) or 22))),
+        "preview_rows": min(100, max(1, int(float(value.get("preview_rows", 10) or 10)))),
+        "empty_message": str(value.get("empty_message", "No records")),
+    }
+
+
+def _normalize_group(value: Any) -> dict[str, Any]:
+    if not isinstance(value, Mapping):
+        return {}
+    normalized = {
+        "id": str(value.get("id", "")),
+        "data_path": str(value.get("data_path", "")),
+        "field": str(value.get("field", "")),
+        "sort": str(value.get("sort", "none") or "none"),
+    }
+    if normalized["sort"] not in {"none", "asc", "desc"}:
+        normalized["sort"] = "none"
+    return {key: item for key, item in normalized.items() if item != ""}
+
+
+def _normalize_pagination(value: Any) -> dict[str, Any]:
+    if not isinstance(value, Mapping):
+        return {}
+    return {
+        "enabled": bool(value.get("enabled", True)),
+        "repeat_page_header": bool(value.get("repeat_page_header", True)),
+        "repeat_page_footer": bool(value.get("repeat_page_footer", True)),
+        "respect_margins": bool(value.get("respect_margins", True)),
+    }
+
+
+def _normalize_print_settings(value: Any) -> dict[str, Any]:
+    if not isinstance(value, Mapping):
+        return {}
+    normalized: dict[str, Any] = {}
+    if "show_browser_print_button" in value:
+        normalized["show_browser_print_button"] = bool(value.get("show_browser_print_button"))
+    if "default_filename" in value:
+        normalized["default_filename"] = str(value.get("default_filename") or "")
+    if "pdf_title" in value:
+        normalized["pdf_title"] = str(value.get("pdf_title") or "")
+    if "pdf_author" in value:
+        normalized["pdf_author"] = str(value.get("pdf_author") or "")
+    if "pdf_subject" in value:
+        normalized["pdf_subject"] = str(value.get("pdf_subject") or "")
+    if "print_background" in value:
+        normalized["print_background"] = bool(value.get("print_background"))
+    return {key: item for key, item in normalized.items() if item != ""}
+
+
 def _style_parent(value: Any) -> Style | None:
     if value is None or isinstance(value, str):
         return None
@@ -1508,18 +1700,27 @@ def _safe_id_prefix(value: str) -> str:
 def _page_size_dimensions(size: str, unit: str) -> tuple[float, float]:
     normalized_size = size.lower()
     normalized_unit = unit.lower()
+    sizes_in_px = {
+        "letter": (612.0, 792.0),
+        "legal": (612.0, 1008.0),
+        "a4": (595.0, 842.0),
+        "custom": (595.0, 842.0),
+    }
     sizes_in_inches = {
         "letter": (8.5, 11.0),
+        "legal": (8.5, 14.0),
         "a4": (210.0 / 25.4, 297.0 / 25.4),
+        "custom": (8.5, 11.0),
     }
     if normalized_size not in sizes_in_inches:
         raise ReportValidationError(f"Unsupported page size: {size}.")
 
+    if normalized_unit == "px":
+        return sizes_in_px[normalized_size]
+
     width_in, height_in = sizes_in_inches[normalized_size]
     if normalized_unit == "in":
         return width_in, height_in
-    if normalized_unit == "px":
-        return width_in * 96.0, height_in * 96.0
     if normalized_unit == "pt":
         return width_in * 72.0, height_in * 72.0
     if normalized_unit == "mm":

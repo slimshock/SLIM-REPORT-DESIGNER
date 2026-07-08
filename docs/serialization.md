@@ -33,6 +33,12 @@ serializer.save(report, "template.json")
 
 `Report` intentionally has no JSON load/save helpers. Serialization belongs here, not on the domain model.
 
+## Current Template Shape
+
+The current JSON template shape includes `version`, `metadata`, `page`, `bands`, `objects`, `assets`, and optional `data`.
+
+`data.sample` can store sample render data for preview/export. `data.fields` can store field metadata for the designer's Data Fields panel and binding picker. See `json-template-schema.md` and `data-fields.md` for the practical early-alpha schema notes.
+
 ## Future Serializers
 
 Future formats should implement `BaseSerializer` without changing renderers:
