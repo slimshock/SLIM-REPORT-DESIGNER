@@ -487,11 +487,6 @@ function renderObject(object, selectedIds = [], primarySelectedId = null, unit =
       image.draggable = false;
       image.style.objectFit = style.object_fit || "contain";
       element.appendChild(image);
-    } else {
-      const placeholder = document.createElement("div");
-      placeholder.className = "image-placeholder";
-      placeholder.textContent = "Image";
-      element.appendChild(placeholder);
     }
   } else if (object.type === "table") {
     element.classList.add("table-object");

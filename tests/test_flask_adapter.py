@@ -395,7 +395,7 @@ def test_flask_designer_api_previews_and_exports_posted_json(tmp_path: Path) -> 
     assert "text-decoration: underline" in preview_html
     assert "background: #ffeecc" in preview_html
     assert 'data-slim-object="logo"' in preview_html
-    assert "Image" in preview_html
+    assert ">Image<" not in preview_html
     assert pdf_response.status_code == 200
     assert pdf_response.mimetype == "application/pdf"
     assert pdf_response.headers["X-Slim-Report-Object-Count"] == "2"

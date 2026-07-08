@@ -278,7 +278,7 @@ def _render_rectangle(obj: RenderObject, context: RenderContext) -> str:
 def _render_image(obj: RenderObject, context: RenderContext) -> str:
     x, y, width, height = object_px(obj, context.page.unit)
     style = obj.style
-    source = str(obj.properties.get("src") or obj.properties.get("source") or "")
+    source = str(obj.properties.get("src") or obj.properties.get("source") or _object_value(obj, context) or "")
     border_width = float(style.get("border_width", 0))
     border_color = escape(str(style.get("border_color", "#000000")), quote=True)
     background_color = escape(str(style.get("background_color", "transparent")), quote=True)
@@ -295,7 +295,7 @@ def _render_image(obj: RenderObject, context: RenderContext) -> str:
     if not source:
         return (
             f'<div class="slim-report-object" data-slim-object="{escape(obj.id, quote=True)}" '
-            f'style="{css}; color: #64748b;">Image</div>'
+            f'style="{css}"></div>'
         )
     alt = escape(str(obj.properties.get("alt", "")), quote=True)
     return (

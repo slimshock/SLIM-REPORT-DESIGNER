@@ -1,2967 +1,4641 @@
 {
-  "version": "1.0",
-  "metadata": {
-    "name": "Cerebro CBC Result",
-    "title": "Cerebro CBC Result",
-    "description": "Cerebro Diagnostic System CBC report demo.",
-    "author": "Slim Report Designer",
-    "tags": [
-      "demo",
-      "lab",
-      "cbc",
-      "cerebro"
+  "assets": [],
+  "bands": [
+    {
+      "id": "page_header",
+      "type": "page_header",
+      "name": "Page Header",
+      "y": 0,
+      "height": 362,
+      "background_color": "#ffffff",
+      "visible": true,
+      "locked": false
+    },
+    {
+      "id": "detail",
+      "type": "detail",
+      "name": "Detail",
+      "y": 362,
+      "height": 488,
+      "background_color": "#ffffff",
+      "visible": true,
+      "locked": false,
+      "repeat": {
+        "enabled": true,
+        "data_path": "results",
+        "row_height": 25,
+        "preview_rows": 18,
+        "empty_message": "No printable result rows"
+      }
+    },
+    {
+      "id": "page_footer",
+      "type": "page_footer",
+      "name": "Page Footer",
+      "y": 850,
+      "height": 206,
+      "background_color": "#ffffff",
+      "visible": true,
+      "locked": false
+    }
+  ],
+  "data": {
+    "fields": [
+      {
+        "path": "department.color",
+        "label": "Color",
+        "type": "string",
+        "sample": "#1f3a93"
+      },
+      {
+        "path": "department.name",
+        "label": "Name",
+        "type": "string",
+        "sample": "Hematology"
+      },
+      {
+        "path": "laboratory.address",
+        "label": "Address",
+        "type": "string",
+        "sample": "Alwana Business Park, Zone 4 Cugman, Cagayan de Oro City"
+      },
+      {
+        "path": "laboratory.city",
+        "label": "City",
+        "type": "string",
+        "sample": "Misamis Oriental 9000"
+      },
+      {
+        "path": "laboratory.contact",
+        "label": "Contact",
+        "type": "string",
+        "sample": "Contact No.: +639 260 235 049, +639 222 979 774"
+      },
+      {
+        "path": "laboratory.email_line",
+        "label": "Email Line",
+        "type": "string",
+        "sample": "Email Address: cerebro.info@gmail.com"
+      },
+      {
+        "path": "laboratory.header",
+        "label": "Header",
+        "type": "string",
+        "sample": "Laboratory Information System"
+      },
+      {
+        "path": "laboratory.logo",
+        "label": "Logo",
+        "type": "string",
+        "sample": ""
+      },
+      {
+        "path": "laboratory.name",
+        "label": "Name",
+        "type": "string",
+        "sample": "Cerebro Diagnostic System"
+      },
+      {
+        "path": "order.checked_in",
+        "label": "Checked In",
+        "type": "string",
+        "sample": "07/09/2026, 03:01:00 AM"
+      },
+      {
+        "path": "order.date",
+        "label": "Date",
+        "type": "string",
+        "sample": "07/09/2026"
+      },
+      {
+        "path": "order.diagnosis",
+        "label": "Diagnosis",
+        "type": "string",
+        "sample": ""
+      },
+      {
+        "path": "order.id",
+        "label": "Id",
+        "type": "string",
+        "sample": "ORDER-1001"
+      },
+      {
+        "path": "order.physician",
+        "label": "Physician",
+        "type": "string",
+        "sample": "Dr. Maria Santos"
+      },
+      {
+        "path": "order.received",
+        "label": "Received",
+        "type": "string",
+        "sample": "07/09/2026, 03:00:00 AM"
+      },
+      {
+        "path": "order.released",
+        "label": "Released",
+        "type": "string",
+        "sample": "07/09/2026, 03:10:00 AM"
+      },
+      {
+        "path": "order.remarks",
+        "label": "Remarks",
+        "type": "string",
+        "sample": ""
+      },
+      {
+        "path": "order.room",
+        "label": "Room",
+        "type": "string",
+        "sample": ""
+      },
+      {
+        "path": "patient.age",
+        "label": "Age",
+        "type": "string",
+        "sample": "35"
+      },
+      {
+        "path": "patient.age_sex",
+        "label": "Age Sex",
+        "type": "string",
+        "sample": "35 / MALE"
+      },
+      {
+        "path": "patient.dob",
+        "label": "Dob",
+        "type": "string",
+        "sample": "01/15/1991"
+      },
+      {
+        "path": "patient.name",
+        "label": "Name",
+        "type": "string",
+        "sample": "JUAN DELA CRUZ"
+      },
+      {
+        "path": "patient.sex",
+        "label": "Sex",
+        "type": "string",
+        "sample": "MALE"
+      },
+      {
+        "path": "patient.source",
+        "label": "Source",
+        "type": "string",
+        "sample": "OPD"
+      },
+      {
+        "path": "printed_at",
+        "label": "Printed At",
+        "type": "string",
+        "sample": "07/09/2026, 03:00:00 AM"
+      },
+      {
+        "path": "results[]",
+        "label": "Results",
+        "type": "object",
+        "sample": "[object Object]"
+      },
+      {
+        "path": "results[0].flag",
+        "label": "Flag",
+        "type": "string",
+        "sample": "N"
+      },
+      {
+        "path": "results[0].reference",
+        "label": "Reference",
+        "type": "string",
+        "sample": "4.0 - 10.0"
+      },
+      {
+        "path": "results[0].result",
+        "label": "Result",
+        "type": "string",
+        "sample": "7.2"
+      },
+      {
+        "path": "results[0].test",
+        "label": "Test",
+        "type": "string",
+        "sample": "WBC"
+      },
+      {
+        "path": "results[0].unit",
+        "label": "Unit",
+        "type": "string",
+        "sample": "10^9/L"
+      },
+      {
+        "path": "results[].flag",
+        "label": "Flag",
+        "type": "string",
+        "sample": "N"
+      },
+      {
+        "path": "results[].reference",
+        "label": "Reference",
+        "type": "string",
+        "sample": "4.0 - 10.0"
+      },
+      {
+        "path": "results[].result",
+        "label": "Result",
+        "type": "string",
+        "sample": "7.2"
+      },
+      {
+        "path": "results[].test",
+        "label": "Test",
+        "type": "string",
+        "sample": "WBC"
+      },
+      {
+        "path": "results[].unit",
+        "label": "Unit",
+        "type": "string",
+        "sample": "10^9/L"
+      },
+      {
+        "path": "signatures.pathologist.license",
+        "label": "License",
+        "type": "string",
+        "sample": ""
+      },
+      {
+        "path": "signatures.pathologist.license_line",
+        "label": "License Line",
+        "type": "string",
+        "sample": ""
+      },
+      {
+        "path": "signatures.pathologist.name",
+        "label": "Name",
+        "type": "string",
+        "sample": ""
+      },
+      {
+        "path": "signatures.pathologist.signature",
+        "label": "Signature",
+        "type": "string",
+        "sample": ""
+      },
+      {
+        "path": "signatures.run_by.license",
+        "label": "License",
+        "type": "string",
+        "sample": ""
+      },
+      {
+        "path": "signatures.run_by.license_line",
+        "label": "License Line",
+        "type": "string",
+        "sample": ""
+      },
+      {
+        "path": "signatures.run_by.name",
+        "label": "Name",
+        "type": "string",
+        "sample": ""
+      },
+      {
+        "path": "signatures.run_by.signature",
+        "label": "Signature",
+        "type": "string",
+        "sample": ""
+      },
+      {
+        "path": "signatures.validated_by.license",
+        "label": "License",
+        "type": "string",
+        "sample": ""
+      },
+      {
+        "path": "signatures.validated_by.license_line",
+        "label": "License Line",
+        "type": "string",
+        "sample": ""
+      },
+      {
+        "path": "signatures.validated_by.name",
+        "label": "Name",
+        "type": "string",
+        "sample": ""
+      },
+      {
+        "path": "signatures.validated_by.signature",
+        "label": "Signature",
+        "type": "string",
+        "sample": ""
+      }
     ],
-    "custom": {
-      "id": "cerebro_cbc",
-      "provider": "cerebro_cbc"
+    "sample": {
+      "department": {
+        "color": "#1f3a93",
+        "name": "Hematology"
+      },
+      "laboratory": {
+        "address": "Alwana Business Park, Zone 4 Cugman, Cagayan de Oro City",
+        "city": "Misamis Oriental 9000",
+        "contact": "Contact No.: +639 260 235 049, +639 222 979 774",
+        "email_line": "Email Address: cerebro.info@gmail.com",
+        "header": "Laboratory Information System",
+        "logo": "",
+        "name": "Cerebro Diagnostic System"
+      },
+      "order": {
+        "checked_in": "07/09/2026, 03:01:00 AM",
+        "date": "07/09/2026",
+        "diagnosis": "",
+        "id": "ORDER-1001",
+        "physician": "Dr. Maria Santos",
+        "received": "07/09/2026, 03:00:00 AM",
+        "released": "07/09/2026, 03:10:00 AM",
+        "remarks": "",
+        "room": ""
+      },
+      "patient": {
+        "age": "35",
+        "age_sex": "35 / MALE",
+        "dob": "01/15/1991",
+        "name": "JUAN DELA CRUZ",
+        "sex": "MALE",
+        "source": "OPD"
+      },
+      "printed_at": "07/09/2026, 03:00:00 AM",
+      "results": [
+        {
+          "flag": "N",
+          "reference": "4.0 - 10.0",
+          "result": "7.2",
+          "test": "WBC",
+          "unit": "10^9/L"
+        },
+        {
+          "flag": "N",
+          "reference": "4.5 - 5.9",
+          "result": "5.02",
+          "test": "RBC",
+          "unit": "10^12/L"
+        },
+        {
+          "flag": "N",
+          "reference": "13.0 - 17.0",
+          "result": "14.2",
+          "test": "HGB",
+          "unit": "g/dL"
+        }
+      ],
+      "signatures": {
+        "pathologist": {
+          "license": "",
+          "license_line": "",
+          "name": "",
+          "signature": ""
+        },
+        "run_by": {
+          "license": "",
+          "license_line": "",
+          "name": "",
+          "signature": ""
+        },
+        "validated_by": {
+          "license": "",
+          "license_line": "",
+          "name": "",
+          "signature": ""
+        }
+      }
     }
   },
-  "page": {
-    "width": 651.0,
-    "height": 842.0,
-    "unit": "px",
-    "orientation": "portrait",
-    "margin_top": 0.5,
-    "margin_right": 0.5,
-    "margin_bottom": 0.5,
-    "margin_left": 0.5,
-    "background_color": "#ffffff",
-    "transparent": false,
-    "size": "A4"
+  "metadata": {
+    "author": "CDS-LIS",
+    "custom": {
+      "id": "lis_result",
+      "provider": "lis_result",
+      "revision": "result-entry-v3"
+    },
+    "description": "Default CDS-LIS result-entry report template.",
+    "tags": [],
+    "title": "LIS Result Report",
+    "name": "LIS Result Report"
   },
   "objects": [
     {
-      "id": "cerebro_logo",
-      "type": "text",
-      "x": 16.0,
-      "y": 26.0,
-      "width": 150.0,
-      "height": 30.0,
-      "z_index": 0,
-      "visible": true,
+      "id": "lab_logo",
+      "type": "image",
+      "x": 8,
+      "y": 26,
+      "width": 190,
+      "height": 78,
+      "locked": false,
       "properties": {
-        "page_id": "page_1",
+        "alt": "",
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "laboratory.logo",
+        "locked": false,
+        "maintain_aspect_ratio": true,
+        "source": "",
+        "src": "",
         "style": {
-          "color": "#0B79C9",
-          "font_size": 27
-        },
-        "text": "CEREBRO",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+          "background_color": "transparent",
+          "border_width": 0,
+          "object_fit": "contain"
+        }
       },
-      "text": "CEREBRO",
+      "band": "page_header",
+      "band_id": "page_header",
+      "binding": "laboratory.logo",
+      "src": "",
+      "alt": "",
       "style": {
-        "color": "#0B79C9",
-        "font_size": 27
-      },
-      "band_id": "detail"
+        "background_color": "transparent",
+        "border_width": 0,
+        "object_fit": "contain"
+      }
     },
     {
-      "id": "cerebro_subtitle",
-      "type": "text",
-      "x": 18.0,
-      "y": 56.0,
-      "width": 150.0,
-      "height": 16.0,
-      "z_index": 0,
-      "visible": true,
+      "id": "laboratory_name",
+      "type": "field",
+      "x": 210,
+      "y": 30,
+      "width": 430,
+      "height": 34,
+      "locked": false,
       "properties": {
-        "page_id": "page_1",
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "laboratory.name",
+        "locked": false,
         "style": {
-          "color": "#E53935",
-          "font_size": 10
-        },
-        "text": "DIAGNOSTIC SYSTEM",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "DIAGNOSTIC SYSTEM",
-      "style": {
-        "color": "#E53935",
-        "font_size": 10
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "clinic_name",
-      "type": "text",
-      "x": 170.0,
-      "y": 4.0,
-      "width": 360.0,
-      "height": 30.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
+          "align": "left",
           "bold": true,
+          "color": "#111827",
           "font_size": 26
-        },
-        "text": "Cerebro Diagnostic System",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+        }
       },
-      "text": "Cerebro Diagnostic System",
+      "band": "page_header",
+      "band_id": "page_header",
+      "binding": "laboratory.name",
       "style": {
+        "align": "left",
         "bold": true,
+        "color": "#111827",
         "font_size": 26
-      },
-      "band_id": "detail"
+      }
     },
     {
-      "id": "clinic_address",
-      "type": "text",
-      "x": 171.0,
-      "y": 35.0,
-      "width": 390.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
+      "id": "laboratory_address",
+      "type": "field",
+      "x": 210,
+      "y": 66,
+      "width": 520,
+      "height": 18,
+      "locked": false,
       "properties": {
-        "page_id": "page_1",
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "laboratory.address",
+        "locked": false,
         "style": {
-          "font_size": 10
-        },
-        "text": "Alwana Business Park, Zone 4 Cugman, Cagayan de Oro City",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        }
       },
-      "text": "Alwana Business Park, Zone 4 Cugman, Cagayan de Oro City",
+      "band": "page_header",
+      "band_id": "page_header",
+      "binding": "laboratory.address",
       "style": {
-        "font_size": 10
-      },
-      "band_id": "detail"
+        "align": "left",
+        "bold": false,
+        "color": "#111827",
+        "font_size": 12
+      }
     },
     {
-      "id": "clinic_contact",
-      "type": "text",
-      "x": 171.0,
-      "y": 61.0,
-      "width": 360.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
+      "id": "laboratory_contact",
+      "type": "field",
+      "x": 210,
+      "y": 88,
+      "width": 520,
+      "height": 18,
+      "locked": false,
       "properties": {
-        "page_id": "page_1",
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "laboratory.contact",
+        "locked": false,
         "style": {
-          "font_size": 10
-        },
-        "text": "Contact No.: +639 260 235 049, +639 222 979 774",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        }
       },
-      "text": "Contact No.: +639 260 235 049, +639 222 979 774",
+      "band": "page_header",
+      "band_id": "page_header",
+      "binding": "laboratory.contact",
       "style": {
-        "font_size": 10
-      },
-      "band_id": "detail"
+        "align": "left",
+        "bold": false,
+        "color": "#111827",
+        "font_size": 12
+      }
     },
     {
-      "id": "clinic_email",
-      "type": "text",
-      "x": 171.0,
-      "y": 74.0,
-      "width": 300.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
+      "id": "laboratory_email",
+      "type": "field",
+      "x": 210,
+      "y": 108,
+      "width": 520,
+      "height": 18,
+      "locked": false,
       "properties": {
-        "page_id": "page_1",
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "laboratory.email_line",
+        "locked": false,
         "style": {
-          "font_size": 10
-        },
-        "text": "Email Address: cerebro.info@gmail.com",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        }
       },
-      "text": "Email Address: cerebro.info@gmail.com",
+      "band": "page_header",
+      "band_id": "page_header",
+      "binding": "laboratory.email_line",
       "style": {
-        "font_size": 10
-      },
-      "band_id": "detail"
+        "align": "left",
+        "bold": false,
+        "color": "#111827",
+        "font_size": 12
+      }
     },
     {
-      "id": "header_rule",
+      "id": "top_rule",
       "type": "line",
-      "x": 10.0,
-      "y": 90.0,
-      "width": 624.0,
-      "height": 0.0,
-      "z_index": 0,
-      "visible": true,
+      "x": 8,
+      "y": 134,
+      "width": 800,
+      "height": 1,
+      "locked": false,
       "properties": {
-        "page_id": "page_1",
+        "band": "page_header",
+        "band_id": "page_header",
+        "locked": false,
         "style": {
+          "stroke_color": "#111827",
           "stroke_width": 1
-        },
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+        }
       },
+      "band": "page_header",
+      "band_id": "page_header",
       "style": {
+        "stroke_color": "#111827",
         "stroke_width": 1
-      },
-      "band_id": "detail"
+      }
     },
     {
       "id": "patient_name_label",
       "type": "text",
-      "x": 20.0,
-      "y": 100.0,
-      "width": 96.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
+      "x": 8,
+      "y": 145,
+      "width": 120,
+      "height": 18,
+      "locked": false,
       "properties": {
-        "page_id": "page_1",
+        "band": "page_header",
+        "band_id": "page_header",
+        "locked": false,
         "style": {
-          "font_size": 10
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 12
         },
-        "text": "Patient Name:",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+        "text": "Patient Name:"
       },
+      "band": "page_header",
+      "band_id": "page_header",
       "text": "Patient Name:",
       "style": {
-        "font_size": 10
-      },
-      "band_id": "detail"
+        "align": "left",
+        "bold": true,
+        "color": "#111827",
+        "font_size": 12
+      }
     },
     {
-      "id": "patient_name_value",
+      "id": "patient_name",
       "type": "field",
-      "x": 100.0,
-      "y": 100.0,
-      "width": 180.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
+      "x": 132,
+      "y": 145,
+      "width": 280,
+      "height": 18,
+      "locked": false,
       "properties": {
+        "band": "page_header",
+        "band_id": "page_header",
         "binding": "patient.name",
-        "page_id": "page_1",
+        "locked": false,
         "style": {
+          "align": "left",
           "bold": true,
-          "font_size": 10
-        },
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+          "color": "#111827",
+          "font_size": 12
+        }
       },
+      "band": "page_header",
+      "band_id": "page_header",
       "binding": "patient.name",
       "style": {
+        "align": "left",
         "bold": true,
-        "font_size": 10
-      },
-      "band_id": "detail"
+        "color": "#111827",
+        "font_size": 12
+      }
     },
     {
       "id": "age_label",
       "type": "text",
-      "x": 20.0,
-      "y": 110.0,
-      "width": 96.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
+      "x": 8,
+      "y": 167,
+      "width": 120,
+      "height": 18,
+      "locked": false,
       "properties": {
-        "page_id": "page_1",
+        "band": "page_header",
+        "band_id": "page_header",
+        "locked": false,
         "style": {
-          "font_size": 10
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 12
         },
-        "text": "Age:",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+        "text": "Age:"
       },
+      "band": "page_header",
+      "band_id": "page_header",
       "text": "Age:",
       "style": {
-        "font_size": 10
-      },
-      "band_id": "detail"
+        "align": "left",
+        "bold": true,
+        "color": "#111827",
+        "font_size": 12
+      }
     },
     {
-      "id": "age_value",
+      "id": "age",
       "type": "field",
-      "x": 100.0,
-      "y": 110.0,
-      "width": 180.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
+      "x": 132,
+      "y": 167,
+      "width": 280,
+      "height": 18,
+      "locked": false,
       "properties": {
+        "band": "page_header",
+        "band_id": "page_header",
         "binding": "patient.age",
-        "page_id": "page_1",
+        "locked": false,
         "style": {
-          "bold": true,
-          "font_size": 10
-        },
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        }
       },
+      "band": "page_header",
+      "band_id": "page_header",
       "binding": "patient.age",
       "style": {
-        "bold": true,
-        "font_size": 10
-      },
-      "band_id": "detail"
+        "align": "left",
+        "bold": false,
+        "color": "#111827",
+        "font_size": 12
+      }
     },
     {
       "id": "dob_label",
       "type": "text",
-      "x": 20.0,
-      "y": 120.0,
-      "width": 96.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
+      "x": 8,
+      "y": 189,
+      "width": 120,
+      "height": 18,
+      "locked": false,
       "properties": {
-        "page_id": "page_1",
+        "band": "page_header",
+        "band_id": "page_header",
+        "locked": false,
         "style": {
-          "font_size": 10
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 12
         },
-        "text": "DOB:",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+        "text": "DOB:"
       },
+      "band": "page_header",
+      "band_id": "page_header",
       "text": "DOB:",
       "style": {
-        "font_size": 10
-      },
-      "band_id": "detail"
+        "align": "left",
+        "bold": true,
+        "color": "#111827",
+        "font_size": 12
+      }
     },
     {
-      "id": "dob_value",
+      "id": "dob",
       "type": "field",
-      "x": 100.0,
-      "y": 120.0,
-      "width": 180.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
+      "x": 132,
+      "y": 189,
+      "width": 280,
+      "height": 18,
+      "locked": false,
       "properties": {
+        "band": "page_header",
+        "band_id": "page_header",
         "binding": "patient.dob",
-        "page_id": "page_1",
+        "locked": false,
         "style": {
-          "bold": true,
-          "font_size": 10
-        },
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        }
       },
+      "band": "page_header",
+      "band_id": "page_header",
       "binding": "patient.dob",
       "style": {
-        "bold": true,
-        "font_size": 10
-      },
-      "band_id": "detail"
+        "align": "left",
+        "bold": false,
+        "color": "#111827",
+        "font_size": 12
+      }
     },
     {
       "id": "sex_label",
       "type": "text",
-      "x": 20.0,
-      "y": 130.0,
-      "width": 96.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
+      "x": 8,
+      "y": 211,
+      "width": 120,
+      "height": 18,
+      "locked": false,
       "properties": {
-        "page_id": "page_1",
+        "band": "page_header",
+        "band_id": "page_header",
+        "locked": false,
         "style": {
-          "font_size": 10
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 12
         },
-        "text": "Sex:",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+        "text": "Sex:"
       },
+      "band": "page_header",
+      "band_id": "page_header",
       "text": "Sex:",
       "style": {
-        "font_size": 10
-      },
-      "band_id": "detail"
+        "align": "left",
+        "bold": true,
+        "color": "#111827",
+        "font_size": 12
+      }
     },
     {
-      "id": "sex_value",
+      "id": "sex",
       "type": "field",
-      "x": 100.0,
-      "y": 130.0,
-      "width": 180.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
+      "x": 132,
+      "y": 211,
+      "width": 280,
+      "height": 18,
+      "locked": false,
       "properties": {
+        "band": "page_header",
+        "band_id": "page_header",
         "binding": "patient.sex",
-        "page_id": "page_1",
+        "locked": false,
         "style": {
-          "bold": true,
-          "font_size": 10
-        },
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        }
       },
+      "band": "page_header",
+      "band_id": "page_header",
       "binding": "patient.sex",
       "style": {
-        "bold": true,
-        "font_size": 10
-      },
-      "band_id": "detail"
+        "align": "left",
+        "bold": false,
+        "color": "#111827",
+        "font_size": 12
+      }
     },
     {
-      "id": "order_no_label",
+      "id": "physician_label",
       "type": "text",
-      "x": 330.0,
-      "y": 98.0,
-      "width": 98.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
+      "x": 8,
+      "y": 233,
+      "width": 120,
+      "height": 18,
+      "locked": false,
       "properties": {
-        "page_id": "page_1",
+        "band": "page_header",
+        "band_id": "page_header",
+        "locked": false,
         "style": {
-          "font_size": 10
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 12
         },
-        "text": "Order No.:",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+        "text": "Physician:"
       },
+      "band": "page_header",
+      "band_id": "page_header",
+      "text": "Physician:",
+      "style": {
+        "align": "left",
+        "bold": true,
+        "color": "#111827",
+        "font_size": 12
+      }
+    },
+    {
+      "id": "physician",
+      "type": "field",
+      "x": 132,
+      "y": 233,
+      "width": 280,
+      "height": 18,
+      "locked": false,
+      "properties": {
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "order.physician",
+        "locked": false,
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        }
+      },
+      "band": "page_header",
+      "band_id": "page_header",
+      "binding": "order.physician",
+      "style": {
+        "align": "left",
+        "bold": false,
+        "color": "#111827",
+        "font_size": 12
+      }
+    },
+    {
+      "id": "diagnosis_label",
+      "type": "text",
+      "x": 8,
+      "y": 255,
+      "width": 130,
+      "height": 18,
+      "locked": false,
+      "properties": {
+        "band": "page_header",
+        "band_id": "page_header",
+        "locked": false,
+        "style": {
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "text": "Clinical Diagnosis:"
+      },
+      "band": "page_header",
+      "band_id": "page_header",
+      "text": "Clinical Diagnosis:",
+      "style": {
+        "align": "left",
+        "bold": true,
+        "color": "#111827",
+        "font_size": 12
+      }
+    },
+    {
+      "id": "diagnosis",
+      "type": "field",
+      "x": 132,
+      "y": 255,
+      "width": 280,
+      "height": 18,
+      "locked": false,
+      "properties": {
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "order.diagnosis",
+        "locked": false,
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        }
+      },
+      "band": "page_header",
+      "band_id": "page_header",
+      "binding": "order.diagnosis",
+      "style": {
+        "align": "left",
+        "bold": false,
+        "color": "#111827",
+        "font_size": 12
+      }
+    },
+    {
+      "id": "order_label",
+      "type": "text",
+      "x": 420,
+      "y": 145,
+      "width": 120,
+      "height": 18,
+      "locked": false,
+      "properties": {
+        "band": "page_header",
+        "band_id": "page_header",
+        "locked": false,
+        "style": {
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "text": "Order No.:"
+      },
+      "band": "page_header",
+      "band_id": "page_header",
       "text": "Order No.:",
       "style": {
-        "font_size": 10
-      },
-      "band_id": "detail"
+        "align": "left",
+        "bold": true,
+        "color": "#111827",
+        "font_size": 12
+      }
     },
     {
-      "id": "order_no_value",
+      "id": "order_id",
       "type": "field",
-      "x": 428.0,
-      "y": 98.0,
-      "width": 185.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
+      "x": 548,
+      "y": 145,
+      "width": 230,
+      "height": 18,
+      "locked": false,
       "properties": {
+        "band": "page_header",
+        "band_id": "page_header",
         "binding": "order.id",
-        "page_id": "page_1",
+        "locked": false,
         "style": {
-          "bold": true,
-          "font_size": 10
-        },
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        }
       },
+      "band": "page_header",
+      "band_id": "page_header",
       "binding": "order.id",
       "style": {
-        "bold": true,
-        "font_size": 10
-      },
-      "band_id": "detail"
+        "align": "left",
+        "bold": false,
+        "color": "#111827",
+        "font_size": 12
+      }
     },
     {
       "id": "source_label",
       "type": "text",
-      "x": 330.0,
-      "y": 111.0,
-      "width": 98.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
+      "x": 420,
+      "y": 167,
+      "width": 120,
+      "height": 18,
+      "locked": false,
       "properties": {
-        "page_id": "page_1",
+        "band": "page_header",
+        "band_id": "page_header",
+        "locked": false,
         "style": {
-          "font_size": 10
-        },
-        "text": "Source:",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "Source:",
-      "style": {
-        "font_size": 10
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "source_value",
-      "type": "field",
-      "x": 428.0,
-      "y": 111.0,
-      "width": 185.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "binding": "order.source",
-        "page_id": "page_1",
-        "style": {
+          "align": "left",
           "bold": true,
-          "font_size": 10
-        },
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "binding": "order.source",
-      "style": {
-        "bold": true,
-        "font_size": 10
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "date_received_label",
-      "type": "text",
-      "x": 330.0,
-      "y": 137.0,
-      "width": 98.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 10
-        },
-        "text": "Date Received:",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "Date Received:",
-      "style": {
-        "font_size": 10
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "date_received_value",
-      "type": "field",
-      "x": 428.0,
-      "y": 137.0,
-      "width": 185.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "binding": "order.received",
-        "page_id": "page_1",
-        "style": {
-          "bold": true,
-          "font_size": 10
-        },
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "binding": "order.received",
-      "style": {
-        "bold": true,
-        "font_size": 10
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "date_printed_label",
-      "type": "text",
-      "x": 330.0,
-      "y": 176.0,
-      "width": 98.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 10
-        },
-        "text": "Date Printed:",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "Date Printed:",
-      "style": {
-        "font_size": 10
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "date_printed_value",
-      "type": "field",
-      "x": 428.0,
-      "y": 176.0,
-      "width": 185.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "binding": "order.printed",
-        "page_id": "page_1",
-        "style": {
-          "bold": true,
-          "font_size": 10
-        },
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "binding": "order.printed",
-      "style": {
-        "bold": true,
-        "font_size": 10
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "section",
-      "type": "text",
-      "x": 0.0,
-      "y": 205.0,
-      "width": 651.0,
-      "height": 16.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "align": "center",
-          "bold": true,
-          "color": "#9AA0A6",
+          "color": "#111827",
           "font_size": 12
         },
-        "text": "HEMATOLOGY",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+        "text": "Source:"
       },
-      "text": "HEMATOLOGY",
+      "band": "page_header",
+      "band_id": "page_header",
+      "text": "Source:",
+      "style": {
+        "align": "left",
+        "bold": true,
+        "color": "#111827",
+        "font_size": 12
+      }
+    },
+    {
+      "id": "source",
+      "type": "field",
+      "x": 548,
+      "y": 167,
+      "width": 230,
+      "height": 18,
+      "locked": false,
+      "properties": {
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "patient.source",
+        "locked": false,
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        }
+      },
+      "band": "page_header",
+      "band_id": "page_header",
+      "binding": "patient.source",
+      "style": {
+        "align": "left",
+        "bold": false,
+        "color": "#111827",
+        "font_size": 12
+      }
+    },
+    {
+      "id": "room_label",
+      "type": "text",
+      "x": 420,
+      "y": 189,
+      "width": 120,
+      "height": 18,
+      "locked": false,
+      "properties": {
+        "band": "page_header",
+        "band_id": "page_header",
+        "locked": false,
+        "style": {
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "text": "Room No.:"
+      },
+      "band": "page_header",
+      "band_id": "page_header",
+      "text": "Room No.:",
+      "style": {
+        "align": "left",
+        "bold": true,
+        "color": "#111827",
+        "font_size": 12
+      }
+    },
+    {
+      "id": "room",
+      "type": "field",
+      "x": 548,
+      "y": 189,
+      "width": 230,
+      "height": 18,
+      "locked": false,
+      "properties": {
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "order.room",
+        "locked": false,
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        }
+      },
+      "band": "page_header",
+      "band_id": "page_header",
+      "binding": "order.room",
+      "style": {
+        "align": "left",
+        "bold": false,
+        "color": "#111827",
+        "font_size": 12
+      }
+    },
+    {
+      "id": "received_label",
+      "type": "text",
+      "x": 420,
+      "y": 211,
+      "width": 120,
+      "height": 18,
+      "locked": false,
+      "properties": {
+        "band": "page_header",
+        "band_id": "page_header",
+        "locked": false,
+        "style": {
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "text": "Date Received:"
+      },
+      "band": "page_header",
+      "band_id": "page_header",
+      "text": "Date Received:",
+      "style": {
+        "align": "left",
+        "bold": true,
+        "color": "#111827",
+        "font_size": 12
+      }
+    },
+    {
+      "id": "received",
+      "type": "field",
+      "x": 548,
+      "y": 211,
+      "width": 230,
+      "height": 18,
+      "locked": false,
+      "properties": {
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "order.received",
+        "locked": false,
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        }
+      },
+      "band": "page_header",
+      "band_id": "page_header",
+      "binding": "order.received",
+      "style": {
+        "align": "left",
+        "bold": false,
+        "color": "#111827",
+        "font_size": 12
+      }
+    },
+    {
+      "id": "checkin_label",
+      "type": "text",
+      "x": 420,
+      "y": 233,
+      "width": 120,
+      "height": 18,
+      "locked": false,
+      "properties": {
+        "band": "page_header",
+        "band_id": "page_header",
+        "locked": false,
+        "style": {
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "text": "Date Checked-In:"
+      },
+      "band": "page_header",
+      "band_id": "page_header",
+      "text": "Date Checked-In:",
+      "style": {
+        "align": "left",
+        "bold": true,
+        "color": "#111827",
+        "font_size": 12
+      }
+    },
+    {
+      "id": "checked_in",
+      "type": "field",
+      "x": 548,
+      "y": 233,
+      "width": 230,
+      "height": 18,
+      "locked": false,
+      "properties": {
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "order.checked_in",
+        "locked": false,
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        }
+      },
+      "band": "page_header",
+      "band_id": "page_header",
+      "binding": "order.checked_in",
+      "style": {
+        "align": "left",
+        "bold": false,
+        "color": "#111827",
+        "font_size": 12
+      }
+    },
+    {
+      "id": "released_label",
+      "type": "text",
+      "x": 420,
+      "y": 255,
+      "width": 120,
+      "height": 18,
+      "locked": false,
+      "properties": {
+        "band": "page_header",
+        "band_id": "page_header",
+        "locked": false,
+        "style": {
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "text": "Date Released:"
+      },
+      "band": "page_header",
+      "band_id": "page_header",
+      "text": "Date Released:",
+      "style": {
+        "align": "left",
+        "bold": true,
+        "color": "#111827",
+        "font_size": 12
+      }
+    },
+    {
+      "id": "released",
+      "type": "field",
+      "x": 548,
+      "y": 255,
+      "width": 230,
+      "height": 18,
+      "locked": false,
+      "properties": {
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "order.released",
+        "locked": false,
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        }
+      },
+      "band": "page_header",
+      "band_id": "page_header",
+      "binding": "order.released",
+      "style": {
+        "align": "left",
+        "bold": false,
+        "color": "#111827",
+        "font_size": 12
+      }
+    },
+    {
+      "id": "printed_label",
+      "type": "text",
+      "x": 420,
+      "y": 277,
+      "width": 120,
+      "height": 18,
+      "locked": false,
+      "properties": {
+        "band": "page_header",
+        "band_id": "page_header",
+        "locked": false,
+        "style": {
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "text": "Date Printed:"
+      },
+      "band": "page_header",
+      "band_id": "page_header",
+      "text": "Date Printed:",
+      "style": {
+        "align": "left",
+        "bold": true,
+        "color": "#111827",
+        "font_size": 12
+      }
+    },
+    {
+      "id": "printed",
+      "type": "field",
+      "x": 548,
+      "y": 277,
+      "width": 230,
+      "height": 18,
+      "locked": false,
+      "properties": {
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "printed_at",
+        "locked": false,
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        }
+      },
+      "band": "page_header",
+      "band_id": "page_header",
+      "binding": "printed_at",
+      "style": {
+        "align": "left",
+        "bold": false,
+        "color": "#111827",
+        "font_size": 12
+      }
+    },
+    {
+      "id": "department_bar",
+      "type": "rectangle",
+      "x": 8,
+      "y": 302,
+      "width": 800,
+      "height": 34,
+      "locked": false,
+      "properties": {
+        "band": "page_header",
+        "band_id": "page_header",
+        "locked": false,
+        "style": {
+          "background_color": "#f000e8",
+          "border_color": "#f000e8",
+          "border_width": 0,
+          "fill_color": "#f000e8"
+        }
+      },
+      "band": "page_header",
+      "band_id": "page_header",
+      "style": {
+        "background_color": "#f000e8",
+        "border_color": "#f000e8",
+        "border_width": 0,
+        "fill_color": "#f000e8"
+      }
+    },
+    {
+      "id": "department_name",
+      "type": "field",
+      "x": 8,
+      "y": 307,
+      "width": 800,
+      "height": 24,
+      "locked": false,
+      "properties": {
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "department.name",
+        "locked": false,
+        "style": {
+          "align": "center",
+          "bold": true,
+          "color": "#ffffff",
+          "font_size": 18
+        }
+      },
+      "band": "page_header",
+      "band_id": "page_header",
+      "binding": "department.name",
       "style": {
         "align": "center",
         "bold": true,
-        "color": "#9AA0A6",
-        "font_size": 12
-      },
-      "band_id": "detail"
+        "color": "#ffffff",
+        "font_size": 18
+      }
     },
     {
-      "id": "test_header",
+      "id": "h_test",
       "type": "text",
-      "x": 16.0,
-      "y": 232.0,
-      "width": 150.0,
-      "height": 14.0,
-      "z_index": 0,
-      "visible": true,
+      "x": 14,
+      "y": 341,
+      "width": 250,
+      "height": 18,
+      "locked": false,
       "properties": {
-        "page_id": "page_1",
+        "band": "page_header",
+        "band_id": "page_header",
+        "locked": false,
         "style": {
+          "align": "left",
           "bold": true,
-          "font_size": 10
+          "color": "#111827",
+          "font_size": 13
         },
-        "text": "TEST NAME",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+        "text": "TEST NAME"
       },
+      "band": "page_header",
+      "band_id": "page_header",
       "text": "TEST NAME",
       "style": {
+        "align": "left",
         "bold": true,
-        "font_size": 10
-      },
-      "band_id": "detail"
+        "color": "#111827",
+        "font_size": 13
+      }
     },
     {
-      "id": "result_header",
+      "id": "h_result",
       "type": "text",
-      "x": 226.0,
-      "y": 232.0,
-      "width": 54.0,
-      "height": 14.0,
-      "z_index": 0,
-      "visible": true,
+      "x": 280,
+      "y": 341,
+      "width": 90,
+      "height": 18,
+      "locked": false,
       "properties": {
-        "page_id": "page_1",
+        "band": "page_header",
+        "band_id": "page_header",
+        "locked": false,
         "style": {
+          "align": "center",
           "bold": true,
-          "font_size": 10
+          "color": "#111827",
+          "font_size": 13
         },
-        "text": "RESULT",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+        "text": "RESULT"
       },
+      "band": "page_header",
+      "band_id": "page_header",
       "text": "RESULT",
       "style": {
+        "align": "center",
         "bold": true,
-        "font_size": 10
-      },
-      "band_id": "detail"
+        "color": "#111827",
+        "font_size": 13
+      }
     },
     {
-      "id": "unit_header",
+      "id": "h_unit",
       "type": "text",
-      "x": 315.0,
-      "y": 232.0,
-      "width": 58.0,
-      "height": 14.0,
-      "z_index": 0,
-      "visible": true,
+      "x": 402,
+      "y": 341,
+      "width": 90,
+      "height": 18,
+      "locked": false,
       "properties": {
-        "page_id": "page_1",
+        "band": "page_header",
+        "band_id": "page_header",
+        "locked": false,
         "style": {
+          "align": "left",
           "bold": true,
-          "font_size": 10
+          "color": "#111827",
+          "font_size": 13
         },
-        "text": "UNIT",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+        "text": "UNIT"
       },
+      "band": "page_header",
+      "band_id": "page_header",
       "text": "UNIT",
       "style": {
+        "align": "left",
         "bold": true,
-        "font_size": 10
-      },
-      "band_id": "detail"
+        "color": "#111827",
+        "font_size": 13
+      }
     },
     {
-      "id": "range_header",
+      "id": "h_reference",
       "type": "text",
-      "x": 378.0,
-      "y": 232.0,
-      "width": 130.0,
-      "height": 14.0,
-      "z_index": 0,
-      "visible": true,
+      "x": 482,
+      "y": 341,
+      "width": 190,
+      "height": 18,
+      "locked": false,
       "properties": {
-        "page_id": "page_1",
+        "band": "page_header",
+        "band_id": "page_header",
+        "locked": false,
         "style": {
+          "align": "left",
           "bold": true,
-          "font_size": 10
+          "color": "#111827",
+          "font_size": 13
         },
-        "text": "REFERENCE RANGE",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+        "text": "REFERENCE RANGE"
       },
+      "band": "page_header",
+      "band_id": "page_header",
       "text": "REFERENCE RANGE",
       "style": {
+        "align": "left",
         "bold": true,
-        "font_size": 10
-      },
-      "band_id": "detail"
+        "color": "#111827",
+        "font_size": 13
+      }
     },
     {
-      "id": "flag_header",
+      "id": "h_flag",
       "type": "text",
-      "x": 570.0,
-      "y": 232.0,
-      "width": 54.0,
-      "height": 14.0,
-      "z_index": 0,
-      "visible": true,
+      "x": 725,
+      "y": 341,
+      "width": 70,
+      "height": 18,
+      "locked": false,
       "properties": {
-        "page_id": "page_1",
+        "band": "page_header",
+        "band_id": "page_header",
+        "locked": false,
         "style": {
+          "align": "center",
           "bold": true,
-          "font_size": 10
+          "color": "#111827",
+          "font_size": 13
         },
-        "text": "FLAGS",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+        "text": "FLAGS"
       },
+      "band": "page_header",
+      "band_id": "page_header",
       "text": "FLAGS",
       "style": {
+        "align": "center",
         "bold": true,
+        "color": "#111827",
+        "font_size": 13
+      }
+    },
+    {
+      "id": "d_test",
+      "type": "field",
+      "x": 14,
+      "y": 366,
+      "width": 250,
+      "height": 20,
+      "locked": false,
+      "properties": {
+        "band": "detail",
+        "band_id": "detail",
+        "binding": "test",
+        "locked": false,
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        }
+      },
+      "band": "detail",
+      "band_id": "detail",
+      "binding": "test",
+      "style": {
+        "align": "left",
+        "bold": false,
+        "color": "#111827",
+        "font_size": 12
+      }
+    },
+    {
+      "id": "d_result",
+      "type": "field",
+      "x": 280,
+      "y": 366,
+      "width": 90,
+      "height": 20,
+      "locked": false,
+      "properties": {
+        "band": "detail",
+        "band_id": "detail",
+        "binding": "result",
+        "locked": false,
+        "style": {
+          "align": "center",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        }
+      },
+      "band": "detail",
+      "band_id": "detail",
+      "binding": "result",
+      "style": {
+        "align": "center",
+        "bold": false,
+        "color": "#111827",
+        "font_size": 12
+      }
+    },
+    {
+      "id": "d_unit",
+      "type": "field",
+      "x": 402,
+      "y": 366,
+      "width": 90,
+      "height": 20,
+      "locked": false,
+      "properties": {
+        "band": "detail",
+        "band_id": "detail",
+        "binding": "unit",
+        "locked": false,
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        }
+      },
+      "band": "detail",
+      "band_id": "detail",
+      "binding": "unit",
+      "style": {
+        "align": "left",
+        "bold": false,
+        "color": "#111827",
+        "font_size": 12
+      }
+    },
+    {
+      "id": "d_reference",
+      "type": "field",
+      "x": 482,
+      "y": 366,
+      "width": 190,
+      "height": 20,
+      "locked": false,
+      "properties": {
+        "band": "detail",
+        "band_id": "detail",
+        "binding": "reference",
+        "locked": false,
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        }
+      },
+      "band": "detail",
+      "band_id": "detail",
+      "binding": "reference",
+      "style": {
+        "align": "left",
+        "bold": false,
+        "color": "#111827",
+        "font_size": 12
+      }
+    },
+    {
+      "id": "d_flag",
+      "type": "field",
+      "x": 725,
+      "y": 366,
+      "width": 70,
+      "height": 20,
+      "locked": false,
+      "properties": {
+        "band": "detail",
+        "band_id": "detail",
+        "binding": "flag",
+        "locked": false,
+        "style": {
+          "align": "center",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 12
+        }
+      },
+      "band": "detail",
+      "band_id": "detail",
+      "binding": "flag",
+      "style": {
+        "align": "center",
+        "bold": true,
+        "color": "#111827",
+        "font_size": 12
+      }
+    },
+    {
+      "id": "note",
+      "type": "text",
+      "x": 10,
+      "y": 1026,
+      "width": 800,
+      "height": 18,
+      "locked": false,
+      "properties": {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "locked": false,
+        "style": {
+          "align": "center",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 10
+        },
+        "text": "*Please consult your doctor for interpretation*"
+      },
+      "band": "page_footer",
+      "band_id": "page_footer",
+      "text": "*Please consult your doctor for interpretation*",
+      "style": {
+        "align": "center",
+        "bold": false,
+        "color": "#111827",
         "font_size": 10
-      },
-      "band_id": "detail"
+      }
     },
     {
-      "id": "result_0_test",
+      "id": "esign",
       "type": "text",
-      "x": 16.0,
-      "y": 248.0,
-      "width": 190.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
+      "x": 0,
+      "y": 1040,
+      "width": 800,
+      "height": 12,
+      "locked": false,
       "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": false,
-          "font_size": 9
-        },
-        "text": "White Blood Cell Count",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "White Blood Cell Count",
-      "style": {
-        "bold": false,
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_0_value",
-      "type": "field",
-      "x": 226.0,
-      "y": 248.0,
-      "width": 54.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "binding": "results.wbc",
-        "page_id": "page_1",
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "locked": false,
         "style": {
           "align": "center",
-          "color": "#FF0000",
-          "font_size": 9
+          "bold": false,
+          "color": "#111827",
+          "font_size": 10
         },
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+        "text": "***Electronically Signed***"
       },
-      "binding": "results.wbc",
+      "band": "page_footer",
+      "band_id": "page_footer",
+      "text": "***Electronically Signed***",
       "style": {
         "align": "center",
-        "color": "#FF0000",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_0_unit",
-      "type": "text",
-      "x": 312.0,
-      "y": 248.0,
-      "width": 58.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "x10^9/L",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "x10^9/L",
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_0_range",
-      "type": "text",
-      "x": 378.0,
-      "y": 248.0,
-      "width": 120.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "5-14.5",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "5-14.5",
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_0_flag",
-      "type": "text",
-      "x": 592.0,
-      "y": 248.0,
-      "width": 40.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": true,
-          "color": "#FF0000",
-          "font_size": 9
-        },
-        "text": "HIGH",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "HIGH",
-      "style": {
-        "bold": true,
-        "color": "#FF0000",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_1_test",
-      "type": "text",
-      "x": 16.0,
-      "y": 264.0,
-      "width": 190.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": false,
-          "font_size": 9
-        },
-        "text": "Red Blood Cell Count",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "Red Blood Cell Count",
-      "style": {
         "bold": false,
-        "font_size": 9
-      },
-      "band_id": "detail"
+        "color": "#111827",
+        "font_size": 10
+      }
     },
     {
-      "id": "result_1_value",
+      "id": "run_by_signature",
+      "type": "image",
+      "x": 64,
+      "y": 906,
+      "width": 150,
+      "height": 54,
+      "locked": false,
+      "properties": {
+        "alt": "",
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "binding": "signatures.run_by.signature",
+        "locked": false,
+        "maintain_aspect_ratio": true,
+        "source": "",
+        "src": "",
+        "style": {
+          "background_color": "transparent",
+          "border_width": 0,
+          "object_fit": "contain"
+        }
+      },
+      "band": "page_footer",
+      "band_id": "page_footer",
+      "binding": "signatures.run_by.signature",
+      "src": "",
+      "alt": "",
+      "style": {
+        "background_color": "transparent",
+        "border_width": 0,
+        "object_fit": "contain"
+      }
+    },
+    {
+      "id": "run_by_name",
       "type": "field",
-      "x": 226.0,
-      "y": 264.0,
-      "width": 54.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "binding": "results.rbc",
-        "page_id": "page_1",
-        "style": {
-          "align": "center",
-          "color": "#000000",
-          "font_size": 9
-        },
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "binding": "results.rbc",
-      "style": {
-        "align": "center",
-        "color": "#000000",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_1_unit",
-      "type": "text",
-      "x": 312.0,
-      "y": 264.0,
-      "width": 58.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "x10^12/L",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "x10^12/L",
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_1_range",
-      "type": "text",
-      "x": 378.0,
-      "y": 264.0,
-      "width": 120.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "3.9 - 5.3",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "3.9 - 5.3",
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_1_flag",
-      "type": "text",
-      "x": 592.0,
-      "y": 264.0,
-      "width": 40.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": false,
-          "color": "#000000",
-          "font_size": 9
-        },
-        "text": "",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "style": {
-        "bold": false,
-        "color": "#000000",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_2_test",
-      "type": "text",
-      "x": 16.0,
-      "y": 280.0,
-      "width": 190.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": false,
-          "font_size": 9
-        },
-        "text": "Hemoglobin",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "Hemoglobin",
-      "style": {
-        "bold": false,
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_2_value",
-      "type": "field",
-      "x": 226.0,
-      "y": 280.0,
-      "width": 54.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "binding": "results.hgb",
-        "page_id": "page_1",
-        "style": {
-          "align": "center",
-          "color": "#003BFF",
-          "font_size": 9
-        },
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "binding": "results.hgb",
-      "style": {
-        "align": "center",
-        "color": "#003BFF",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_2_unit",
-      "type": "text",
-      "x": 312.0,
-      "y": 280.0,
-      "width": 58.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "g/dL",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "g/dL",
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_2_range",
-      "type": "text",
-      "x": 378.0,
-      "y": 280.0,
-      "width": 120.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "11.5 - 13.5",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "11.5 - 13.5",
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_2_flag",
-      "type": "text",
-      "x": 592.0,
-      "y": 280.0,
-      "width": 40.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": true,
-          "color": "#003BFF",
-          "font_size": 9
-        },
-        "text": "LOW",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "LOW",
-      "style": {
-        "bold": true,
-        "color": "#003BFF",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_3_test",
-      "type": "text",
-      "x": 16.0,
-      "y": 296.0,
-      "width": 190.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": false,
-          "font_size": 9
-        },
-        "text": "Hematocrit",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "Hematocrit",
-      "style": {
-        "bold": false,
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_3_value",
-      "type": "field",
-      "x": 226.0,
-      "y": 296.0,
-      "width": 54.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "binding": "results.hct",
-        "page_id": "page_1",
-        "style": {
-          "align": "center",
-          "color": "#003BFF",
-          "font_size": 9
-        },
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "binding": "results.hct",
-      "style": {
-        "align": "center",
-        "color": "#003BFF",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_3_unit",
-      "type": "text",
-      "x": 312.0,
-      "y": 296.0,
-      "width": 58.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "%",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "%",
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_3_range",
-      "type": "text",
-      "x": 378.0,
-      "y": 296.0,
-      "width": 120.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "34 - 40",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "34 - 40",
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_3_flag",
-      "type": "text",
-      "x": 592.0,
-      "y": 296.0,
-      "width": 40.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": true,
-          "color": "#003BFF",
-          "font_size": 9
-        },
-        "text": "LOW",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "LOW",
-      "style": {
-        "bold": true,
-        "color": "#003BFF",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_4_test",
-      "type": "text",
-      "x": 16.0,
-      "y": 312.0,
-      "width": 190.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": false,
-          "font_size": 9
-        },
-        "text": "MCV",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "MCV",
-      "style": {
-        "bold": false,
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_4_value",
-      "type": "field",
-      "x": 226.0,
-      "y": 312.0,
-      "width": 54.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "binding": "results.mcv",
-        "page_id": "page_1",
-        "style": {
-          "align": "center",
-          "color": "#000000",
-          "font_size": 9
-        },
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "binding": "results.mcv",
-      "style": {
-        "align": "center",
-        "color": "#000000",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_4_unit",
-      "type": "text",
-      "x": 312.0,
-      "y": 312.0,
-      "width": 58.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "c.u.",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "c.u.",
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_4_range",
-      "type": "text",
-      "x": 378.0,
-      "y": 312.0,
-      "width": 120.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "75 - 87",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "75 - 87",
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_4_flag",
-      "type": "text",
-      "x": 592.0,
-      "y": 312.0,
-      "width": 40.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": false,
-          "color": "#000000",
-          "font_size": 9
-        },
-        "text": "",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "style": {
-        "bold": false,
-        "color": "#000000",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_5_test",
-      "type": "text",
-      "x": 16.0,
-      "y": 328.0,
-      "width": 190.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": false,
-          "font_size": 9
-        },
-        "text": "MCH",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "MCH",
-      "style": {
-        "bold": false,
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_5_value",
-      "type": "field",
-      "x": 226.0,
-      "y": 328.0,
-      "width": 54.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "binding": "results.mch",
-        "page_id": "page_1",
-        "style": {
-          "align": "center",
-          "color": "#000000",
-          "font_size": 9
-        },
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "binding": "results.mch",
-      "style": {
-        "align": "center",
-        "color": "#000000",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_5_unit",
-      "type": "text",
-      "x": 312.0,
-      "y": 328.0,
-      "width": 58.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "uug",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "uug",
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_5_range",
-      "type": "text",
-      "x": 378.0,
-      "y": 328.0,
-      "width": 120.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "24 - 30",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "24 - 30",
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_5_flag",
-      "type": "text",
-      "x": 592.0,
-      "y": 328.0,
-      "width": 40.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": false,
-          "color": "#000000",
-          "font_size": 9
-        },
-        "text": "",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "style": {
-        "bold": false,
-        "color": "#000000",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_6_test",
-      "type": "text",
-      "x": 16.0,
-      "y": 344.0,
-      "width": 190.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": false,
-          "font_size": 9
-        },
-        "text": "MCHC",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "MCHC",
-      "style": {
-        "bold": false,
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_6_value",
-      "type": "field",
-      "x": 226.0,
-      "y": 344.0,
-      "width": 54.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "binding": "results.mchc",
-        "page_id": "page_1",
-        "style": {
-          "align": "center",
-          "color": "#000000",
-          "font_size": 9
-        },
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "binding": "results.mchc",
-      "style": {
-        "align": "center",
-        "color": "#000000",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_6_unit",
-      "type": "text",
-      "x": 312.0,
-      "y": 344.0,
-      "width": 58.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "g/dL",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "g/dL",
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_6_range",
-      "type": "text",
-      "x": 378.0,
-      "y": 344.0,
-      "width": 120.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "31-37",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "31-37",
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_6_flag",
-      "type": "text",
-      "x": 592.0,
-      "y": 344.0,
-      "width": 40.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": false,
-          "color": "#000000",
-          "font_size": 9
-        },
-        "text": "",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "style": {
-        "bold": false,
-        "color": "#000000",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_7_test",
-      "type": "text",
-      "x": 16.0,
-      "y": 360.0,
-      "width": 190.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": false,
-          "font_size": 9
-        },
-        "text": "RDW",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "RDW",
-      "style": {
-        "bold": false,
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_7_value",
-      "type": "field",
-      "x": 226.0,
-      "y": 360.0,
-      "width": 54.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "binding": "results.rdw",
-        "page_id": "page_1",
-        "style": {
-          "align": "center",
-          "color": "#000000",
-          "font_size": 9
-        },
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "binding": "results.rdw",
-      "style": {
-        "align": "center",
-        "color": "#000000",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_7_unit",
-      "type": "text",
-      "x": 312.0,
-      "y": 360.0,
-      "width": 58.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "%",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "%",
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_7_range",
-      "type": "text",
-      "x": 378.0,
-      "y": 360.0,
-      "width": 120.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "11 - 16",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "11 - 16",
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_7_flag",
-      "type": "text",
-      "x": 592.0,
-      "y": 360.0,
-      "width": 40.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": false,
-          "color": "#000000",
-          "font_size": 9
-        },
-        "text": "",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "style": {
-        "bold": false,
-        "color": "#000000",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_8_test",
-      "type": "text",
-      "x": 16.0,
-      "y": 376.0,
-      "width": 190.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": true,
-          "font_size": 9
-        },
-        "text": "Differential Count",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "Differential Count",
-      "style": {
-        "bold": true,
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_8_unit",
-      "type": "text",
-      "x": 312.0,
-      "y": 376.0,
-      "width": 58.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_8_range",
-      "type": "text",
-      "x": 378.0,
-      "y": 376.0,
-      "width": 120.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_8_flag",
-      "type": "text",
-      "x": 592.0,
-      "y": 376.0,
-      "width": 40.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": false,
-          "color": "#000000",
-          "font_size": 9
-        },
-        "text": "",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "style": {
-        "bold": false,
-        "color": "#000000",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_9_test",
-      "type": "text",
-      "x": 16.0,
-      "y": 392.0,
-      "width": 190.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": false,
-          "font_size": 9
-        },
-        "text": "Neutrophils",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "Neutrophils",
-      "style": {
-        "bold": false,
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_9_value",
-      "type": "field",
-      "x": 226.0,
-      "y": 392.0,
-      "width": 54.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "binding": "results.neutrophils",
-        "page_id": "page_1",
-        "style": {
-          "align": "center",
-          "color": "#000000",
-          "font_size": 9
-        },
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "binding": "results.neutrophils",
-      "style": {
-        "align": "center",
-        "color": "#000000",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_9_unit",
-      "type": "text",
-      "x": 312.0,
-      "y": 392.0,
-      "width": 58.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "%",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "%",
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_9_range",
-      "type": "text",
-      "x": 378.0,
-      "y": 392.0,
-      "width": 120.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "50 - 70",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "50 - 70",
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_9_flag",
-      "type": "text",
-      "x": 592.0,
-      "y": 392.0,
-      "width": 40.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": false,
-          "color": "#000000",
-          "font_size": 9
-        },
-        "text": "",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "style": {
-        "bold": false,
-        "color": "#000000",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_10_test",
-      "type": "text",
-      "x": 16.0,
-      "y": 408.0,
-      "width": 190.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": false,
-          "font_size": 9
-        },
-        "text": "Lymphocytes",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "Lymphocytes",
-      "style": {
-        "bold": false,
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_10_value",
-      "type": "field",
-      "x": 226.0,
-      "y": 408.0,
-      "width": 54.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "binding": "results.lymphocytes",
-        "page_id": "page_1",
-        "style": {
-          "align": "center",
-          "color": "#000000",
-          "font_size": 9
-        },
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "binding": "results.lymphocytes",
-      "style": {
-        "align": "center",
-        "color": "#000000",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_10_unit",
-      "type": "text",
-      "x": 312.0,
-      "y": 408.0,
-      "width": 58.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "%",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "%",
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_10_range",
-      "type": "text",
-      "x": 378.0,
-      "y": 408.0,
-      "width": 120.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "20 - 40",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "20 - 40",
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_10_flag",
-      "type": "text",
-      "x": 592.0,
-      "y": 408.0,
-      "width": 40.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": false,
-          "color": "#000000",
-          "font_size": 9
-        },
-        "text": "",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "style": {
-        "bold": false,
-        "color": "#000000",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_11_test",
-      "type": "text",
-      "x": 16.0,
-      "y": 424.0,
-      "width": 190.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": false,
-          "font_size": 9
-        },
-        "text": "Monocytes",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "Monocytes",
-      "style": {
-        "bold": false,
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_11_value",
-      "type": "field",
-      "x": 226.0,
-      "y": 424.0,
-      "width": 54.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "binding": "results.monocytes",
-        "page_id": "page_1",
-        "style": {
-          "align": "center",
-          "color": "#000000",
-          "font_size": 9
-        },
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "binding": "results.monocytes",
-      "style": {
-        "align": "center",
-        "color": "#000000",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_11_unit",
-      "type": "text",
-      "x": 312.0,
-      "y": 424.0,
-      "width": 58.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "%",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "%",
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_11_range",
-      "type": "text",
-      "x": 378.0,
-      "y": 424.0,
-      "width": 120.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "3 - 9",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "3 - 9",
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_11_flag",
-      "type": "text",
-      "x": 592.0,
-      "y": 424.0,
-      "width": 40.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": false,
-          "color": "#000000",
-          "font_size": 9
-        },
-        "text": "",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "style": {
-        "bold": false,
-        "color": "#000000",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_12_test",
-      "type": "text",
-      "x": 16.0,
-      "y": 440.0,
-      "width": 190.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": false,
-          "font_size": 9
-        },
-        "text": "Basophils",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "Basophils",
-      "style": {
-        "bold": false,
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_12_value",
-      "type": "field",
-      "x": 226.0,
-      "y": 440.0,
-      "width": 54.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "binding": "results.basophils",
-        "page_id": "page_1",
-        "style": {
-          "align": "center",
-          "color": "#000000",
-          "font_size": 9
-        },
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "binding": "results.basophils",
-      "style": {
-        "align": "center",
-        "color": "#000000",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_12_unit",
-      "type": "text",
-      "x": 312.0,
-      "y": 440.0,
-      "width": 58.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "%",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "%",
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_12_range",
-      "type": "text",
-      "x": 378.0,
-      "y": 440.0,
-      "width": 120.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "0 - 0.5",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "0 - 0.5",
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_12_flag",
-      "type": "text",
-      "x": 592.0,
-      "y": 440.0,
-      "width": 40.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": false,
-          "color": "#000000",
-          "font_size": 9
-        },
-        "text": "",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "style": {
-        "bold": false,
-        "color": "#000000",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_13_test",
-      "type": "text",
-      "x": 16.0,
-      "y": 456.0,
-      "width": 190.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": false,
-          "font_size": 9
-        },
-        "text": "Total (%)",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "Total (%)",
-      "style": {
-        "bold": false,
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_13_value",
-      "type": "field",
-      "x": 226.0,
-      "y": 456.0,
-      "width": 54.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "binding": "results.total",
-        "page_id": "page_1",
-        "style": {
-          "align": "center",
-          "color": "#000000",
-          "font_size": 9
-        },
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "binding": "results.total",
-      "style": {
-        "align": "center",
-        "color": "#000000",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_13_unit",
-      "type": "text",
-      "x": 312.0,
-      "y": 456.0,
-      "width": 58.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_13_range",
-      "type": "text",
-      "x": 378.0,
-      "y": 456.0,
-      "width": 120.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_13_flag",
-      "type": "text",
-      "x": 592.0,
-      "y": 456.0,
-      "width": 40.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": false,
-          "color": "#000000",
-          "font_size": 9
-        },
-        "text": "",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "style": {
-        "bold": false,
-        "color": "#000000",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_14_test",
-      "type": "text",
-      "x": 16.0,
-      "y": 472.0,
-      "width": 190.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": false,
-          "font_size": 9
-        },
-        "text": "Platelet Count",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "Platelet Count",
-      "style": {
-        "bold": false,
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_14_value",
-      "type": "field",
-      "x": 226.0,
-      "y": 472.0,
-      "width": 54.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "binding": "results.platelet",
-        "page_id": "page_1",
-        "style": {
-          "align": "center",
-          "color": "#000000",
-          "font_size": 9
-        },
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "binding": "results.platelet",
-      "style": {
-        "align": "center",
-        "color": "#000000",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_14_unit",
-      "type": "text",
-      "x": 312.0,
-      "y": 472.0,
-      "width": 58.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "x10^9/L",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "x10^9/L",
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_14_range",
-      "type": "text",
-      "x": 378.0,
-      "y": 472.0,
-      "width": 120.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "font_size": 9
-        },
-        "text": "150 - 450",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "150 - 450",
-      "style": {
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "result_14_flag",
-      "type": "text",
-      "x": 592.0,
-      "y": 472.0,
-      "width": 40.0,
-      "height": 13.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
-        "style": {
-          "bold": false,
-          "color": "#000000",
-          "font_size": 9
-        },
-        "text": "",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "style": {
-        "bold": false,
-        "color": "#000000",
-        "font_size": 9
-      },
-      "band_id": "detail"
-    },
-    {
-      "id": "performed_name",
-      "type": "text",
-      "x": 52.0,
-      "y": 672.0,
-      "width": 150.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "page_id": "page_1",
+      "x": 44,
+      "y": 964,
+      "width": 190,
+      "height": 16,
+      "locked": false,
+      "properties": {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "binding": "signatures.run_by.name",
+        "locked": false,
         "style": {
           "align": "center",
           "bold": true,
-          "font_size": 7
-        },
-        "text": "Cerebro Diagnostic System",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+          "color": "#111827",
+          "font_size": 10
+        }
       },
-      "text": "Cerebro Diagnostic System",
+      "band": "page_footer",
+      "band_id": "page_footer",
+      "binding": "signatures.run_by.name",
       "style": {
         "align": "center",
         "bold": true,
-        "font_size": 7
-      },
-      "band_id": "detail"
+        "color": "#111827",
+        "font_size": 10
+      }
     },
     {
-      "id": "performed_line",
+      "id": "run_by_license",
+      "type": "field",
+      "x": 44,
+      "y": 982,
+      "width": 190,
+      "height": 14,
+      "locked": false,
+      "properties": {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "binding": "signatures.run_by.license_line",
+        "locked": false,
+        "style": {
+          "align": "center",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 8
+        }
+      },
+      "band": "page_footer",
+      "band_id": "page_footer",
+      "binding": "signatures.run_by.license_line",
+      "style": {
+        "align": "center",
+        "bold": false,
+        "color": "#111827",
+        "font_size": 8
+      }
+    },
+    {
+      "id": "run_by_line",
       "type": "line",
-      "x": 14.0,
-      "y": 693.0,
-      "width": 193.0,
-      "height": 0.0,
-      "z_index": 0,
-      "visible": true,
+      "x": 44,
+      "y": 1000,
+      "width": 190,
+      "height": 1,
+      "locked": false,
       "properties": {
-        "page_id": "page_1",
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "locked": false,
         "style": {
+          "stroke_color": "#111827",
           "stroke_width": 1
-        },
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+        }
       },
+      "band": "page_footer",
+      "band_id": "page_footer",
       "style": {
+        "stroke_color": "#111827",
         "stroke_width": 1
-      },
-      "band_id": "detail"
+      }
     },
     {
-      "id": "validator",
+      "id": "run_by_label",
       "type": "text",
-      "x": 276.0,
-      "y": 672.0,
-      "width": 130.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
+      "x": 44,
+      "y": 1008,
+      "width": 190,
+      "height": 16,
+      "locked": false,
       "properties": {
-        "page_id": "page_1",
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "locked": false,
         "style": {
           "align": "center",
           "bold": true,
-          "font_size": 7
+          "color": "#111827",
+          "font_size": 9
         },
-        "text": "Dummy LAB_ENCODER",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+        "text": "Medical Technologist"
       },
-      "text": "Dummy LAB_ENCODER",
+      "band": "page_footer",
+      "band_id": "page_footer",
+      "text": "Medical Technologist",
       "style": {
         "align": "center",
         "bold": true,
-        "font_size": 7
+        "color": "#111827",
+        "font_size": 9
+      }
+    },
+    {
+      "id": "validated_signature",
+      "type": "image",
+      "x": 333,
+      "y": 906,
+      "width": 150,
+      "height": 54,
+      "locked": false,
+      "properties": {
+        "alt": "",
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "binding": "signatures.validated_by.signature",
+        "locked": false,
+        "maintain_aspect_ratio": true,
+        "source": "",
+        "src": "",
+        "style": {
+          "background_color": "transparent",
+          "border_width": 0,
+          "object_fit": "contain"
+        }
       },
-      "band_id": "detail"
+      "band": "page_footer",
+      "band_id": "page_footer",
+      "binding": "signatures.validated_by.signature",
+      "src": "",
+      "alt": "",
+      "style": {
+        "background_color": "transparent",
+        "border_width": 0,
+        "object_fit": "contain"
+      }
+    },
+    {
+      "id": "validated_name",
+      "type": "field",
+      "x": 312,
+      "y": 964,
+      "width": 190,
+      "height": 16,
+      "locked": false,
+      "properties": {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "binding": "signatures.validated_by.name",
+        "locked": false,
+        "style": {
+          "align": "center",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 10
+        }
+      },
+      "band": "page_footer",
+      "band_id": "page_footer",
+      "binding": "signatures.validated_by.name",
+      "style": {
+        "align": "center",
+        "bold": true,
+        "color": "#111827",
+        "font_size": 10
+      }
+    },
+    {
+      "id": "validated_license",
+      "type": "field",
+      "x": 312,
+      "y": 982,
+      "width": 190,
+      "height": 14,
+      "locked": false,
+      "properties": {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "binding": "signatures.validated_by.license_line",
+        "locked": false,
+        "style": {
+          "align": "center",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 8
+        }
+      },
+      "band": "page_footer",
+      "band_id": "page_footer",
+      "binding": "signatures.validated_by.license_line",
+      "style": {
+        "align": "center",
+        "bold": false,
+        "color": "#111827",
+        "font_size": 8
+      }
     },
     {
       "id": "validated_line",
       "type": "line",
-      "x": 232.0,
-      "y": 693.0,
-      "width": 192.0,
-      "height": 0.0,
-      "z_index": 0,
-      "visible": true,
+      "x": 312,
+      "y": 1000,
+      "width": 190,
+      "height": 1,
+      "locked": false,
       "properties": {
-        "page_id": "page_1",
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "locked": false,
         "style": {
+          "stroke_color": "#111827",
           "stroke_width": 1
-        },
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+        }
       },
+      "band": "page_footer",
+      "band_id": "page_footer",
       "style": {
+        "stroke_color": "#111827",
         "stroke_width": 1
-      },
-      "band_id": "detail"
+      }
     },
     {
-      "id": "pathologist",
+      "id": "validated_label",
       "type": "text",
-      "x": 473.0,
-      "y": 672.0,
-      "width": 150.0,
-      "height": 12.0,
-      "z_index": 0,
-      "visible": true,
+      "x": 312,
+      "y": 1008,
+      "width": 190,
+      "height": 16,
+      "locked": false,
       "properties": {
-        "page_id": "page_1",
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "locked": false,
         "style": {
           "align": "center",
           "bold": true,
-          "font_size": 7
+          "color": "#111827",
+          "font_size": 9
         },
-        "text": "MARY ANN R. TORREGOSA, M.D.",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+        "text": "Validated By"
       },
-      "text": "MARY ANN R. TORREGOSA, M.D.",
+      "band": "page_footer",
+      "band_id": "page_footer",
+      "text": "Validated By",
       "style": {
         "align": "center",
         "bold": true,
-        "font_size": 7
+        "color": "#111827",
+        "font_size": 9
+      }
+    },
+    {
+      "id": "pathologist_signature",
+      "type": "image",
+      "x": 602,
+      "y": 906,
+      "width": 150,
+      "height": 54,
+      "locked": false,
+      "properties": {
+        "alt": "",
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "binding": "signatures.pathologist.signature",
+        "locked": false,
+        "maintain_aspect_ratio": true,
+        "source": "",
+        "src": "",
+        "style": {
+          "background_color": "transparent",
+          "border_width": 0,
+          "object_fit": "contain"
+        }
       },
-      "band_id": "detail"
+      "band": "page_footer",
+      "band_id": "page_footer",
+      "binding": "signatures.pathologist.signature",
+      "src": "",
+      "alt": "",
+      "style": {
+        "background_color": "transparent",
+        "border_width": 0,
+        "object_fit": "contain"
+      }
+    },
+    {
+      "id": "pathologist_name",
+      "type": "field",
+      "x": 582,
+      "y": 964,
+      "width": 190,
+      "height": 16,
+      "locked": false,
+      "properties": {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "binding": "signatures.pathologist.name",
+        "locked": false,
+        "style": {
+          "align": "center",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 10
+        }
+      },
+      "band": "page_footer",
+      "band_id": "page_footer",
+      "binding": "signatures.pathologist.name",
+      "style": {
+        "align": "center",
+        "bold": true,
+        "color": "#111827",
+        "font_size": 10
+      }
+    },
+    {
+      "id": "pathologist_license",
+      "type": "field",
+      "x": 582,
+      "y": 982,
+      "width": 190,
+      "height": 14,
+      "locked": false,
+      "properties": {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "binding": "signatures.pathologist.license_line",
+        "locked": false,
+        "style": {
+          "align": "center",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 8
+        }
+      },
+      "band": "page_footer",
+      "band_id": "page_footer",
+      "binding": "signatures.pathologist.license_line",
+      "style": {
+        "align": "center",
+        "bold": false,
+        "color": "#111827",
+        "font_size": 8
+      }
     },
     {
       "id": "pathologist_line",
       "type": "line",
-      "x": 448.0,
-      "y": 693.0,
-      "width": 193.0,
-      "height": 0.0,
-      "z_index": 0,
-      "visible": true,
+      "x": 582,
+      "y": 1000,
+      "width": 190,
+      "height": 1,
+      "locked": false,
       "properties": {
-        "page_id": "page_1",
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "locked": false,
         "style": {
+          "stroke_color": "#111827",
           "stroke_width": 1
-        },
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
+        }
       },
+      "band": "page_footer",
+      "band_id": "page_footer",
       "style": {
+        "stroke_color": "#111827",
         "stroke_width": 1
-      },
-      "band_id": "detail"
+      }
     },
     {
-      "id": "page_count",
+      "id": "pathologist_label",
       "type": "text",
-      "x": 614.0,
-      "y": 738.0,
-      "width": 30.0,
-      "height": 11.0,
-      "z_index": 0,
-      "visible": true,
+      "x": 582,
+      "y": 1008,
+      "width": 190,
+      "height": 16,
+      "locked": false,
       "properties": {
-        "page_id": "page_1",
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "locked": false,
         "style": {
+          "align": "center",
           "bold": true,
+          "color": "#111827",
           "font_size": 9
         },
-        "text": "1 of 1",
+        "text": "Pathologist"
+      },
+      "band": "page_footer",
+      "band_id": "page_footer",
+      "text": "Pathologist",
+      "style": {
+        "align": "center",
+        "bold": true,
+        "color": "#111827",
+        "font_size": 9
+      }
+    },
+    {
+      "id": "text_1",
+      "type": "text",
+      "x": 20,
+      "y": 860,
+      "width": 160,
+      "height": 32,
+      "locked": false,
+      "properties": {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "locked": false,
+        "style": {
+          "font_size": 14
+        },
+        "text": "Remarks:"
+      },
+      "band": "page_footer",
+      "band_id": "page_footer",
+      "text": "Remarks:",
+      "style": {
+        "font_size": 14
+      }
+    }
+  ],
+  "ok": true,
+  "page": {
+    "size": "Letter",
+    "orientation": "portrait",
+    "unit": "px",
+    "width": 816,
+    "height": 1056,
+    "margin_top": 24,
+    "margin_right": 24,
+    "margin_bottom": 24,
+    "margin_left": 24,
+    "background_color": "#ffffff",
+    "transparent": false,
+    "print": {
+      "show_browser_print_button": true,
+      "default_filename": "lis-result.pdf",
+      "pdf_title": "LIS Result Report",
+      "pdf_author": "CDS-LIS",
+      "pdf_subject": "",
+      "print_background": true
+    }
+  },
+  "template": {
+    "assets": [],
+    "bands": [
+      {
+        "background_color": "#ffffff",
+        "height": 362,
+        "id": "page_header",
+        "locked": false,
+        "name": "Page Header",
+        "properties": {},
+        "type": "page_header",
+        "visible": true,
+        "y": 0
+      },
+      {
+        "background_color": "#ffffff",
+        "height": 488,
+        "id": "detail",
+        "locked": false,
+        "name": "Detail",
+        "properties": {},
+        "repeat": {
+          "data_path": "results",
+          "empty_message": "No printable result rows",
+          "enabled": true,
+          "preview_rows": 18,
+          "row_height": 25
+        },
+        "type": "detail",
+        "visible": true,
+        "y": 362
+      },
+      {
+        "background_color": "#ffffff",
+        "height": 206,
+        "id": "page_footer",
+        "locked": false,
+        "name": "Page Footer",
+        "properties": {},
+        "type": "page_footer",
+        "visible": true,
+        "y": 850
+      }
+    ],
+    "data": {
+      "fields": [
+        {
+          "label": "Color",
+          "path": "department.color",
+          "sample": "#1f3a93",
+          "type": "string"
+        },
+        {
+          "label": "Name",
+          "path": "department.name",
+          "sample": "Hematology",
+          "type": "string"
+        },
+        {
+          "label": "Address",
+          "path": "laboratory.address",
+          "sample": "Alwana Business Park, Zone 4 Cugman, Cagayan de Oro City",
+          "type": "string"
+        },
+        {
+          "label": "City",
+          "path": "laboratory.city",
+          "sample": "Misamis Oriental 9000",
+          "type": "string"
+        },
+        {
+          "label": "Contact",
+          "path": "laboratory.contact",
+          "sample": "Contact No.: +639 260 235 049, +639 222 979 774",
+          "type": "string"
+        },
+        {
+          "label": "Email Line",
+          "path": "laboratory.email_line",
+          "sample": "Email Address: cerebro.info@gmail.com",
+          "type": "string"
+        },
+        {
+          "label": "Header",
+          "path": "laboratory.header",
+          "sample": "Laboratory Information System",
+          "type": "string"
+        },
+        {
+          "label": "Logo",
+          "path": "laboratory.logo",
+          "sample": "",
+          "type": "string"
+        },
+        {
+          "label": "Name",
+          "path": "laboratory.name",
+          "sample": "Cerebro Diagnostic System",
+          "type": "string"
+        },
+        {
+          "label": "Checked In",
+          "path": "order.checked_in",
+          "sample": "07/09/2026, 03:01:00 AM",
+          "type": "string"
+        },
+        {
+          "label": "Date",
+          "path": "order.date",
+          "sample": "07/09/2026",
+          "type": "string"
+        },
+        {
+          "label": "Diagnosis",
+          "path": "order.diagnosis",
+          "sample": "",
+          "type": "string"
+        },
+        {
+          "label": "Id",
+          "path": "order.id",
+          "sample": "ORDER-1001",
+          "type": "string"
+        },
+        {
+          "label": "Physician",
+          "path": "order.physician",
+          "sample": "Dr. Maria Santos",
+          "type": "string"
+        },
+        {
+          "label": "Received",
+          "path": "order.received",
+          "sample": "07/09/2026, 03:00:00 AM",
+          "type": "string"
+        },
+        {
+          "label": "Released",
+          "path": "order.released",
+          "sample": "07/09/2026, 03:10:00 AM",
+          "type": "string"
+        },
+        {
+          "label": "Remarks",
+          "path": "order.remarks",
+          "sample": "",
+          "type": "string"
+        },
+        {
+          "label": "Room",
+          "path": "order.room",
+          "sample": "",
+          "type": "string"
+        },
+        {
+          "label": "Age",
+          "path": "patient.age",
+          "sample": "35",
+          "type": "string"
+        },
+        {
+          "label": "Age Sex",
+          "path": "patient.age_sex",
+          "sample": "35 / MALE",
+          "type": "string"
+        },
+        {
+          "label": "Dob",
+          "path": "patient.dob",
+          "sample": "01/15/1991",
+          "type": "string"
+        },
+        {
+          "label": "Name",
+          "path": "patient.name",
+          "sample": "JUAN DELA CRUZ",
+          "type": "string"
+        },
+        {
+          "label": "Sex",
+          "path": "patient.sex",
+          "sample": "MALE",
+          "type": "string"
+        },
+        {
+          "label": "Source",
+          "path": "patient.source",
+          "sample": "OPD",
+          "type": "string"
+        },
+        {
+          "label": "Printed At",
+          "path": "printed_at",
+          "sample": "07/09/2026, 03:00:00 AM",
+          "type": "string"
+        },
+        {
+          "label": "Results",
+          "path": "results[]",
+          "sample": "[object Object]",
+          "type": "object"
+        },
+        {
+          "label": "Flag",
+          "path": "results[0].flag",
+          "sample": "N",
+          "type": "string"
+        },
+        {
+          "label": "Reference",
+          "path": "results[0].reference",
+          "sample": "4.0 - 10.0",
+          "type": "string"
+        },
+        {
+          "label": "Result",
+          "path": "results[0].result",
+          "sample": "7.2",
+          "type": "string"
+        },
+        {
+          "label": "Test",
+          "path": "results[0].test",
+          "sample": "WBC",
+          "type": "string"
+        },
+        {
+          "label": "Unit",
+          "path": "results[0].unit",
+          "sample": "10^9/L",
+          "type": "string"
+        },
+        {
+          "label": "Flag",
+          "path": "results[].flag",
+          "sample": "N",
+          "type": "string"
+        },
+        {
+          "label": "Reference",
+          "path": "results[].reference",
+          "sample": "4.0 - 10.0",
+          "type": "string"
+        },
+        {
+          "label": "Result",
+          "path": "results[].result",
+          "sample": "7.2",
+          "type": "string"
+        },
+        {
+          "label": "Test",
+          "path": "results[].test",
+          "sample": "WBC",
+          "type": "string"
+        },
+        {
+          "label": "Unit",
+          "path": "results[].unit",
+          "sample": "10^9/L",
+          "type": "string"
+        },
+        {
+          "label": "License",
+          "path": "signatures.pathologist.license",
+          "sample": "",
+          "type": "string"
+        },
+        {
+          "label": "License Line",
+          "path": "signatures.pathologist.license_line",
+          "sample": "",
+          "type": "string"
+        },
+        {
+          "label": "Name",
+          "path": "signatures.pathologist.name",
+          "sample": "",
+          "type": "string"
+        },
+        {
+          "label": "Signature",
+          "path": "signatures.pathologist.signature",
+          "sample": "",
+          "type": "string"
+        },
+        {
+          "label": "License",
+          "path": "signatures.run_by.license",
+          "sample": "",
+          "type": "string"
+        },
+        {
+          "label": "License Line",
+          "path": "signatures.run_by.license_line",
+          "sample": "",
+          "type": "string"
+        },
+        {
+          "label": "Name",
+          "path": "signatures.run_by.name",
+          "sample": "",
+          "type": "string"
+        },
+        {
+          "label": "Signature",
+          "path": "signatures.run_by.signature",
+          "sample": "",
+          "type": "string"
+        },
+        {
+          "label": "License",
+          "path": "signatures.validated_by.license",
+          "sample": "",
+          "type": "string"
+        },
+        {
+          "label": "License Line",
+          "path": "signatures.validated_by.license_line",
+          "sample": "",
+          "type": "string"
+        },
+        {
+          "label": "Name",
+          "path": "signatures.validated_by.name",
+          "sample": "",
+          "type": "string"
+        },
+        {
+          "label": "Signature",
+          "path": "signatures.validated_by.signature",
+          "sample": "",
+          "type": "string"
+        }
+      ],
+      "sample": {
+        "department": {
+          "color": "#1f3a93",
+          "name": "Hematology"
+        },
+        "laboratory": {
+          "address": "Alwana Business Park, Zone 4 Cugman, Cagayan de Oro City",
+          "city": "Misamis Oriental 9000",
+          "contact": "Contact No.: +639 260 235 049, +639 222 979 774",
+          "email_line": "Email Address: cerebro.info@gmail.com",
+          "header": "Laboratory Information System",
+          "logo": "",
+          "name": "Cerebro Diagnostic System"
+        },
+        "order": {
+          "checked_in": "07/09/2026, 03:01:00 AM",
+          "date": "07/09/2026",
+          "diagnosis": "",
+          "id": "ORDER-1001",
+          "physician": "Dr. Maria Santos",
+          "received": "07/09/2026, 03:00:00 AM",
+          "released": "07/09/2026, 03:10:00 AM",
+          "remarks": "",
+          "room": ""
+        },
+        "patient": {
+          "age": "35",
+          "age_sex": "35 / MALE",
+          "dob": "01/15/1991",
+          "name": "JUAN DELA CRUZ",
+          "sex": "MALE",
+          "source": "OPD"
+        },
+        "printed_at": "07/09/2026, 03:00:00 AM",
+        "results": [
+          {
+            "flag": "N",
+            "reference": "4.0 - 10.0",
+            "result": "7.2",
+            "test": "WBC",
+            "unit": "10^9/L"
+          },
+          {
+            "flag": "N",
+            "reference": "4.5 - 5.9",
+            "result": "5.02",
+            "test": "RBC",
+            "unit": "10^12/L"
+          },
+          {
+            "flag": "N",
+            "reference": "13.0 - 17.0",
+            "result": "14.2",
+            "test": "HGB",
+            "unit": "g/dL"
+          }
+        ],
+        "signatures": {
+          "pathologist": {
+            "license": "",
+            "license_line": "",
+            "name": "",
+            "signature": ""
+          },
+          "run_by": {
+            "license": "",
+            "license_line": "",
+            "name": "",
+            "signature": ""
+          },
+          "validated_by": {
+            "license": "",
+            "license_line": "",
+            "name": "",
+            "signature": ""
+          }
+        }
+      }
+    },
+    "metadata": {
+      "author": "CDS-LIS",
+      "custom": {
+        "id": "lis_result",
+        "provider": "lis_result",
+        "revision": "result-entry-v3"
+      },
+      "description": "Default CDS-LIS result-entry report template.",
+      "tags": [],
+      "title": "LIS Result Report"
+    },
+    "objects": [
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "laboratory.logo",
+        "height": 78,
+        "id": "lab_logo",
+        "properties": {
+          "alt": "",
+          "band": "page_header",
+          "band_id": "page_header",
+          "binding": "laboratory.logo",
+          "locked": false,
+          "maintain_aspect_ratio": true,
+          "source": "",
+          "src": "",
+          "style": {
+            "background_color": "transparent",
+            "border_width": 0,
+            "object_fit": "contain"
+          }
+        },
+        "style": {
+          "background_color": "transparent",
+          "border_width": 0,
+          "object_fit": "contain"
+        },
+        "type": "image",
+        "visible": true,
+        "width": 190,
+        "x": 8,
+        "y": 26,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "laboratory.name",
+        "height": 34,
+        "id": "laboratory_name",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "binding": "laboratory.name",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": true,
+            "color": "#111827",
+            "font_size": 26
+          }
+        },
+        "style": {
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 26
+        },
+        "type": "field",
+        "visible": true,
+        "width": 430,
+        "x": 210,
+        "y": 30,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "laboratory.address",
+        "height": 18,
+        "id": "laboratory_address",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "binding": "laboratory.address",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": false,
+            "color": "#111827",
+            "font_size": 12
+          }
+        },
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "type": "field",
+        "visible": true,
+        "width": 520,
+        "x": 210,
+        "y": 66,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "laboratory.contact",
+        "height": 18,
+        "id": "laboratory_contact",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "binding": "laboratory.contact",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": false,
+            "color": "#111827",
+            "font_size": 12
+          }
+        },
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "type": "field",
+        "visible": true,
+        "width": 520,
+        "x": 210,
+        "y": 88,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "laboratory.email_line",
+        "height": 18,
+        "id": "laboratory_email",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "binding": "laboratory.email_line",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": false,
+            "color": "#111827",
+            "font_size": 12
+          }
+        },
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "type": "field",
+        "visible": true,
+        "width": 520,
+        "x": 210,
+        "y": 108,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "height": 1,
+        "id": "top_rule",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "locked": false,
+          "style": {
+            "stroke_color": "#111827",
+            "stroke_width": 1
+          }
+        },
+        "style": {
+          "stroke_color": "#111827",
+          "stroke_width": 1
+        },
+        "type": "line",
+        "visible": true,
+        "width": 800,
+        "x": 8,
+        "y": 134,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "height": 18,
+        "id": "patient_name_label",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": true,
+            "color": "#111827",
+            "font_size": 12
+          },
+          "text": "Patient Name:"
+        },
+        "style": {
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "text": "Patient Name:",
+        "type": "text",
+        "visible": true,
+        "width": 120,
+        "x": 8,
+        "y": 145,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "patient.name",
+        "height": 18,
+        "id": "patient_name",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "binding": "patient.name",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": true,
+            "color": "#111827",
+            "font_size": 12
+          }
+        },
+        "style": {
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "type": "field",
+        "visible": true,
+        "width": 280,
+        "x": 132,
+        "y": 145,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "height": 18,
+        "id": "age_label",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": true,
+            "color": "#111827",
+            "font_size": 12
+          },
+          "text": "Age:"
+        },
+        "style": {
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "text": "Age:",
+        "type": "text",
+        "visible": true,
+        "width": 120,
+        "x": 8,
+        "y": 167,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "patient.age",
+        "height": 18,
+        "id": "age",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "binding": "patient.age",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": false,
+            "color": "#111827",
+            "font_size": 12
+          }
+        },
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "type": "field",
+        "visible": true,
+        "width": 280,
+        "x": 132,
+        "y": 167,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "height": 18,
+        "id": "dob_label",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": true,
+            "color": "#111827",
+            "font_size": 12
+          },
+          "text": "DOB:"
+        },
+        "style": {
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "text": "DOB:",
+        "type": "text",
+        "visible": true,
+        "width": 120,
+        "x": 8,
+        "y": 189,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "patient.dob",
+        "height": 18,
+        "id": "dob",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "binding": "patient.dob",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": false,
+            "color": "#111827",
+            "font_size": 12
+          }
+        },
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "type": "field",
+        "visible": true,
+        "width": 280,
+        "x": 132,
+        "y": 189,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "height": 18,
+        "id": "sex_label",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": true,
+            "color": "#111827",
+            "font_size": 12
+          },
+          "text": "Sex:"
+        },
+        "style": {
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "text": "Sex:",
+        "type": "text",
+        "visible": true,
+        "width": 120,
+        "x": 8,
+        "y": 211,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "patient.sex",
+        "height": 18,
+        "id": "sex",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "binding": "patient.sex",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": false,
+            "color": "#111827",
+            "font_size": 12
+          }
+        },
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "type": "field",
+        "visible": true,
+        "width": 280,
+        "x": 132,
+        "y": 211,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "height": 18,
+        "id": "physician_label",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": true,
+            "color": "#111827",
+            "font_size": 12
+          },
+          "text": "Physician:"
+        },
+        "style": {
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "text": "Physician:",
+        "type": "text",
+        "visible": true,
+        "width": 120,
+        "x": 8,
+        "y": 233,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "order.physician",
+        "height": 18,
+        "id": "physician",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "binding": "order.physician",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": false,
+            "color": "#111827",
+            "font_size": 12
+          }
+        },
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "type": "field",
+        "visible": true,
+        "width": 280,
+        "x": 132,
+        "y": 233,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "height": 18,
+        "id": "diagnosis_label",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": true,
+            "color": "#111827",
+            "font_size": 12
+          },
+          "text": "Clinical Diagnosis:"
+        },
+        "style": {
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "text": "Clinical Diagnosis:",
+        "type": "text",
+        "visible": true,
+        "width": 130,
+        "x": 8,
+        "y": 255,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "order.diagnosis",
+        "height": 18,
+        "id": "diagnosis",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "binding": "order.diagnosis",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": false,
+            "color": "#111827",
+            "font_size": 12
+          }
+        },
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "type": "field",
+        "visible": true,
+        "width": 280,
+        "x": 132,
+        "y": 255,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "height": 18,
+        "id": "order_label",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": true,
+            "color": "#111827",
+            "font_size": 12
+          },
+          "text": "Order No.:"
+        },
+        "style": {
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "text": "Order No.:",
+        "type": "text",
+        "visible": true,
+        "width": 120,
+        "x": 420,
+        "y": 145,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "order.id",
+        "height": 18,
+        "id": "order_id",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "binding": "order.id",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": false,
+            "color": "#111827",
+            "font_size": 12
+          }
+        },
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "type": "field",
+        "visible": true,
+        "width": 230,
+        "x": 548,
+        "y": 145,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "height": 18,
+        "id": "source_label",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": true,
+            "color": "#111827",
+            "font_size": 12
+          },
+          "text": "Source:"
+        },
+        "style": {
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "text": "Source:",
+        "type": "text",
+        "visible": true,
+        "width": 120,
+        "x": 420,
+        "y": 167,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "patient.source",
+        "height": 18,
+        "id": "source",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "binding": "patient.source",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": false,
+            "color": "#111827",
+            "font_size": 12
+          }
+        },
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "type": "field",
+        "visible": true,
+        "width": 230,
+        "x": 548,
+        "y": 167,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "height": 18,
+        "id": "room_label",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": true,
+            "color": "#111827",
+            "font_size": 12
+          },
+          "text": "Room No.:"
+        },
+        "style": {
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "text": "Room No.:",
+        "type": "text",
+        "visible": true,
+        "width": 120,
+        "x": 420,
+        "y": 189,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "order.room",
+        "height": 18,
+        "id": "room",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "binding": "order.room",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": false,
+            "color": "#111827",
+            "font_size": 12
+          }
+        },
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "type": "field",
+        "visible": true,
+        "width": 230,
+        "x": 548,
+        "y": 189,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "height": 18,
+        "id": "received_label",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": true,
+            "color": "#111827",
+            "font_size": 12
+          },
+          "text": "Date Received:"
+        },
+        "style": {
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "text": "Date Received:",
+        "type": "text",
+        "visible": true,
+        "width": 120,
+        "x": 420,
+        "y": 211,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "order.received",
+        "height": 18,
+        "id": "received",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "binding": "order.received",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": false,
+            "color": "#111827",
+            "font_size": 12
+          }
+        },
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "type": "field",
+        "visible": true,
+        "width": 230,
+        "x": 548,
+        "y": 211,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "height": 18,
+        "id": "checkin_label",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": true,
+            "color": "#111827",
+            "font_size": 12
+          },
+          "text": "Date Checked-In:"
+        },
+        "style": {
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "text": "Date Checked-In:",
+        "type": "text",
+        "visible": true,
+        "width": 120,
+        "x": 420,
+        "y": 233,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "order.checked_in",
+        "height": 18,
+        "id": "checked_in",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "binding": "order.checked_in",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": false,
+            "color": "#111827",
+            "font_size": 12
+          }
+        },
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "type": "field",
+        "visible": true,
+        "width": 230,
+        "x": 548,
+        "y": 233,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "height": 18,
+        "id": "released_label",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": true,
+            "color": "#111827",
+            "font_size": 12
+          },
+          "text": "Date Released:"
+        },
+        "style": {
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "text": "Date Released:",
+        "type": "text",
+        "visible": true,
+        "width": 120,
+        "x": 420,
+        "y": 255,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "order.released",
+        "height": 18,
+        "id": "released",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "binding": "order.released",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": false,
+            "color": "#111827",
+            "font_size": 12
+          }
+        },
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "type": "field",
+        "visible": true,
+        "width": 230,
+        "x": 548,
+        "y": 255,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "height": 18,
+        "id": "printed_label",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": true,
+            "color": "#111827",
+            "font_size": 12
+          },
+          "text": "Date Printed:"
+        },
+        "style": {
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "text": "Date Printed:",
+        "type": "text",
+        "visible": true,
+        "width": 120,
+        "x": 420,
+        "y": 277,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "printed_at",
+        "height": 18,
+        "id": "printed",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "binding": "printed_at",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": false,
+            "color": "#111827",
+            "font_size": 12
+          }
+        },
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "type": "field",
+        "visible": true,
+        "width": 230,
+        "x": 548,
+        "y": 277,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "height": 34,
+        "id": "department_bar",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "locked": false,
+          "style": {
+            "background_color": "#f000e8",
+            "border_color": "#f000e8",
+            "border_width": 0,
+            "fill_color": "#f000e8"
+          }
+        },
+        "style": {
+          "background_color": "#f000e8",
+          "border_color": "#f000e8",
+          "border_width": 0,
+          "fill_color": "#f000e8"
+        },
+        "type": "rectangle",
+        "visible": true,
+        "width": 800,
+        "x": 8,
+        "y": 302,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "binding": "department.name",
+        "height": 24,
+        "id": "department_name",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "binding": "department.name",
+          "locked": false,
+          "style": {
+            "align": "center",
+            "bold": true,
+            "color": "#ffffff",
+            "font_size": 18
+          }
+        },
+        "style": {
+          "align": "center",
+          "bold": true,
+          "color": "#ffffff",
+          "font_size": 18
+        },
+        "type": "field",
+        "visible": true,
+        "width": 800,
+        "x": 8,
+        "y": 307,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "height": 18,
+        "id": "h_test",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": true,
+            "color": "#111827",
+            "font_size": 13
+          },
+          "text": "TEST NAME"
+        },
+        "style": {
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 13
+        },
+        "text": "TEST NAME",
+        "type": "text",
+        "visible": true,
+        "width": 250,
+        "x": 14,
+        "y": 341,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "height": 18,
+        "id": "h_result",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "locked": false,
+          "style": {
+            "align": "center",
+            "bold": true,
+            "color": "#111827",
+            "font_size": 13
+          },
+          "text": "RESULT"
+        },
+        "style": {
+          "align": "center",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 13
+        },
+        "text": "RESULT",
+        "type": "text",
+        "visible": true,
+        "width": 90,
+        "x": 280,
+        "y": 341,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "height": 18,
+        "id": "h_unit",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": true,
+            "color": "#111827",
+            "font_size": 13
+          },
+          "text": "UNIT"
+        },
+        "style": {
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 13
+        },
+        "text": "UNIT",
+        "type": "text",
+        "visible": true,
+        "width": 90,
+        "x": 402,
+        "y": 341,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "height": 18,
+        "id": "h_reference",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": true,
+            "color": "#111827",
+            "font_size": 13
+          },
+          "text": "REFERENCE RANGE"
+        },
+        "style": {
+          "align": "left",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 13
+        },
+        "text": "REFERENCE RANGE",
+        "type": "text",
+        "visible": true,
+        "width": 190,
+        "x": 482,
+        "y": 341,
+        "z_index": 0
+      },
+      {
+        "band": "page_header",
+        "band_id": "page_header",
+        "height": 18,
+        "id": "h_flag",
+        "properties": {
+          "band": "page_header",
+          "band_id": "page_header",
+          "locked": false,
+          "style": {
+            "align": "center",
+            "bold": true,
+            "color": "#111827",
+            "font_size": 13
+          },
+          "text": "FLAGS"
+        },
+        "style": {
+          "align": "center",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 13
+        },
+        "text": "FLAGS",
+        "type": "text",
+        "visible": true,
+        "width": 70,
+        "x": 725,
+        "y": 341,
+        "z_index": 0
+      },
+      {
         "band": "detail",
         "band_id": "detail",
-        "locked": false
+        "binding": "test",
+        "height": 20,
+        "id": "d_test",
+        "properties": {
+          "band": "detail",
+          "band_id": "detail",
+          "binding": "test",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": false,
+            "color": "#111827",
+            "font_size": 12
+          }
+        },
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "type": "field",
+        "visible": true,
+        "width": 250,
+        "x": 14,
+        "y": 366,
+        "z_index": 0
       },
-      "text": "1 of 1",
-      "style": {
-        "bold": true,
-        "font_size": 9
+      {
+        "band": "detail",
+        "band_id": "detail",
+        "binding": "result",
+        "height": 20,
+        "id": "d_result",
+        "properties": {
+          "band": "detail",
+          "band_id": "detail",
+          "binding": "result",
+          "locked": false,
+          "style": {
+            "align": "center",
+            "bold": false,
+            "color": "#111827",
+            "font_size": 12
+          }
+        },
+        "style": {
+          "align": "center",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "type": "field",
+        "visible": true,
+        "width": 90,
+        "x": 280,
+        "y": 366,
+        "z_index": 0
       },
-      "band_id": "detail"
-    }
-  ],
-  "bands": [
-    {
-      "id": "detail",
-      "type": "detail",
-      "height": 842.0,
-      "properties": {}
-    }
-  ],
-  "assets": []
+      {
+        "band": "detail",
+        "band_id": "detail",
+        "binding": "unit",
+        "height": 20,
+        "id": "d_unit",
+        "properties": {
+          "band": "detail",
+          "band_id": "detail",
+          "binding": "unit",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": false,
+            "color": "#111827",
+            "font_size": 12
+          }
+        },
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "type": "field",
+        "visible": true,
+        "width": 90,
+        "x": 402,
+        "y": 366,
+        "z_index": 0
+      },
+      {
+        "band": "detail",
+        "band_id": "detail",
+        "binding": "reference",
+        "height": 20,
+        "id": "d_reference",
+        "properties": {
+          "band": "detail",
+          "band_id": "detail",
+          "binding": "reference",
+          "locked": false,
+          "style": {
+            "align": "left",
+            "bold": false,
+            "color": "#111827",
+            "font_size": 12
+          }
+        },
+        "style": {
+          "align": "left",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "type": "field",
+        "visible": true,
+        "width": 190,
+        "x": 482,
+        "y": 366,
+        "z_index": 0
+      },
+      {
+        "band": "detail",
+        "band_id": "detail",
+        "binding": "flag",
+        "height": 20,
+        "id": "d_flag",
+        "properties": {
+          "band": "detail",
+          "band_id": "detail",
+          "binding": "flag",
+          "locked": false,
+          "style": {
+            "align": "center",
+            "bold": true,
+            "color": "#111827",
+            "font_size": 12
+          }
+        },
+        "style": {
+          "align": "center",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 12
+        },
+        "type": "field",
+        "visible": true,
+        "width": 70,
+        "x": 725,
+        "y": 366,
+        "z_index": 0
+      },
+      {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "height": 18,
+        "id": "note",
+        "properties": {
+          "band": "page_footer",
+          "band_id": "page_footer",
+          "locked": false,
+          "style": {
+            "align": "center",
+            "bold": false,
+            "color": "#111827",
+            "font_size": 10
+          },
+          "text": "*Please consult your doctor for interpretation*"
+        },
+        "style": {
+          "align": "center",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 10
+        },
+        "text": "*Please consult your doctor for interpretation*",
+        "type": "text",
+        "visible": true,
+        "width": 800,
+        "x": 10,
+        "y": 1026,
+        "z_index": 0
+      },
+      {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "height": 12,
+        "id": "esign",
+        "properties": {
+          "band": "page_footer",
+          "band_id": "page_footer",
+          "locked": false,
+          "style": {
+            "align": "center",
+            "bold": false,
+            "color": "#111827",
+            "font_size": 10
+          },
+          "text": "***Electronically Signed***"
+        },
+        "style": {
+          "align": "center",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 10
+        },
+        "text": "***Electronically Signed***",
+        "type": "text",
+        "visible": true,
+        "width": 800,
+        "x": 0,
+        "y": 1040,
+        "z_index": 0
+      },
+      {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "binding": "signatures.run_by.signature",
+        "height": 54,
+        "id": "run_by_signature",
+        "properties": {
+          "alt": "",
+          "band": "page_footer",
+          "band_id": "page_footer",
+          "binding": "signatures.run_by.signature",
+          "locked": false,
+          "maintain_aspect_ratio": true,
+          "source": "",
+          "src": "",
+          "style": {
+            "background_color": "transparent",
+            "border_width": 0,
+            "object_fit": "contain"
+          }
+        },
+        "style": {
+          "background_color": "transparent",
+          "border_width": 0,
+          "object_fit": "contain"
+        },
+        "type": "image",
+        "visible": true,
+        "width": 150,
+        "x": 64,
+        "y": 906,
+        "z_index": 0
+      },
+      {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "binding": "signatures.run_by.name",
+        "height": 16,
+        "id": "run_by_name",
+        "properties": {
+          "band": "page_footer",
+          "band_id": "page_footer",
+          "binding": "signatures.run_by.name",
+          "locked": false,
+          "style": {
+            "align": "center",
+            "bold": true,
+            "color": "#111827",
+            "font_size": 10
+          }
+        },
+        "style": {
+          "align": "center",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 10
+        },
+        "type": "field",
+        "visible": true,
+        "width": 190,
+        "x": 44,
+        "y": 964,
+        "z_index": 0
+      },
+      {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "binding": "signatures.run_by.license_line",
+        "height": 14,
+        "id": "run_by_license",
+        "properties": {
+          "band": "page_footer",
+          "band_id": "page_footer",
+          "binding": "signatures.run_by.license_line",
+          "locked": false,
+          "style": {
+            "align": "center",
+            "bold": false,
+            "color": "#111827",
+            "font_size": 8
+          }
+        },
+        "style": {
+          "align": "center",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 8
+        },
+        "type": "field",
+        "visible": true,
+        "width": 190,
+        "x": 44,
+        "y": 982,
+        "z_index": 0
+      },
+      {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "height": 1,
+        "id": "run_by_line",
+        "properties": {
+          "band": "page_footer",
+          "band_id": "page_footer",
+          "locked": false,
+          "style": {
+            "stroke_color": "#111827",
+            "stroke_width": 1
+          }
+        },
+        "style": {
+          "stroke_color": "#111827",
+          "stroke_width": 1
+        },
+        "type": "line",
+        "visible": true,
+        "width": 190,
+        "x": 44,
+        "y": 1000,
+        "z_index": 0
+      },
+      {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "height": 16,
+        "id": "run_by_label",
+        "properties": {
+          "band": "page_footer",
+          "band_id": "page_footer",
+          "locked": false,
+          "style": {
+            "align": "center",
+            "bold": true,
+            "color": "#111827",
+            "font_size": 9
+          },
+          "text": "Medical Technologist"
+        },
+        "style": {
+          "align": "center",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 9
+        },
+        "text": "Medical Technologist",
+        "type": "text",
+        "visible": true,
+        "width": 190,
+        "x": 44,
+        "y": 1008,
+        "z_index": 0
+      },
+      {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "binding": "signatures.validated_by.signature",
+        "height": 54,
+        "id": "validated_signature",
+        "properties": {
+          "alt": "",
+          "band": "page_footer",
+          "band_id": "page_footer",
+          "binding": "signatures.validated_by.signature",
+          "locked": false,
+          "maintain_aspect_ratio": true,
+          "source": "",
+          "src": "",
+          "style": {
+            "background_color": "transparent",
+            "border_width": 0,
+            "object_fit": "contain"
+          }
+        },
+        "style": {
+          "background_color": "transparent",
+          "border_width": 0,
+          "object_fit": "contain"
+        },
+        "type": "image",
+        "visible": true,
+        "width": 150,
+        "x": 333,
+        "y": 906,
+        "z_index": 0
+      },
+      {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "binding": "signatures.validated_by.name",
+        "height": 16,
+        "id": "validated_name",
+        "properties": {
+          "band": "page_footer",
+          "band_id": "page_footer",
+          "binding": "signatures.validated_by.name",
+          "locked": false,
+          "style": {
+            "align": "center",
+            "bold": true,
+            "color": "#111827",
+            "font_size": 10
+          }
+        },
+        "style": {
+          "align": "center",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 10
+        },
+        "type": "field",
+        "visible": true,
+        "width": 190,
+        "x": 312,
+        "y": 964,
+        "z_index": 0
+      },
+      {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "binding": "signatures.validated_by.license_line",
+        "height": 14,
+        "id": "validated_license",
+        "properties": {
+          "band": "page_footer",
+          "band_id": "page_footer",
+          "binding": "signatures.validated_by.license_line",
+          "locked": false,
+          "style": {
+            "align": "center",
+            "bold": false,
+            "color": "#111827",
+            "font_size": 8
+          }
+        },
+        "style": {
+          "align": "center",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 8
+        },
+        "type": "field",
+        "visible": true,
+        "width": 190,
+        "x": 312,
+        "y": 982,
+        "z_index": 0
+      },
+      {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "height": 1,
+        "id": "validated_line",
+        "properties": {
+          "band": "page_footer",
+          "band_id": "page_footer",
+          "locked": false,
+          "style": {
+            "stroke_color": "#111827",
+            "stroke_width": 1
+          }
+        },
+        "style": {
+          "stroke_color": "#111827",
+          "stroke_width": 1
+        },
+        "type": "line",
+        "visible": true,
+        "width": 190,
+        "x": 312,
+        "y": 1000,
+        "z_index": 0
+      },
+      {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "height": 16,
+        "id": "validated_label",
+        "properties": {
+          "band": "page_footer",
+          "band_id": "page_footer",
+          "locked": false,
+          "style": {
+            "align": "center",
+            "bold": true,
+            "color": "#111827",
+            "font_size": 9
+          },
+          "text": "Validated By"
+        },
+        "style": {
+          "align": "center",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 9
+        },
+        "text": "Validated By",
+        "type": "text",
+        "visible": true,
+        "width": 190,
+        "x": 312,
+        "y": 1008,
+        "z_index": 0
+      },
+      {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "binding": "signatures.pathologist.signature",
+        "height": 54,
+        "id": "pathologist_signature",
+        "properties": {
+          "alt": "",
+          "band": "page_footer",
+          "band_id": "page_footer",
+          "binding": "signatures.pathologist.signature",
+          "locked": false,
+          "maintain_aspect_ratio": true,
+          "source": "",
+          "src": "",
+          "style": {
+            "background_color": "transparent",
+            "border_width": 0,
+            "object_fit": "contain"
+          }
+        },
+        "style": {
+          "background_color": "transparent",
+          "border_width": 0,
+          "object_fit": "contain"
+        },
+        "type": "image",
+        "visible": true,
+        "width": 150,
+        "x": 602,
+        "y": 906,
+        "z_index": 0
+      },
+      {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "binding": "signatures.pathologist.name",
+        "height": 16,
+        "id": "pathologist_name",
+        "properties": {
+          "band": "page_footer",
+          "band_id": "page_footer",
+          "binding": "signatures.pathologist.name",
+          "locked": false,
+          "style": {
+            "align": "center",
+            "bold": true,
+            "color": "#111827",
+            "font_size": 10
+          }
+        },
+        "style": {
+          "align": "center",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 10
+        },
+        "type": "field",
+        "visible": true,
+        "width": 190,
+        "x": 582,
+        "y": 964,
+        "z_index": 0
+      },
+      {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "binding": "signatures.pathologist.license_line",
+        "height": 14,
+        "id": "pathologist_license",
+        "properties": {
+          "band": "page_footer",
+          "band_id": "page_footer",
+          "binding": "signatures.pathologist.license_line",
+          "locked": false,
+          "style": {
+            "align": "center",
+            "bold": false,
+            "color": "#111827",
+            "font_size": 8
+          }
+        },
+        "style": {
+          "align": "center",
+          "bold": false,
+          "color": "#111827",
+          "font_size": 8
+        },
+        "type": "field",
+        "visible": true,
+        "width": 190,
+        "x": 582,
+        "y": 982,
+        "z_index": 0
+      },
+      {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "height": 1,
+        "id": "pathologist_line",
+        "properties": {
+          "band": "page_footer",
+          "band_id": "page_footer",
+          "locked": false,
+          "style": {
+            "stroke_color": "#111827",
+            "stroke_width": 1
+          }
+        },
+        "style": {
+          "stroke_color": "#111827",
+          "stroke_width": 1
+        },
+        "type": "line",
+        "visible": true,
+        "width": 190,
+        "x": 582,
+        "y": 1000,
+        "z_index": 0
+      },
+      {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "height": 16,
+        "id": "pathologist_label",
+        "properties": {
+          "band": "page_footer",
+          "band_id": "page_footer",
+          "locked": false,
+          "style": {
+            "align": "center",
+            "bold": true,
+            "color": "#111827",
+            "font_size": 9
+          },
+          "text": "Pathologist"
+        },
+        "style": {
+          "align": "center",
+          "bold": true,
+          "color": "#111827",
+          "font_size": 9
+        },
+        "text": "Pathologist",
+        "type": "text",
+        "visible": true,
+        "width": 190,
+        "x": 582,
+        "y": 1008,
+        "z_index": 0
+      },
+      {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "height": 32,
+        "id": "text_1",
+        "properties": {
+          "band": "page_footer",
+          "band_id": "page_footer",
+          "locked": false,
+          "style": {
+            "font_size": 14
+          },
+          "text": "Remarks:"
+        },
+        "style": {
+          "font_size": 14
+        },
+        "text": "Remarks:",
+        "type": "text",
+        "visible": true,
+        "width": 160,
+        "x": 20,
+        "y": 860,
+        "z_index": 0
+      }
+    ],
+    "page": {
+      "background_color": "#ffffff",
+      "height": 1056,
+      "margin_bottom": 24,
+      "margin_left": 24,
+      "margin_right": 24,
+      "margin_top": 24,
+      "orientation": "portrait",
+      "print": {
+        "default_filename": "lis-result.pdf",
+        "pdf_author": "CDS-LIS",
+        "pdf_title": "LIS Result Report",
+        "print_background": true,
+        "show_browser_print_button": true
+      },
+      "size": "Letter",
+      "transparent": false,
+      "unit": "px",
+      "width": 816
+    },
+    "version": "1.0"
+  },
+  "template_id": "lis_result",
+  "version": "1.0"
 }

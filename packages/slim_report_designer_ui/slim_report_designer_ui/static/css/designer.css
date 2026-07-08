@@ -744,18 +744,6 @@ button {
   pointer-events: none;
 }
 
-.image-placeholder {
-  display: grid;
-  width: 100%;
-  height: 100%;
-  place-items: center;
-  border: 1px dashed var(--panel-border-strong);
-  background: #f8fafc;
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 700;
-}
-
 .table-object {
   padding: 0;
 }

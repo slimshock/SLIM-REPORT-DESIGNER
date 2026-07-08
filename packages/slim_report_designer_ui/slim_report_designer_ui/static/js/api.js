@@ -307,7 +307,7 @@ function localObjectHtml(object, unit = "px", sampleData = {}, rowData = null, r
     const src = object.src || object.properties?.src || object.properties?.source || "";
     const imageBox = `${box};display:grid;place-items:center;border:${style.border_width || 0}px solid ${style.border_color || "#000000"};border-radius:${style.border_radius || 0}px;opacity:${style.opacity ?? 1}`;
     if (!src) {
-      return `<div style="${imageBox};color:#64748b;background:#f8fafc">Image</div>`;
+      return `<div style="${imageBox}"></div>`;
     }
     return `<div style="${imageBox}"><img src="${escapeHtml(src)}" alt="${escapeHtml(object.alt || object.properties?.alt || "")}" style="width:100%;height:100%;object-fit:${style.object_fit || "contain"};display:block"></div>`;
   }

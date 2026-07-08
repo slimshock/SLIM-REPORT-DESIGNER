@@ -68,13 +68,13 @@ def test_widget_validate_rejects_wrong_type() -> None:
         widget.validate(obj)
 
 
-def test_image_widget_renders_placeholder_without_source() -> None:
+def test_image_widget_renders_blank_without_source() -> None:
     widget = ImageWidget()
     obj = ReportObject(id="logo", type="image", width=80, height=40)
 
     html = widget.render_html(obj, {}, {})
 
-    assert "Image" in html
+    assert ">Image<" not in html
     assert 'data-slim-object="logo"' in html
 
 

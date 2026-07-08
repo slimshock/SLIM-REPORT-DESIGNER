@@ -258,10 +258,9 @@ def _render_image(canvas: Any, obj: RenderObject, context: RenderContext) -> Non
         _set_stroke_color(canvas, style.get("border_color", "#000000"))
         canvas.rect(x, _pdf_y(context, y + height), width, height, stroke=1, fill=0)
 
-    source = str(obj.properties.get("src") or obj.properties.get("source") or "")
+    source = str(obj.properties.get("src") or obj.properties.get("source") or _object_value(obj, context) or "")
     reader = _image_reader(source)
     if reader is None:
-        _draw_image_placeholder(canvas, x, y, width, height, context)
         return
     try:
         _set_alpha(canvas, float(style.get("opacity", 1)))
@@ -277,7 +276,7 @@ def _render_image(canvas: Any, obj: RenderObject, context: RenderContext) -> Non
         _set_alpha(canvas, 1)
     except Exception:
         _set_alpha(canvas, 1)
-        _draw_image_placeholder(canvas, x, y, width, height, context)
+        return
 
 
 def _render_barcode(canvas: Any, obj: RenderObject, context: RenderContext) -> None:
@@ -652,22 +651,6 @@ def _normalize_table_column(column: Any, index: int) -> dict[str, Any]:
 
 def _dict_value(value: Any) -> dict[str, Any]:
     return dict(value) if isinstance(value, dict) else {}
-
-
-def _draw_image_placeholder(
-    canvas: Any,
-    x: float,
-    y: float,
-    width: float,
-    height: float,
-    context: RenderContext,
-) -> None:
-    canvas.setLineWidth(1)
-    _set_stroke_color(canvas, "#94a3b8")
-    canvas.rect(x, _pdf_y(context, y + height), width, height, stroke=1, fill=0)
-    canvas.setFont("Helvetica", 9)
-    _set_fill_color(canvas, "#64748b")
-    canvas.drawString(x + 4, _pdf_y(context, y + (height / 2)), "Image")
 
 
 def _image_reader(source: str) -> Any | None:

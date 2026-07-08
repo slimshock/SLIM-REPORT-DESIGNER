@@ -7,7 +7,7 @@ from io import BytesIO
 from typing import Any, ClassVar
 
 from ..models import ReportObject
-from .base import BaseWidget, html_attr, object_style, pdf_y, set_pdf_stroke_color
+from .base import BaseWidget, html_attr, object_style, pdf_y
 
 
 class ImageWidget(BaseWidget):
@@ -45,7 +45,7 @@ class ImageWidget(BaseWidget):
         if not source:
             return (
                 f'<div data-slim-object="{html_attr(obj.id)}" style="{style}; '
-                'display: grid; place-items: center; color: #64748b;">Image</div>'
+                'display: grid; place-items: center;"></div>'
             )
         return (
             f'<div data-slim-object="{html_attr(obj.id)}" style="{style}">'
@@ -60,10 +60,6 @@ class ImageWidget(BaseWidget):
         source = str(config.get("src") or config.get("source") or "")
         reader = _image_reader(source)
         if reader is None:
-            canvas.setLineWidth(1)
-            set_pdf_stroke_color(canvas, "#94a3b8")
-            canvas.rect(obj.x, pdf_y(obj, context), obj.width, obj.height, stroke=1, fill=0)
-            canvas.drawString(obj.x + 4, pdf_y(obj, context) + (obj.height / 2), "Image")
             return
         canvas.drawImage(
             reader,
