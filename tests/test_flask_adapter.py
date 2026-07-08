@@ -4,6 +4,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PACKAGE_SRC_DIRS = (
     "packages/slim_report_core/src",
@@ -19,7 +21,11 @@ from flask import Flask  # noqa: E402
 
 from slim_report_core import Report, ReportObject  # noqa: E402
 from slim_report_core.serialization import JSONSerializer  # noqa: E402
-from slim_report_flask import SlimReportDesigner  # noqa: E402
+from slim_report_flask import (  # noqa: E402
+    FileSystemTemplateProvider,
+    SlimReportDesigner,
+    TemplateProvider,
+)
 from slim_report_flask.blueprint import safe_pdf_filename  # noqa: E402
 from slim_report_flask import extension as extension_module  # noqa: E402
 
@@ -31,6 +37,12 @@ def test_flask_adapter_registers_health_route(tmp_path: Path) -> None:
 
     assert response.status_code == 200
     assert response.get_json() == {"status": "ok"}
+
+
+def test_flask_extension_exports_provider_api() -> None:
+    assert SlimReportDesigner is not None
+    assert FileSystemTemplateProvider is not None
+    assert TemplateProvider is not None
 
 
 def test_flask_adapter_creates_lists_and_returns_template(tmp_path: Path) -> None:
@@ -106,6 +118,61 @@ def test_flask_adapter_serves_framework_agnostic_designer_ui(tmp_path: Path) -> 
     assert css_response.status_code == 200
     assert css_response.mimetype == "text/css"
     assert ".inspector-section" in css_response.get_data(as_text=True)
+
+
+def test_flask_adapter_supports_app_factory_custom_prefix_and_runtime_config(tmp_path: Path) -> None:
+    provider = FileSystemTemplateProvider(tmp_path / "templates", allow_save=True)
+    app = Flask(__name__)
+    app.config["TESTING"] = True
+    designer = SlimReportDesigner(
+        template_provider=provider,
+        url_prefix="/custom/reports",
+        csrf_token_provider=lambda: "csrf-123",
+        csrf_header_name="X-CSRFToken",
+    )
+    designer.init_app(app)
+    designer.create_template(template_payload())
+    client = app.test_client()
+
+    designer_response = client.get("/custom/reports/designer?template=lab-template")
+    list_response = client.get("/custom/reports/api/templates")
+    js_response = client.get("/custom/reports/designer-ui/js/designer.js")
+
+    assert designer_response.status_code == 200
+    html = designer_response.get_data(as_text=True)
+    assert 'window.SLIM_REPORT_API_BASE = "/custom/reports/api";' in html
+    assert '"templateId": "lab-template"' in html
+    assert '"csrfHeaderName": "X-CSRFToken"' in html
+    assert '"csrfToken": "csrf-123"' in html
+    assert list_response.status_code == 200
+    assert list_response.get_json()["templates"][0]["id"] == "lab-template"
+    assert list_response.get_json()["templates"][0]["name"] == "Lab Result"
+    assert js_response.status_code == 200
+    assert js_response.mimetype in {"application/javascript", "text/javascript"}
+
+
+def test_filesystem_template_provider_lists_gets_saves_and_rejects_traversal(tmp_path: Path) -> None:
+    provider = FileSystemTemplateProvider(tmp_path, allow_save=True)
+    saved = provider.save_template("lab-template", template_payload())
+
+    templates = provider.list_templates()
+    loaded = provider.get_template("lab-template")
+
+    assert saved["metadata"]["title"] == "Lab Result"
+    assert templates[0]["id"] == "lab-template"
+    assert templates[0]["name"] == "Lab Result"
+    assert loaded["metadata"]["title"] == "Lab Result"
+    assert provider.exists("lab-template")
+    assert not provider.exists("../secret")
+    with pytest.raises(ValueError):
+        provider.get_template("../secret")
+
+
+def test_filesystem_template_provider_can_disable_saves(tmp_path: Path) -> None:
+    provider = FileSystemTemplateProvider(tmp_path, allow_save=False)
+
+    with pytest.raises(PermissionError):
+        provider.save_template("lab-template", template_payload())
 
 
 def test_flask_adapter_new_template_get_returns_default_template(tmp_path: Path) -> None:
@@ -310,6 +377,112 @@ def test_flask_designer_api_preview_and_export_use_explicit_data_payload(tmp_pat
     assert pdf_response.status_code == 200
     assert pdf_response.get_data().startswith(b"%PDF")
     assert pdf_response.headers["X-Slim-Report-Repeat-Row-Count"] == "2"
+
+
+def test_flask_designer_api_preview_falls_back_to_data_provider(tmp_path: Path) -> None:
+    def data_provider(template_id: str, request_args: Any, request_json: Any) -> dict[str, Any]:
+        assert template_id == "lab-template"
+        return {"patient": {"name": request_json["request_args"]["patient"]}}
+
+    app = Flask(__name__)
+    app.config["TESTING"] = True
+    app.config["SLIM_REPORT_TEMPLATE_DIR"] = str(tmp_path / "templates")
+    designer = SlimReportDesigner(data_provider=data_provider)
+    designer.init_app(app)
+    designer.create_template(template_payload(provider=None))
+
+    response = app.test_client().post(
+        "/report-designer/api/preview",
+        json={
+            "template_id": "lab-template",
+            "template": template_payload(provider=None),
+            "request_args": {"patient": "Provider Patient"},
+        },
+    )
+
+    assert response.status_code == 200
+    assert "Provider Patient" in response.get_data(as_text=True)
+
+
+def test_flask_designer_api_preview_falls_back_to_template_sample(tmp_path: Path) -> None:
+    app, _designer = create_app(tmp_path)
+    template = template_payload(provider=None)
+    template["data"] = {"sample": {"patient": {"name": "Sample Fallback"}}}
+
+    response = app.test_client().post(
+        "/report-designer/api/preview",
+        json={"template_id": "lab-template", "template": template},
+    )
+
+    assert response.status_code == 200
+    assert "Sample Fallback" in response.get_data(as_text=True)
+
+
+def test_flask_designer_api_data_provider_exception_returns_clean_error(tmp_path: Path) -> None:
+    def data_provider(template_id: str, request_args: Any, request_json: Any) -> dict[str, Any]:
+        raise RuntimeError(f"Data unavailable for {template_id}")
+
+    app = Flask(__name__)
+    app.config["TESTING"] = True
+    app.config["SLIM_REPORT_TEMPLATE_DIR"] = str(tmp_path / "templates")
+    designer = SlimReportDesigner(data_provider=data_provider)
+    designer.init_app(app)
+
+    response = app.test_client().post(
+        "/report-designer/api/preview",
+        json={"template_id": "lab-template", "template": template_payload(provider=None)},
+    )
+
+    assert response.status_code == 500
+    payload = response.get_json()
+    assert payload["ok"] is False
+    assert payload["error_detail"]["code"] == "server_error"
+    assert "Data unavailable" in payload["error"]
+
+
+def test_flask_auth_hook_blocks_designer_and_api(tmp_path: Path) -> None:
+    app = Flask(__name__)
+    app.config["TESTING"] = True
+    app.config["SLIM_REPORT_TEMPLATE_DIR"] = str(tmp_path / "templates")
+    designer = SlimReportDesigner(auth_required=lambda: False)
+    designer.init_app(app)
+
+    designer_response = app.test_client().get("/report-designer/designer")
+    api_response = app.test_client().get("/report-designer/api/templates")
+
+    assert designer_response.status_code == 401
+    assert api_response.status_code == 401
+    assert api_response.get_json()["error_detail"]["code"] == "unauthorized"
+
+
+def test_flask_permission_hooks_block_view_edit_and_export(tmp_path: Path) -> None:
+    app = Flask(__name__)
+    app.config["TESTING"] = True
+    app.config["SLIM_REPORT_TEMPLATE_DIR"] = str(tmp_path / "templates")
+    designer = SlimReportDesigner(
+        can_view_template=lambda template_id: template_id != "blocked",
+        can_edit_template=lambda template_id: False,
+        can_export_template=lambda template_id: False,
+    )
+    designer.init_app(app)
+    designer.create_template({**template_payload(), "metadata": {"title": "Allowed", "custom": {"id": "allowed"}}})
+    designer.create_template({**template_payload(), "metadata": {"title": "Blocked", "custom": {"id": "blocked"}}})
+    client = app.test_client()
+
+    view_response = client.get("/report-designer/api/templates/blocked")
+    edit_response = client.post(
+        "/report-designer/api/templates/allowed",
+        json={"template": template_payload(provider=None)},
+    )
+    export_response = client.post(
+        "/report-designer/api/export/pdf",
+        json={"template_id": "allowed", "template": template_payload(provider=None)},
+    )
+
+    assert view_response.status_code == 403
+    assert view_response.get_json()["error_detail"]["code"] == "forbidden"
+    assert edit_response.status_code == 403
+    assert export_response.status_code == 403
 
 
 def test_flask_designer_api_missing_render_data_does_not_crash(tmp_path: Path) -> None:

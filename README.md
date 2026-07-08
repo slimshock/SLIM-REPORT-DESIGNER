@@ -221,6 +221,19 @@ http://127.0.0.1:5000/report-designer/designer?template=barcode_qr_lab_result
 
 The Flask example loads templates from `examples/flask_app/sample_templates/`. Preview works, PDF export works, and sample/provider data can be used for field rendering. The examples cover fixed lab reports, paginated repeating rows, basic tables, grouping, aggregates, formulas, conditional formatting, barcode/QR objects, and a complete Sprint 5 demo template.
 
+For a production-style Flask setup with app factory, custom URL prefix, auth/permission hooks,
+read-only filesystem templates, CSRF header injection, and a LIS-style data provider, run:
+
+```bash
+python examples/flask_production_app/app.py
+```
+
+Open:
+
+```text
+http://127.0.0.1:5001/admin/reports/designer?template=complete_sprint5_lab_report&order_id=ORD-2026-0001
+```
+
 ## Serialization
 
 Use `JSONSerializer` when you want to load or save JSON:
@@ -272,6 +285,7 @@ The CLI accepts JSON files as input, but commands deserialize to `Report` before
 - [Documentation index](docs/README.md)
 - [Designer UI](docs/designer-ui.md)
 - [Flask integration](docs/flask-integration.md)
+- [Flask production integration](docs/flask-production-integration.md)
 - [JSON template schema](docs/json-template-schema.md)
 - [Data Fields](docs/data-fields.md)
 - [Repeating Detail rows](docs/repeating-detail-rows.md)

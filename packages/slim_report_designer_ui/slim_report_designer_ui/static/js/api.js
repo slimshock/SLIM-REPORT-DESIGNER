@@ -14,7 +14,8 @@ export async function loadTemplate() {
   if (!response.ok) {
     throw new Error(await errorMessage(response, "Template load failed"));
   }
-  return normalizeTemplate(await response.json());
+  const payload = await response.json();
+  return normalizeTemplate(payload.template || payload);
 }
 
 export async function saveTemplate(template) {
@@ -23,11 +24,14 @@ export async function saveTemplate(template) {
     localStorage.setItem("slim-report-template", JSON.stringify(normalized));
     return normalized;
   }
+  if (runtimeConfig().canSave === false) {
+    throw new Error("Template saving is disabled.");
+  }
   const templateId = currentTemplateId() || normalized.metadata?.custom?.id || "untitled";
   const response = await fetch(`${apiBase()}/templates/${encodeURIComponent(templateId)}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(normalized)
+    headers: requestHeaders(),
+    body: JSON.stringify({ template: normalized, ...normalized })
   });
   if (!response.ok) {
     throw new Error(await errorMessage(response, "Template save failed"));
@@ -50,7 +54,7 @@ export async function previewTemplate(template) {
   }
   const response = await fetch(`${apiBase()}/preview`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: requestHeaders(),
     body: JSON.stringify(templateRequestPayload(template))
   });
   if (!response.ok) {
@@ -66,7 +70,7 @@ export async function exportPdf(template) {
   }
   const response = await fetch(`${apiBase()}/export/pdf`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: requestHeaders(),
     body: JSON.stringify(templateRequestPayload(template))
   });
   if (!response.ok) {
@@ -77,24 +81,42 @@ export async function exportPdf(template) {
 }
 
 function apiBase() {
-  return window.SLIM_REPORT_API_BASE || "";
+  return runtimeConfig().apiBase || window.SLIM_REPORT_API_BASE || "";
 }
 
 function currentTemplateId() {
   const params = new URLSearchParams(window.location.search);
-  return params.get("template") || window.SLIM_REPORT_TEMPLATE_ID || "";
+  return params.get("template") || runtimeConfig().templateId || window.SLIM_REPORT_TEMPLATE_ID || "";
+}
+
+function runtimeConfig() {
+  return window.SLIM_REPORT_CONFIG || {};
+}
+
+function requestHeaders() {
+  const headers = { "Content-Type": "application/json" };
+  const config = runtimeConfig();
+  if (config.csrfHeaderName && config.csrfToken) {
+    headers[config.csrfHeaderName] = config.csrfToken;
+  }
+  return headers;
 }
 
 function templateRequestPayload(template) {
   const normalized = normalizeTemplate(template);
   const payload = {
     template_id: currentTemplateId() || normalized.metadata?.custom?.id || "",
-    template: normalized
+    template: normalized,
+    request_args: currentQueryParams()
   };
   if (normalized.data?.sample && typeof normalized.data.sample === "object") {
     payload.data = normalized.data.sample;
   }
   return payload;
+}
+
+function currentQueryParams() {
+  return Object.fromEntries(new URLSearchParams(window.location.search).entries());
 }
 
 function templateFromSaveResponse(payload) {
@@ -425,7 +447,16 @@ async function errorMessage(response, fallback) {
   const contentType = response.headers.get("content-type") || "";
   if (contentType.includes("application/json")) {
     const payload = await response.json().catch(() => ({}));
-    return payload.error || fallback;
+    if (typeof payload.error === "string") {
+      return payload.error;
+    }
+    if (payload.error?.message) {
+      return payload.error.message;
+    }
+    if (payload.error_detail?.message) {
+      return payload.error_detail.message;
+    }
+    return fallback;
   }
   return (await response.text().catch(() => "")) || fallback;
 }

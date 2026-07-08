@@ -123,3 +123,6 @@ Templates can also include `data.sample` for preview/export. The designer API pr
 - If CSS or JavaScript is missing, confirm `slim_report_designer_ui` is installed or available on `PYTHONPATH`.
 - If preview or PDF export fails for a template, first try the direct `/preview/sample` route to isolate render data issues.
 - If port 5000 is already in use, stop the existing process or run the app with a different Flask port.
+
+For app-factory setup, custom URL prefixes, auth hooks, permission hooks, read-only saves, CSRF
+header injection, and LIS-style data providers, see `examples/flask_production_app/`.

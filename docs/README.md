@@ -8,6 +8,7 @@ Start with:
 - [Public API](public-api.md)
 - [Designer UI](designer-ui.md)
 - [Flask integration](flask-integration.md)
+- [Flask production integration](flask-production-integration.md)
 - [JSON template schema](json-template-schema.md)
 - [Data Fields](data-fields.md)
 - [Repeating Detail rows](repeating-detail-rows.md)

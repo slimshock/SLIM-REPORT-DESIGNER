@@ -11,6 +11,7 @@ This project follows semantic versioning once public releases begin.
 - Bumped package versions to the Sprint 6 development baseline `0.6.0a0`.
 - Added `normalize_template` to the core public API and use it before JSON serializer validation.
 - Added designer UI `get_designer_static_path()` resource helper.
+- Added Flask production integration API with `TemplateProvider`, `FileSystemTemplateProvider`, custom URL prefixes, data providers, auth/permission hooks, and CSRF config injection.
 - Expanded package/public API smoke tests and designer static package-data checks.
 - Documented the multi-package editable install flow for Sprint 6.
 

@@ -41,10 +41,16 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.get("/templates")
     def templates() -> Response:
+        blocked = require_access(designer, "view", api=True)
+        if blocked:
+            return blocked
         return jsonify({"templates": [item.to_dict() for item in designer.list_templates()]})
 
     @blueprint.route("/templates/new", methods=["GET", "POST"])
     def new_template() -> tuple[Response, int] | Response:
+        blocked = require_access(designer, "edit", api=True)
+        if blocked:
+            return blocked
         if request.method == "GET":
             return jsonify(create_default_template().to_dict())
 
@@ -57,6 +63,9 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.get("/templates/<template_id>/designer")
     def designer_template(template_id: str) -> Response:
+        blocked = require_access(designer, "view", template_id, api=False)
+        if blocked:
+            return blocked
         report = designer.get_report(template_id)
         editable_template = template_for_designer(JSONSerializer().dump_mapping(report))
         html = render_designer_page(
@@ -81,6 +90,10 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.get("/designer")
     def canvas_designer() -> Response:
+        template_id = request.args.get("template", "")
+        blocked = require_access(designer, "view", template_id or None, api=False)
+        if blocked:
+            return blocked
         html = static_file("index.html").read_text(encoding="utf-8")
         asset_base = url_for(
             "slim_report_designer.designer_ui_asset",
@@ -90,10 +103,19 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
             "/templates",
             1,
         )[0]
+        runtime_config = {
+            "apiBase": api_base,
+            "templateId": template_id,
+            "canSave": designer.can_edit(template_id) if template_id else designer.save_enabled,
+            "saveEnabled": designer.save_enabled,
+            **designer.csrf_config(),
+        }
         config = (
             f'<base href="{asset_base}/">\n'
             "<script>\n"
+            f"window.SLIM_REPORT_CONFIG = {json.dumps(runtime_config)};\n"
             f"window.SLIM_REPORT_API_BASE = {json.dumps(api_base)};\n"
+            f"window.SLIM_REPORT_TEMPLATE_ID = {json.dumps(template_id)};\n"
             "</script>"
         )
         html = html.replace("<head>\n", f"<head>\n{config}\n", 1)
@@ -105,6 +127,9 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.post("/templates/<template_id>/designer/save")
     def save_designer_template(template_id: str) -> tuple[Response, int]:
+        blocked = require_access(designer, "edit", template_id, api=True)
+        if blocked:
+            return blocked
         payload = request.get_json(silent=True)
         if not isinstance(payload, dict):
             return jsonify({"error": "Template payload must be a JSON object."}), 400
@@ -114,27 +139,39 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.get("/api/templates")
     def api_templates_root() -> Response:
-        return jsonify({"templates": [item.to_dict() for item in designer.list_templates()]})
+        blocked = require_access(designer, "view", api=True)
+        if blocked:
+            return blocked
+        return jsonify({"templates": designer.list_template_summaries()})
 
     @blueprint.get("/api/templates/<template_id>")
     def api_template(template_id: str) -> Response:
-        report = designer.get_report(template_id)
-        return jsonify(JSONSerializer().dump_mapping(report))
+        blocked = require_access(designer, "view", template_id, api=True)
+        if blocked:
+            return blocked
+        template = designer.get_template(template_id)
+        return jsonify(template_response(template_id, template))
 
     @blueprint.post("/api/templates/<template_id>")
     def save_api_template(template_id: str) -> tuple[Response, int]:
+        blocked = require_access(designer, "edit", template_id, api=True)
+        if blocked:
+            return blocked
         payload = request_template_payload()
-        record = designer.save_template(template_id, normalize_template_payload(payload))
-        report = designer.get_report(record.id)
-        return jsonify(JSONSerializer().dump_mapping(report)), 200
+        saved = designer.save_template_mapping(template_id, normalize_template_payload(payload))
+        return jsonify(template_response(template_id, saved, ok=True)), 200
 
     @blueprint.post("/api/preview")
     def api_preview() -> Response:
         try:
             request_payload = request.get_json(silent=True)
             payload = request_template_payload(request_payload)
-            data = request_template_data(request_payload, payload, designer)
+            template_id = request_template_id(request_payload, payload)
+            blocked = require_access(designer, "view", template_id or None, api=True)
+            if blocked:
+                return blocked
             report = load_report_from_payload(normalize_template_payload(payload))
+            data = request_template_data(request_payload, payload, designer, report)
             context = validate_api_report(report)
             return Response(
                 report.render_html(data),
@@ -149,8 +186,12 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         try:
             request_payload = request.get_json(silent=True)
             payload = request_template_payload(request_payload)
-            data = request_template_data(request_payload, payload, designer)
+            template_id = request_template_id(request_payload, payload)
+            blocked = require_access(designer, "export", template_id or None, api=True)
+            if blocked:
+                return blocked
             report = load_report_from_payload(normalize_template_payload(payload))
+            data = request_template_data(request_payload, payload, designer, report)
             context = validate_api_report(report)
             return Response(
                 report.render_pdf(data),
@@ -166,8 +207,16 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
     @blueprint.get("/templates/<template_id>/preview/<record_id>")
     def preview(template_id: str, record_id: str) -> Response:
         try:
+            blocked = require_access(designer, "view", template_id, api=True)
+            if blocked:
+                return blocked
             report = designer.get_report(template_id)
-            data = designer.resolve_data(template_id, record_id)
+            data = designer.resolve_data(
+                template_id,
+                record_id,
+                request_args=request.args,
+                report=report,
+            )
             context = create_render_context(report)
             return Response(
                 report.render_html(data),
@@ -180,8 +229,16 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
     @blueprint.get("/templates/<template_id>/export/pdf/<record_id>")
     def export_pdf(template_id: str, record_id: str) -> Response:
         try:
+            blocked = require_access(designer, "export", template_id, api=True)
+            if blocked:
+                return blocked
             report = designer.get_report(template_id)
-            data = designer.resolve_data(template_id, record_id)
+            data = designer.resolve_data(
+                template_id,
+                record_id,
+                request_args=request.args,
+                report=report,
+            )
             context = create_render_context(report)
             pdf = designer.export_pdf(template_id, record_id)
             return Response(
@@ -199,15 +256,15 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.errorhandler(FileNotFoundError)
     def not_found(exc: FileNotFoundError) -> tuple[Response, int]:
-        return jsonify({"error": str(exc)}), 404
+        return error_response("template_not_found", str(exc), 404)
 
     @blueprint.errorhandler(ValueError)
     def bad_value(exc: ValueError) -> tuple[Response, int]:
-        return jsonify({"error": str(exc)}), 400
+        return error_response("invalid_request", str(exc), 400)
 
     @blueprint.errorhandler(SlimReportError)
     def slim_report_error(exc: SlimReportError) -> tuple[Response, int]:
-        return jsonify({"error": str(exc)}), _status_for_core_error(exc)
+        return error_response("slim_report_error", str(exc), _status_for_core_error(exc))
 
     return blueprint
 
@@ -222,17 +279,85 @@ def render_failure_response(exc: Exception) -> tuple[Response, int]:
     """Return a JSON preview/export error and log the stack trace."""
     current_app.logger.exception("Slim report preview/export failed")
     status = _status_for_exception(exc)
-    return jsonify({"error": str(exc), "type": type(exc).__name__}), status
+    return error_response(_error_code_for_exception(exc), str(exc), status, type(exc).__name__)
+
+
+def error_response(
+    code: str,
+    message: str,
+    status: int,
+    exc_type: str | None = None,
+) -> tuple[Response, int]:
+    payload: dict[str, Any] = {
+        "ok": False,
+        "error": message,
+        "error_detail": {
+            "code": code,
+            "message": message,
+        },
+    }
+    if exc_type:
+        payload["type"] = exc_type
+    return jsonify(payload), status
+
+
+def _error_code_for_exception(exc: Exception) -> str:
+    if isinstance(exc, FileNotFoundError):
+        return "template_not_found"
+    if isinstance(exc, PermissionError):
+        return "forbidden"
+    if isinstance(exc, ValueError):
+        return "invalid_request"
+    if isinstance(exc, SlimReportError):
+        return "slim_report_error"
+    return "server_error"
 
 
 def _status_for_exception(exc: Exception) -> int:
     if isinstance(exc, FileNotFoundError):
         return 404
+    if isinstance(exc, PermissionError):
+        return 403
     if isinstance(exc, ValueError):
         return 400
     if isinstance(exc, SlimReportError):
         return _status_for_core_error(exc)
     return 500
+
+
+def require_access(
+    designer: SlimReportDesigner,
+    action: str,
+    template_id: str | None = None,
+    *,
+    api: bool,
+) -> Response | tuple[Response, int] | None:
+    if not designer.is_authenticated():
+        if api:
+            return error_response("unauthorized", "Authentication required.", 401)
+        return Response("Authentication required.", status=401, mimetype="text/plain")
+    if template_id:
+        allowed = {
+            "view": designer.can_view,
+            "edit": designer.can_edit,
+            "export": designer.can_export,
+        }[action](template_id)
+        if not allowed:
+            if api:
+                return error_response("forbidden", "Permission denied.", 403)
+            return Response("Permission denied.", status=403, mimetype="text/plain")
+    return None
+
+
+def template_response(template_id: str, template: dict[str, Any], *, ok: bool | None = None) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "template_id": template_id,
+        "template": template,
+    }
+    if ok is not None:
+        payload["ok"] = ok
+    payload.update(template)
+    return payload
 
 
 def load_report_from_payload(payload: Any) -> Report:
@@ -337,6 +462,8 @@ def request_template_payload(payload: Any | None = None) -> dict[str, Any]:
         payload = request.get_json(silent=True)
     if not isinstance(payload, dict):
         raise ValueError("Template payload must be a JSON object.")
+    if _looks_like_template(payload):
+        return payload
     if isinstance(payload.get("template"), dict):
         return payload["template"]
     return payload
@@ -346,6 +473,7 @@ def request_template_data(
     payload: Any | None = None,
     template: dict[str, Any] | None = None,
     designer: SlimReportDesigner | None = None,
+    report: Report | None = None,
 ) -> dict[str, Any]:
     """Return optional render data from the current JSON request."""
     if payload is None:
@@ -353,18 +481,53 @@ def request_template_data(
     if isinstance(payload, dict) and isinstance(payload.get("template"), dict):
         if isinstance(payload.get("data"), dict):
             return payload["data"]
+    elif (
+        isinstance(payload, dict)
+        and isinstance(payload.get("data"), dict)
+        and not _looks_like_template(payload)
+    ):
+        return payload["data"]
+    template_id = request_template_id(payload, template)
+    if designer is not None and template_id:
+        try:
+            resolved = designer.resolve_data(
+                str(template_id),
+                "sample",
+                request_args=request.args,
+                request_json=payload,
+                report=report,
+            )
+        except Exception:
+            raise
+        if isinstance(resolved, dict):
+            return resolved
     data_metadata = template.get("data") if isinstance(template, dict) else None
     if isinstance(data_metadata, dict) and isinstance(data_metadata.get("sample"), dict):
         return data_metadata["sample"]
-    template_id = payload.get("template_id") if isinstance(payload, dict) else None
-    if designer is not None and template_id:
-        try:
-            resolved = designer.resolve_data(str(template_id), "sample")
-        except Exception:
-            resolved = {}
-        if isinstance(resolved, dict):
-            return resolved
     return {}
+
+
+def _looks_like_template(value: Any) -> bool:
+    return (
+        isinstance(value, dict)
+        and isinstance(value.get("metadata"), dict)
+        and isinstance(value.get("page"), dict)
+        and isinstance(value.get("objects"), list)
+        and isinstance(value.get("bands"), list)
+    )
+
+
+def request_template_id(payload: Any | None, template: dict[str, Any] | None = None) -> str:
+    if isinstance(payload, dict) and payload.get("template_id"):
+        return str(payload["template_id"])
+    metadata = template.get("metadata") if isinstance(template, dict) else None
+    if isinstance(metadata, dict):
+        custom = metadata.get("custom")
+        if isinstance(custom, dict) and custom.get("id"):
+            return str(custom["id"])
+        if metadata.get("template_id"):
+            return str(metadata["template_id"])
+    return ""
 
 
 def normalize_template_payload(payload: dict[str, Any]) -> dict[str, Any]:
@@ -379,4 +542,7 @@ def _static_response(asset_path: str) -> Response:
     if not resource.is_file():
         raise FileNotFoundError(f"Designer asset not found: {asset_path}.")
     mimetype = mimetypes.guess_type(asset_path)[0] or "application/octet-stream"
-    return Response(resource.read_bytes(), mimetype=mimetype)
+    response = Response(resource.read_bytes(), mimetype=mimetype)
+    if current_app.debug:
+        response.headers["Cache-Control"] = "no-store"
+    return response
