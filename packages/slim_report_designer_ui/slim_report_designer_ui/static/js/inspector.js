@@ -1,5 +1,5 @@
 import { icon } from "./icons.js";
-import { fieldExists, getArrayChildFields, getFieldValue, getRowValue, normalizeArrayFieldPath, normalizeFieldPath } from "./data_fields.js";
+import { fieldExists, getArrayChildFields, getFieldValue, getRowValue, normalizeArrayFieldPath, normalizeFieldPath, resolveBinding } from "./data_fields.js";
 import {
   addTableColumn,
   generateTableColumns,
@@ -419,10 +419,15 @@ function fieldContentFields(object, template, fields, sampleData) {
   const row = repeat?.array?.[0] || {};
   const rows = [
     fieldRow("binding", binding),
-    fieldPickerRow(binding, fields),
+    fieldPickerRow(binding, fields, object, template),
     commandGrid([["chooseField", "Choose Field"]])
   ];
-  const sampleValue = repeat ? getRowValue(row, binding, repeat.dataPath) : getFieldValue(sampleData, binding);
+  const sampleValue = resolveBinding(binding, sampleData, {
+    rowData: repeat ? row : null,
+    repeatDataPath: repeat?.dataPath || "",
+    pageNumber: 1,
+    totalPages: 1
+  });
   const sample = document.createElement("p");
   sample.className = "field-sample-preview";
   sample.textContent = `Sample: ${
@@ -533,7 +538,7 @@ function barcodeFields(object, fields) {
   const binding = normalizeFieldPath(object.binding || object.properties?.binding || "");
   return [
     fieldRow("binding", binding),
-    fieldPickerRow(binding, fields),
+    fieldPickerRow(binding, fields, object),
     fieldRow("value", object.value || object.properties?.value || "", { name: "value" }),
     fieldRow("format", object.format || object.properties?.format || "code128", {
       type: "select",
@@ -551,7 +556,7 @@ function qrCodeFields(object, fields) {
   const binding = normalizeFieldPath(object.binding || object.properties?.binding || "");
   return [
     fieldRow("binding", binding),
-    fieldPickerRow(binding, fields),
+    fieldPickerRow(binding, fields, object),
     fieldRow("value", object.value || object.properties?.value || "", { name: "value" }),
     fieldRow("error correction", object.error_correction || object.properties?.error_correction || "M", {
       type: "select",
@@ -664,8 +669,8 @@ function groupFieldOptions(template, dataPath, current = "") {
   return options;
 }
 
-function fieldPickerRow(currentBinding, fields) {
-  const options = ["", ...fields.map((field) => field.path)];
+function fieldPickerRow(currentBinding, fields, object = null, template = null) {
+  const options = ["", ...prioritizedFields(fields, object, template).map((field) => field.path)];
   const row = fieldRow("picker", currentBinding, {
     type: "select",
     name: "binding_picker",
@@ -680,6 +685,26 @@ function fieldPickerRow(currentBinding, fields) {
     select.value = currentBinding;
   }
   return row;
+}
+
+function prioritizedFields(fields, object, template) {
+  if (!object || !template) {
+    return fields;
+  }
+  const band = getBandById(template, object.band || object.band_id || "detail");
+  const priority = ["group_header", "group_footer"].includes(band?.type)
+    ? "group."
+    : band?.id === "page_footer"
+    ? "page."
+    : "";
+  if (!priority) {
+    return fields;
+  }
+  return fields.slice().sort((left, right) => {
+    const leftPriority = String(left.path || "").startsWith(priority) ? 0 : 1;
+    const rightPriority = String(right.path || "").startsWith(priority) ? 0 : 1;
+    return leftPriority - rightPriority;
+  });
 }
 
 function applyInput(template, object, input) {

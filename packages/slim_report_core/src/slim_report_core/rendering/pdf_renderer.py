@@ -11,6 +11,7 @@ from ..report import Report
 from .context import (
     RenderContext,
     RenderObject,
+    context_with_page_numbers,
     convert_unit,
     create_render_context,
     get_array_by_path,
@@ -34,11 +35,16 @@ def render_pdf(report: Report, data: dict[str, Any] | None = None) -> bytes:
     canvas = canvas_class(buffer, pagesize=(context.page.width_pt, context.page.height_pt))
     pages = build_render_pages(context)
     for page_index, page in enumerate(pages):
+        page_number = page_index + 1
         _render_page_background(canvas, context)
         for band in page.bands:
             _render_band(canvas, band, context)
         for obj, object_context in page.objects:
-            render_pdf_object(canvas, obj, object_context)
+            render_pdf_object(
+                canvas,
+                obj,
+                context_with_page_numbers(object_context, page_number, len(pages)),
+            )
         if page_index < len(pages) - 1:
             canvas.showPage()
     canvas.save()

@@ -3,17 +3,20 @@
 from __future__ import annotations
 
 import math
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from datetime import date, datetime
 from typing import Any
 
 from ..exceptions import ReportValidationError
-from ..expressions import resolve_expression, resolve_text
 from ..models import Band, Object, Page
 from ..report import Report
 
 CSS_DPI = 96.0
 POINTS_PER_INCH = 72.0
+_TEXT_BINDING_PATTERN = re.compile(r"\{\{\s*(.*?)\s*\}\}")
+_MISSING = object()
 
 PAGE_SIZES = {
     "letter": {
@@ -413,9 +416,9 @@ def object_pt(obj: RenderObject, unit: str) -> tuple[float, float, float, float]
 def resolve_object_value(obj: RenderObject, data: Mapping[str, Any]) -> str:
     """Resolve display text for text-like render objects."""
     if obj.type == "text":
-        return str(resolve_text(obj.text, data))
+        return resolve_binding_text(obj.text, data)
     if obj.type == "field":
-        return str(resolve_expression(obj.binding, data))
+        return value_to_text(resolve_binding(obj.binding, data))
     return ""
 
 
@@ -427,13 +430,12 @@ def resolve_repeated_object_value(
 ) -> str:
     """Resolve display text for a repeated-row render object."""
     if obj.type == "text":
-        return str(resolve_text(obj.text, {**dict(data), **dict(row)}))
+        return resolve_binding_text(obj.text, data, row=row, repeat_data_path=repeat_data_path)
     if obj.type != "field":
         return ""
-    row_value = get_row_value(row, obj.binding, repeat_data_path)
-    if row_value not in ("", None):
-        return str(row_value)
-    return str(resolve_expression(obj.binding, data))
+    return value_to_text(
+        resolve_binding(obj.binding, data, row=row, repeat_data_path=repeat_data_path)
+    )
 
 
 def resolve_grouped_object_value(
@@ -443,18 +445,13 @@ def resolve_grouped_object_value(
     repeat_data_path: str = "",
 ) -> str:
     """Resolve text/field values against group, row, then global data."""
-    group_value = get_group_value(data, obj.binding)
     if obj.type == "text":
-        return str(resolve_text(obj.text, _group_expression_data(data)))
+        return resolve_binding_text(obj.text, data, row=row, repeat_data_path=repeat_data_path)
     if obj.type != "field":
         return ""
-    if group_value not in ("", None):
-        return str(group_value)
-    if row is not None:
-        row_value = get_row_value(row, obj.binding, repeat_data_path)
-        if row_value not in ("", None):
-            return str(row_value)
-    return str(resolve_expression(obj.binding, _group_expression_data(data)))
+    return value_to_text(
+        resolve_binding(obj.binding, data, row=row, repeat_data_path=repeat_data_path)
+    )
 
 
 def resolve_bound_object_value(
@@ -464,16 +461,193 @@ def resolve_bound_object_value(
     repeat_data_path: str = "",
 ) -> str:
     """Resolve a binding-capable non-field object with a value fallback."""
-    if row is not None and obj.binding:
-        row_value = get_row_value(row, obj.binding, repeat_data_path)
-        if row_value not in ("", None):
-            return str(row_value)
     if obj.binding:
-        value = resolve_expression(obj.binding, data)
+        value = resolve_binding(obj.binding, data, row=row, repeat_data_path=repeat_data_path)
         if value not in ("", None):
-            return str(value)
+            return value_to_text(value)
     value = obj.properties.get("value", "")
     return "" if value is None else str(value)
+
+
+def resolve_binding_text(
+    text: str,
+    data: Mapping[str, Any],
+    *,
+    row: Mapping[str, Any] | None = None,
+    repeat_data_path: str = "",
+) -> str:
+    """Resolve ``{{ path }}`` markers using aggregate/system-aware binding resolution."""
+
+    def replace(match: re.Match[str]) -> str:
+        return value_to_text(
+            resolve_binding(
+                match.group(1),
+                data,
+                row=row,
+                repeat_data_path=repeat_data_path,
+            )
+        )
+
+    return _TEXT_BINDING_PATTERN.sub(replace, str(text or ""))
+
+
+def resolve_binding(
+    binding: str,
+    data: Mapping[str, Any],
+    *,
+    row: Mapping[str, Any] | None = None,
+    repeat_data_path: str = "",
+) -> Any:
+    """Resolve a simple path binding with system, group, report, row, then data precedence."""
+    path = _strip_binding(binding)
+    if not path:
+        return ""
+
+    value = resolve_system_binding(path, data)
+    if value is not _MISSING:
+        return value
+
+    value = resolve_group_binding(path, data)
+    if value is not _MISSING:
+        return value
+
+    value = resolve_report_binding(path, data)
+    if value is not _MISSING:
+        return value
+
+    current_row = row
+    if current_row is None and isinstance(data, Mapping):
+        maybe_row = data.get("__slim_row__")
+        current_row = maybe_row if isinstance(maybe_row, Mapping) else None
+    if current_row is not None:
+        row_value = get_row_value(current_row, path, repeat_data_path or _repeat_path(data))
+        if row_value not in ("", None):
+            return row_value
+
+    value = get_value_by_path(data, path)
+    if value is not None:
+        return value
+
+    return ""
+
+
+def resolve_system_binding(binding: str, data: Mapping[str, Any]) -> Any:
+    """Resolve page/date/time system bindings."""
+    if binding == "date.today":
+        return date.today().isoformat()
+    if binding == "datetime.now":
+        return datetime.now().strftime("%Y-%m-%d %H:%M")
+    if binding in {"page.number", "page.total_pages"}:
+        page = data.get("__slim_page__") if isinstance(data, Mapping) else None
+        if isinstance(page, Mapping):
+            key = "number" if binding == "page.number" else "total_pages"
+            return page.get(key, "")
+        return ""
+    return _MISSING
+
+
+def resolve_group_binding(binding: str, data: Mapping[str, Any]) -> Any:
+    """Resolve group metadata and aggregate bindings."""
+    group = data.get("__slim_group__") if isinstance(data, Mapping) else None
+    if not isinstance(group, Mapping):
+        return _MISSING
+    field = str(group.get("field", "") or "")
+    key = group.get("key", "")
+    rows = group.get("rows", [])
+    group_rows = rows if isinstance(rows, list) else []
+    if binding in {field, "group", "group.key", "group.value"}:
+        return key
+    if binding == "group.field":
+        return field
+    if binding == "group.count":
+        return aggregate_count(group_rows) if group_rows else int(group.get("count", 0) or 0)
+    prefix = "group."
+    if not binding.startswith(prefix):
+        return _MISSING
+    operation, aggregate_field = _aggregate_operation_and_field(binding[len(prefix) :])
+    if operation is None:
+        return _MISSING
+    return _aggregate_rows(group_rows, operation, aggregate_field)
+
+
+def resolve_report_binding(binding: str, data: Mapping[str, Any]) -> Any:
+    """Resolve report-wide aggregates over array paths."""
+    prefix = "report."
+    if not binding.startswith(prefix):
+        return _MISSING
+    remainder = binding[len(prefix) :]
+    operation, path = _first_path_segment(remainder)
+    if operation not in {"count", "sum", "avg", "min", "max"} or not path:
+        return _MISSING
+    if operation == "count":
+        return aggregate_count(get_array_by_path(data, path))
+    array_path, field = _split_report_aggregate_path(data, path)
+    if not array_path or not field:
+        return ""
+    rows = get_array_by_path(data, array_path)
+    if not rows and get_value_by_path(data, array_path) is None:
+        return ""
+    return _aggregate_rows(rows, operation, field)
+
+
+def to_number(value: Any) -> float | None:
+    """Return a float for numeric-like values, ignoring invalid values."""
+    if isinstance(value, bool) or value is None:
+        return None
+    try:
+        number = float(str(value).replace(",", "").strip())
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(number):
+        return None
+    return number
+
+
+def aggregate_count(rows: list[Any]) -> int:
+    return len(rows)
+
+
+def aggregate_sum(rows: list[Any], field: str) -> Any:
+    return _format_number(sum(_numeric_values(rows, field)))
+
+
+def aggregate_avg(rows: list[Any], field: str) -> Any:
+    values = _numeric_values(rows, field)
+    if not values:
+        return ""
+    return _format_number(sum(values) / len(values))
+
+
+def aggregate_min(rows: list[Any], field: str) -> Any:
+    values = _numeric_values(rows, field)
+    return "" if not values else _format_number(min(values))
+
+
+def aggregate_max(rows: list[Any], field: str) -> Any:
+    values = _numeric_values(rows, field)
+    return "" if not values else _format_number(max(values))
+
+
+def context_with_page_numbers(
+    context: RenderContext,
+    page_number: int,
+    total_pages: int,
+) -> RenderContext:
+    """Return context with page system variables available to binding resolution."""
+    return RenderContext(
+        report=context.report,
+        data={
+            **dict(context.data),
+            "__slim_page__": {
+                "number": page_number,
+                "total_pages": total_pages,
+            },
+        },
+        page=context.page,
+        bands=context.bands,
+        objects=context.objects,
+        title=context.title,
+    )
 
 
 def get_group_value(data: Mapping[str, Any], binding: str) -> Any:
@@ -490,6 +664,75 @@ def get_group_value(data: Mapping[str, Any], binding: str) -> Any:
     if path == "group.field":
         return field
     return None
+
+
+def value_to_text(value: Any) -> str:
+    if value is None or value is _MISSING:
+        return ""
+    return str(value)
+
+
+def _strip_binding(binding: str) -> str:
+    value = str(binding or "").strip()
+    match = _TEXT_BINDING_PATTERN.fullmatch(value)
+    if match:
+        return match.group(1).strip()
+    return value
+
+
+def _repeat_path(data: Mapping[str, Any]) -> str:
+    return str(data.get("__slim_repeat_path__", "") if isinstance(data, Mapping) else "")
+
+
+def _aggregate_operation_and_field(value: str) -> tuple[str | None, str]:
+    operation, field = _first_path_segment(value)
+    if operation not in {"sum", "avg", "min", "max"} or not field:
+        return None, ""
+    return operation, field
+
+
+def _first_path_segment(value: str) -> tuple[str, str]:
+    operation, separator, remainder = str(value or "").partition(".")
+    return operation, remainder if separator else ""
+
+
+def _split_report_aggregate_path(data: Mapping[str, Any], path: str) -> tuple[str, str]:
+    parts = str(path or "").split(".")
+    for index in range(len(parts) - 1, 0, -1):
+        array_path = ".".join(parts[:index])
+        if get_array_by_path(data, array_path):
+            return array_path, ".".join(parts[index:])
+    if len(parts) >= 2:
+        return ".".join(parts[:-1]), parts[-1]
+    return "", ""
+
+
+def _aggregate_rows(rows: list[Any], operation: str, field: str) -> Any:
+    if operation == "sum":
+        return aggregate_sum(rows, field)
+    if operation == "avg":
+        return aggregate_avg(rows, field)
+    if operation == "min":
+        return aggregate_min(rows, field)
+    if operation == "max":
+        return aggregate_max(rows, field)
+    return ""
+
+
+def _numeric_values(rows: list[Any], field: str) -> list[float]:
+    numbers: list[float] = []
+    for row in rows:
+        row_data = row if isinstance(row, Mapping) else {}
+        number = to_number(get_value_by_path(row_data, field))
+        if number is not None:
+            numbers.append(number)
+    return numbers
+
+
+def _format_number(value: float) -> int | float:
+    if float(value).is_integer():
+        return int(value)
+    return round(value, 6)
 
 
 def get_value_by_path(data: Any, path: str) -> Any:

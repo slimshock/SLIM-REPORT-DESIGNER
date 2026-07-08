@@ -1,6 +1,6 @@
 import { clampObjectToBand, getBandForObject, objectStyle } from "./objects.js";
 import { gridSizeForUnit, maybeSnap, screenDeltaToRealDelta } from "./canvas_settings.js";
-import { getArrayByPath, getFieldValue, getRowValue } from "./data_fields.js";
+import { getArrayByPath, getFieldValue, getRowValue, resolveBinding } from "./data_fields.js";
 import { appendQrSvg } from "./qrcode.js";
 
 export function createCanvasController({
@@ -318,11 +318,13 @@ export function renderCanvas(
   const repeatRows = repeat ? getArrayByPath(template.data?.sample || {}, repeat.data_path) : [];
   for (const object of template.objects || []) {
     const objectRepeat = repeat && objectBandId(object) === "detail";
+    const groupData = sampleGroupForObject(template, object);
     canvas.appendChild(renderObject(object, selectedIds, primarySelectedId, page.unit, {
       sampleData: template.data?.sample || {},
       showSampleData: Boolean(settings.show_sample_data),
       rowData: objectRepeat ? repeatRows[0] : null,
-      repeatDataPath: objectRepeat ? repeat.data_path : ""
+      repeatDataPath: objectRepeat ? repeat.data_path : "",
+      groupData
     }));
   }
   if (repeat && settings.show_sample_data && settings.show_repeated_rows) {
@@ -425,9 +427,13 @@ function renderObject(object, selectedIds = [], primarySelectedId = null, unit =
   } else if (object.type === "field") {
     const binding = object.binding || object.properties?.binding || "";
     const sampleValue = options.showSampleData
-      ? options.rowData
-        ? repeatedFieldValue(options.rowData, binding, options.repeatDataPath, options.sampleData)
-        : getFieldValue(options.sampleData, binding)
+      ? resolveBinding(binding, options.sampleData, {
+        rowData: options.rowData,
+        repeatDataPath: options.repeatDataPath,
+        groupData: options.groupData,
+        pageNumber: 1,
+        totalPages: 1
+      })
       : undefined;
     if (options.showSampleData && sampleValue !== undefined && sampleValue !== null && sampleValue !== "") {
       element.textContent = String(sampleValue);
@@ -510,11 +516,7 @@ function renderObject(object, selectedIds = [], primarySelectedId = null, unit =
 }
 
 function repeatedFieldValue(rowData, binding, repeatDataPath, sampleData) {
-  const rowValue = getRowValue(rowData, binding, repeatDataPath);
-  if (rowValue !== "") {
-    return rowValue;
-  }
-  return getFieldValue(sampleData, binding);
+  return resolveBinding(binding, sampleData, { rowData, repeatDataPath });
 }
 
 function renderTablePreview(object, options = {}) {
@@ -620,9 +622,13 @@ function renderQrCodePreview(object, options = {}) {
 function objectPreviewValue(object, options = {}) {
   const binding = object.binding || object.properties?.binding || "";
   if (options.showSampleData && binding) {
-    const value = options.rowData
-      ? repeatedFieldValue(options.rowData, binding, options.repeatDataPath, options.sampleData)
-      : getFieldValue(options.sampleData, binding);
+    const value = resolveBinding(binding, options.sampleData, {
+      rowData: options.rowData,
+      repeatDataPath: options.repeatDataPath,
+      groupData: options.groupData,
+      pageNumber: 1,
+      totalPages: 1
+    });
     if (value !== undefined && value !== null && value !== "") {
       return String(value);
     }
@@ -738,6 +744,28 @@ function activeRepeat(template) {
     return null;
   }
   return detail.repeat;
+}
+
+function sampleGroupForObject(template, object) {
+  const bandId = objectBandId(object);
+  const band = (template.bands || []).find((item) => item.id === bandId);
+  if (!["group_header", "group_footer"].includes(band?.type)) {
+    return null;
+  }
+  const detail = (template.bands || []).find((item) => item.id === "detail") || {};
+  const groupHeader = (template.bands || []).find((item) => item.type === "group_header") || band;
+  const dataPath = band.group?.data_path || groupHeader.group?.data_path || detail.repeat?.data_path || "";
+  const field = band.group?.field || groupHeader.group?.field || "";
+  const rows = getArrayByPath(template.data?.sample || {}, dataPath);
+  if (!field || rows.length === 0) {
+    return { key: "", field, rows: [] };
+  }
+  const key = String(getRowValue(rows[0] || {}, field, dataPath) ?? "");
+  return {
+    key,
+    field,
+    rows: rows.filter((row) => String(getRowValue(row || {}, field, dataPath) ?? "") === key)
+  };
 }
 
 function objectBandId(object) {

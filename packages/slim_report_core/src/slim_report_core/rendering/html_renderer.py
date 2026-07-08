@@ -10,6 +10,7 @@ from ..report import Report
 from .context import (
     RenderContext,
     RenderObject,
+    context_with_page_numbers,
     create_render_context,
     get_array_by_path,
     get_row_value,
@@ -30,8 +31,9 @@ def render_html(report: Report, data: dict[str, Any] | None = None) -> str:
     page = context.page
     title = escape(context.title)
     page_background = "#fff" if page.transparent else escape(page.background_color, quote=True)
+    pages = build_render_pages(context)
     page_html = "\n".join(
-        render_html_page(plan, context, page_background) for plan in build_render_pages(context)
+        render_html_page(plan, context, page_background, len(pages)) for plan in pages
     )
 
     return (
@@ -64,13 +66,22 @@ def render_html(report: Report, data: dict[str, Any] | None = None) -> str:
     )
 
 
-def render_html_page(plan: Any, context: RenderContext, page_background: str) -> str:
+def render_html_page(
+    plan: Any,
+    context: RenderContext,
+    page_background: str,
+    total_pages: int,
+) -> str:
     bands = "\n      ".join(render_html_band(band) for band in plan.bands)
-    objects = "\n      ".join(
-        render_html_object(obj, object_context) for obj, object_context in plan.objects
-    )
     page = context.page
     page_number = plan.index + 1
+    objects = "\n      ".join(
+        render_html_object(
+            obj,
+            context_with_page_numbers(object_context, page_number, total_pages),
+        )
+        for obj, object_context in plan.objects
+    )
     return (
         f'    <div class="slim-report-page" data-slim-page="{page_number}" '
         f'style="width: {page.width_px}px; height: {page.height_px}px; '

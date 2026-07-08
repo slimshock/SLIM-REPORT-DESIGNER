@@ -1,5 +1,5 @@
 import { createDefaultTemplate, normalizeTemplate, objectStyle } from "./objects.js";
-import { ensureTemplateData, getArrayByPath, getFieldValue, getRowValue } from "./data_fields.js";
+import { ensureTemplateData, getArrayByPath, getFieldValue, getRowValue, resolveBinding } from "./data_fields.js";
 import { qrSvgMarkup } from "./qrcode.js";
 
 export async function loadTemplate() {
@@ -233,16 +233,21 @@ function localGroupedObjectsHtml(template, unit, sampleData, repeat, groupHeader
 
 function localObjectHtml(object, unit = "px", sampleData = {}, rowData = null, repeatDataPath = "", groupData = null) {
   const style = objectStyle(object);
+  const binding = object.binding || object.properties?.binding || "";
   const fieldValue = object.type === "field"
-    ? groupData && groupValue(groupData, object.binding || object.properties?.binding || "") !== undefined
-      ? groupValue(groupData, object.binding || object.properties?.binding || "")
-      : rowData
-      ? repeatedFieldValue(rowData, object.binding || object.properties?.binding || "", repeatDataPath, sampleData)
-      : getFieldValue(sampleData, object.binding || object.properties?.binding || "")
+    ? resolveBinding(binding, sampleData, {
+      rowData,
+      repeatDataPath,
+      groupData,
+      pageNumber: 1,
+      totalPages: 1
+    })
     : undefined;
   const value = object.type === "field"
     ? fieldValue === undefined || fieldValue === null ? `{{ ${object.binding || object.properties?.binding || ""} }}` : String(fieldValue)
-    : object.text || object.properties?.text || "";
+    : object.type === "text"
+    ? resolveTextValue(object.text || object.properties?.text || "", sampleData, rowData, repeatDataPath, groupData)
+    : "";
   const textDecoration = style.underline ? "underline" : "none";
   const display = object.type === "text" || object.type === "field" ? "flex" : "block";
   const box = `position:absolute;box-sizing:border-box;left:${unitToPx(object.x, unit)}px;top:${unitToPx(object.y, unit)}px;width:${unitToPx(object.width, unit)}px;height:${unitToPx(Math.max(object.height, 8), unit)}px;display:${display};justify-content:${horizontalFlexAlign(style.align)};align-items:${verticalFlexAlign(style.vertical_align)};font-family:${style.font_family || "Arial"};font-size:${style.font_size || 12}px;line-height:${style.line_height || 1.2};font-weight:${style.bold ? 700 : 400};font-style:${style.italic ? "italic" : "normal"};text-decoration:${textDecoration};color:${style.color || "#111827"};background:${style.background_color || "transparent"};text-align:${style.align || "left"};overflow:hidden`;
@@ -285,19 +290,32 @@ function localObjectHtml(object, unit = "px", sampleData = {}, rowData = null, r
 
 function boundObjectValue(object, sampleData = {}, rowData = null, repeatDataPath = "", groupData = null) {
   const binding = object.binding || object.properties?.binding || "";
-  const grouped = groupValue(groupData, binding);
-  if (grouped !== undefined && grouped !== null && grouped !== "") {
-    return String(grouped);
-  }
   if (binding) {
-    const value = rowData
-      ? repeatedFieldValue(rowData, binding, repeatDataPath, sampleData)
-      : getFieldValue(sampleData, binding);
+    const value = resolveBinding(binding, sampleData, {
+      rowData,
+      repeatDataPath,
+      groupData,
+      pageNumber: 1,
+      totalPages: 1
+    });
     if (value !== undefined && value !== null && value !== "") {
       return String(value);
     }
   }
   return String(object.value ?? object.properties?.value ?? "");
+}
+
+function resolveTextValue(text, sampleData = {}, rowData = null, repeatDataPath = "", groupData = null) {
+  return String(text || "").replace(/\{\{\s*(.*?)\s*\}\}/g, (_match, binding) => {
+    const value = resolveBinding(binding, sampleData, {
+      rowData,
+      repeatDataPath,
+      groupData,
+      pageNumber: 1,
+      totalPages: 1
+    });
+    return value === undefined || value === null ? "" : String(value);
+  });
 }
 
 function groupLocalRows(rows, field, dataPath) {
@@ -325,23 +343,6 @@ function sortLocalGroups(groups, sort = "none") {
   return groups;
 }
 
-function groupValue(groupData, binding) {
-  if (!groupData) {
-    return undefined;
-  }
-  const path = String(binding || "");
-  if ([groupData.field, "group", "group.key", "group.value"].includes(path)) {
-    return groupData.key;
-  }
-  if (["count", "group.count"].includes(path)) {
-    return groupData.rows.length;
-  }
-  if (path === "group.field") {
-    return groupData.field;
-  }
-  return undefined;
-}
-
 function flowObject(object, cursor, bandY) {
   return {
     ...object,
@@ -350,11 +351,7 @@ function flowObject(object, cursor, bandY) {
 }
 
 function repeatedFieldValue(rowData, binding, repeatDataPath, sampleData) {
-  const rowValue = getRowValue(rowData, binding, repeatDataPath);
-  if (rowValue !== "") {
-    return rowValue;
-  }
-  return getFieldValue(sampleData, binding);
+  return resolveBinding(binding, sampleData, { rowData, repeatDataPath });
 }
 
 function localEmptyMessageHtml(template, repeat, unit = "px") {

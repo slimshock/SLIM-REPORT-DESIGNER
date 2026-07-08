@@ -1,918 +1,60 @@
 {
   "version": "0.1",
   "metadata": {
-    "title": "Repeating Laboratory Result",
-    "description": null,
-    "author": null,
-    "tags": [],
-    "custom": {}
+    "name": "Aggregate Grouped Laboratory Result"
   },
   "page": {
-    "width": 595.0,
-    "height": 842.0,
-    "unit": "px",
+    "size": "A4",
     "orientation": "portrait",
-    "margin_top": 24.0,
-    "margin_right": 24.0,
-    "margin_bottom": 24.0,
-    "margin_left": 24.0,
+    "unit": "px",
+    "width": 595,
+    "height": 842,
+    "margin_top": 24,
+    "margin_right": 24,
+    "margin_bottom": 24,
+    "margin_left": 24,
     "background_color": "#ffffff",
     "transparent": false,
-    "size": "A4"
-  },
-  "objects": [
-    {
-      "id": "lab_name",
-      "type": "field",
-      "x": 40.0,
-      "y": 24.0,
-      "width": 360.0,
-      "height": 24.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "page_header",
-        "band_id": "page_header",
-        "locked": false,
-        "binding": "laboratory.name",
-        "style": {
-          "font_family": "Arial",
-          "font_size": 18,
-          "bold": true,
-          "italic": false,
-          "underline": false,
-          "color": "#111827",
-          "background_color": "transparent",
-          "align": "left"
-        }
-      },
-      "binding": "laboratory.name",
-      "style": {
-        "font_family": "Arial",
-        "font_size": 18,
-        "bold": true,
-        "italic": false,
-        "underline": false,
-        "color": "#111827",
-        "background_color": "transparent",
-        "align": "left"
-      },
-      "band": "page_header",
-      "band_id": "page_header"
-    },
-    {
-      "id": "report_title",
-      "type": "text",
-      "x": 40.0,
-      "y": 58.0,
-      "width": 300.0,
-      "height": 22.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "page_header",
-        "band_id": "page_header",
-        "locked": false,
-        "text": "Laboratory Result",
-        "style": {
-          "font_family": "Arial",
-          "font_size": 15,
-          "bold": true,
-          "italic": false,
-          "underline": false,
-          "color": "#2563eb",
-          "background_color": "transparent",
-          "align": "left"
-        }
-      },
-      "text": "Laboratory Result",
-      "style": {
-        "font_family": "Arial",
-        "font_size": 15,
-        "bold": true,
-        "italic": false,
-        "underline": false,
-        "color": "#2563eb",
-        "background_color": "transparent",
-        "align": "left"
-      },
-      "band": "page_header",
-      "band_id": "page_header"
-    },
-    {
-      "id": "patient_label",
-      "type": "text",
-      "x": 40.0,
-      "y": 95.0,
-      "width": 80.0,
-      "height": 18.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "page_header",
-        "band_id": "page_header",
-        "locked": false,
-        "text": "Patient:",
-        "style": {
-          "font_size": 11,
-          "bold": true,
-          "color": "#111827"
-        }
-      },
-      "text": "Patient:",
-      "style": {
-        "font_size": 11,
-        "bold": true,
-        "color": "#111827"
-      },
-      "band": "page_header",
-      "band_id": "page_header"
-    },
-    {
-      "id": "patient_name",
-      "type": "field",
-      "x": 120.0,
-      "y": 95.0,
-      "width": 250.0,
-      "height": 18.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "page_header",
-        "band_id": "page_header",
-        "locked": false,
-        "binding": "patient.name",
-        "style": {
-          "font_size": 11,
-          "bold": false,
-          "color": "#111827"
-        }
-      },
-      "binding": "patient.name",
-      "style": {
-        "font_size": 11,
-        "bold": false,
-        "color": "#111827"
-      },
-      "band": "page_header",
-      "band_id": "page_header"
-    },
-    {
-      "id": "order_label",
-      "type": "text",
-      "x": 390.0,
-      "y": 95.0,
-      "width": 65.0,
-      "height": 18.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "page_header",
-        "band_id": "page_header",
-        "locked": false,
-        "text": "Order:",
-        "style": {
-          "font_size": 11,
-          "bold": true,
-          "color": "#111827"
-        }
-      },
-      "text": "Order:",
-      "style": {
-        "font_size": 11,
-        "bold": true,
-        "color": "#111827"
-      },
-      "band": "page_header",
-      "band_id": "page_header"
-    },
-    {
-      "id": "order_id",
-      "type": "field",
-      "x": 455.0,
-      "y": 95.0,
-      "width": 110.0,
-      "height": 18.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "page_header",
-        "band_id": "page_header",
-        "locked": false,
-        "binding": "order.id",
-        "style": {
-          "font_size": 11,
-          "bold": false,
-          "color": "#111827"
-        }
-      },
-      "binding": "order.id",
-      "style": {
-        "font_size": 11,
-        "bold": false,
-        "color": "#111827"
-      },
-      "band": "page_header",
-      "band_id": "page_header"
-    },
-    {
-      "id": "age_label",
-      "type": "text",
-      "x": 40.0,
-      "y": 116.0,
-      "width": 40.0,
-      "height": 18.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "page_header",
-        "band_id": "page_header",
-        "locked": false,
-        "text": "Age:",
-        "style": {
-          "font_size": 11,
-          "bold": true
-        }
-      },
-      "text": "Age:",
-      "style": {
-        "font_size": 11,
-        "bold": true
-      },
-      "band": "page_header",
-      "band_id": "page_header"
-    },
-    {
-      "id": "age_value",
-      "type": "field",
-      "x": 80.0,
-      "y": 116.0,
-      "width": 60.0,
-      "height": 18.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "page_header",
-        "band_id": "page_header",
-        "locked": false,
-        "binding": "patient.age",
-        "style": {
-          "font_size": 11
-        }
-      },
-      "binding": "patient.age",
-      "style": {
-        "font_size": 11
-      },
-      "band": "page_header",
-      "band_id": "page_header"
-    },
-    {
-      "id": "sex_label",
-      "type": "text",
-      "x": 150.0,
-      "y": 116.0,
-      "width": 35.0,
-      "height": 18.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "page_header",
-        "band_id": "page_header",
-        "locked": false,
-        "text": "Sex:",
-        "style": {
-          "font_size": 11,
-          "bold": true
-        }
-      },
-      "text": "Sex:",
-      "style": {
-        "font_size": 11,
-        "bold": true
-      },
-      "band": "page_header",
-      "band_id": "page_header"
-    },
-    {
-      "id": "sex_value",
-      "type": "field",
-      "x": 185.0,
-      "y": 116.0,
-      "width": 80.0,
-      "height": 18.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "page_header",
-        "band_id": "page_header",
-        "locked": false,
-        "binding": "patient.sex",
-        "style": {
-          "font_size": 11
-        }
-      },
-      "binding": "patient.sex",
-      "style": {
-        "font_size": 11
-      },
-      "band": "page_header",
-      "band_id": "page_header"
-    },
-    {
-      "id": "date_label",
-      "type": "text",
-      "x": 390.0,
-      "y": 116.0,
-      "width": 65.0,
-      "height": 18.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "page_header",
-        "band_id": "page_header",
-        "locked": false,
-        "text": "Date:",
-        "style": {
-          "font_size": 11,
-          "bold": true
-        }
-      },
-      "text": "Date:",
-      "style": {
-        "font_size": 11,
-        "bold": true
-      },
-      "band": "page_header",
-      "band_id": "page_header"
-    },
-    {
-      "id": "date_value",
-      "type": "field",
-      "x": 455.0,
-      "y": 116.0,
-      "width": 110.0,
-      "height": 18.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "page_header",
-        "band_id": "page_header",
-        "locked": false,
-        "binding": "order.date",
-        "style": {
-          "font_size": 11
-        }
-      },
-      "binding": "order.date",
-      "style": {
-        "font_size": 11
-      },
-      "band": "page_header",
-      "band_id": "page_header"
-    },
-    {
-      "id": "header_line",
-      "type": "line",
-      "x": 40.0,
-      "y": 144.0,
-      "width": 515.0,
-      "height": 1.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "page_header",
-        "band_id": "page_header",
-        "locked": false,
-        "style": {
-          "stroke_width": 1,
-          "stroke_color": "#111827"
-        }
-      },
-      "style": {
-        "stroke_width": 1,
-        "stroke_color": "#111827"
-      },
-      "band": "page_header",
-      "band_id": "page_header"
-    },
-    {
-      "id": "table_header_bg",
-      "type": "rectangle",
-      "x": 40.0,
-      "y": 126.0,
-      "width": 515.0,
-      "height": 24.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "page_header",
-        "band_id": "page_header",
-        "locked": false,
-        "style": {
-          "border_width": 1,
-          "border_color": "#111827",
-          "background_color": "#e5e7eb"
-        }
-      },
-      "style": {
-        "border_width": 1,
-        "border_color": "#111827",
-        "background_color": "#e5e7eb"
-      },
-      "band": "page_header",
-      "band_id": "page_header"
-    },
-    {
-      "id": "col_test",
-      "type": "text",
-      "x": 48.0,
-      "y": 134.0,
-      "width": 130.0,
-      "height": 16.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "page_header",
-        "band_id": "page_header",
-        "locked": false,
-        "text": "Test",
-        "style": {
-          "font_size": 10,
-          "bold": true,
-          "align": "left"
-        }
-      },
-      "text": "Test",
-      "style": {
-        "font_size": 10,
-        "bold": true,
-        "align": "left"
-      },
-      "band": "page_header",
-      "band_id": "page_header"
-    },
-    {
-      "id": "col_result",
-      "type": "text",
-      "x": 190.0,
-      "y": 134.0,
-      "width": 90.0,
-      "height": 16.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "page_header",
-        "band_id": "page_header",
-        "locked": false,
-        "text": "Result",
-        "style": {
-          "font_size": 10,
-          "bold": true,
-          "align": "center"
-        }
-      },
-      "text": "Result",
-      "style": {
-        "font_size": 10,
-        "bold": true,
-        "align": "center"
-      },
-      "band": "page_header",
-      "band_id": "page_header"
-    },
-    {
-      "id": "col_unit",
-      "type": "text",
-      "x": 290.0,
-      "y": 134.0,
-      "width": 80.0,
-      "height": 16.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "page_header",
-        "band_id": "page_header",
-        "locked": false,
-        "text": "Unit",
-        "style": {
-          "font_size": 10,
-          "bold": true,
-          "align": "left"
-        }
-      },
-      "text": "Unit",
-      "style": {
-        "font_size": 10,
-        "bold": true,
-        "align": "left"
-      },
-      "band": "page_header",
-      "band_id": "page_header"
-    },
-    {
-      "id": "col_reference",
-      "type": "text",
-      "x": 375.0,
-      "y": 134.0,
-      "width": 120.0,
-      "height": 16.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "page_header",
-        "band_id": "page_header",
-        "locked": false,
-        "text": "Reference",
-        "style": {
-          "font_size": 10,
-          "bold": true,
-          "align": "left"
-        }
-      },
-      "text": "Reference",
-      "style": {
-        "font_size": 10,
-        "bold": true,
-        "align": "left"
-      },
-      "band": "page_header",
-      "band_id": "page_header"
-    },
-    {
-      "id": "col_flag",
-      "type": "text",
-      "x": 510.0,
-      "y": 134.0,
-      "width": 35.0,
-      "height": 16.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "page_header",
-        "band_id": "page_header",
-        "locked": false,
-        "text": "Flag",
-        "style": {
-          "font_size": 10,
-          "bold": true,
-          "align": "center"
-        }
-      },
-      "text": "Flag",
-      "style": {
-        "font_size": 10,
-        "bold": true,
-        "align": "center"
-      },
-      "band": "page_header",
-      "band_id": "page_header"
-    },
-    {
-      "id": "row_separator",
-      "type": "line",
-      "x": 40.0,
-      "y": 206.0,
-      "width": 515.0,
-      "height": 1.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false,
-        "style": {
-          "stroke_width": 1,
-          "stroke_color": "#d1d5db"
-        }
-      },
-      "style": {
-        "stroke_width": 1,
-        "stroke_color": "#d1d5db"
-      },
-      "band": "detail",
-      "band_id": "detail"
-    },
-    {
-      "id": "result_test",
-      "type": "field",
-      "x": 48.0,
-      "y": 188.0,
-      "width": 130.0,
-      "height": 18.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false,
-        "binding": "results[].test",
-        "source_path": "results[].test",
-        "style": {
-          "font_size": 10,
-          "bold": false,
-          "color": "#111827",
-          "align": "left"
-        },
-        "text": "{{ results[].test }}"
-      },
-      "text": "{{ results[].test }}",
-      "binding": "results[].test",
-      "style": {
-        "font_size": 10,
-        "bold": false,
-        "color": "#111827",
-        "align": "left"
-      },
-      "band": "detail",
-      "band_id": "detail"
-    },
-    {
-      "id": "result_value",
-      "type": "field",
-      "x": 190.0,
-      "y": 188.0,
-      "width": 90.0,
-      "height": 18.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false,
-        "binding": "results[].result",
-        "source_path": "results[].result",
-        "style": {
-          "font_size": 10,
-          "bold": true,
-          "color": "#111827",
-          "align": "center"
-        },
-        "text": "{{ results[].result }}"
-      },
-      "text": "{{ results[].result }}",
-      "binding": "results[].result",
-      "style": {
-        "font_size": 10,
-        "bold": true,
-        "color": "#111827",
-        "align": "center"
-      },
-      "band": "detail",
-      "band_id": "detail"
-    },
-    {
-      "id": "result_unit",
-      "type": "field",
-      "x": 290.0,
-      "y": 188.0,
-      "width": 80.0,
-      "height": 18.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false,
-        "binding": "results[].unit",
-        "source_path": "results[].unit",
-        "style": {
-          "font_size": 10,
-          "color": "#374151",
-          "align": "left"
-        },
-        "text": "{{ results[].unit }}"
-      },
-      "text": "{{ results[].unit }}",
-      "binding": "results[].unit",
-      "style": {
-        "font_size": 10,
-        "color": "#374151",
-        "align": "left"
-      },
-      "band": "detail",
-      "band_id": "detail"
-    },
-    {
-      "id": "result_reference",
-      "type": "field",
-      "x": 375.0,
-      "y": 188.0,
-      "width": 120.0,
-      "height": 18.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false,
-        "binding": "results[].reference",
-        "source_path": "results[].reference",
-        "style": {
-          "font_size": 10,
-          "color": "#374151",
-          "align": "left"
-        },
-        "text": "{{ results[].reference }}"
-      },
-      "text": "{{ results[].reference }}",
-      "binding": "results[].reference",
-      "style": {
-        "font_size": 10,
-        "color": "#374151",
-        "align": "left"
-      },
-      "band": "detail",
-      "band_id": "detail"
-    },
-    {
-      "id": "result_flag",
-      "type": "field",
-      "x": 510.0,
-      "y": 188.0,
-      "width": 35.0,
-      "height": 18.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false,
-        "binding": "results[].flag",
-        "source_path": "results[].flag",
-        "style": {
-          "font_size": 10,
-          "bold": true,
-          "color": "#111827",
-          "align": "center"
-        },
-        "text": "{{ results[].flag }}"
-      },
-      "text": "{{ results[].flag }}",
-      "binding": "results[].flag",
-      "style": {
-        "font_size": 10,
-        "bold": true,
-        "color": "#111827",
-        "align": "center"
-      },
-      "band": "detail",
-      "band_id": "detail"
-    },
-    {
-      "id": "footer_line",
-      "type": "line",
-      "x": 40.0,
-      "y": 780.0,
-      "width": 515.0,
-      "height": 1.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "page_footer",
-        "band_id": "page_footer",
-        "locked": false,
-        "style": {
-          "stroke_width": 1,
-          "stroke_color": "#d1d5db"
-        }
-      },
-      "style": {
-        "stroke_width": 1,
-        "stroke_color": "#d1d5db"
-      },
-      "band": "page_footer",
-      "band_id": "page_footer"
-    },
-    {
-      "id": "prepared_by_label",
-      "type": "text",
-      "x": 40.0,
-      "y": 795.0,
-      "width": 120.0,
-      "height": 16.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "page_footer",
-        "band_id": "page_footer",
-        "locked": false,
-        "text": "Prepared by:",
-        "style": {
-          "font_size": 10,
-          "bold": true
-        }
-      },
-      "text": "Prepared by:",
-      "style": {
-        "font_size": 10,
-        "bold": true
-      },
-      "band": "page_footer",
-      "band_id": "page_footer"
-    },
-    {
-      "id": "verified_by_label",
-      "type": "text",
-      "x": 360.0,
-      "y": 795.0,
-      "width": 120.0,
-      "height": 16.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "page_footer",
-        "band_id": "page_footer",
-        "locked": false,
-        "text": "Verified by:",
-        "style": {
-          "font_size": 10,
-          "bold": true
-        }
-      },
-      "text": "Verified by:",
-      "style": {
-        "font_size": 10,
-        "bold": true
-      },
-      "band": "page_footer",
-      "band_id": "page_footer"
-    },
-    {
-      "id": "footer_note",
-      "type": "text",
-      "x": 40.0,
-      "y": 822.0,
-      "width": 515.0,
-      "height": 14.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "band": "page_footer",
-        "band_id": "page_footer",
-        "locked": false,
-        "text": "This is a sample repeating detail report generated by Slim Report Designer.",
-        "style": {
-          "font_size": 8,
-          "italic": true,
-          "color": "#6b7280",
-          "align": "center"
-        }
-      },
-      "text": "This is a sample repeating detail report generated by Slim Report Designer.",
-      "style": {
-        "font_size": 8,
-        "italic": true,
-        "color": "#6b7280",
-        "align": "center"
-      },
-      "band": "page_footer",
-      "band_id": "page_footer"
-    },
-    {
-      "id": "text_1",
-      "type": "text",
-      "x": 50.0,
-      "y": 160.0,
-      "width": 140.0,
-      "height": 20.0,
-      "z_index": 0,
-      "visible": true,
-      "properties": {
-        "style": {
-          "font_size": 14
-        },
-        "text": "Text",
-        "band": "detail",
-        "band_id": "detail",
-        "locked": false
-      },
-      "text": "Text",
-      "style": {
-        "font_size": 14
-      },
-      "band": "detail",
-      "band_id": "detail"
+    "pagination": {
+      "enabled": true,
+      "repeat_page_header": true,
+      "repeat_page_footer": true,
+      "respect_margins": true
     }
-  ],
+  },
   "bands": [
     {
       "id": "page_header",
       "type": "page_header",
       "name": "Page Header",
-      "y": 0.0,
-      "height": 150.0,
+      "y": 0,
+      "height": 125,
       "background_color": "#ffffff",
       "visible": true,
+      "locked": false
+    },
+    {
+      "id": "group_header_section",
+      "type": "group_header",
+      "name": "Group Header",
+      "y": 125,
+      "height": 56,
+      "background_color": "#f3f4f6",
+      "visible": true,
       "locked": false,
-      "properties": {}
+      "group": {
+        "id": "section_group",
+        "data_path": "results",
+        "field": "section",
+        "sort": "asc"
+      }
     },
     {
       "id": "detail",
       "type": "detail",
       "name": "Detail",
-      "y": 150.0,
-      "height": 620.0,
+      "y": 181,
+      "height": 515,
       "background_color": "#ffffff",
       "visible": true,
       "locked": false,
@@ -920,24 +62,34 @@
         "enabled": true,
         "data_path": "results",
         "row_height": 24,
-        "preview_rows": 20,
+        "preview_rows": 40,
         "empty_message": "No laboratory results found"
-      },
-      "properties": {}
+      }
+    },
+    {
+      "id": "group_footer_section",
+      "type": "group_footer",
+      "name": "Group Footer",
+      "y": 696,
+      "height": 44,
+      "background_color": "#f9fafb",
+      "visible": true,
+      "locked": false,
+      "group": {
+        "id": "section_group"
+      }
     },
     {
       "id": "page_footer",
       "type": "page_footer",
       "name": "Page Footer",
-      "y": 770.0,
-      "height": 72.0,
+      "y": 740,
+      "height": 102,
       "background_color": "#ffffff",
       "visible": true,
-      "locked": false,
-      "properties": {}
+      "locked": false
     }
   ],
-  "assets": [],
   "data": {
     "sample": {
       "laboratory": {
@@ -948,70 +100,120 @@
         "name": "JUAN DELA CRUZ",
         "patient_no": "P-00001234",
         "age": "34",
-        "sex": "Male",
-        "dob": "1992-04-18"
+        "sex": "Male"
       },
       "order": {
         "id": "ORD-2026-0001",
         "date": "2026-07-06",
-        "physician": "Dr. Maria Santos",
-        "section": "Hematology"
+        "physician": "Dr. Maria Santos"
       },
       "results": [
         {
+          "section": "CHEMISTRY",
+          "test": "Fasting Blood Sugar",
+          "result": "95",
+          "numeric_value": 95,
+          "unit": "mg/dL",
+          "reference": "70 - 110",
+          "flag": "N"
+        },
+        {
+          "section": "CHEMISTRY",
+          "test": "Creatinine",
+          "result": "1.10",
+          "numeric_value": 1.1,
+          "unit": "mg/dL",
+          "reference": "0.70 - 1.30",
+          "flag": "N"
+        },
+        {
+          "section": "CHEMISTRY",
+          "test": "Uric Acid",
+          "result": "6.20",
+          "numeric_value": 6.2,
+          "unit": "mg/dL",
+          "reference": "3.50 - 7.20",
+          "flag": "N"
+        },
+        {
+          "section": "CHEMISTRY",
+          "test": "SGPT",
+          "result": "42",
+          "numeric_value": 42,
+          "unit": "U/L",
+          "reference": "0 - 41",
+          "flag": "H"
+        },
+        {
+          "section": "HEMATOLOGY",
           "test": "WBC",
           "result": "7.10",
+          "numeric_value": 7.1,
           "unit": "10^9/L",
           "reference": "4.00 - 10.00",
           "flag": "N"
         },
         {
+          "section": "HEMATOLOGY",
           "test": "RBC",
           "result": "5.02",
+          "numeric_value": 5.02,
           "unit": "10^12/L",
           "reference": "4.50 - 5.90",
           "flag": "N"
         },
         {
+          "section": "HEMATOLOGY",
           "test": "HGB",
           "result": "14.20",
+          "numeric_value": 14.2,
           "unit": "g/dL",
           "reference": "13.00 - 17.00",
           "flag": "N"
         },
         {
-          "test": "HCT",
-          "result": "42.80",
-          "unit": "%",
-          "reference": "40.00 - 50.00",
-          "flag": "N"
-        },
-        {
-          "test": "MCV",
-          "result": "85.30",
-          "unit": "fL",
-          "reference": "80.00 - 100.00",
-          "flag": "N"
-        },
-        {
-          "test": "MCH",
-          "result": "28.30",
-          "unit": "pg",
-          "reference": "27.00 - 32.00",
-          "flag": "N"
-        },
-        {
-          "test": "MCHC",
-          "result": "33.20",
-          "unit": "g/dL",
-          "reference": "32.00 - 36.00",
-          "flag": "N"
-        },
-        {
+          "section": "HEMATOLOGY",
           "test": "PLT",
           "result": "265",
+          "numeric_value": 265,
           "unit": "10^9/L",
           "reference": "150 - 400",
+          "flag": "N"
+        },
+        {
+          "section": "URINALYSIS",
+          "test": "Color",
+          "result": "Yellow",
+          "numeric_value": 0,
+          "unit": "",
+          "reference": "Yellow",
+          "flag": "N"
+        },
+        {
+          "section": "URINALYSIS",
+          "test": "Transparency",
+          "result": "Clear",
+          "numeric_value": 0,
+          "unit": "",
+          "reference": "Clear",
+          "flag": "N"
+        },
+        {
+          "section": "URINALYSIS",
+          "test": "pH",
+          "result": "6.00",
+          "numeric_value": 6,
+          "unit": "",
+          "reference": "5.00 - 8.00",
+          "flag": "N"
+        },
+        {
+          "section": "URINALYSIS",
+          "test": "Specific Gravity",
+          "result": "1.015",
+          "numeric_value": 1.015,
+          "unit": "",
+          "reference": "1.005 - 1.030",
           "flag": "N"
         }
       ]
@@ -1036,18 +238,6 @@
         "sample": "P-00001234"
       },
       {
-        "path": "patient.age",
-        "label": "Age",
-        "type": "string",
-        "sample": "34"
-      },
-      {
-        "path": "patient.sex",
-        "label": "Sex",
-        "type": "string",
-        "sample": "Male"
-      },
-      {
         "path": "order.id",
         "label": "Order ID",
         "type": "string",
@@ -1060,16 +250,16 @@
         "sample": "2026-07-06"
       },
       {
-        "path": "order.physician",
-        "label": "Physician",
-        "type": "string",
-        "sample": "Dr. Maria Santos"
-      },
-      {
         "path": "results[]",
         "label": "Results",
         "type": "array",
-        "sample": "8 rows"
+        "sample": "12 rows"
+      },
+      {
+        "path": "results[].section",
+        "label": "Section",
+        "type": "string",
+        "sample": "HEMATOLOGY"
       },
       {
         "path": "results[].test",
@@ -1081,6 +271,12 @@
         "path": "results[].result",
         "label": "Result",
         "type": "string",
+        "sample": "7.10"
+      },
+      {
+        "path": "results[].numeric_value",
+        "label": "Numeric Value",
+        "type": "number",
         "sample": "7.10"
       },
       {
@@ -1100,7 +296,587 @@
         "label": "Flag",
         "type": "string",
         "sample": "N"
+      },
+      {
+        "path": "group.value",
+        "label": "Group Value",
+        "type": "system",
+        "sample": "HEMATOLOGY"
+      },
+      {
+        "path": "group.count",
+        "label": "Group Count",
+        "type": "system",
+        "sample": "4"
+      },
+      {
+        "path": "group.avg.numeric_value",
+        "label": "Group Average Numeric Value",
+        "type": "aggregate",
+        "sample": "72.83"
+      },
+      {
+        "path": "report.count.results",
+        "label": "Total Result Count",
+        "type": "aggregate",
+        "sample": "12"
+      },
+      {
+        "path": "page.number",
+        "label": "Page Number",
+        "type": "system",
+        "sample": "1"
+      },
+      {
+        "path": "page.total_pages",
+        "label": "Total Pages",
+        "type": "system",
+        "sample": "1"
+      },
+      {
+        "path": "date.today",
+        "label": "Today",
+        "type": "system",
+        "sample": "2026-07-06"
       }
     ]
-  }
+  },
+  "objects": [
+    {
+      "id": "lab_name",
+      "type": "field",
+      "band": "page_header",
+      "x": 40,
+      "y": 26,
+      "width": 360,
+      "height": 26,
+      "binding": "laboratory.name",
+      "style": {
+        "font_family": "Arial",
+        "font_size": 18,
+        "bold": true,
+        "color": "#111827",
+        "background_color": "transparent",
+        "align": "left"
+      }
+    },
+    {
+      "id": "report_title",
+      "type": "text",
+      "band": "page_header",
+      "x": 40,
+      "y": 58,
+      "width": 340,
+      "height": 22,
+      "text": "Grouped Result with Aggregates",
+      "style": {
+        "font_family": "Arial",
+        "font_size": 14,
+        "bold": true,
+        "color": "#2563eb",
+        "background_color": "transparent",
+        "align": "left"
+      }
+    },
+    {
+      "id": "patient_label",
+      "type": "text",
+      "band": "page_header",
+      "x": 40,
+      "y": 92,
+      "width": 70,
+      "height": 18,
+      "text": "Patient:",
+      "style": {
+        "font_size": 11,
+        "bold": true
+      }
+    },
+    {
+      "id": "patient_name",
+      "type": "field",
+      "band": "page_header",
+      "x": 112,
+      "y": 92,
+      "width": 220,
+      "height": 18,
+      "binding": "patient.name",
+      "style": {
+        "font_size": 11
+      }
+    },
+    {
+      "id": "order_label",
+      "type": "text",
+      "band": "page_header",
+      "x": 350,
+      "y": 92,
+      "width": 60,
+      "height": 18,
+      "text": "Order:",
+      "style": {
+        "font_size": 11,
+        "bold": true
+      }
+    },
+    {
+      "id": "order_id",
+      "type": "field",
+      "band": "page_header",
+      "x": 410,
+      "y": 92,
+      "width": 140,
+      "height": 18,
+      "binding": "order.id",
+      "style": {
+        "font_size": 11
+      }
+    },
+    {
+      "id": "header_line",
+      "type": "line",
+      "band": "page_header",
+      "x": 40,
+      "y": 118,
+      "width": 515,
+      "height": 1,
+      "style": {
+        "stroke_width": 1,
+        "stroke_color": "#111827"
+      }
+    },
+    {
+      "id": "group_bg",
+      "type": "rectangle",
+      "band": "group_header_section",
+      "x": 40,
+      "y": 130,
+      "width": 515,
+      "height": 48,
+      "style": {
+        "border_width": 1,
+        "border_color": "#d1d5db",
+        "background_color": "#f3f4f6"
+      }
+    },
+    {
+      "id": "group_label",
+      "type": "text",
+      "band": "group_header_section",
+      "x": 50,
+      "y": 138,
+      "width": 80,
+      "height": 18,
+      "text": "Section:",
+      "style": {
+        "font_size": 11,
+        "bold": true
+      }
+    },
+    {
+      "id": "group_value",
+      "type": "field",
+      "band": "group_header_section",
+      "x": 122,
+      "y": 138,
+      "width": 220,
+      "height": 18,
+      "binding": "group.value",
+      "style": {
+        "font_size": 12,
+        "bold": true,
+        "color": "#0f766e"
+      }
+    },
+    {
+      "id": "group_count_label",
+      "type": "text",
+      "band": "group_header_section",
+      "x": 390,
+      "y": 138,
+      "width": 80,
+      "height": 18,
+      "text": "Count:",
+      "style": {
+        "font_size": 10,
+        "bold": true,
+        "align": "right"
+      }
+    },
+    {
+      "id": "group_count",
+      "type": "field",
+      "band": "group_header_section",
+      "x": 475,
+      "y": 138,
+      "width": 50,
+      "height": 18,
+      "binding": "group.count",
+      "style": {
+        "font_size": 10,
+        "bold": true,
+        "align": "center"
+      }
+    },
+    {
+      "id": "col_test",
+      "type": "text",
+      "band": "group_header_section",
+      "x": 50,
+      "y": 160,
+      "width": 170,
+      "height": 16,
+      "text": "Test",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      }
+    },
+    {
+      "id": "col_result",
+      "type": "text",
+      "band": "group_header_section",
+      "x": 230,
+      "y": 160,
+      "width": 70,
+      "height": 16,
+      "text": "Result",
+      "style": {
+        "font_size": 10,
+        "bold": true,
+        "align": "center"
+      }
+    },
+    {
+      "id": "col_unit",
+      "type": "text",
+      "band": "group_header_section",
+      "x": 310,
+      "y": 160,
+      "width": 80,
+      "height": 16,
+      "text": "Unit",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      }
+    },
+    {
+      "id": "col_reference",
+      "type": "text",
+      "band": "group_header_section",
+      "x": 395,
+      "y": 160,
+      "width": 100,
+      "height": 16,
+      "text": "Reference",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      }
+    },
+    {
+      "id": "col_flag",
+      "type": "text",
+      "band": "group_header_section",
+      "x": 505,
+      "y": 160,
+      "width": 40,
+      "height": 16,
+      "text": "Flag",
+      "style": {
+        "font_size": 10,
+        "bold": true,
+        "align": "center"
+      }
+    },
+    {
+      "id": "result_test",
+      "type": "field",
+      "band": "detail",
+      "x": 50,
+      "y": 190,
+      "width": 170,
+      "height": 18,
+      "binding": "test",
+      "source_path": "results[].test",
+      "style": {
+        "font_size": 10,
+        "color": "#111827"
+      }
+    },
+    {
+      "id": "result_value",
+      "type": "field",
+      "band": "detail",
+      "x": 230,
+      "y": 190,
+      "width": 70,
+      "height": 18,
+      "binding": "result",
+      "source_path": "results[].result",
+      "style": {
+        "font_size": 10,
+        "bold": true,
+        "align": "center"
+      }
+    },
+    {
+      "id": "result_unit",
+      "type": "field",
+      "band": "detail",
+      "x": 310,
+      "y": 190,
+      "width": 80,
+      "height": 18,
+      "binding": "unit",
+      "source_path": "results[].unit",
+      "style": {
+        "font_size": 10,
+        "color": "#374151"
+      }
+    },
+    {
+      "id": "result_reference",
+      "type": "field",
+      "band": "detail",
+      "x": 395,
+      "y": 190,
+      "width": 100,
+      "height": 18,
+      "binding": "reference",
+      "source_path": "results[].reference",
+      "style": {
+        "font_size": 10,
+        "color": "#374151"
+      }
+    },
+    {
+      "id": "result_flag",
+      "type": "field",
+      "band": "detail",
+      "x": 505,
+      "y": 190,
+      "width": 40,
+      "height": 18,
+      "binding": "flag",
+      "source_path": "results[].flag",
+      "style": {
+        "font_size": 10,
+        "bold": true,
+        "align": "center",
+        "color": "#111827"
+      }
+    },
+    {
+      "id": "row_separator",
+      "type": "line",
+      "band": "detail",
+      "x": 40,
+      "y": 212,
+      "width": 515,
+      "height": 1,
+      "style": {
+        "stroke_width": 1,
+        "stroke_color": "#e5e7eb"
+      }
+    },
+    {
+      "id": "group_footer_line",
+      "type": "line",
+      "band": "group_footer_section",
+      "x": 40,
+      "y": 704,
+      "width": 515,
+      "height": 1,
+      "style": {
+        "stroke_width": 1,
+        "stroke_color": "#d1d5db"
+      }
+    },
+    {
+      "id": "group_total_label",
+      "type": "text",
+      "band": "group_footer_section",
+      "x": 50,
+      "y": 714,
+      "width": 130,
+      "height": 18,
+      "text": "Group Count:",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      }
+    },
+    {
+      "id": "group_total_count",
+      "type": "field",
+      "band": "group_footer_section",
+      "x": 175,
+      "y": 714,
+      "width": 50,
+      "height": 18,
+      "binding": "group.count",
+      "style": {
+        "font_size": 10,
+        "bold": true,
+        "align": "center"
+      }
+    },
+    {
+      "id": "group_avg_label",
+      "type": "text",
+      "band": "group_footer_section",
+      "x": 255,
+      "y": 714,
+      "width": 145,
+      "height": 18,
+      "text": "Group Avg Numeric:",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      }
+    },
+    {
+      "id": "group_avg_value",
+      "type": "field",
+      "band": "group_footer_section",
+      "x": 400,
+      "y": 714,
+      "width": 90,
+      "height": 18,
+      "binding": "group.avg.numeric_value",
+      "style": {
+        "font_size": 10,
+        "bold": true,
+        "align": "center",
+        "color": "#2563eb"
+      }
+    },
+    {
+      "id": "footer_line",
+      "type": "line",
+      "band": "page_footer",
+      "x": 40,
+      "y": 748,
+      "width": 515,
+      "height": 1,
+      "style": {
+        "stroke_width": 1,
+        "stroke_color": "#d1d5db"
+      }
+    },
+    {
+      "id": "total_results_label",
+      "type": "text",
+      "band": "page_footer",
+      "x": 40,
+      "y": 765,
+      "width": 110,
+      "height": 16,
+      "text": "Total Results:",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      }
+    },
+    {
+      "id": "total_results",
+      "type": "field",
+      "band": "page_footer",
+      "x": 150,
+      "y": 765,
+      "width": 70,
+      "height": 16,
+      "binding": "report.count.results",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      }
+    },
+    {
+      "id": "date_label",
+      "type": "text",
+      "band": "page_footer",
+      "x": 40,
+      "y": 787,
+      "width": 80,
+      "height": 16,
+      "text": "Date:",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      }
+    },
+    {
+      "id": "today_value",
+      "type": "field",
+      "band": "page_footer",
+      "x": 120,
+      "y": 787,
+      "width": 120,
+      "height": 16,
+      "binding": "date.today",
+      "style": {
+        "font_size": 10
+      }
+    },
+    {
+      "id": "page_label",
+      "type": "text",
+      "band": "page_footer",
+      "x": 405,
+      "y": 787,
+      "width": 50,
+      "height": 16,
+      "text": "Page",
+      "style": {
+        "font_size": 10,
+        "bold": true,
+        "align": "right"
+      }
+    },
+    {
+      "id": "page_number",
+      "type": "field",
+      "band": "page_footer",
+      "x": 460,
+      "y": 787,
+      "width": 30,
+      "height": 16,
+      "binding": "page.number",
+      "style": {
+        "font_size": 10,
+        "align": "center"
+      }
+    },
+    {
+      "id": "page_of",
+      "type": "text",
+      "band": "page_footer",
+      "x": 490,
+      "y": 787,
+      "width": 20,
+      "height": 16,
+      "text": "of",
+      "style": {
+        "font_size": 10,
+        "align": "center"
+      }
+    },
+    {
+      "id": "page_total",
+      "type": "field",
+      "band": "page_footer",
+      "x": 510,
+      "y": 787,
+      "width": 35,
+      "height": 16,
+      "binding": "page.total_pages",
+      "style": {
+        "font_size": 10,
+        "align": "center"
+      }
+    }
+  ]
 }

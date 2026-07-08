@@ -7,7 +7,7 @@ import pytest
 from slim_report_core import Band, Report, ReportValidationError, render_html, render_pdf
 from slim_report_core.expressions import resolve_expression
 from slim_report_core.rendering import render_html as render_report_html
-from slim_report_core.rendering.context import create_render_context
+from slim_report_core.rendering.context import create_render_context, resolve_binding
 from slim_report_core.rendering.pagination import (
     calculate_rows_per_page,
     get_available_detail_height,
@@ -117,6 +117,45 @@ def test_grouping_helpers_group_preserve_order_and_sort() -> None:
     assert [group.key for group in sort_groups(groups, "desc")] == ["HEMATOLOGY", "CHEMISTRY", ""]
 
 
+def test_aggregate_binding_resolver_handles_group_and_report_values() -> None:
+    data = {
+        "results": [
+            {"amount": "10.5", "label": "A"},
+            {"amount": "bad", "label": "B"},
+            {"amount": 4.5, "label": "C"},
+            {"label": "Missing"},
+        ],
+        "__slim_group__": {
+            "key": "A",
+            "field": "label",
+            "rows": [
+                {"amount": "10.5"},
+                {"amount": "bad"},
+                {"amount": 4.5},
+            ],
+        },
+    }
+
+    assert resolve_binding("group.count", data) == 3
+    assert resolve_binding("group.sum.amount", data) == 15
+    assert resolve_binding("group.avg.amount", data) == 7.5
+    assert resolve_binding("group.min.amount", data) == 4.5
+    assert resolve_binding("group.max.amount", data) == 10.5
+    assert resolve_binding("report.count.results", data) == 4
+    assert resolve_binding("report.sum.results.amount", data) == 15
+    assert resolve_binding("report.avg.results.amount", data) == 7.5
+    assert resolve_binding("report.sum.missing.amount", data) == ""
+
+
+def test_system_binding_resolver_handles_page_and_datetime_values() -> None:
+    data = {"__slim_page__": {"number": 2, "total_pages": 5}}
+
+    assert resolve_binding("page.number", data) == 2
+    assert resolve_binding("page.total_pages", data) == 5
+    assert resolve_binding("date.today", data)
+    assert resolve_binding("datetime.now", data)
+
+
 def test_html_rendering_empty_repeating_detail_does_not_crash() -> None:
     report = repeating_report()
 
@@ -194,6 +233,12 @@ def test_html_rendering_grouped_detail_rows() -> None:
     assert "FBS" in html
     assert "Count:" in html
     assert 'data-slim-object="group_count' in html
+    assert 'data-slim-object="group_sum' in html
+    assert 'data-slim-object="page_number' in html
+    assert html.count('data-slim-object="group_name"') == 2
+    assert html.count('data-slim-object="group_count"') == 2
+    assert html.count('data-slim-object="group_sum"') == 2
+    assert 'data-slim-object="group_name" style="left: 40.0px; top: 108.0px;' in html
 
 
 def test_pdf_rendering_grouped_detail_rows() -> None:
@@ -833,6 +878,36 @@ def grouped_report() -> Report:
                     "height": 18,
                     "binding": "group.count",
                     "band": "group_footer_results",
+                },
+                {
+                    "id": "group_sum",
+                    "type": "field",
+                    "x": 160,
+                    "y": 758,
+                    "width": 80,
+                    "height": 18,
+                    "binding": "group.sum.value",
+                    "band": "group_footer_results",
+                },
+                {
+                    "id": "page_number",
+                    "type": "field",
+                    "x": 430,
+                    "y": 802,
+                    "width": 40,
+                    "height": 18,
+                    "binding": "page.number",
+                    "band": "page_footer",
+                },
+                {
+                    "id": "page_total",
+                    "type": "field",
+                    "x": 480,
+                    "y": 802,
+                    "width": 40,
+                    "height": 18,
+                    "binding": "page.total_pages",
+                    "band": "page_footer",
                 },
             ],
             "bands": [

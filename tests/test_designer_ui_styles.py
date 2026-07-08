@@ -113,7 +113,8 @@ import {
   getArrayByPath,
   getRowValue,
   inferFieldsFromSample,
-  normalizeFieldPath
+  normalizeFieldPath,
+  resolveBinding
 } from '__MODULE_PATH__';
 
 const sample = {
@@ -168,6 +169,42 @@ if (
   childFields[1].child_path !== 'value'
 ) {
   throw new Error('array child field helper failed');
+}
+
+const templateFields = await import('__MODULE_PATH__').then(({ getTemplateFields }) => (
+  getTemplateFields({
+  bands: [
+    {
+      id: 'group_header_results',
+      type: 'group_header',
+      group: { data_path: 'results', field: 'name' }
+    },
+    { id: 'detail', type: 'detail', repeat: { enabled: true, data_path: 'results' } }
+  ],
+  data: { sample, fields }
+})
+));
+const virtualPaths = [
+  'page.number',
+  'date.today',
+  'group.count',
+  'report.count.results',
+  'report.sum.results.value'
+];
+for (const virtualPath of virtualPaths) {
+  if (!templateFields.some((field) => field.path === virtualPath)) {
+    throw new Error(`missing virtual field ${virtualPath}`);
+  }
+}
+const groupData = { key: 'HGB', field: 'name', rows: sample.results };
+if (resolveBinding('group.count', sample, { groupData }) !== 1) {
+  throw new Error('group count binding failed');
+}
+if (resolveBinding('report.sum.results.value', sample) !== 13.2) {
+  throw new Error('report sum binding failed');
+}
+if (resolveBinding('page.total_pages', sample, { totalPages: 3 }) !== 3) {
+  throw new Error('page total binding failed');
 }
 """.replace("__MODULE_PATH__", module_path)
 

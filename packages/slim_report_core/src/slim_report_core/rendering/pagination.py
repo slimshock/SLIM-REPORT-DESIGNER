@@ -122,7 +122,12 @@ def repeat_render_pages(
     rows_per_page = repeat_rows_per_page(context, row_height, detail_objects)
 
     if not rows:
-        objects = outside_objects_for_page(context, 0, settings)
+        objects = outside_objects_for_page(
+            context,
+            0,
+            settings,
+            exclude_band_types={"group_header", "group_footer"},
+        )
         objects.append((empty_repeat_object(context, repeat), context))
         return [
             RenderPagePlan(
@@ -165,6 +170,7 @@ def grouped_repeat_render_pages(
     group_footer = get_group_footer_band(context)
     detail = get_detail_band(context)
     detail_y = detail.y if detail else get_content_top(context)
+    flow_top = get_grouped_content_top(context, group_header)
     groups = sort_groups(
         group_rows(rows, get_group_field(context), data_path),
         str((group_header.group if group_header else {}).get("sort", "none")),
@@ -184,20 +190,30 @@ def grouped_repeat_render_pages(
     ]
     pages: list[RenderPagePlan] = []
     page_index = 0
-    cursor = get_content_top(context)
-    objects = outside_objects_for_page(context, page_index, settings)
+    cursor = flow_top
+    objects = outside_objects_for_page(
+        context,
+        page_index,
+        settings,
+        exclude_band_types={"group_header", "group_footer"},
+    )
     bands = bands_for_grouped_page(context, page_index, settings)
 
     def start_new_page() -> None:
         nonlocal page_index, cursor, objects, bands
         pages.append(RenderPagePlan(page_index, bands, objects))
         page_index += 1
-        cursor = get_content_top(context)
-        objects = outside_objects_for_page(context, page_index, settings)
+        cursor = flow_top
+        objects = outside_objects_for_page(
+            context,
+            page_index,
+            settings,
+            exclude_band_types={"group_header", "group_footer"},
+        )
         bands = bands_for_grouped_page(context, page_index, settings)
 
     def ensure_space(height: float) -> None:
-        if cursor > get_content_top(context) and cursor + height > get_content_bottom(context):
+        if cursor > flow_top and cursor + height > get_content_bottom(context):
             start_new_page()
 
     for group in groups:
@@ -217,7 +233,7 @@ def grouped_repeat_render_pages(
             ensure_space(row_height)
             if (
                 row_index > 0
-                and cursor == get_content_top(context)
+                and cursor == flow_top
                 and group_header
                 and group_header.visible
             ):
@@ -362,6 +378,12 @@ def get_content_top(context: RenderContext) -> float:
     return 0.0
 
 
+def get_grouped_content_top(context: RenderContext, group_header: RenderBand | None) -> float:
+    if group_header and group_header.visible:
+        return group_header.y
+    return get_content_top(context)
+
+
 def get_content_bottom(context: RenderContext) -> float:
     footer = get_footer_band(context)
     if footer:
@@ -431,10 +453,16 @@ def outside_objects_for_page(
     context: RenderContext,
     page_index: int,
     settings: dict[str, bool],
+    *,
+    exclude_band_types: set[str] | None = None,
 ) -> list[tuple[RenderObject, RenderContext]]:
     objects: list[tuple[RenderObject, RenderContext]] = []
+    excluded = exclude_band_types or set()
+    band_types = {band.id: band.type for band in context.bands}
     for obj in context.objects:
         if obj.band == "detail":
+            continue
+        if band_types.get(obj.band) in excluded:
             continue
         if obj.band == "page_header" and page_index > 0 and not settings["repeat_page_header"]:
             continue
@@ -574,6 +602,7 @@ def group_context_data(group: RowGroup) -> dict[str, Any]:
         "value": group.key,
         "count": len(group.rows),
         "field": group.field,
+        "rows": group.rows,
     }
 
 
