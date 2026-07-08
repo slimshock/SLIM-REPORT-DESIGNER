@@ -2,20 +2,10 @@
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 from typing import Any
 
 from flask import Flask, redirect
-
-REPO_ROOT = Path(__file__).resolve().parents[2]
-for package_src in (
-    REPO_ROOT / "packages" / "slim_report_core" / "src",
-    REPO_ROOT / "packages" / "slim_report_designer_ui",
-    REPO_ROOT / "packages" / "slim_report_flask" / "src",
-):
-    if str(package_src) not in sys.path:
-        sys.path.insert(0, str(package_src))
 
 try:
     from sqlalchemy import Boolean, Column, DateTime, Integer, JSON, String, Text, create_engine
@@ -26,9 +16,10 @@ except ImportError as exc:  # pragma: no cover - exercised manually
         'python -m pip install -e "packages/slim_report_core[sqlalchemy]"'
     ) from exc
 
-from slim_report_core.storage import FileSystemTemplateProvider, SQLAlchemyTemplateProvider  # noqa: E402
-from slim_report_flask import SlimReportDesigner  # noqa: E402
+from slim_report_core.storage import FileSystemTemplateProvider, SQLAlchemyTemplateProvider
+from slim_report_flask import SlimReportDesigner
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
 BASE_DIR = Path(__file__).resolve().parent
 SAMPLE_TEMPLATE_DIR = REPO_ROOT / "examples" / "flask_app" / "sample_templates"
 DATABASE_PATH = BASE_DIR / "report_templates.db"

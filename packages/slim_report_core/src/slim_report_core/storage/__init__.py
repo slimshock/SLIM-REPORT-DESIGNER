@@ -12,6 +12,7 @@ from .base import (
     template_metadata,
     validate_template_id,
 )
+from .dbapi import DBAPITemplateProvider, PyMySQLTemplateProvider
 from .errors import (
     TemplateExistsError,
     TemplateIdError,
@@ -29,7 +30,9 @@ SQLAlchemyTemplateProvider = import_module(
 
 __all__ = [
     "SAFE_TEMPLATE_ID_PATTERN",
+    "DBAPITemplateProvider",
     "FileSystemTemplateProvider",
+    "PyMySQLTemplateProvider",
     "SQLAlchemyTemplateProvider",
     "TemplateExistsError",
     "TemplateIdError",

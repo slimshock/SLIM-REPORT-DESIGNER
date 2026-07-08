@@ -5,7 +5,9 @@ __version__ = "0.6.0a0"
 from .blueprint import create_blueprint
 from .extension import SlimReportDesigner
 from .storage import (
+    DBAPITemplateProvider,
     FileSystemTemplateProvider,
+    PyMySQLTemplateProvider,
     SQLAlchemyTemplateProvider,
     TemplateExistsError,
     TemplateIdError,
@@ -19,7 +21,9 @@ from .storage import (
 )
 
 __all__ = [
+    "DBAPITemplateProvider",
     "FileSystemTemplateProvider",
+    "PyMySQLTemplateProvider",
     "SQLAlchemyTemplateProvider",
     "SlimReportDesigner",
     "TemplateExistsError",

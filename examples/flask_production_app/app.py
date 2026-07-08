@@ -2,24 +2,15 @@
 
 from __future__ import annotations
 
-import sys
 from pathlib import Path
 from typing import Any
 
 from flask import Flask, redirect, request
 
+from slim_report_core.storage import FileSystemTemplateProvider
+from slim_report_flask import SlimReportDesigner
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
-for package_src in (
-    REPO_ROOT / "packages" / "slim_report_core" / "src",
-    REPO_ROOT / "packages" / "slim_report_designer_ui",
-    REPO_ROOT / "packages" / "slim_report_flask" / "src",
-):
-    if str(package_src) not in sys.path:
-        sys.path.insert(0, str(package_src))
-
-from slim_report_core.storage import FileSystemTemplateProvider  # noqa: E402
-from slim_report_flask import SlimReportDesigner  # noqa: E402
-
 TEMPLATE_DIR = REPO_ROOT / "examples" / "flask_app" / "sample_templates"
 
 

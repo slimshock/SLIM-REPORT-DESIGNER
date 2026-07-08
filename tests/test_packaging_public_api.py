@@ -9,13 +9,27 @@ import slim_report_designer_ui
 import slim_report_flask
 from slim_report_core import JSONSerializer, normalize_template, render_html, render_pdf
 from slim_report_core.storage import (
-    FileSystemTemplateProvider as CoreFileSystemTemplateProvider,
+    DBAPITemplateProvider,
+    PyMySQLTemplateProvider,
     SQLAlchemyTemplateProvider,
     TemplateNotFoundError,
+)
+from slim_report_core.storage import (
+    FileSystemTemplateProvider as CoreFileSystemTemplateProvider,
+)
+from slim_report_core.storage import (
     TemplateProvider as CoreTemplateProvider,
 )
 from slim_report_designer_ui import get_designer_static_path, static_file
-from slim_report_flask import FileSystemTemplateProvider, SlimReportDesigner, TemplateProvider, create_blueprint
+from slim_report_flask import (
+    FileSystemTemplateProvider,
+    SlimReportDesigner,
+    TemplateProvider,
+    create_blueprint,
+)
+from slim_report_flask import (
+    PyMySQLTemplateProvider as FlaskPyMySQLTemplateProvider,
+)
 from slim_report_flask import TemplateNotFoundError as FlaskTemplateNotFoundError
 
 
@@ -29,6 +43,9 @@ def test_public_package_imports_are_stable() -> None:
     assert SlimReportDesigner is not None
     assert TemplateProvider is CoreTemplateProvider
     assert FileSystemTemplateProvider is CoreFileSystemTemplateProvider
+    assert DBAPITemplateProvider is not None
+    assert PyMySQLTemplateProvider is not None
+    assert FlaskPyMySQLTemplateProvider is PyMySQLTemplateProvider
     assert FlaskTemplateNotFoundError is TemplateNotFoundError
     assert SQLAlchemyTemplateProvider is not None
     assert TemplateNotFoundError is not None

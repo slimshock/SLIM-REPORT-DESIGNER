@@ -258,7 +258,9 @@ def _render_image(canvas: Any, obj: RenderObject, context: RenderContext) -> Non
         _set_stroke_color(canvas, style.get("border_color", "#000000"))
         canvas.rect(x, _pdf_y(context, y + height), width, height, stroke=1, fill=0)
 
-    source = str(obj.properties.get("src") or obj.properties.get("source") or _object_value(obj, context) or "")
+    source = _image_source(
+        obj.properties.get("src") or obj.properties.get("source") or _object_value(obj, context)
+    )
     reader = _image_reader(source)
     if reader is None:
         return
@@ -672,6 +674,15 @@ def _image_reader(source: str) -> Any | None:
         return ImageReader(source)
     except Exception:
         return None
+
+
+def _image_source(value: Any) -> str:
+    text = str(value or "").strip()
+    if text.lower() in {"", "none", "null", "undefined"}:
+        return ""
+    if text.startswith("{{") and text.endswith("}}"):
+        return ""
+    return text
 
 
 def _draw_text(canvas: Any, obj: RenderObject, context: RenderContext, value: str) -> None:

@@ -73,6 +73,35 @@ def test_html_rendering_applies_extended_style_fields() -> None:
     assert "object-fit: contain" in html
 
 
+def test_html_rendering_empty_image_source_is_blank() -> None:
+    report = image_source_report("")
+
+    html = render_html(report, {})
+
+    assert 'data-slim-object="signature"' in html
+    assert ">Image<" not in html
+    assert "<img" not in html
+
+
+def test_html_rendering_unresolved_image_binding_is_blank() -> None:
+    report = image_source_report("{{ signatures.pathologist }}")
+
+    html = render_html(report, {})
+
+    assert 'data-slim-object="signature"' in html
+    assert ">Image<" not in html
+    assert "<img" not in html
+
+
+def test_pdf_rendering_empty_image_source_does_not_crash() -> None:
+    report = image_source_report("null")
+
+    pdf = render_pdf(report, {})
+
+    assert pdf.startswith(b"%PDF")
+    assert len(pdf) > 100
+
+
 def test_html_rendering_expands_repeating_detail_rows() -> None:
     report = repeating_report()
 
@@ -572,7 +601,7 @@ def test_sample_templates_render_html_and_pdf() -> None:
 def test_sample_templates_render_expected_content_with_embedded_data() -> None:
     cases = {
         "lab_result": ["LABORATORY RESULT", "250"],
-        "cerebro_cbc": ["Cerebro CBC Result"],
+        "cerebro_cbc": ["LIS Result Report"],
         "repeating_lab_result": ["WBC", "HGB", "Nitrite"],
         "table_lab_result": ["Table Laboratory Result", "WBC", "Nitrite"],
         "grouped_lab_result": ["HEMATOLOGY", "CHEMISTRY", "URINALYSIS"],
@@ -711,6 +740,29 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 def load_report() -> Report:
     return JSONSerializer().load_mapping(sample_template())
+
+
+def image_source_report(source: str) -> Report:
+    return JSONSerializer().load_mapping(
+        {
+            "version": "1.0",
+            "metadata": {"title": "Image Source"},
+            "page": {"width": 240, "height": 120, "unit": "px"},
+            "objects": [
+                {
+                    "id": "signature",
+                    "type": "image",
+                    "x": 20,
+                    "y": 20,
+                    "width": 120,
+                    "height": 48,
+                    "src": source,
+                }
+            ],
+            "bands": [],
+            "assets": [],
+        }
+    )
 
 
 def sample_template() -> dict:

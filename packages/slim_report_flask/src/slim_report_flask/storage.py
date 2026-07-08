@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from slim_report_core.storage import (
+    DBAPITemplateProvider,
     FileSystemTemplateProvider,
+    PyMySQLTemplateProvider,
     SQLAlchemyTemplateProvider,
     TemplateExistsError,
     TemplateIdError,
@@ -21,7 +23,9 @@ from slim_report_core.storage import (
 _record_from_summary = record_from_summary
 
 __all__ = [
+    "DBAPITemplateProvider",
     "FileSystemTemplateProvider",
+    "PyMySQLTemplateProvider",
     "SQLAlchemyTemplateProvider",
     "TemplateExistsError",
     "TemplateIdError",

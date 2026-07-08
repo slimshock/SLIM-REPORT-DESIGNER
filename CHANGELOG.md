@@ -14,13 +14,17 @@ This project follows semantic versioning once public releases begin.
 - Added Flask production integration API with `TemplateProvider`, `FileSystemTemplateProvider`, custom URL prefixes, data providers, auth/permission hooks, and CSRF config injection.
 - Moved reusable template storage providers into `slim_report_core.storage` with Flask compatibility re-exports.
 - Added optional `SQLAlchemyTemplateProvider` for app-owned database template storage and sample data storage.
+- Added dependency-free `DBAPITemplateProvider` and `PyMySQLTemplateProvider` for raw MySQL/PyMySQL template storage.
 - Added SQLite database-backed Flask example and LIS template storage documentation.
+- Added LIS integration hardening documentation for GitHub installs, PyMySQL storage, auth hooks, and patient portal safety.
+- Added LIS hematology sample templates for filesystem/database/LIS preview testing.
 - Expanded package/public API smoke tests and designer static package-data checks.
 - Documented the multi-package editable install flow for Sprint 6.
 
 ### Fixed
 
 - Template loading now tolerates missing serializer defaults such as `assets` and missing metadata title/name mirrors.
+- Empty image values no longer render visible `Image` placeholder text in HTML preview or PDF export.
 
 ## 0.5.0-alpha - Sprint 5
 

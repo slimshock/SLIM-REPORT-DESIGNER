@@ -26,6 +26,7 @@ from slim_report_flask import (  # noqa: E402
     SQLAlchemyTemplateProvider,
     SlimReportDesigner,
     TemplateProvider,
+    TemplateStorageError,
 )
 from slim_report_flask.blueprint import safe_pdf_filename  # noqa: E402
 from slim_report_flask import extension as extension_module  # noqa: E402
@@ -559,6 +560,36 @@ def test_flask_designer_api_data_provider_exception_returns_clean_error(tmp_path
     assert payload["ok"] is False
     assert payload["error_detail"]["code"] == "server_error"
     assert "Data unavailable" in payload["error"]
+
+
+def test_flask_designer_provider_exception_returns_clean_storage_error() -> None:
+    class FailingProvider:
+        allow_save = True
+
+        def list_templates(self) -> list[dict[str, Any]]:
+            raise TemplateStorageError("Could not connect to MySQL.")
+
+        def get_template(self, template_id: str) -> dict[str, Any]:
+            raise TemplateStorageError("Could not connect to MySQL.")
+
+        def save_template(self, template_id: str, template: dict[str, Any]) -> dict[str, Any]:
+            raise TemplateStorageError("Could not connect to MySQL.")
+
+        def exists(self, template_id: str) -> bool:
+            return False
+
+    app = Flask(__name__)
+    app.config["TESTING"] = True
+    designer = SlimReportDesigner(template_provider=FailingProvider())
+    designer.init_app(app)
+
+    response = app.test_client().get("/report-designer/api/templates")
+
+    assert response.status_code == 500
+    payload = response.get_json()
+    assert payload["ok"] is False
+    assert payload["error_detail"]["code"] == "template_storage_error"
+    assert payload["error_detail"]["message"] == "Could not connect to MySQL."
 
 
 def test_flask_auth_hook_blocks_designer_and_api(tmp_path: Path) -> None:

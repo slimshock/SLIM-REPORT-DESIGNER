@@ -1,0 +1,352 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "title": "LIS Hematology Result",
+    "description": "Sample LIS hematology report template for Flask/PyMySQL integration testing.",
+    "custom": {
+      "id": "lab_result_hematology",
+      "category": "lis"
+    }
+  },
+  "page": {
+    "width": 595,
+    "height": 842,
+    "unit": "px",
+    "background_color": "#ffffff"
+  },
+  "objects": [
+    {
+      "id": "clinic_name",
+      "type": "field",
+      "x": 40,
+      "y": 28,
+      "width": 330,
+      "height": 26,
+      "binding": "clinic.name",
+      "style": {
+        "font_size": 18,
+        "bold": true,
+        "color": "#111827"
+      },
+      "band": "page_header"
+    },
+    {
+      "id": "clinic_address",
+      "type": "field",
+      "x": 40,
+      "y": 56,
+      "width": 330,
+      "height": 18,
+      "binding": "clinic.address",
+      "style": {
+        "font_size": 10,
+        "color": "#4b5563"
+      },
+      "band": "page_header"
+    },
+    {
+      "id": "report_title",
+      "type": "text",
+      "x": 390,
+      "y": 32,
+      "width": 165,
+      "height": 28,
+      "text": "HEMATOLOGY",
+      "style": {
+        "font_size": 16,
+        "bold": true,
+        "align": "right",
+        "color": "#0f766e"
+      },
+      "band": "page_header"
+    },
+    {
+      "id": "header_line",
+      "type": "line",
+      "x": 40,
+      "y": 88,
+      "width": 515,
+      "height": 1,
+      "style": {
+        "stroke_width": 1,
+        "stroke_color": "#111827"
+      },
+      "band": "page_header"
+    },
+    {
+      "id": "patient_label",
+      "type": "text",
+      "x": 40,
+      "y": 108,
+      "width": 80,
+      "height": 16,
+      "text": "Patient:",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      },
+      "band": "detail"
+    },
+    {
+      "id": "patient_name",
+      "type": "field",
+      "x": 120,
+      "y": 108,
+      "width": 220,
+      "height": 16,
+      "binding": "patient.name",
+      "style": {
+        "font_size": 10
+      },
+      "band": "detail"
+    },
+    {
+      "id": "order_label",
+      "type": "text",
+      "x": 360,
+      "y": 108,
+      "width": 70,
+      "height": 16,
+      "text": "Order No:",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      },
+      "band": "detail"
+    },
+    {
+      "id": "order_id",
+      "type": "field",
+      "x": 430,
+      "y": 108,
+      "width": 125,
+      "height": 16,
+      "binding": "order.id",
+      "style": {
+        "font_size": 10
+      },
+      "band": "detail"
+    },
+    {
+      "id": "department_bar",
+      "type": "rectangle",
+      "x": 40,
+      "y": 150,
+      "width": 515,
+      "height": 24,
+      "style": {
+        "background_color": "#e0f2f1",
+        "border_width": 1,
+        "border_color": "#99f6e4"
+      },
+      "band": "detail"
+    },
+    {
+      "id": "department_name",
+      "type": "field",
+      "x": 48,
+      "y": 154,
+      "width": 300,
+      "height": 16,
+      "binding": "department.name",
+      "style": {
+        "font_size": 11,
+        "bold": true,
+        "color": "#115e59"
+      },
+      "band": "detail"
+    },
+    {
+      "id": "results_table",
+      "type": "table",
+      "x": 40,
+      "y": 188,
+      "width": 515,
+      "height": 310,
+      "data_path": "results",
+      "columns": [
+        {
+          "id": "test",
+          "label": "Test",
+          "binding": "test",
+          "width": 190
+        },
+        {
+          "id": "result",
+          "label": "Result",
+          "binding": "result",
+          "width": 100,
+          "align": "right"
+        },
+        {
+          "id": "unit",
+          "label": "Unit",
+          "binding": "unit",
+          "width": 85
+        },
+        {
+          "id": "reference",
+          "label": "Reference",
+          "binding": "reference",
+          "width": 140
+        }
+      ],
+      "header": {
+        "visible": true,
+        "height": 24,
+        "background_color": "#f3f4f6",
+        "color": "#111827",
+        "bold": true
+      },
+      "row": {
+        "height": 22
+      },
+      "border": {
+        "width": 1,
+        "color": "#d1d5db"
+      },
+      "band": "detail"
+    },
+    {
+      "id": "remarks_label",
+      "type": "text",
+      "x": 40,
+      "y": 522,
+      "width": 70,
+      "height": 16,
+      "text": "Remarks:",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      },
+      "band": "detail"
+    },
+    {
+      "id": "remarks",
+      "type": "field",
+      "x": 112,
+      "y": 522,
+      "width": 443,
+      "height": 36,
+      "binding": "order.remarks",
+      "style": {
+        "font_size": 10
+      },
+      "band": "detail"
+    },
+    {
+      "id": "pathologist_signature",
+      "type": "image",
+      "x": 360,
+      "y": 612,
+      "width": 150,
+      "height": 48,
+      "binding": "signatures.pathologist",
+      "style": {
+        "object_fit": "contain"
+      },
+      "band": "page_footer"
+    },
+    {
+      "id": "pathologist_line",
+      "type": "line",
+      "x": 350,
+      "y": 666,
+      "width": 170,
+      "height": 1,
+      "style": {
+        "stroke_width": 1,
+        "stroke_color": "#111827"
+      },
+      "band": "page_footer"
+    },
+    {
+      "id": "pathologist_name",
+      "type": "field",
+      "x": 330,
+      "y": 672,
+      "width": 210,
+      "height": 16,
+      "binding": "order.verified_by",
+      "style": {
+        "font_size": 10,
+        "bold": true,
+        "align": "center"
+      },
+      "band": "page_footer"
+    }
+  ],
+  "bands": [
+    {
+      "id": "page_header",
+      "type": "page_header",
+      "y": 0,
+      "height": 96
+    },
+    {
+      "id": "detail",
+      "type": "detail",
+      "y": 96,
+      "height": 500
+    },
+    {
+      "id": "page_footer",
+      "type": "page_footer",
+      "y": 596,
+      "height": 120
+    }
+  ],
+  "assets": [],
+  "data": {
+    "sample": {
+      "clinic": {
+        "name": "Slim Diagnostics Laboratory",
+        "address": "123 Health Avenue, Manila"
+      },
+      "patient": {
+        "id": "P-000123",
+        "name": "Juan Dela Cruz",
+        "age": "34",
+        "sex": "M"
+      },
+      "order": {
+        "id": "ORD-2026-0001",
+        "collected_at": "2026-07-09 08:15",
+        "reported_at": "2026-07-09 10:40",
+        "remarks": "Correlate clinically.",
+        "verified_by": "Maria Santos, RMT"
+      },
+      "department": {
+        "name": "Hematology"
+      },
+      "results": [
+        {
+          "test": "WBC",
+          "result": "7.10",
+          "unit": "10^9/L",
+          "reference": "4.00 - 10.00"
+        },
+        {
+          "test": "RBC",
+          "result": "5.02",
+          "unit": "10^12/L",
+          "reference": "4.50 - 5.90"
+        },
+        {
+          "test": "Hemoglobin",
+          "result": "148",
+          "unit": "g/L",
+          "reference": "135 - 175"
+        },
+        {
+          "test": "Platelet",
+          "result": "260",
+          "unit": "10^9/L",
+          "reference": "150 - 400"
+        }
+      ],
+      "left_results": [],
+      "right_results": []
+    }
+  }
+}

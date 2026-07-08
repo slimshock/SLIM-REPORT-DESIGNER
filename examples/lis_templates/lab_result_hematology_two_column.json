@@ -1,0 +1,315 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "title": "LIS Hematology Result Two Column",
+    "description": "Two-table LIS hematology layout using current table features only.",
+    "custom": {
+      "id": "lab_result_hematology_two_column",
+      "category": "lis"
+    }
+  },
+  "page": {
+    "width": 595,
+    "height": 842,
+    "unit": "px",
+    "background_color": "#ffffff"
+  },
+  "objects": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 40,
+      "y": 32,
+      "width": 515,
+      "height": 28,
+      "text": "HEMATOLOGY REPORT",
+      "style": {
+        "font_size": 18,
+        "bold": true,
+        "align": "center",
+        "color": "#111827"
+      },
+      "band": "page_header"
+    },
+    {
+      "id": "patient_summary",
+      "type": "text",
+      "x": 40,
+      "y": 70,
+      "width": 515,
+      "height": 18,
+      "text": "{{ patient.name }} | {{ order.id }} | {{ order.collected_at }}",
+      "style": {
+        "font_size": 10,
+        "align": "center",
+        "color": "#4b5563"
+      },
+      "band": "page_header"
+    },
+    {
+      "id": "department_bar",
+      "type": "rectangle",
+      "x": 40,
+      "y": 116,
+      "width": 515,
+      "height": 24,
+      "style": {
+        "background_color": "#eff6ff",
+        "border_width": 1,
+        "border_color": "#bfdbfe"
+      },
+      "band": "detail"
+    },
+    {
+      "id": "department_name",
+      "type": "field",
+      "x": 48,
+      "y": 120,
+      "width": 300,
+      "height": 16,
+      "binding": "department.name",
+      "style": {
+        "font_size": 11,
+        "bold": true,
+        "color": "#1d4ed8"
+      },
+      "band": "detail"
+    },
+    {
+      "id": "left_table",
+      "type": "table",
+      "x": 40,
+      "y": 156,
+      "width": 250,
+      "height": 270,
+      "data_path": "left_results",
+      "columns": [
+        {
+          "id": "test",
+          "label": "Test",
+          "binding": "test",
+          "width": 105
+        },
+        {
+          "id": "result",
+          "label": "Result",
+          "binding": "result",
+          "width": 70,
+          "align": "right"
+        },
+        {
+          "id": "unit",
+          "label": "Unit",
+          "binding": "unit",
+          "width": 75
+        }
+      ],
+      "header": {
+        "visible": true,
+        "height": 24,
+        "background_color": "#f3f4f6",
+        "bold": true
+      },
+      "row": {
+        "height": 22
+      },
+      "border": {
+        "width": 1,
+        "color": "#d1d5db"
+      },
+      "band": "detail"
+    },
+    {
+      "id": "right_table",
+      "type": "table",
+      "x": 305,
+      "y": 156,
+      "width": 250,
+      "height": 270,
+      "data_path": "right_results",
+      "columns": [
+        {
+          "id": "test",
+          "label": "Test",
+          "binding": "test",
+          "width": 105
+        },
+        {
+          "id": "result",
+          "label": "Result",
+          "binding": "result",
+          "width": 70,
+          "align": "right"
+        },
+        {
+          "id": "unit",
+          "label": "Unit",
+          "binding": "unit",
+          "width": 75
+        }
+      ],
+      "header": {
+        "visible": true,
+        "height": 24,
+        "background_color": "#f3f4f6",
+        "bold": true
+      },
+      "row": {
+        "height": 22
+      },
+      "border": {
+        "width": 1,
+        "color": "#d1d5db"
+      },
+      "band": "detail"
+    },
+    {
+      "id": "remarks_label",
+      "type": "text",
+      "x": 40,
+      "y": 456,
+      "width": 70,
+      "height": 16,
+      "text": "Remarks:",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      },
+      "band": "detail"
+    },
+    {
+      "id": "remarks",
+      "type": "field",
+      "x": 112,
+      "y": 456,
+      "width": 443,
+      "height": 36,
+      "binding": "order.remarks",
+      "style": {
+        "font_size": 10
+      },
+      "band": "detail"
+    },
+    {
+      "id": "signature_image",
+      "type": "image",
+      "x": 365,
+      "y": 608,
+      "width": 145,
+      "height": 46,
+      "binding": "signatures.medtech",
+      "style": {
+        "object_fit": "contain"
+      },
+      "band": "page_footer"
+    },
+    {
+      "id": "signature_line",
+      "type": "line",
+      "x": 350,
+      "y": 662,
+      "width": 175,
+      "height": 1,
+      "style": {
+        "stroke_width": 1,
+        "stroke_color": "#111827"
+      },
+      "band": "page_footer"
+    },
+    {
+      "id": "verified_by",
+      "type": "field",
+      "x": 330,
+      "y": 668,
+      "width": 215,
+      "height": 16,
+      "binding": "order.verified_by",
+      "style": {
+        "font_size": 10,
+        "bold": true,
+        "align": "center"
+      },
+      "band": "page_footer"
+    }
+  ],
+  "bands": [
+    {
+      "id": "page_header",
+      "type": "page_header",
+      "y": 0,
+      "height": 100
+    },
+    {
+      "id": "detail",
+      "type": "detail",
+      "y": 100,
+      "height": 490
+    },
+    {
+      "id": "page_footer",
+      "type": "page_footer",
+      "y": 590,
+      "height": 120
+    }
+  ],
+  "assets": [],
+  "data": {
+    "sample": {
+      "clinic": {
+        "name": "Slim Diagnostics Laboratory",
+        "address": "123 Health Avenue, Manila"
+      },
+      "patient": {
+        "id": "P-000123",
+        "name": "Juan Dela Cruz",
+        "age": "34",
+        "sex": "M"
+      },
+      "order": {
+        "id": "ORD-2026-0001",
+        "collected_at": "2026-07-09 08:15",
+        "reported_at": "2026-07-09 10:40",
+        "remarks": "Two-column layout is manually split by the LIS data provider.",
+        "verified_by": "Maria Santos, RMT"
+      },
+      "department": {
+        "name": "Hematology"
+      },
+      "left_results": [
+        {
+          "test": "WBC",
+          "result": "7.10",
+          "unit": "10^9/L"
+        },
+        {
+          "test": "RBC",
+          "result": "5.02",
+          "unit": "10^12/L"
+        },
+        {
+          "test": "Hemoglobin",
+          "result": "148",
+          "unit": "g/L"
+        }
+      ],
+      "right_results": [
+        {
+          "test": "Hematocrit",
+          "result": "0.44",
+          "unit": "L/L"
+        },
+        {
+          "test": "Platelet",
+          "result": "260",
+          "unit": "10^9/L"
+        },
+        {
+          "test": "MCV",
+          "result": "87.6",
+          "unit": "fL"
+        }
+      ],
+      "results": []
+    }
+  }
+}

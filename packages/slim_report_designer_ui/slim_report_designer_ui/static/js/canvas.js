@@ -480,9 +480,10 @@ function renderObject(object, selectedIds = [], primarySelectedId = null, unit =
     element.style.border = `${Number(style.border_width) || 0}px solid ${style.border_color || "#000000"}`;
     element.style.borderRadius = `${Number(style.border_radius) || 0}px`;
     element.style.opacity = `${Number(style.opacity ?? 1)}`;
-    if (object.src || object.properties?.src || object.properties?.source) {
+    const src = imageSource(object.src || object.properties?.src || object.properties?.source);
+    if (src) {
       const image = document.createElement("img");
-      image.src = object.src || object.properties?.src || object.properties?.source;
+      image.src = src;
       image.alt = object.alt || object.properties?.alt || "";
       image.draggable = false;
       image.style.objectFit = style.object_fit || "contain";
@@ -532,6 +533,17 @@ function renderObject(object, selectedIds = [], primarySelectedId = null, unit =
   }
 
   return element;
+}
+
+function imageSource(value) {
+  const text = String(value || "").trim();
+  if (!text || ["none", "null", "undefined"].includes(text.toLowerCase())) {
+    return "";
+  }
+  if (text.startsWith("{{") && text.endsWith("}}")) {
+    return "";
+  }
+  return text;
 }
 
 function repeatedFieldValue(rowData, binding, repeatDataPath, sampleData) {

@@ -329,6 +329,8 @@ def _error_code_for_exception(exc: Exception) -> str:
         return "invalid_request"
     if isinstance(exc, SlimReportError):
         return "slim_report_error"
+    if isinstance(exc, TemplateStorageError):
+        return "template_storage_error"
     return "server_error"
 
 

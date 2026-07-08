@@ -278,7 +278,9 @@ def _render_rectangle(obj: RenderObject, context: RenderContext) -> str:
 def _render_image(obj: RenderObject, context: RenderContext) -> str:
     x, y, width, height = object_px(obj, context.page.unit)
     style = obj.style
-    source = str(obj.properties.get("src") or obj.properties.get("source") or _object_value(obj, context) or "")
+    source = _image_source(
+        obj.properties.get("src") or obj.properties.get("source") or _object_value(obj, context)
+    )
     border_width = float(style.get("border_width", 0))
     border_color = escape(str(style.get("border_color", "#000000")), quote=True)
     background_color = escape(str(style.get("background_color", "transparent")), quote=True)
@@ -303,6 +305,15 @@ def _render_image(obj: RenderObject, context: RenderContext) -> str:
         f'style="{css}"><img src="{escape(source, quote=True)}" alt="{alt}" '
         f'style="width: 100%; height: 100%; object-fit: {object_fit}; display: block;"></div>'
     )
+
+
+def _image_source(value: Any) -> str:
+    text = str(value or "").strip()
+    if text.lower() in {"", "none", "null", "undefined"}:
+        return ""
+    if text.startswith("{{") and text.endswith("}}"):
+        return ""
+    return text
 
 
 def _render_barcode(obj: RenderObject, context: RenderContext) -> str:

@@ -11,6 +11,7 @@ Start with:
 - [Flask production integration](flask-production-integration.md)
 - [Template storage](template-storage.md)
 - [LIS Flask template storage](lis-flask-template-storage.md)
+- [LIS integration hardening](lis-integration-hardening.md)
 - [JSON template schema](json-template-schema.md)
 - [Data Fields](data-fields.md)
 - [Repeating Detail rows](repeating-detail-rows.md)

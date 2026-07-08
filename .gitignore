@@ -14,6 +14,7 @@ pip-wheel-metadata/
 *.download
 downloads/
 browser-downloads/
+screenshots/
 *.db
 *.sqlite
 *.sqlite3

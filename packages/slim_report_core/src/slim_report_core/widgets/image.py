@@ -30,7 +30,7 @@ class ImageWidget(BaseWidget):
     def render_html(self, obj: ReportObject, data: Any, context: Any) -> str:
         self.validate(obj)
         config = self.default_config() | obj.properties | obj.style.resolved_values()
-        source = str(config.get("src") or config.get("source") or "")
+        source = _image_source(config.get("src") or config.get("source"))
         style = object_style(
             obj,
             extra={
@@ -57,7 +57,7 @@ class ImageWidget(BaseWidget):
     def render_pdf(self, canvas: Any, obj: ReportObject, data: Any, context: Any) -> None:
         self.validate(obj)
         config = self.default_config() | obj.properties | obj.style.resolved_values()
-        source = str(config.get("src") or config.get("source") or "")
+        source = _image_source(config.get("src") or config.get("source"))
         reader = _image_reader(source)
         if reader is None:
             return
@@ -89,3 +89,12 @@ def _image_reader(source: str) -> Any | None:
         return ImageReader(source)
     except Exception:
         return None
+
+
+def _image_source(value: Any) -> str:
+    text = str(value or "").strip()
+    if text.lower() in {"", "none", "null", "undefined"}:
+        return ""
+    if text.startswith("{{") and text.endswith("}}"):
+        return ""
+    return text

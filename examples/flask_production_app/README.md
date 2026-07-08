@@ -7,11 +7,14 @@ This example shows the Sprint 6 Flask extension API in an app-factory style setu
 From the repository root:
 
 ```bash
-python -m pip install -e packages/slim_report_core
-python -m pip install -e packages/slim_report_designer_ui
-python -m pip install -e packages/slim_report_flask
+python -m pip install "git+https://github.com/slimshock/SLIM-REPORT-DESIGNER.git@develop#subdirectory=packages/slim_report_core"
+python -m pip install "git+https://github.com/slimshock/SLIM-REPORT-DESIGNER.git@develop#subdirectory=packages/slim_report_designer_ui"
+python -m pip install "git+https://github.com/slimshock/SLIM-REPORT-DESIGNER.git@develop#subdirectory=packages/slim_report_flask"
 python examples/flask_production_app/app.py
 ```
+
+For local development from a clone, editable installs of the same three package directories are also
+valid. The app code itself imports installed packages directly and does not modify `sys.path`.
 
 Open:
 
@@ -32,3 +35,5 @@ http://127.0.0.1:5001/admin/reports/designer?template=complete_sprint5_lab_repor
 - CSRF header/token config injection for frontend POST requests.
 
 Use `?auth=0` on a designer URL to see the demo authentication hook return 401.
+
+For raw PyMySQL LIS integration, see `../../docs/lis-integration-hardening.md`.

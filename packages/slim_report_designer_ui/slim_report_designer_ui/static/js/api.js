@@ -304,7 +304,7 @@ function localObjectHtml(object, unit = "px", sampleData = {}, rowData = null, r
     return `<div style="${box};border:${style.border_width || 1}px solid ${style.border_color || "#111827"};border-radius:${style.border_radius || 0}px;background:${style.background_color || style.fill_color || "transparent"}"></div>`;
   }
   if (object.type === "image") {
-    const src = object.src || object.properties?.src || object.properties?.source || "";
+    const src = imageSource(object.src || object.properties?.src || object.properties?.source);
     const imageBox = `${box};display:grid;place-items:center;border:${style.border_width || 0}px solid ${style.border_color || "#000000"};border-radius:${style.border_radius || 0}px;opacity:${style.opacity ?? 1}`;
     if (!src) {
       return `<div style="${imageBox}"></div>`;
@@ -332,6 +332,17 @@ function localObjectHtml(object, unit = "px", sampleData = {}, rowData = null, r
     return `<div title="${escapeHtml(qrValue)}" style="${box};background:${background};color:${foreground};overflow:hidden"><div style="${grid}">${qrSvgMarkup(qrValue, { foreground, background })}</div></div>`;
   }
   return `<div style="${box}">${escapeHtml(value)}</div>`;
+}
+
+function imageSource(value) {
+  const text = String(value || "").trim();
+  if (!text || ["none", "null", "undefined"].includes(text.toLowerCase())) {
+    return "";
+  }
+  if (text.startsWith("{{") && text.endsWith("}}")) {
+    return "";
+  }
+  return text;
 }
 
 function boundObjectValue(object, sampleData = {}, rowData = null, repeatDataPath = "", groupData = null) {

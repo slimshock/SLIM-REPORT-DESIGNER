@@ -138,7 +138,29 @@ The designer UI is framework-agnostic static HTML/CSS/JavaScript. Framework adap
 
 ## Installation
 
-This repository uses a multi-package layout. Install the local packages you need in editable mode from the repository root:
+This repository uses a multi-package layout. For production or LIS installation from GitHub, install
+the package subdirectories:
+
+```bash
+python -m pip uninstall -y slim-report-core slim-report-flask slim-report-designer-ui UNKNOWN
+
+python -m pip install "git+https://github.com/slimshock/SLIM-REPORT-DESIGNER.git@develop#subdirectory=packages/slim_report_core"
+python -m pip install "git+https://github.com/slimshock/SLIM-REPORT-DESIGNER.git@develop#subdirectory=packages/slim_report_designer_ui"
+python -m pip install "git+https://github.com/slimshock/SLIM-REPORT-DESIGNER.git@develop#subdirectory=packages/slim_report_flask"
+```
+
+Verify the installed package path:
+
+```bash
+python -c "import slim_report_flask; print(slim_report_flask.__file__)"
+python -c "from slim_report_flask import SlimReportDesigner; print('OK Flask')"
+python -c "from slim_report_core.storage import FileSystemTemplateProvider, SQLAlchemyTemplateProvider, PyMySQLTemplateProvider; print('OK storage')"
+```
+
+The expected path in production is `site-packages`, not a local source checkout.
+
+For local development from a cloned repository, install the packages you need in editable mode from
+the repository root:
 
 ```bash
 python -m pip install -e packages/slim_report_core
@@ -155,6 +177,8 @@ python -m pip install -e "packages/slim_report_core[sqlalchemy]"
 ```
 
 There is no root `pip install -e .` package yet; install the package folders directly.
+
+See `docs/lis-integration-hardening.md` for Flask LIS/PyMySQL deployment guidance.
 
 For development tools:
 

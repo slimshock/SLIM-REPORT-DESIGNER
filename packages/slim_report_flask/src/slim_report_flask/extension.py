@@ -8,7 +8,7 @@ from inspect import signature
 from pathlib import Path
 from typing import Any
 
-from flask import Flask, request
+from flask import Flask, has_request_context, request
 
 from slim_report_core import (
     DataProviderRegistry,
@@ -148,7 +148,16 @@ class SlimReportDesigner:
 
     def get_template(self, template_id: str) -> dict[str, Any]:
         """Load a saved template mapping by id."""
-        return self._provider().get_template(template_id)
+        provider = self._provider()
+        template = provider.get_template(template_id)
+        prepare = getattr(provider, "prepare_template_for_request", None)
+        if callable(prepare):
+            request_args = request.args if has_request_context() else None
+            request_json = request.get_json(silent=True) if has_request_context() and request.is_json else None
+            prepared = prepare(template_id, template, request_args, request_json)
+            if isinstance(prepared, dict):
+                return prepared
+        return template
 
     def get_report(self, template_id: str) -> Report:
         """Load a saved report template by id."""

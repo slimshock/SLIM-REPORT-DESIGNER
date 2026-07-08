@@ -8,11 +8,15 @@ This example stores Slim Report Designer templates in SQLite through the framewo
 From the repository root:
 
 ```bash
-python -m pip install -e "packages/slim_report_core[sqlalchemy]"
-python -m pip install -e packages/slim_report_designer_ui
-python -m pip install -e packages/slim_report_flask
+python -m pip install "git+https://github.com/slimshock/SLIM-REPORT-DESIGNER.git@develop#subdirectory=packages/slim_report_core"
+python -m pip install SQLAlchemy
+python -m pip install "git+https://github.com/slimshock/SLIM-REPORT-DESIGNER.git@develop#subdirectory=packages/slim_report_designer_ui"
+python -m pip install "git+https://github.com/slimshock/SLIM-REPORT-DESIGNER.git@develop#subdirectory=packages/slim_report_flask"
 python examples/flask_database_app/app.py
 ```
+
+For local development from a clone, editable installs of the same package directories are also valid.
+The app code imports installed packages directly and does not modify `sys.path`.
 
 Open:
 
@@ -41,3 +45,4 @@ See also:
 
 - `docs/template-storage.md`
 - `docs/lis-flask-template-storage.md`
+- `docs/lis-integration-hardening.md`
