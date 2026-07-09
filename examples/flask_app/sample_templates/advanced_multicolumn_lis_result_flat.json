@@ -1,0 +1,996 @@
+{
+  "id": "advanced_multicolumn_lis_result",
+  "name": "Advanced Multi-Column LIS Result",
+  "description": "Two-column LIS lab result using advanced fixed-row table features, section rows, conditional formatting, assets, barcode, QR, and print settings.",
+  "version": 1,
+  "page": {
+    "size": "letter",
+    "orientation": "portrait",
+    "width": 816,
+    "height": 1056,
+    "margin": {
+      "top": 10,
+      "right": 10,
+      "bottom": 18,
+      "left": 10
+    }
+  },
+  "printSettings": {
+    "paperSize": "letter",
+    "orientation": "portrait",
+    "printBackground": true,
+    "scale": 1,
+    "showGrid": false,
+    "pdfFilename": "hematology-two-column-{{order.order_no}}.pdf"
+  },
+  "data": {
+    "sample": {
+      "clinic": {
+        "name": "Cerebro Diagnostic System",
+        "address1": "Alwana Business Park, Zone 4 Cugman, Cagayan de Oro City",
+        "address2": "Misamis Oriental 9000",
+        "contact": "Contact No.: +639 260 235 049, +639 222 979 774",
+        "email": "Email Address: cerebro.info@gmail.com"
+      },
+      "patient": {
+        "name": "dhab W. cabrera",
+        "age": "1",
+        "dob": "09/18/2024",
+        "sex": "FEMALE",
+        "physician": "",
+        "clinical_diagnosis": ""
+      },
+      "order": {
+        "order_no": "43",
+        "source": "OPD",
+        "room_no": "",
+        "date_received": "06/29/2026, 11:04:55 AM",
+        "date_checked_in": "06/29/2026, 11:04:59 AM",
+        "date_released": "06/29/2026, 11:05:43 AM",
+        "date_printed": "07/09/2026, 05:04:48 AM",
+        "barcode": "43",
+        "qr_payload": "ORDER:43|PATIENT:dhab W. cabrera|HEMATOLOGY"
+      },
+      "department": {
+        "name": "HEMATOLOGY"
+      },
+      "remarks": "Correlate clinically.",
+      "signatures": {
+        "medtech_asset_id": "",
+        "reviewer_asset_id": "",
+        "pathologist_asset_id": ""
+      },
+      "staff": {
+        "medtech": "Medical Technologist",
+        "reviewer": "Reviewed By",
+        "pathologist": "Pathologist"
+      },
+      "left_results": [
+        {
+          "test_name": "White Blood Cell Count",
+          "result": "50",
+          "normal_values": "5-14.5 x10^9/L",
+          "flag": "HIGH"
+        },
+        {
+          "test_name": "Red Blood Cell Count",
+          "result": "5",
+          "normal_values": "3.9 - 5.3 x10^12/L",
+          "flag": ""
+        },
+        {
+          "test_name": "Hemoglobin",
+          "result": "5",
+          "normal_values": "11.5 - 13.5 g/dL",
+          "flag": "LOW"
+        },
+        {
+          "test_name": "Hematocrit",
+          "result": "5",
+          "normal_values": "34 - 40 %",
+          "flag": "LOW"
+        },
+        {
+          "test_name": "MCV",
+          "result": "",
+          "normal_values": "75 - 87 cu.u.",
+          "flag": ""
+        },
+        {
+          "test_name": "MCH",
+          "result": "",
+          "normal_values": "24 - 30 uug",
+          "flag": ""
+        },
+        {
+          "test_name": "MCHC",
+          "result": "",
+          "normal_values": "31 - 37 g/dL",
+          "flag": ""
+        },
+        {
+          "test_name": "RDW",
+          "result": "",
+          "normal_values": "11 - 16 %",
+          "flag": ""
+        }
+      ],
+      "right_results": [
+        {
+          "row_type": "section",
+          "label": "Differential Count"
+        },
+        {
+          "test_name": "Neutrophils",
+          "result": "",
+          "normal_values": "50 - 70 %",
+          "flag": ""
+        },
+        {
+          "test_name": "Lymphocytes",
+          "result": "",
+          "normal_values": "20 - 40 %",
+          "flag": ""
+        },
+        {
+          "test_name": "Monocytes",
+          "result": "",
+          "normal_values": "3 - 9 %",
+          "flag": ""
+        },
+        {
+          "test_name": "Basophils",
+          "result": "",
+          "normal_values": "0 - 0.5 %",
+          "flag": ""
+        },
+        {
+          "test_name": "Total (%)",
+          "result": "",
+          "normal_values": "",
+          "flag": ""
+        },
+        {
+          "row_type": "section",
+          "label": "Platelet Count"
+        },
+        {
+          "test_name": "Platelet Count",
+          "result": "",
+          "normal_values": "150 - 450 x10^9/L",
+          "flag": ""
+        }
+      ]
+    }
+  },
+  "bands": [
+    {
+      "id": "page_header",
+      "type": "pageHeader",
+      "height": 320,
+      "y": 0
+    },
+    {
+      "id": "detail",
+      "type": "detail",
+      "height": 470,
+      "y": 320
+    },
+    {
+      "id": "page_footer",
+      "type": "pageFooter",
+      "height": 145,
+      "y": 790
+    }
+  ],
+  "objects": [
+    {
+      "id": "clinic_logo",
+      "type": "image",
+      "x": 8,
+      "y": 18,
+      "width": 185,
+      "height": 76,
+      "assetId": "clinic_logo",
+      "fit": "contain",
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "clinic_name",
+      "type": "field",
+      "x": 205,
+      "y": 6,
+      "width": 580,
+      "height": 44,
+      "binding": "clinic.name",
+      "fontSize": 32,
+      "fontWeight": "bold",
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "clinic_address1",
+      "type": "field",
+      "x": 205,
+      "y": 55,
+      "width": 580,
+      "height": 18,
+      "binding": "clinic.address1",
+      "fontSize": 14,
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "clinic_address2",
+      "type": "field",
+      "x": 205,
+      "y": 75,
+      "width": 580,
+      "height": 18,
+      "binding": "clinic.address2",
+      "fontSize": 14,
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "clinic_contact",
+      "type": "field",
+      "x": 205,
+      "y": 95,
+      "width": 580,
+      "height": 18,
+      "binding": "clinic.contact",
+      "fontSize": 14,
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "clinic_email",
+      "type": "field",
+      "x": 205,
+      "y": 115,
+      "width": 580,
+      "height": 18,
+      "binding": "clinic.email",
+      "fontSize": 14,
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "header_line",
+      "type": "line",
+      "x1": 0,
+      "y1": 150,
+      "x2": 796,
+      "y2": 150,
+      "strokeWidth": 1,
+      "strokeColor": "#000000",
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "lbl_patient_name",
+      "type": "text",
+      "x": 0,
+      "y": 162,
+      "width": 120,
+      "height": 20,
+      "text": "Patient Name:",
+      "fontSize": 14,
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "patient_name",
+      "type": "field",
+      "x": 128,
+      "y": 162,
+      "width": 260,
+      "height": 20,
+      "binding": "patient.name",
+      "fontSize": 14,
+      "fontWeight": "bold",
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "lbl_age",
+      "type": "text",
+      "x": 0,
+      "y": 184,
+      "width": 120,
+      "height": 20,
+      "text": "Age:",
+      "fontSize": 14,
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "patient_age",
+      "type": "field",
+      "x": 128,
+      "y": 184,
+      "width": 260,
+      "height": 20,
+      "binding": "patient.age",
+      "fontSize": 14,
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "lbl_dob",
+      "type": "text",
+      "x": 0,
+      "y": 206,
+      "width": 120,
+      "height": 20,
+      "text": "DOB:",
+      "fontSize": 14,
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "patient_dob",
+      "type": "field",
+      "x": 128,
+      "y": 206,
+      "width": 260,
+      "height": 20,
+      "binding": "patient.dob",
+      "fontSize": 14,
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "lbl_sex",
+      "type": "text",
+      "x": 0,
+      "y": 228,
+      "width": 120,
+      "height": 20,
+      "text": "Sex:",
+      "fontSize": 14,
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "patient_sex",
+      "type": "field",
+      "x": 128,
+      "y": 228,
+      "width": 260,
+      "height": 20,
+      "binding": "patient.sex",
+      "fontSize": 14,
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "lbl_physician",
+      "type": "text",
+      "x": 0,
+      "y": 250,
+      "width": 120,
+      "height": 20,
+      "text": "Physician:",
+      "fontSize": 14,
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "patient_physician",
+      "type": "field",
+      "x": 128,
+      "y": 250,
+      "width": 260,
+      "height": 20,
+      "binding": "patient.physician",
+      "fontSize": 14,
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "lbl_diagnosis",
+      "type": "text",
+      "x": 0,
+      "y": 272,
+      "width": 150,
+      "height": 20,
+      "text": "Clinical Diagnosis:",
+      "fontSize": 14,
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "clinical_diagnosis",
+      "type": "field",
+      "x": 150,
+      "y": 272,
+      "width": 250,
+      "height": 20,
+      "binding": "patient.clinical_diagnosis",
+      "fontSize": 14,
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "lbl_order_no",
+      "type": "text",
+      "x": 405,
+      "y": 162,
+      "width": 130,
+      "height": 20,
+      "text": "Order No.:",
+      "fontSize": 14,
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "order_no",
+      "type": "field",
+      "x": 540,
+      "y": 162,
+      "width": 190,
+      "height": 20,
+      "binding": "order.order_no",
+      "fontSize": 14,
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "lbl_source",
+      "type": "text",
+      "x": 405,
+      "y": 184,
+      "width": 130,
+      "height": 20,
+      "text": "Source:",
+      "fontSize": 14,
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "order_source",
+      "type": "field",
+      "x": 540,
+      "y": 184,
+      "width": 190,
+      "height": 20,
+      "binding": "order.source",
+      "fontSize": 14,
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "lbl_room_no",
+      "type": "text",
+      "x": 405,
+      "y": 206,
+      "width": 130,
+      "height": 20,
+      "text": "Room No.:",
+      "fontSize": 14,
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "room_no",
+      "type": "field",
+      "x": 540,
+      "y": 206,
+      "width": 190,
+      "height": 20,
+      "binding": "order.room_no",
+      "fontSize": 14,
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "lbl_date_received",
+      "type": "text",
+      "x": 405,
+      "y": 228,
+      "width": 130,
+      "height": 20,
+      "text": "Date Received:",
+      "fontSize": 14,
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "date_received",
+      "type": "field",
+      "x": 540,
+      "y": 228,
+      "width": 250,
+      "height": 20,
+      "binding": "order.date_received",
+      "fontSize": 14,
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "lbl_date_released",
+      "type": "text",
+      "x": 405,
+      "y": 250,
+      "width": 130,
+      "height": 20,
+      "text": "Date Released:",
+      "fontSize": 14,
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "date_released",
+      "type": "field",
+      "x": 540,
+      "y": 250,
+      "width": 250,
+      "height": 20,
+      "binding": "order.date_released",
+      "fontSize": 14,
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "lbl_date_printed",
+      "type": "text",
+      "x": 405,
+      "y": 272,
+      "width": 130,
+      "height": 20,
+      "text": "Date Printed:",
+      "fontSize": 14,
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "date_printed",
+      "type": "field",
+      "x": 540,
+      "y": 272,
+      "width": 250,
+      "height": 20,
+      "binding": "order.date_printed",
+      "fontSize": 14,
+      "bandId": "page_header",
+      "bandType": "pageHeader",
+      "band": "pageHeader"
+    },
+    {
+      "id": "department_bar",
+      "type": "rectangle",
+      "x": 0,
+      "y": 320,
+      "width": 796,
+      "height": 38,
+      "fillColor": "#ff00e6",
+      "strokeColor": "#ff00e6",
+      "bandId": "detail",
+      "bandType": "detail",
+      "band": "detail"
+    },
+    {
+      "id": "department_name",
+      "type": "field",
+      "x": 0,
+      "y": 328,
+      "width": 796,
+      "height": 22,
+      "binding": "department.name",
+      "fontSize": 16,
+      "fontWeight": "bold",
+      "align": "center",
+      "color": "#ffffff",
+      "bandId": "detail",
+      "bandType": "detail",
+      "band": "detail"
+    },
+    {
+      "id": "left_results_table",
+      "type": "table",
+      "x": 10,
+      "y": 382,
+      "width": 380,
+      "height": 255,
+      "dataSource": "left_results",
+      "showHeader": true,
+      "autoHeight": true,
+      "rowHeight": 24,
+      "sectionRowHeight": 24,
+      "headerHeight": 28,
+      "border": {
+        "show": false,
+        "color": "#000000",
+        "width": 1
+      },
+      "grid": {
+        "showHorizontal": false,
+        "showVertical": false,
+        "color": "#d1d5db",
+        "width": 1
+      },
+      "headerStyle": {
+        "fontSize": 13,
+        "fontWeight": "bold",
+        "color": "#000000",
+        "backgroundColor": "#ffffff",
+        "align": "left"
+      },
+      "bodyStyle": {
+        "fontSize": 13,
+        "fontWeight": "normal",
+        "color": "#000000",
+        "backgroundColor": "#ffffff",
+        "align": "left"
+      },
+      "columns": [
+        {
+          "id": "test_name",
+          "title": "TEST NAME",
+          "field": "test_name",
+          "width": 190,
+          "align": "left",
+          "wrap": false
+        },
+        {
+          "id": "result",
+          "title": "RESULT",
+          "field": "result",
+          "width": 75,
+          "align": "center",
+          "conditionalFormatting": [
+            {
+              "when": "flag == 'HIGH'",
+              "style": {
+                "color": "#ff0000",
+                "fontWeight": "bold"
+              }
+            },
+            {
+              "when": "flag == 'LOW'",
+              "style": {
+                "color": "#004cff",
+                "fontWeight": "bold"
+              }
+            },
+            {
+              "when": "flag == 'CRITICAL'",
+              "style": {
+                "color": "#ff0000",
+                "fontWeight": "bold"
+              }
+            }
+          ]
+        },
+        {
+          "id": "normal_values",
+          "title": "NORMAL VALUES",
+          "field": "normal_values",
+          "width": 160,
+          "align": "left"
+        }
+      ],
+      "bandId": "detail",
+      "bandType": "detail",
+      "band": "detail"
+    },
+    {
+      "id": "right_results_table",
+      "type": "table",
+      "x": 405,
+      "y": 382,
+      "width": 380,
+      "height": 255,
+      "dataSource": "right_results",
+      "showHeader": true,
+      "autoHeight": true,
+      "rowHeight": 24,
+      "sectionRowHeight": 24,
+      "headerHeight": 28,
+      "border": {
+        "show": false,
+        "color": "#000000",
+        "width": 1
+      },
+      "grid": {
+        "showHorizontal": false,
+        "showVertical": false,
+        "color": "#d1d5db",
+        "width": 1
+      },
+      "headerStyle": {
+        "fontSize": 13,
+        "fontWeight": "bold",
+        "color": "#000000",
+        "backgroundColor": "#ffffff",
+        "align": "left"
+      },
+      "bodyStyle": {
+        "fontSize": 13,
+        "fontWeight": "normal",
+        "color": "#000000",
+        "backgroundColor": "#ffffff",
+        "align": "left"
+      },
+      "columns": [
+        {
+          "id": "test_name",
+          "title": "TEST NAME",
+          "field": "test_name",
+          "width": 190,
+          "align": "left",
+          "wrap": false
+        },
+        {
+          "id": "result",
+          "title": "RESULT",
+          "field": "result",
+          "width": 75,
+          "align": "center",
+          "conditionalFormatting": [
+            {
+              "when": "flag == 'HIGH'",
+              "style": {
+                "color": "#ff0000",
+                "fontWeight": "bold"
+              }
+            },
+            {
+              "when": "flag == 'LOW'",
+              "style": {
+                "color": "#004cff",
+                "fontWeight": "bold"
+              }
+            },
+            {
+              "when": "flag == 'CRITICAL'",
+              "style": {
+                "color": "#ff0000",
+                "fontWeight": "bold"
+              }
+            }
+          ]
+        },
+        {
+          "id": "normal_values",
+          "title": "NORMAL VALUES",
+          "field": "normal_values",
+          "width": 160,
+          "align": "left"
+        }
+      ],
+      "sectionStyle": {
+        "fontSize": 13,
+        "fontWeight": "bold",
+        "color": "#000000",
+        "backgroundColor": "#ffffff",
+        "align": "left"
+      },
+      "bandId": "detail",
+      "bandType": "detail",
+      "band": "detail"
+    },
+    {
+      "id": "remarks_label",
+      "type": "text",
+      "x": 10,
+      "y": 660,
+      "width": 80,
+      "height": 20,
+      "text": "Remarks:",
+      "fontSize": 12,
+      "fontWeight": "bold",
+      "bandId": "detail",
+      "bandType": "detail",
+      "band": "detail"
+    },
+    {
+      "id": "remarks",
+      "type": "field",
+      "x": 90,
+      "y": 660,
+      "width": 360,
+      "height": 20,
+      "binding": "remarks",
+      "fontSize": 12,
+      "bandId": "detail",
+      "bandType": "detail",
+      "band": "detail"
+    },
+    {
+      "id": "order_barcode",
+      "type": "barcode",
+      "x": 575,
+      "y": 650,
+      "width": 110,
+      "height": 40,
+      "binding": "order.barcode",
+      "format": "CODE128",
+      "showText": true,
+      "bandId": "detail",
+      "bandType": "detail",
+      "band": "detail"
+    },
+    {
+      "id": "order_qr",
+      "type": "qrcode",
+      "x": 710,
+      "y": 638,
+      "width": 70,
+      "height": 70,
+      "binding": "order.qr_payload",
+      "errorCorrection": "M",
+      "bandId": "detail",
+      "bandType": "detail",
+      "band": "detail"
+    },
+    {
+      "id": "medtech_signature",
+      "type": "image",
+      "x": 35,
+      "y": 800,
+      "width": 180,
+      "height": 50,
+      "binding": "signatures.medtech_asset_id",
+      "fit": "contain",
+      "bandId": "page_footer",
+      "bandType": "pageFooter",
+      "band": "pageFooter"
+    },
+    {
+      "id": "reviewer_signature",
+      "type": "image",
+      "x": 310,
+      "y": 800,
+      "width": 180,
+      "height": 50,
+      "binding": "signatures.reviewer_asset_id",
+      "fit": "contain",
+      "bandId": "page_footer",
+      "bandType": "pageFooter",
+      "band": "pageFooter"
+    },
+    {
+      "id": "pathologist_signature",
+      "type": "image",
+      "x": 585,
+      "y": 800,
+      "width": 180,
+      "height": 50,
+      "binding": "signatures.pathologist_asset_id",
+      "fit": "contain",
+      "bandId": "page_footer",
+      "bandType": "pageFooter",
+      "band": "pageFooter"
+    },
+    {
+      "id": "line_medtech",
+      "type": "line",
+      "x1": 35,
+      "y1": 855,
+      "x2": 215,
+      "y2": 855,
+      "strokeColor": "#000000",
+      "strokeWidth": 1,
+      "bandId": "page_footer",
+      "bandType": "pageFooter",
+      "band": "pageFooter"
+    },
+    {
+      "id": "line_reviewer",
+      "type": "line",
+      "x1": 310,
+      "y1": 855,
+      "x2": 490,
+      "y2": 855,
+      "strokeColor": "#000000",
+      "strokeWidth": 1,
+      "bandId": "page_footer",
+      "bandType": "pageFooter",
+      "band": "pageFooter"
+    },
+    {
+      "id": "line_pathologist",
+      "type": "line",
+      "x1": 585,
+      "y1": 855,
+      "x2": 765,
+      "y2": 855,
+      "strokeColor": "#000000",
+      "strokeWidth": 1,
+      "bandId": "page_footer",
+      "bandType": "pageFooter",
+      "band": "pageFooter"
+    },
+    {
+      "id": "medtech_label",
+      "type": "field",
+      "x": 35,
+      "y": 862,
+      "width": 180,
+      "height": 18,
+      "binding": "staff.medtech",
+      "fontSize": 10,
+      "align": "center",
+      "bandId": "page_footer",
+      "bandType": "pageFooter",
+      "band": "pageFooter"
+    },
+    {
+      "id": "reviewer_label",
+      "type": "field",
+      "x": 310,
+      "y": 862,
+      "width": 180,
+      "height": 18,
+      "binding": "staff.reviewer",
+      "fontSize": 10,
+      "align": "center",
+      "bandId": "page_footer",
+      "bandType": "pageFooter",
+      "band": "pageFooter"
+    },
+    {
+      "id": "pathologist_label",
+      "type": "field",
+      "x": 585,
+      "y": 862,
+      "width": 180,
+      "height": 18,
+      "binding": "staff.pathologist",
+      "fontSize": 10,
+      "align": "center",
+      "bandId": "page_footer",
+      "bandType": "pageFooter",
+      "band": "pageFooter"
+    },
+    {
+      "id": "footer_page",
+      "type": "text",
+      "x": 620,
+      "y": 905,
+      "width": 160,
+      "height": 18,
+      "text": "Page {{system.page}} of {{system.total_pages}}",
+      "fontSize": 9,
+      "align": "right",
+      "color": "#444444",
+      "bandId": "page_footer",
+      "bandType": "pageFooter",
+      "band": "pageFooter"
+    }
+  ]
+}

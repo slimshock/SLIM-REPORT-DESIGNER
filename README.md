@@ -70,6 +70,8 @@ Implemented now:
 - Safe computed field formulas
 - Conditional formatting with style overrides and hide actions
 - Page print/export settings, safe PDF filenames, and PDF metadata
+- Flask printable preview and GET PDF export routes for saved templates
+- App-facing Flask render/export helper methods
 - Framework-agnostic template storage providers
 - Filesystem and optional SQLAlchemy template storage
 - Framework-agnostic asset provider interface for report images
@@ -185,6 +187,16 @@ There is no root `pip install -e .` package yet; install the package folders dir
 See `docs/lis-integration-hardening.md` for Flask LIS/PyMySQL deployment guidance.
 See `docs/advanced-table-designer.md` for the Sprint 6.5 table schema and
 `docs/lis-table-layouts.md` for two-column LIS table layout guidance.
+See `docs/print-export-workflow.md` and `docs/lis-print-workflow.md` for Sprint 6.6
+print preview, GET PDF export, filename, and LIS button integration patterns.
+
+Flask/LIS pages can link directly to saved templates:
+
+```html
+<a href="/report-designer/print/lab_result?order_id=43" target="_blank">Print Preview</a>
+<a href="/report-designer/export/pdf/lab_result?order_id=43" target="_blank">Export PDF</a>
+<a href="/report-designer/export/pdf/lab_result?order_id=43&download=1">Download PDF</a>
+```
 
 For development tools:
 
@@ -378,6 +390,11 @@ from slim_report_core import normalize_template
 
 template = normalize_template({"metadata": {"name": "Lab"}, "page": {}, "objects": [], "bands": []})
 ```
+
+The normalizer accepts both flat templates with top-level `objects` and
+band-based templates where objects are nested under `bands[].objects`. If a
+template contains non-empty top-level `objects`, that flat list is preserved and
+nested band objects are not duplicated.
 
 ## CLI
 

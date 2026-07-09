@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import mimetypes
 import re
+from html import escape
 from typing import TYPE_CHECKING, Any
 
 from flask import Blueprint, Response, current_app, jsonify, request, url_for
@@ -294,6 +295,56 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         except Exception as exc:
             return render_failure_response(exc)
 
+    @blueprint.get("/print/<template_id>")
+    def print_template(template_id: str) -> Response:
+        try:
+            blocked = require_access(designer, "view", template_id, api=wants_json_response())
+            if blocked:
+                return blocked
+            report = designer.get_report(template_id)
+            data = designer.resolve_data(
+                template_id,
+                request_args=request.args,
+                request_json=None,
+                report=report,
+            )
+            context = create_render_context(report, asset_provider=designer.asset_provider)
+            html = printable_preview_html(render_report_html(report, data, designer))
+            return Response(
+                html,
+                mimetype="text/html",
+                headers=render_debug_headers(context, data, renderer="html"),
+            )
+        except Exception as exc:
+            return render_route_failure_response(exc)
+
+    @blueprint.get("/export/pdf/<template_id>")
+    def export_template_pdf(template_id: str) -> Response:
+        try:
+            blocked = require_access(designer, "export", template_id, api=wants_json_response())
+            if blocked:
+                return blocked
+            report = designer.get_report(template_id)
+            data = designer.resolve_data(
+                template_id,
+                request_args=request.args,
+                request_json=None,
+                report=report,
+            )
+            context = create_render_context(report, asset_provider=designer.asset_provider)
+            filename = designer.export_filename(template_id, data, request.args, report)
+            disposition = "attachment" if truthy_query_arg("download") else "inline"
+            return Response(
+                render_report_pdf(report, data, designer),
+                mimetype="application/pdf",
+                headers={
+                    "Content-Disposition": content_disposition(filename, disposition=disposition),
+                    **render_debug_headers(context, data, renderer="pdf"),
+                },
+            )
+        except Exception as exc:
+            return render_route_failure_response(exc)
+
     @blueprint.get("/templates/<template_id>/preview/<record_id>")
     def preview(template_id: str, record_id: str) -> Response:
         try:
@@ -390,6 +441,26 @@ def render_failure_response(exc: Exception) -> tuple[Response, int]:
     current_app.logger.exception("Slim report preview/export failed")
     status = _status_for_exception(exc)
     return error_response(_error_code_for_exception(exc), str(exc), status, type(exc).__name__)
+
+
+def render_route_failure_response(exc: Exception) -> tuple[Response, int] | Response:
+    """Return JSON or readable browser errors for GET preview/export routes."""
+    current_app.logger.exception("Slim report route render/export failed")
+    status = _status_for_exception(exc)
+    code = _error_code_for_exception(exc)
+    message = str(exc)
+    if wants_json_response():
+        return error_response(code, message, status, type(exc).__name__)
+    html = (
+        "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">"
+        "<title>Report Error</title>"
+        "<style>body{font-family:Arial,sans-serif;margin:32px;color:#111827;}"
+        "code{background:#f1f5f9;padding:2px 4px;border-radius:3px;}</style>"
+        "</head><body>"
+        f"<h1>Report export failed</h1><p>{escape(message)}</p><p><code>{escape(code)}</code></p>"
+        "</body></html>"
+    )
+    return Response(html, status=status, mimetype="text/html")
 
 
 def error_response(
@@ -665,8 +736,54 @@ def safe_pdf_filename(value: Any, fallback: str = "report.pdf") -> str:
     return f"{slug[:120]}.pdf"
 
 
-def content_disposition(filename: str) -> str:
-    return f'attachment; filename="{safe_pdf_filename(filename)}"'
+def content_disposition(filename: str, *, disposition: str = "attachment") -> str:
+    resolved = "attachment" if disposition == "attachment" else "inline"
+    return f'{resolved}; filename="{safe_pdf_filename(filename)}"'
+
+
+def printable_preview_html(html: str) -> str:
+    """Return full report HTML adjusted for direct browser printing."""
+    printable_css = (
+        "<style id=\"slim-report-print-route-css\">"
+        "html,body{background:#fff!important;}"
+        ".slim-report-preview-toolbar,.slim-report-print-button{display:none!important;}"
+        ".slim-report-preview{padding:0!important;background:#fff!important;}"
+        ".slim-report-page{box-shadow:none!important;margin:0 auto!important;}"
+        "@media print{body{margin:0!important;background:#fff!important;}"
+        ".slim-report-page{margin:0!important;box-shadow:none!important;}}"
+        "</style>"
+    )
+    html = re.sub(
+        r'<div class="slim-report-preview-toolbar">.*?</div>',
+        "",
+        html,
+        flags=re.DOTALL,
+    )
+    if "</head>" in html:
+        html = html.replace("</head>", f"{printable_css}</head>", 1)
+    else:
+        html = f"{printable_css}{html}"
+    if truthy_query_arg("auto_print"):
+        script = (
+            "<script>window.addEventListener('load',function(){window.print();});</script>"
+        )
+        html = (
+            html.replace("</body>", f"{script}</body>", 1)
+            if "</body>" in html
+            else html + script
+        )
+    return html
+
+
+def wants_json_response() -> bool:
+    best = request.accept_mimetypes.best_match(["application/json", "text/html"])
+    return best == "application/json" and (
+        request.accept_mimetypes["application/json"] >= request.accept_mimetypes["text/html"]
+    )
+
+
+def truthy_query_arg(name: str) -> bool:
+    return str(request.args.get(name, "")).strip().lower() in {"1", "true", "yes", "on"}
 
 
 def request_template_payload(payload: Any | None = None) -> dict[str, Any]:

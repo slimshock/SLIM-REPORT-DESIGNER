@@ -16,6 +16,8 @@ Start with:
 - [LIS Asset Management](lis-asset-management.md)
 - [Advanced Table Designer](advanced-table-designer.md)
 - [LIS Table Layouts](lis-table-layouts.md)
+- [Print/Export Workflow](print-export-workflow.md)
+- [LIS Print Workflow](lis-print-workflow.md)
 - [JSON template schema](json-template-schema.md)
 - [Data Fields](data-fields.md)
 - [Repeating Detail rows](repeating-detail-rows.md)

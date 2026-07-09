@@ -20,6 +20,7 @@ This project follows semantic versioning once public releases begin.
 - Added LIS hematology sample templates for filesystem/database/LIS preview testing.
 - Added Sprint 6.4 asset provider interface, filesystem asset provider, asset ID validation, image `assetId` rendering, Flask asset routes, LIS asset docs, and a sample asset template.
 - Added Sprint 6.5 advanced Table designer support with schema aliases, presets, richer column editing, grid controls, conditional formatting, section rows, two-column hematology sample data, and LIS table docs.
+- Added Sprint 6.6 print/export workflow polish with Flask helper APIs, printable preview route, GET PDF export route, safe filenames, inline/download disposition, cleaner GET-route errors, permission coverage, LIS print docs, and compatibility for templates that store objects under `bands[].objects`.
 - Expanded package/public API smoke tests and designer static package-data checks.
 - Documented the multi-package editable install flow for Sprint 6.
 

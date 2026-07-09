@@ -537,6 +537,35 @@ def test_flask_designer_api_previews_and_exports_posted_json(tmp_path: Path) -> 
     assert pdf_response.get_data().startswith(b"%PDF")
 
 
+def test_flask_preview_export_and_print_support_band_based_templates(tmp_path: Path) -> None:
+    app, designer = create_app(tmp_path)
+    template = band_based_template_payload()
+    designer.create_template(template)
+    client = app.test_client()
+
+    posted_preview = client.post(
+        "/report-designer/api/preview",
+        json={"template_id": "band-template", "template": template},
+    )
+    posted_pdf = client.post(
+        "/report-designer/api/export/pdf",
+        json={"template_id": "band-template", "template": template},
+    )
+    print_response = client.get("/report-designer/print/band-template")
+    get_pdf_response = client.get("/report-designer/export/pdf/band-template")
+
+    assert posted_preview.status_code == 200
+    assert posted_preview.headers["X-Slim-Report-Object-Count"] == "2"
+    assert "Band Based Report" in posted_preview.get_data(as_text=True)
+    assert "Band Patient" in posted_preview.get_data(as_text=True)
+    assert posted_pdf.status_code == 200
+    assert posted_pdf.get_data().startswith(b"%PDF")
+    assert print_response.status_code == 200
+    assert "Band Based Report" in print_response.get_data(as_text=True)
+    assert get_pdf_response.status_code == 200
+    assert get_pdf_response.get_data().startswith(b"%PDF")
+
+
 def test_flask_designer_api_uses_posted_template_sample_data(tmp_path: Path) -> None:
     app, _designer = create_app(tmp_path)
     payload = {
@@ -765,11 +794,15 @@ def test_flask_permission_hooks_block_view_edit_and_export(tmp_path: Path) -> No
         "/report-designer/api/export/pdf",
         json={"template_id": "allowed", "template": template_payload(provider=None)},
     )
+    print_response = client.get("/report-designer/print/blocked")
+    get_export_response = client.get("/report-designer/export/pdf/allowed")
 
     assert view_response.status_code == 403
     assert view_response.get_json()["error_detail"]["code"] == "forbidden"
     assert edit_response.status_code == 403
     assert export_response.status_code == 403
+    assert print_response.status_code == 403
+    assert get_export_response.status_code == 403
 
 
 def test_flask_designer_api_missing_render_data_does_not_crash(tmp_path: Path) -> None:
@@ -832,6 +865,25 @@ def test_flask_designer_api_rejects_empty_preview_and_export(tmp_path: Path) -> 
     assert pdf_response.get_json()["type"] == "ValueError"
 
 
+def test_flask_designer_api_rejects_empty_band_based_preview(tmp_path: Path) -> None:
+    app, _designer = create_app(tmp_path)
+    payload = {
+        "version": "0.1",
+        "metadata": {"name": "Empty Bands"},
+        "page": {"width": 595, "height": 842, "unit": "px"},
+        "bands": [
+            {"id": "page_header", "type": "pageHeader", "height": 80, "objects": []},
+            {"id": "detail", "type": "detail", "height": 700, "objects": []},
+        ],
+        "assets": [],
+    }
+
+    response = app.test_client().post("/report-designer/api/preview", json=payload)
+
+    assert response.status_code == 400
+    assert "at least one object" in response.get_json()["error"]
+
+
 def test_flask_export_uses_page_print_filename_and_safe_slug(tmp_path: Path) -> None:
     app, _designer = create_app(tmp_path)
     payload = {
@@ -852,6 +904,138 @@ def test_flask_export_uses_page_print_filename_and_safe_slug(tmp_path: Path) -> 
 def test_safe_pdf_filename_removes_windows_invalid_characters() -> None:
     assert safe_pdf_filename('CBC: Result/July*08?.pdf') == "CBC-Result-July-08.pdf"
     assert safe_pdf_filename("CON") == "report.pdf"
+
+
+def test_flask_helper_api_renders_with_standard_data_priority(tmp_path: Path) -> None:
+    calls: list[str] = []
+
+    def data_provider(template_id: str, request_args: Any, request_json: Any) -> dict[str, Any]:
+        calls.append(str(request_args.get("order_id")))
+        return {"patient": {"name": f"Provider {request_args.get('order_id')}"}}
+
+    app = Flask(__name__)
+    app.config["TESTING"] = True
+    app.config["SLIM_REPORT_TEMPLATE_DIR"] = str(tmp_path / "templates")
+    designer = SlimReportDesigner(data_provider=data_provider)
+    designer.init_app(app)
+    designer.create_template(template_payload(provider=None))
+
+    explicit_html = designer.render_template_html(
+        "lab-template",
+        data={"patient": {"name": "Explicit Patient"}},
+        request_args={"order_id": "43"},
+    )
+    provider_html = designer.render_template_html(
+        "lab-template",
+        request_args={"order_id": "44"},
+    )
+    pdf = designer.render_template_pdf(
+        "lab-template",
+        data={"patient": {"name": "PDF Patient"}},
+    )
+
+    assert "Explicit Patient" in explicit_html
+    assert "Provider 44" in provider_html
+    assert pdf.startswith(b"%PDF")
+    assert calls == ["44"]
+
+
+def test_flask_helper_api_falls_back_to_template_sample_data(tmp_path: Path) -> None:
+    _app, designer = create_app(tmp_path)
+    payload = template_payload(provider=None)
+    payload["data"] = {"sample": {"patient": {"name": "Template Sample"}}}
+    designer.create_template(payload)
+
+    html = designer.render_template_html("lab-template")
+
+    assert "Template Sample" in html
+
+
+def test_flask_print_route_renders_query_data_and_auto_print(tmp_path: Path) -> None:
+    captured_args: list[str] = []
+
+    def data_provider(template_id: str, request_args: Any, request_json: Any) -> dict[str, Any]:
+        captured_args.append(str(request_args.get("order_id")))
+        return {"patient": {"name": f"Order {request_args.get('order_id')}"}}
+
+    app = Flask(__name__)
+    app.config["TESTING"] = True
+    app.config["SLIM_REPORT_TEMPLATE_DIR"] = str(tmp_path / "templates")
+    designer = SlimReportDesigner(data_provider=data_provider)
+    designer.init_app(app)
+    designer.create_template(template_payload(provider=None))
+
+    response = app.test_client().get(
+        "/report-designer/print/lab-template?order_id=43&auto_print=1"
+    )
+    html = response.get_data(as_text=True)
+
+    assert response.status_code == 200
+    assert response.mimetype == "text/html"
+    assert "Order 43" in html
+    assert "window.print()" in html
+    assert "slim-report-print-route-css" in html
+    assert '<div class="slim-report-preview-toolbar">' not in html
+    assert captured_args == ["43"]
+
+
+def test_flask_get_pdf_route_supports_filename_provider_and_disposition(tmp_path: Path) -> None:
+    def data_provider(template_id: str, request_args: Any, request_json: Any) -> dict[str, Any]:
+        return {"patient": {"name": f"Order {request_args.get('order_id')}"}}
+
+    def filename_provider(template_id: str, data: dict[str, Any], request_args: Any) -> str:
+        return f"lab/result-{request_args.get('order_id')}"
+
+    app = Flask(__name__)
+    app.config["TESTING"] = True
+    app.config["SLIM_REPORT_TEMPLATE_DIR"] = str(tmp_path / "templates")
+    designer = SlimReportDesigner(
+        data_provider=data_provider,
+        filename_provider=filename_provider,
+    )
+    designer.init_app(app)
+    designer.create_template(template_payload(provider=None))
+    client = app.test_client()
+
+    inline_response = client.get("/report-designer/export/pdf/lab-template?order_id=43")
+    download_response = client.get(
+        "/report-designer/export/pdf/lab-template?order_id=43&download=1"
+    )
+    override_response = client.get(
+        "/report-designer/export/pdf/lab-template?filename=Unsafe/Name*42"
+    )
+
+    assert inline_response.status_code == 200
+    assert inline_response.mimetype == "application/pdf"
+    assert inline_response.get_data().startswith(b"%PDF")
+    assert inline_response.headers["Content-Disposition"] == 'inline; filename="lab-result-43.pdf"'
+    assert download_response.headers["Content-Disposition"] == (
+        'attachment; filename="lab-result-43.pdf"'
+    )
+    assert override_response.headers["Content-Disposition"] == (
+        'inline; filename="Unsafe-Name-42.pdf"'
+    )
+
+
+def test_flask_get_print_and_pdf_routes_return_clean_missing_template_errors(
+    tmp_path: Path,
+) -> None:
+    app, _designer = create_app(tmp_path)
+    client = app.test_client()
+
+    print_response = client.get(
+        "/report-designer/print/missing",
+        headers={"Accept": "application/json"},
+    )
+    pdf_response = client.get(
+        "/report-designer/export/pdf/missing",
+        headers={"Accept": "application/json"},
+    )
+
+    assert print_response.status_code == 404
+    assert print_response.get_json()["error_detail"]["code"] == "template_not_found"
+    assert pdf_response.status_code == 404
+    assert pdf_response.get_json()["error_detail"]["code"] == "template_not_found"
 
 
 def test_flask_designer_save_route_persists_template_json(tmp_path: Path) -> None:
@@ -1208,6 +1392,52 @@ def template_payload(provider: str | None = "lab_result") -> dict[str, Any]:
         )
     )
     return JSONSerializer().dump_mapping(report)
+
+
+def band_based_template_payload() -> dict[str, Any]:
+    return {
+        "version": "1.0",
+        "metadata": {"title": "Band Based", "custom": {"id": "band-template"}},
+        "page": {"width": 595, "height": 842, "unit": "px"},
+        "bands": [
+            {
+                "id": "page_header",
+                "type": "pageHeader",
+                "height": 80,
+                "objects": [
+                    {
+                        "id": "report_title",
+                        "type": "text",
+                        "x": 40,
+                        "y": 24,
+                        "width": 240,
+                        "height": 24,
+                        "text": "Band Based Report",
+                        "band": "pageHeader",
+                    }
+                ],
+            },
+            {
+                "id": "detail",
+                "type": "detail",
+                "height": 700,
+                "objects": [
+                    {
+                        "id": "patient_name",
+                        "type": "field",
+                        "x": 40,
+                        "y": 120,
+                        "width": 240,
+                        "height": 20,
+                        "binding": "patient.name",
+                        "bandId": "detail",
+                    }
+                ],
+            },
+        ],
+        "data": {"sample": {"patient": {"name": "Band Patient"}}},
+        "assets": [],
+    }
 
 
 def repeating_template_payload() -> dict[str, Any]:

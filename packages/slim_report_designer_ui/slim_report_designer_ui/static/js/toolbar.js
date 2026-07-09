@@ -13,6 +13,7 @@ export function createToolbar({ container, onCommand }) {
       label: "Preview",
       actions: [
         ["preview", "Preview", "text-action", "Preview report", "Preview", "preview"],
+        ["printPreview", "Print Preview", "text-action", "Open printable report preview", "Print", "preview"],
         ["exportPdf", "Export PDF", "icon-action", "Export report as PDF", "", "pdf"]
       ]
     },

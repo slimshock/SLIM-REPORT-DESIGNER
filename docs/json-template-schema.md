@@ -28,6 +28,12 @@ Common top-level keys:
 
 Optional keys such as `pages`, `layers`, and `styles` may appear when the domain model contains them.
 
+For compatibility with external builders, the serializer also accepts templates
+where objects are nested under `bands[].objects`. If top-level `objects` is
+missing or empty, those nested objects are flattened internally and assigned to
+the owning band ID. If top-level `objects` is non-empty, it remains authoritative
+and nested band objects are not duplicated.
+
 ## Page
 
 Page settings describe the canvas and exported page:

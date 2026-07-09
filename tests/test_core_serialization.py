@@ -3,7 +3,15 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from slim_report_core import DEFAULT_REPORT_VERSION, Band, Object, Page, Report, Style
+from slim_report_core import (
+    DEFAULT_REPORT_VERSION,
+    Band,
+    Object,
+    Page,
+    Report,
+    Style,
+    normalize_template,
+)
 from slim_report_core.serialization import JSONSerializer
 
 
@@ -145,6 +153,90 @@ def test_json_serializer_preserves_bands_and_object_band_alias() -> None:
     assert report.objects[0].band_id == "page_header"
     assert dumped["bands"][0]["background_color"] == "#eeeeee"
     assert dumped["objects"][0]["band"] == "page_header"
+
+
+def test_json_serializer_flattens_band_objects_when_top_level_objects_missing() -> None:
+    payload = {
+        "version": DEFAULT_REPORT_VERSION,
+        "metadata": {"title": "Bands Only"},
+        "page": {"width": 595, "height": 842, "unit": "px"},
+        "bands": [
+            {
+                "id": "page_header",
+                "type": "pageHeader",
+                "height": 80,
+                "objects": [
+                    {
+                        "id": "title",
+                        "type": "text",
+                        "x": 40,
+                        "y": 24,
+                        "width": 200,
+                        "height": 22,
+                        "text": "Band Header",
+                        "band": "pageHeader",
+                    }
+                ],
+            },
+            {
+                "id": "detail",
+                "type": "detail",
+                "height": 700,
+                "objects": [
+                    {
+                        "id": "patient_name",
+                        "type": "field",
+                        "x": 40,
+                        "y": 120,
+                        "width": 220,
+                        "height": 18,
+                        "binding": "patient.name",
+                    }
+                ],
+            },
+        ],
+        "assets": [],
+    }
+
+    report = JSONSerializer().load_mapping(payload)
+    dumped = JSONSerializer().dump_mapping(report)
+
+    assert [item.id for item in report.objects] == ["title", "patient_name"]
+    assert [item.band_id for item in report.objects] == ["page_header", "detail"]
+    assert [band.type for band in report.bands] == ["page_header", "detail"]
+    assert dumped["objects"][0]["band"] == "page_header"
+    assert dumped["objects"][1]["band"] == "detail"
+
+
+def test_normalize_template_preserves_non_empty_top_level_objects_without_duplication() -> None:
+    normalized = normalize_template(
+        {
+            "metadata": {"title": "Mixed"},
+            "page": {"width": 595, "height": 842, "unit": "px"},
+            "objects": [{"id": "flat_title", "type": "text", "text": "Flat"}],
+            "bands": [
+                {
+                    "id": "detail",
+                    "type": "detail",
+                    "objects": [{"id": "nested_title", "type": "text", "text": "Nested"}],
+                }
+            ],
+            "assets": [],
+        }
+    )
+
+    assert [item["id"] for item in normalized["objects"]] == ["flat_title"]
+    assert normalized["bands"][0]["objects"][0]["id"] == "nested_title"
+
+
+def test_json_serializer_accepts_flat_object_band_id_alias() -> None:
+    payload = sample_template()
+    payload["bands"] = [{"id": "page_header", "type": "page_header", "height": 80}]
+    payload["objects"][0]["bandId"] = "page_header"
+
+    report = JSONSerializer().load_mapping(payload)
+
+    assert report.objects[0].band_id == "page_header"
 
 
 def test_json_serializer_round_trips_optional_data_metadata() -> None:

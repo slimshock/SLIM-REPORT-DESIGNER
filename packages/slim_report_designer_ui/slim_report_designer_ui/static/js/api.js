@@ -64,6 +64,25 @@ export async function previewTemplate(template) {
   openHtmlPreview(html);
 }
 
+export async function printPreview(template) {
+  if (!apiBase()) {
+    openHtmlPreview(localPreviewHtml(template));
+    return;
+  }
+  const templateId = currentTemplateId() || template.metadata?.custom?.id || "";
+  if (!templateId) {
+    throw new Error("Print preview requires a saved template id.");
+  }
+  const root = apiBase().replace(/\/api\/?$/, "");
+  const params = new URLSearchParams(currentQueryParams());
+  const query = params.toString();
+  window.open(
+    `${root}/print/${encodeURIComponent(templateId)}${query ? `?${query}` : ""}`,
+    "_blank",
+    "noopener"
+  );
+}
+
 export async function exportPdf(template) {
   if (!apiBase()) {
     throw new Error("PDF export requires a backend API.");

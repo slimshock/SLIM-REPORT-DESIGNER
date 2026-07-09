@@ -404,7 +404,9 @@ class ObjectFactory:
             "position": position,
             "size": size,
             "style": style,
-            "band_id": _optional_str(mapping.get("band", mapping.get("band_id"))),
+            "band_id": _optional_str(
+                mapping.get("band", mapping.get("band_id", mapping.get("bandId")))
+            ),
             "layer_id": _optional_str(mapping.get("layer_id")),
             "z_index": int(mapping.get("z_index", 0)),
             "visible": bool(mapping.get("visible", True)),

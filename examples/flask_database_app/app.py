@@ -2,10 +2,20 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 from typing import Any
 
 from flask import Flask, redirect
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+for package_src in (
+    REPO_ROOT / "packages" / "slim_report_core" / "src",
+    REPO_ROOT / "packages" / "slim_report_designer_ui",
+    REPO_ROOT / "packages" / "slim_report_flask" / "src",
+):
+    if str(package_src) not in sys.path:
+        sys.path.insert(0, str(package_src))
 
 try:
     from sqlalchemy import Boolean, Column, DateTime, Integer, JSON, String, Text, create_engine
@@ -19,9 +29,9 @@ except ImportError as exc:  # pragma: no cover - exercised manually
 from slim_report_core.storage import FileSystemTemplateProvider, SQLAlchemyTemplateProvider
 from slim_report_flask import SlimReportDesigner
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
 BASE_DIR = Path(__file__).resolve().parent
 SAMPLE_TEMPLATE_DIR = REPO_ROOT / "examples" / "flask_app" / "sample_templates"
+LIS_TEMPLATE_DIR = REPO_ROOT / "examples" / "lis_templates"
 DATABASE_PATH = BASE_DIR / "report_templates.db"
 Base = declarative_base()
 
@@ -80,13 +90,17 @@ def create_session():
 def seed_templates(provider: SQLAlchemyTemplateProvider) -> None:
     """Seed selected sample templates into SQLite if they do not exist."""
     source = FileSystemTemplateProvider(SAMPLE_TEMPLATE_DIR)
-    for template_id in [
+    for template_id in (
         "complete_sprint5_lab_report",
         "conditional_lab_result",
         "aggregate_grouped_lab_result",
-    ]:
+    ):
         if not provider.exists(template_id):
             provider.save_template(template_id, source.get_template(template_id))
+    lis_source = FileSystemTemplateProvider(LIS_TEMPLATE_DIR)
+    for template_id in ("lab_result_hematology_two_column",):
+        if not provider.exists(template_id):
+            provider.save_template(template_id, lis_source.get_template(template_id))
 
 
 def demo_data_provider(provider: SQLAlchemyTemplateProvider):

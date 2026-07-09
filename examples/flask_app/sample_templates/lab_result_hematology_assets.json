@@ -1,0 +1,798 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "title": "LIS Hematology Result Assets",
+    "description": "LIS hematology layout demonstrating assetId image references.",
+    "author": null,
+    "tags": [],
+    "custom": {
+      "id": "lab_result_hematology_assets",
+      "category": "lis"
+    }
+  },
+  "page": {
+    "width": 595.0,
+    "height": 842.0,
+    "unit": "px",
+    "orientation": "portrait",
+    "margin_top": 24.0,
+    "margin_right": 24.0,
+    "margin_bottom": 24.0,
+    "margin_left": 24.0,
+    "background_color": "#ffffff",
+    "transparent": false,
+    "size": "A4"
+  },
+  "objects": [
+    {
+      "id": "clinic_logo",
+      "type": "image",
+      "x": 40.0,
+      "y": 24.0,
+      "width": 140.0,
+      "height": 48.0,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "band": "page_header",
+        "band_id": "page_header",
+        "locked": false,
+        "src": "",
+        "source": "",
+        "alt": "",
+        "assetId": "clinic_logo",
+        "maintain_aspect_ratio": true,
+        "style": {
+          "object_fit": "contain"
+        }
+      },
+      "src": "",
+      "source": "",
+      "assetId": "clinic_logo",
+      "alt": "",
+      "style": {
+        "object_fit": "contain"
+      },
+      "band": "page_header",
+      "band_id": "page_header"
+    },
+    {
+      "id": "title",
+      "type": "text",
+      "x": 190.0,
+      "y": 28.0,
+      "width": 365.0,
+      "height": 28.0,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "band": "page_header",
+        "band_id": "page_header",
+        "locked": false,
+        "text": "HEMATOLOGY REPORT",
+        "style": {
+          "font_size": 18,
+          "bold": true,
+          "align": "right",
+          "color": "#111827"
+        }
+      },
+      "text": "HEMATOLOGY REPORT",
+      "style": {
+        "font_size": 18,
+        "bold": true,
+        "align": "right",
+        "color": "#111827"
+      },
+      "band": "page_header",
+      "band_id": "page_header"
+    },
+    {
+      "id": "patient_summary",
+      "type": "text",
+      "x": 40.0,
+      "y": 82.0,
+      "width": 515.0,
+      "height": 18.0,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "band": "page_header",
+        "band_id": "page_header",
+        "locked": false,
+        "text": "{{ patient.name }} | {{ order.id }} | {{ order.collected_at }}",
+        "style": {
+          "font_size": 10,
+          "align": "center",
+          "color": "#4b5563"
+        }
+      },
+      "text": "{{ patient.name }} | {{ order.id }} | {{ order.collected_at }}",
+      "style": {
+        "font_size": 10,
+        "align": "center",
+        "color": "#4b5563"
+      },
+      "band": "page_header",
+      "band_id": "page_header"
+    },
+    {
+      "id": "results_table",
+      "type": "table",
+      "x": 40.0,
+      "y": 140.0,
+      "width": 515.0,
+      "height": 270.0,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false,
+        "data_path": "results",
+        "dataSource": "results",
+        "autoHeight": true,
+        "header": {
+          "visible": true,
+          "height": 24,
+          "background_color": "#f3f4f6",
+          "color": "#111827",
+          "font_size": 10,
+          "bold": true
+        },
+        "row": {
+          "height": 22,
+          "background_color": "#ffffff",
+          "alternate_background_color": "#f9fafb",
+          "color": "#111827",
+          "font_size": 10
+        },
+        "border": {
+          "show": true,
+          "width": 1,
+          "color": "#d1d5db"
+        },
+        "grid": {
+          "show_horizontal": false,
+          "show_vertical": false,
+          "showHorizontal": false,
+          "showVertical": false,
+          "width": 1,
+          "color": "#d1d5db"
+        },
+        "sectionStyle": {
+          "font_size": 10,
+          "bold": true,
+          "background_color": "#ffffff",
+          "color": "#111827",
+          "align": "left"
+        },
+        "columns": [
+          {
+            "id": "test",
+            "label": "Test",
+            "title": "Test",
+            "binding": "test",
+            "field": "test",
+            "width": 165,
+            "align": "left",
+            "bold": false,
+            "fontWeight": "normal",
+            "color": "",
+            "wrap": false
+          },
+          {
+            "id": "result",
+            "label": "Result",
+            "title": "Result",
+            "binding": "result",
+            "field": "result",
+            "width": 90,
+            "align": "right",
+            "bold": false,
+            "fontWeight": "normal",
+            "color": "",
+            "wrap": false
+          },
+          {
+            "id": "unit",
+            "label": "Unit",
+            "title": "Unit",
+            "binding": "unit",
+            "field": "unit",
+            "width": 90,
+            "align": "left",
+            "bold": false,
+            "fontWeight": "normal",
+            "color": "",
+            "wrap": false
+          },
+          {
+            "id": "reference",
+            "label": "Reference",
+            "title": "Reference",
+            "binding": "reference",
+            "field": "reference",
+            "width": 140,
+            "align": "left",
+            "bold": false,
+            "fontWeight": "normal",
+            "color": "",
+            "wrap": false
+          }
+        ],
+        "showHeader": true,
+        "headerHeight": 24,
+        "rowHeight": 22
+      },
+      "band": "detail",
+      "band_id": "detail",
+      "data_path": "results",
+      "dataSource": "results",
+      "autoHeight": true,
+      "showHeader": true,
+      "rowHeight": 22,
+      "headerHeight": 24,
+      "header": {
+        "visible": true,
+        "height": 24,
+        "background_color": "#f3f4f6",
+        "color": "#111827",
+        "font_size": 10,
+        "bold": true
+      },
+      "row": {
+        "height": 22,
+        "background_color": "#ffffff",
+        "alternate_background_color": "#f9fafb",
+        "color": "#111827",
+        "font_size": 10
+      },
+      "border": {
+        "show": true,
+        "width": 1,
+        "color": "#d1d5db"
+      },
+      "grid": {
+        "show_horizontal": false,
+        "show_vertical": false,
+        "showHorizontal": false,
+        "showVertical": false,
+        "width": 1,
+        "color": "#d1d5db"
+      },
+      "sectionStyle": {
+        "font_size": 10,
+        "bold": true,
+        "background_color": "#ffffff",
+        "color": "#111827",
+        "align": "left"
+      },
+      "columns": [
+        {
+          "id": "test",
+          "label": "Test",
+          "title": "Test",
+          "binding": "test",
+          "field": "test",
+          "width": 165,
+          "align": "left",
+          "bold": false,
+          "fontWeight": "normal",
+          "color": "",
+          "wrap": false
+        },
+        {
+          "id": "result",
+          "label": "Result",
+          "title": "Result",
+          "binding": "result",
+          "field": "result",
+          "width": 90,
+          "align": "right",
+          "bold": false,
+          "fontWeight": "normal",
+          "color": "",
+          "wrap": false
+        },
+        {
+          "id": "unit",
+          "label": "Unit",
+          "title": "Unit",
+          "binding": "unit",
+          "field": "unit",
+          "width": 90,
+          "align": "left",
+          "bold": false,
+          "fontWeight": "normal",
+          "color": "",
+          "wrap": false
+        },
+        {
+          "id": "reference",
+          "label": "Reference",
+          "title": "Reference",
+          "binding": "reference",
+          "field": "reference",
+          "width": 140,
+          "align": "left",
+          "bold": false,
+          "fontWeight": "normal",
+          "color": "",
+          "wrap": false
+        }
+      ]
+    },
+    {
+      "id": "remarks_label",
+      "type": "text",
+      "x": 40.0,
+      "y": 430.0,
+      "width": 70.0,
+      "height": 16.0,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false,
+        "text": "Remarks:",
+        "style": {
+          "font_size": 10,
+          "bold": true
+        }
+      },
+      "text": "Remarks:",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      },
+      "band": "detail",
+      "band_id": "detail"
+    },
+    {
+      "id": "remarks",
+      "type": "field",
+      "x": 112.0,
+      "y": 430.0,
+      "width": 443.0,
+      "height": 36.0,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "band": "detail",
+        "band_id": "detail",
+        "locked": false,
+        "binding": "order.remarks",
+        "style": {
+          "font_size": 10
+        }
+      },
+      "binding": "order.remarks",
+      "style": {
+        "font_size": 10
+      },
+      "band": "detail",
+      "band_id": "detail"
+    },
+    {
+      "id": "medtech_signature",
+      "type": "image",
+      "x": 70.0,
+      "y": 602.0,
+      "width": 150.0,
+      "height": 46.0,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "locked": false,
+        "src": "",
+        "source": "",
+        "alt": "",
+        "assetId": "medtech_signature",
+        "maintain_aspect_ratio": true,
+        "style": {
+          "object_fit": "contain"
+        }
+      },
+      "src": "",
+      "source": "",
+      "assetId": "medtech_signature",
+      "alt": "",
+      "style": {
+        "object_fit": "contain"
+      },
+      "band": "page_footer",
+      "band_id": "page_footer"
+    },
+    {
+      "id": "pathologist_signature",
+      "type": "image",
+      "x": 370.0,
+      "y": 602.0,
+      "width": 150.0,
+      "height": 46.0,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "locked": false,
+        "src": "",
+        "source": "",
+        "alt": "",
+        "assetId": "pathologist_signature",
+        "maintain_aspect_ratio": true,
+        "style": {
+          "object_fit": "contain"
+        }
+      },
+      "src": "",
+      "source": "",
+      "assetId": "pathologist_signature",
+      "alt": "",
+      "style": {
+        "object_fit": "contain"
+      },
+      "band": "page_footer",
+      "band_id": "page_footer"
+    },
+    {
+      "id": "empty_signature_slot",
+      "type": "image",
+      "x": 230.0,
+      "y": 602.0,
+      "width": 110.0,
+      "height": 46.0,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "locked": false,
+        "src": "",
+        "source": "",
+        "alt": "",
+        "maintain_aspect_ratio": true,
+        "style": {
+          "object_fit": "contain"
+        },
+        "assetId": ""
+      },
+      "src": "",
+      "source": "",
+      "assetId": "",
+      "alt": "",
+      "style": {
+        "object_fit": "contain"
+      },
+      "band": "page_footer",
+      "band_id": "page_footer"
+    },
+    {
+      "id": "medtech_line",
+      "type": "line",
+      "x": 60.0,
+      "y": 656.0,
+      "width": 170.0,
+      "height": 1.0,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "locked": false,
+        "style": {
+          "stroke_width": 1,
+          "stroke_color": "#111827"
+        }
+      },
+      "style": {
+        "stroke_width": 1,
+        "stroke_color": "#111827"
+      },
+      "band": "page_footer",
+      "band_id": "page_footer"
+    },
+    {
+      "id": "pathologist_line",
+      "type": "line",
+      "x": 360.0,
+      "y": 656.0,
+      "width": 170.0,
+      "height": 1.0,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "locked": false,
+        "style": {
+          "stroke_width": 1,
+          "stroke_color": "#111827"
+        }
+      },
+      "style": {
+        "stroke_width": 1,
+        "stroke_color": "#111827"
+      },
+      "band": "page_footer",
+      "band_id": "page_footer"
+    },
+    {
+      "id": "medtech_name",
+      "type": "field",
+      "x": 45.0,
+      "y": 662.0,
+      "width": 200.0,
+      "height": 16.0,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "locked": false,
+        "binding": "order.medtech",
+        "style": {
+          "font_size": 10,
+          "bold": true,
+          "align": "center"
+        }
+      },
+      "binding": "order.medtech",
+      "style": {
+        "font_size": 10,
+        "bold": true,
+        "align": "center"
+      },
+      "band": "page_footer",
+      "band_id": "page_footer"
+    },
+    {
+      "id": "pathologist_name",
+      "type": "field",
+      "x": 345.0,
+      "y": 662.0,
+      "width": 200.0,
+      "height": 16.0,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "band": "page_footer",
+        "band_id": "page_footer",
+        "locked": false,
+        "binding": "order.pathologist",
+        "style": {
+          "font_size": 10,
+          "bold": true,
+          "align": "center"
+        }
+      },
+      "binding": "order.pathologist",
+      "style": {
+        "font_size": 10,
+        "bold": true,
+        "align": "center"
+      },
+      "band": "page_footer",
+      "band_id": "page_footer"
+    }
+  ],
+  "bands": [
+    {
+      "id": "page_header",
+      "type": "page_header",
+      "name": "Page Header",
+      "y": 0.0,
+      "height": 112.0,
+      "background_color": "transparent",
+      "visible": true,
+      "locked": false,
+      "properties": {}
+    },
+    {
+      "id": "detail",
+      "type": "detail",
+      "name": "Detail",
+      "y": 112.0,
+      "height": 602.0,
+      "background_color": "transparent",
+      "visible": true,
+      "locked": false,
+      "properties": {}
+    },
+    {
+      "id": "page_footer",
+      "type": "page_footer",
+      "name": "Page Footer",
+      "y": 714.0,
+      "height": 128.0,
+      "background_color": "transparent",
+      "visible": true,
+      "locked": false,
+      "properties": {}
+    }
+  ],
+  "assets": [],
+  "data": {
+    "sample": {
+      "clinic": {
+        "name": "Slim Diagnostics Laboratory",
+        "logo_asset_id": "clinic_logo"
+      },
+      "patient": {
+        "id": "P-000123",
+        "name": "Juan Dela Cruz",
+        "age": "34",
+        "sex": "M"
+      },
+      "order": {
+        "id": "ORD-2026-0001",
+        "collected_at": "2026-07-09 08:15",
+        "remarks": "Asset-backed logos and signatures avoid local absolute paths.",
+        "medtech": "Maria Santos, RMT",
+        "pathologist": "Dr. Ana Reyes"
+      },
+      "signatures": {
+        "medtech": "medtech_signature",
+        "pathologist": "pathologist_signature"
+      },
+      "results": [
+        {
+          "test": "WBC",
+          "result": "7.10",
+          "unit": "10^9/L",
+          "reference": "4.00 - 10.00"
+        },
+        {
+          "test": "RBC",
+          "result": "5.02",
+          "unit": "10^12/L",
+          "reference": "4.50 - 5.90"
+        },
+        {
+          "test": "Hemoglobin",
+          "result": "148",
+          "unit": "g/L",
+          "reference": "130 - 170"
+        }
+      ]
+    },
+    "fields": [
+      {
+        "path": "clinic.name",
+        "label": "Name",
+        "type": "string",
+        "sample": "Slim Diagnostics Laboratory"
+      },
+      {
+        "path": "clinic.logo_asset_id",
+        "label": "Logo Asset Id",
+        "type": "string",
+        "sample": "clinic_logo"
+      },
+      {
+        "path": "patient.id",
+        "label": "Id",
+        "type": "string",
+        "sample": "P-000123"
+      },
+      {
+        "path": "patient.name",
+        "label": "Name",
+        "type": "string",
+        "sample": "Juan Dela Cruz"
+      },
+      {
+        "path": "patient.age",
+        "label": "Age",
+        "type": "string",
+        "sample": "34"
+      },
+      {
+        "path": "patient.sex",
+        "label": "Sex",
+        "type": "string",
+        "sample": "M"
+      },
+      {
+        "path": "order.id",
+        "label": "Id",
+        "type": "string",
+        "sample": "ORD-2026-0001"
+      },
+      {
+        "path": "order.collected_at",
+        "label": "Collected At",
+        "type": "string",
+        "sample": "2026-07-09 08:15"
+      },
+      {
+        "path": "order.remarks",
+        "label": "Remarks",
+        "type": "string",
+        "sample": "Asset-backed logos and signatures avoid local absolute paths."
+      },
+      {
+        "path": "order.medtech",
+        "label": "Medtech",
+        "type": "string",
+        "sample": "Maria Santos, RMT"
+      },
+      {
+        "path": "order.pathologist",
+        "label": "Pathologist",
+        "type": "string",
+        "sample": "Dr. Ana Reyes"
+      },
+      {
+        "path": "signatures.medtech",
+        "label": "Medtech",
+        "type": "string",
+        "sample": "medtech_signature"
+      },
+      {
+        "path": "signatures.pathologist",
+        "label": "Pathologist",
+        "type": "string",
+        "sample": "pathologist_signature"
+      },
+      {
+        "path": "results[]",
+        "label": "Results",
+        "type": "object",
+        "sample": "[object Object]"
+      },
+      {
+        "path": "results[0].test",
+        "label": "Test",
+        "type": "string",
+        "sample": "WBC"
+      },
+      {
+        "path": "results[0].result",
+        "label": "Result",
+        "type": "string",
+        "sample": "7.10"
+      },
+      {
+        "path": "results[0].unit",
+        "label": "Unit",
+        "type": "string",
+        "sample": "10^9/L"
+      },
+      {
+        "path": "results[0].reference",
+        "label": "Reference",
+        "type": "string",
+        "sample": "4.00 - 10.00"
+      },
+      {
+        "path": "results[].test",
+        "label": "Test",
+        "type": "string",
+        "sample": "WBC"
+      },
+      {
+        "path": "results[].result",
+        "label": "Result",
+        "type": "string",
+        "sample": "7.10"
+      },
+      {
+        "path": "results[].unit",
+        "label": "Unit",
+        "type": "string",
+        "sample": "10^9/L"
+      },
+      {
+        "path": "results[].reference",
+        "label": "Reference",
+        "type": "string",
+        "sample": "4.00 - 10.00"
+      }
+    ]
+  }
+}

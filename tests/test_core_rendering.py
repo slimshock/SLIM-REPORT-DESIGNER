@@ -495,6 +495,61 @@ def test_pdf_rendering_basic_table_missing_data_path_does_not_crash() -> None:
     assert len(pdf) > 1000
 
 
+def test_html_and_pdf_render_band_based_template_objects() -> None:
+    report = JSONSerializer().load_mapping(
+        {
+            "version": "1.0",
+            "metadata": {"title": "Band Based"},
+            "page": {"width": 595, "height": 842, "unit": "px"},
+            "bands": [
+                {
+                    "id": "page_header",
+                    "type": "pageHeader",
+                    "height": 80,
+                    "objects": [
+                        {
+                            "id": "report_title",
+                            "type": "text",
+                            "x": 40,
+                            "y": 24,
+                            "width": 240,
+                            "height": 24,
+                            "text": "Band Based Report",
+                        }
+                    ],
+                },
+                {
+                    "id": "detail",
+                    "type": "detail",
+                    "height": 700,
+                    "objects": [
+                        {
+                            "id": "patient_name",
+                            "type": "field",
+                            "x": 40,
+                            "y": 120,
+                            "width": 240,
+                            "height": 20,
+                            "binding": "patient.name",
+                        }
+                    ],
+                },
+            ],
+            "assets": [],
+        }
+    )
+
+    html = render_html(report, {"patient": {"name": "Juan Dela Cruz"}})
+    pdf = render_pdf(report, {"patient": {"name": "Juan Dela Cruz"}})
+
+    assert "Band Based Report" in html
+    assert "Juan Dela Cruz" in html
+    assert report.objects[0].band_id == "page_header"
+    assert report.objects[1].band_id == "detail"
+    assert pdf.startswith(b"%PDF")
+    assert len(pdf) > 1000
+
+
 def test_html_rendering_barcode_and_qrcode_objects() -> None:
     report = barcode_qr_report()
 

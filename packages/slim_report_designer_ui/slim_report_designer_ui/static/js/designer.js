@@ -28,6 +28,7 @@ import {
 import {
   exportPdf,
   loadTemplate,
+  printPreview,
   previewTemplate,
   saveTemplate
 } from "./api.js";
@@ -256,6 +257,9 @@ async function handleCommand(command, payload = {}) {
     } else if (command === "preview") {
       await previewTemplate(state.template);
       setStatus("Preview opened");
+    } else if (command === "printPreview") {
+      await printPreview(state.template);
+      setStatus("Print preview opened");
     } else if (command === "exportPdf") {
       await exportPdf(state.template);
       setStatus("PDF exported");

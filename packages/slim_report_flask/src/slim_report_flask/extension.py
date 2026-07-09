@@ -34,6 +34,7 @@ DataProvider = Callable[[str, Any, Any], Any]
 AuthHook = Callable[[], bool]
 PermissionHook = Callable[[str], bool]
 CsrfTokenProvider = Callable[[], str | None]
+FilenameProvider = Callable[[str, dict[str, Any], Any], str]
 
 
 class SlimReportDesigner:
@@ -53,6 +54,7 @@ class SlimReportDesigner:
         can_export_template: PermissionHook | None = None,
         can_view_asset: PermissionHook | None = None,
         can_edit_asset: PermissionHook | None = None,
+        filename_provider: FilenameProvider | None = None,
         csrf_token_provider: CsrfTokenProvider | None = None,
         csrf_header_name: str = "X-CSRFToken",
     ) -> None:
@@ -68,6 +70,7 @@ class SlimReportDesigner:
         self.can_export_template = can_export_template
         self.can_view_asset_hook = can_view_asset
         self.can_edit_asset_hook = can_edit_asset
+        self.filename_provider = filename_provider
         self.csrf_token_provider = csrf_token_provider
         self.csrf_header_name = csrf_header_name
         self.serializer = JSONSerializer()
@@ -176,6 +179,66 @@ class SlimReportDesigner:
         """Load a saved report template by id."""
         return self.serializer.load_mapping(self.get_template(template_id))
 
+    def render_template_html(
+        self,
+        template_id: str,
+        data: Any | None = None,
+        request_args: Any | None = None,
+        request_json: Any | None = None,
+    ) -> str:
+        """Render a saved template to HTML with the standard Flask data resolution order."""
+        report = self.get_report(template_id)
+        render_data = self._resolve_render_data(
+            template_id,
+            report,
+            data,
+            request_args,
+            request_json,
+        )
+        if self.asset_provider is None:
+            return render_html(report, render_data)
+        return render_html(report, render_data, asset_provider=self.asset_provider)
+
+    def render_template_pdf(
+        self,
+        template_id: str,
+        data: Any | None = None,
+        request_args: Any | None = None,
+        request_json: Any | None = None,
+    ) -> bytes:
+        """Render a saved template to PDF with the standard Flask data resolution order."""
+        report = self.get_report(template_id)
+        render_data = self._resolve_render_data(
+            template_id,
+            report,
+            data,
+            request_args,
+            request_json,
+        )
+        if self.asset_provider is None:
+            return render_pdf(report, render_data)
+        return render_pdf(report, render_data, asset_provider=self.asset_provider)
+
+    def export_filename(
+        self,
+        template_id: str,
+        data: dict[str, Any],
+        request_args: Any | None = None,
+        report: Report | None = None,
+    ) -> str:
+        """Return a safe PDF filename for a rendered template."""
+        from .blueprint import default_export_filename, safe_pdf_filename
+
+        query_filename = _request_arg(request_args, "filename")
+        if query_filename:
+            return safe_pdf_filename(query_filename, f"report-{template_id}.pdf")
+        if self.filename_provider is not None:
+            filename = self.filename_provider(template_id, data, request_args)
+            return safe_pdf_filename(filename, f"report-{template_id}.pdf")
+        if report is not None:
+            return default_export_filename(report, f"report-{template_id}")
+        return safe_pdf_filename(f"report-{template_id}.pdf")
+
     def resolve_data(
         self,
         template_id: str,
@@ -190,13 +253,42 @@ class SlimReportDesigner:
         if isinstance(explicit_data, dict):
             return explicit_data
         report = report or self.get_report(template_id)
+        data = self._resolve_render_data(
+            template_id,
+            report,
+            explicit_data,
+            request_args,
+            request_json,
+            record_id=record_id,
+        )
+        if isinstance(data, dict):
+            return data
+        return {}
+
+    def _resolve_render_data(
+        self,
+        template_id: str,
+        report: Report,
+        explicit_data: Any | None,
+        request_args: Any | None,
+        request_json: Any | None,
+        *,
+        record_id: str = "sample",
+    ) -> dict[str, Any]:
+        if isinstance(explicit_data, dict):
+            return explicit_data
+        body_data = request_json.get("data") if isinstance(request_json, dict) else None
+        if isinstance(body_data, dict):
+            return body_data
         if self.data_provider is not None:
             data = self._call_data_provider(template_id, request_args, request_json)
             if isinstance(data, dict):
                 return data
         provider_name = self._provider_name(template_id, report)
         if provider_name is not None:
-            return self.providers.resolve(provider_name, record_id)
+            resolved = self.providers.resolve(provider_name, record_id)
+            if isinstance(resolved, dict):
+                return resolved
         storage_sample = self._sample_data_from_provider(template_id)
         if storage_sample:
             return storage_sample
@@ -316,6 +408,14 @@ def _template_id(payload: dict[str, Any] | None) -> str:
                 return str(custom["id"])
 
     return uuid.uuid4().hex
+
+
+def _request_arg(request_args: Any | None, name: str) -> Any:
+    if hasattr(request_args, "get"):
+        return request_args.get(name)
+    if isinstance(request_args, dict):
+        return request_args.get(name)
+    return None
 
 
 def _record_from_template(template_id: str, template: dict[str, Any]) -> TemplateRecord:
