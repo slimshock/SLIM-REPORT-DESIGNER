@@ -1,0 +1,301 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "title": "LIS Hematology Result Assets",
+    "description": "LIS hematology layout demonstrating assetId image references.",
+    "custom": {
+      "id": "lab_result_hematology_assets",
+      "category": "lis"
+    }
+  },
+  "page": {
+    "width": 595,
+    "height": 842,
+    "unit": "px",
+    "background_color": "#ffffff"
+  },
+  "objects": [
+    {
+      "id": "clinic_logo",
+      "type": "image",
+      "x": 40,
+      "y": 24,
+      "width": 140,
+      "height": 48,
+      "assetId": "clinic_logo",
+      "style": {
+        "object_fit": "contain"
+      },
+      "band": "page_header"
+    },
+    {
+      "id": "title",
+      "type": "text",
+      "x": 190,
+      "y": 28,
+      "width": 365,
+      "height": 28,
+      "text": "HEMATOLOGY REPORT",
+      "style": {
+        "font_size": 18,
+        "bold": true,
+        "align": "right",
+        "color": "#111827"
+      },
+      "band": "page_header"
+    },
+    {
+      "id": "patient_summary",
+      "type": "text",
+      "x": 40,
+      "y": 82,
+      "width": 515,
+      "height": 18,
+      "text": "{{ patient.name }} | {{ order.id }} | {{ order.collected_at }}",
+      "style": {
+        "font_size": 10,
+        "align": "center",
+        "color": "#4b5563"
+      },
+      "band": "page_header"
+    },
+    {
+      "id": "results_table",
+      "type": "table",
+      "x": 40,
+      "y": 140,
+      "width": 515,
+      "height": 270,
+      "data_path": "results",
+      "columns": [
+        {
+          "id": "test",
+          "label": "Test",
+          "binding": "test",
+          "width": 165
+        },
+        {
+          "id": "result",
+          "label": "Result",
+          "binding": "result",
+          "width": 90,
+          "align": "right"
+        },
+        {
+          "id": "unit",
+          "label": "Unit",
+          "binding": "unit",
+          "width": 90
+        },
+        {
+          "id": "reference",
+          "label": "Reference",
+          "binding": "reference",
+          "width": 140
+        }
+      ],
+      "header": {
+        "visible": true,
+        "height": 24,
+        "background_color": "#f3f4f6",
+        "bold": true
+      },
+      "row": {
+        "height": 22
+      },
+      "border": {
+        "width": 1,
+        "color": "#d1d5db"
+      },
+      "band": "detail"
+    },
+    {
+      "id": "remarks_label",
+      "type": "text",
+      "x": 40,
+      "y": 430,
+      "width": 70,
+      "height": 16,
+      "text": "Remarks:",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      },
+      "band": "detail"
+    },
+    {
+      "id": "remarks",
+      "type": "field",
+      "x": 112,
+      "y": 430,
+      "width": 443,
+      "height": 36,
+      "binding": "order.remarks",
+      "style": {
+        "font_size": 10
+      },
+      "band": "detail"
+    },
+    {
+      "id": "medtech_signature",
+      "type": "image",
+      "x": 70,
+      "y": 602,
+      "width": 150,
+      "height": 46,
+      "assetId": "medtech_signature",
+      "style": {
+        "object_fit": "contain"
+      },
+      "band": "page_footer"
+    },
+    {
+      "id": "pathologist_signature",
+      "type": "image",
+      "x": 370,
+      "y": 602,
+      "width": 150,
+      "height": 46,
+      "assetId": "pathologist_signature",
+      "style": {
+        "object_fit": "contain"
+      },
+      "band": "page_footer"
+    },
+    {
+      "id": "empty_signature_slot",
+      "type": "image",
+      "x": 230,
+      "y": 602,
+      "width": 110,
+      "height": 46,
+      "src": "",
+      "style": {
+        "object_fit": "contain"
+      },
+      "band": "page_footer"
+    },
+    {
+      "id": "medtech_line",
+      "type": "line",
+      "x": 60,
+      "y": 656,
+      "width": 170,
+      "height": 1,
+      "style": {
+        "stroke_width": 1,
+        "stroke_color": "#111827"
+      },
+      "band": "page_footer"
+    },
+    {
+      "id": "pathologist_line",
+      "type": "line",
+      "x": 360,
+      "y": 656,
+      "width": 170,
+      "height": 1,
+      "style": {
+        "stroke_width": 1,
+        "stroke_color": "#111827"
+      },
+      "band": "page_footer"
+    },
+    {
+      "id": "medtech_name",
+      "type": "field",
+      "x": 45,
+      "y": 662,
+      "width": 200,
+      "height": 16,
+      "binding": "order.medtech",
+      "style": {
+        "font_size": 10,
+        "bold": true,
+        "align": "center"
+      },
+      "band": "page_footer"
+    },
+    {
+      "id": "pathologist_name",
+      "type": "field",
+      "x": 345,
+      "y": 662,
+      "width": 200,
+      "height": 16,
+      "binding": "order.pathologist",
+      "style": {
+        "font_size": 10,
+        "bold": true,
+        "align": "center"
+      },
+      "band": "page_footer"
+    }
+  ],
+  "bands": [
+    {
+      "id": "page_header",
+      "type": "page_header",
+      "y": 0,
+      "height": 112
+    },
+    {
+      "id": "detail",
+      "type": "detail",
+      "y": 112,
+      "height": 474
+    },
+    {
+      "id": "page_footer",
+      "type": "page_footer",
+      "y": 586,
+      "height": 128
+    }
+  ],
+  "assets": [],
+  "data": {
+    "sample": {
+      "clinic": {
+        "name": "Slim Diagnostics Laboratory",
+        "logo_asset_id": "clinic_logo"
+      },
+      "patient": {
+        "id": "P-000123",
+        "name": "Juan Dela Cruz",
+        "age": "34",
+        "sex": "M"
+      },
+      "order": {
+        "id": "ORD-2026-0001",
+        "collected_at": "2026-07-09 08:15",
+        "remarks": "Asset-backed logos and signatures avoid local absolute paths.",
+        "medtech": "Maria Santos, RMT",
+        "pathologist": "Dr. Ana Reyes"
+      },
+      "signatures": {
+        "medtech": "medtech_signature",
+        "pathologist": "pathologist_signature"
+      },
+      "results": [
+        {
+          "test": "WBC",
+          "result": "7.10",
+          "unit": "10^9/L",
+          "reference": "4.00 - 10.00"
+        },
+        {
+          "test": "RBC",
+          "result": "5.02",
+          "unit": "10^12/L",
+          "reference": "4.50 - 5.90"
+        },
+        {
+          "test": "Hemoglobin",
+          "result": "148",
+          "unit": "g/L",
+          "reference": "130 - 170"
+        }
+      ]
+    }
+  }
+}

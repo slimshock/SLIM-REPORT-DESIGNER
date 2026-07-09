@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import uuid
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
@@ -123,6 +124,7 @@ class Report:
     layers: list[Layer]
     styles: ReportStyleCollection
     assets: ReportAssetCollection
+    data: dict[str, Any]
     events: EventDispatcher
 
     def __init__(
@@ -138,6 +140,7 @@ class Report:
         layers: list[Layer | Mapping[str, Any]] | None = None,
         styles: Mapping[str, Style | Mapping[str, Any]] | None = None,
         assets: list[Asset | Mapping[str, Any]] | None = None,
+        data: Mapping[str, Any] | None = None,
     ) -> None:
         self.events = EventDispatcher()
         title = template if isinstance(template, str) else None
@@ -156,6 +159,7 @@ class Report:
         self.layers = [_normalize_layer(item) for item in layers or []]
         self.styles = _normalize_styles(styles)
         self.assets = [_normalize_asset(item) for item in assets or []]
+        self.data = copy.deepcopy(dict(data or {}))
 
     def __setattr__(self, name: str, value: Any) -> None:
         if name == "objects":
@@ -186,6 +190,7 @@ class Report:
             objects=self.objects,
             bands=self.bands,
             assets=self.assets,
+            data=copy.deepcopy(self.data),
         )
 
     def render(
@@ -194,35 +199,67 @@ class Report:
         *,
         exporter: str = "html",
         context: Any = None,
+        asset_provider: Any | None = None,
+        asset_resolver: Any | None = None,
     ) -> str | bytes:
         """Render this report with a named exporter."""
         self.emit("before_export", exporter=exporter, data=data, context=context)
         if exporter == "html":
-            result = self.render_html(data)
+            result = self.render_html(
+                data,
+                asset_provider=asset_provider,
+                asset_resolver=asset_resolver,
+            )
         elif exporter == "pdf":
-            result = self.render_pdf(data)
+            result = self.render_pdf(
+                data,
+                asset_provider=asset_provider,
+                asset_resolver=asset_resolver,
+            )
         else:
             raise ExporterError(f"Exporter is not registered: {exporter}.")
         self.emit("after_export", exporter=exporter, data=data, context=context, result=result)
         return result
 
-    def render_html(self, data: Any = None) -> str:
+    def render_html(
+        self,
+        data: Any = None,
+        *,
+        asset_provider: Any | None = None,
+        asset_resolver: Any | None = None,
+    ) -> str:
         """Render this report as HTML."""
         from .rendering import render_html
 
         resolved_data = data or {}
         self.emit("before_render", format="html", data=resolved_data)
-        result = render_html(self, resolved_data)
+        result = render_html(
+            self,
+            resolved_data,
+            asset_provider=asset_provider,
+            asset_resolver=asset_resolver,
+        )
         self.emit("after_render", format="html", data=resolved_data, result=result)
         return result
 
-    def render_pdf(self, data: Any = None) -> bytes:
+    def render_pdf(
+        self,
+        data: Any = None,
+        *,
+        asset_provider: Any | None = None,
+        asset_resolver: Any | None = None,
+    ) -> bytes:
         """Render this report as PDF bytes."""
         from .rendering import render_pdf
 
         resolved_data = data or {}
         self.emit("before_render", format="pdf", data=resolved_data)
-        result = render_pdf(self, resolved_data)
+        result = render_pdf(
+            self,
+            resolved_data,
+            asset_provider=asset_provider,
+            asset_resolver=asset_resolver,
+        )
         self.emit("after_render", format="pdf", data=resolved_data, result=result)
         return result
 
@@ -439,6 +476,7 @@ class Report:
             layers=cloned_layers,
             styles=cloned_styles,
             assets=cloned_assets,
+            data=copy.deepcopy(self.data),
         )
 
     def _load_template(self, template: ReportTemplate) -> None:
@@ -453,6 +491,7 @@ class Report:
         self.layers = []
         self.styles = {}
         self.assets = template.assets
+        self.data = copy.deepcopy(template.data)
 
     def _copy_from(self, report: Report) -> None:
         self.version = report.version
@@ -464,6 +503,7 @@ class Report:
         self.layers = report.layers
         self.styles = report.styles
         self.assets = report.assets
+        self.data = copy.deepcopy(report.data)
 
     def _page_index(self, page_id_or_index: str | int) -> int:
         if isinstance(page_id_or_index, int):
@@ -611,6 +651,7 @@ def _clone_object_with_reference_maps(
         cloned.layer_id = layer_id_map[cloned.layer_id]
 
     _remap_property_reference(cloned.properties, "band_id", band_id_map)
+    _remap_property_reference(cloned.properties, "band", band_id_map)
     _remap_property_reference(cloned.properties, "layer_id", layer_id_map)
     _remap_property_reference(cloned.properties, "style_id", style_id_map)
     _remap_property_reference(cloned.properties, "asset_id", asset_id_map)

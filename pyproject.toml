@@ -5,6 +5,7 @@ members = ["packages/*"]
 testpaths = ["tests"]
 pythonpath = [
   "packages/slim_report_core/src",
+  "packages/slim_report_designer_ui",
   "packages/slim_report_flask/src",
   "packages/slim_report_django/src",
   "packages/slim_report_fastapi/src",
@@ -16,6 +17,7 @@ line-length = 100
 target-version = "py310"
 src = [
   "packages/slim_report_core/src",
+  "packages/slim_report_designer_ui",
   "packages/slim_report_flask/src",
   "packages/slim_report_django/src",
   "packages/slim_report_fastapi/src",
@@ -30,4 +32,3 @@ select = ["E", "F", "I", "B", "UP", "RUF"]
 python_version = "3.10"
 strict = true
 files = ["packages", "tests"]
-

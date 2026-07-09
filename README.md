@@ -1,111 +1,364 @@
 # Slim Report Designer
 
-Slim Report Designer is an open-source, framework-agnostic reporting platform for Python applications. It provides a Report-first Python API, JSON serialization, pluggable widgets, multiple exporters, and framework adapters starting with Flask.
+Slim Report Designer is an early-alpha / pre-release, framework-agnostic Python report designer and rendering toolkit.
+
+It includes:
+
+- Python Report API
+- JSON template serialization
+- HTML preview
+- PDF export
+- Static visual designer UI
+- Flask integration
+- Future adapters for Django and FastAPI
+
+The designer UI is plain HTML, CSS, and JavaScript. It has no React, no Vue, no npm build step, and no frontend framework dependency.
+
+The project is not production-ready yet. Sprint 6 starts the packaging and public API baseline, but the API and template format may still change before a stable release.
+
+Suggested repository description:
+
+```text
+Framework-agnostic Python report designer with visual canvas, JSON templates, HTML preview, and PDF export.
+```
+
+Suggested topics:
+
+```text
+python, reporting, report-designer, pdf-generation, flask, reportlab, json-template, drag-and-drop, html-preview, open-source
+```
 
 ## Current Status
-
-The project is in early alpha. The current working flow supports creating reports with Python, loading and saving JSON templates, resolving data fields, previewing as HTML, and exporting as PDF.
 
 Implemented now:
 
 - Framework-agnostic `slim_report_core`
-- `Report` domain model with pages, metadata, objects, styles, assets, bands, and layers
-- Serialization layer with `JSONSerializer` for JSON to `Report` conversion
-- Domain validation with structured `Report.validate()` results
-- Deep cloning for reports, pages, objects, styles, and assets
-- Object query helpers such as `find()`, `fields()`, and `text_objects()`
-- Framework-independent report events for render/export and object/page changes
-- Report-first public API for everyday report creation
-- ObjectFactory for consistent object construction across API helpers, serializers, designers, and AI integrations
-- Fluent Builder API for constructing `Report` domain objects
-- Pure Python rendering API
+- Report-first Python API
+- JSON template serialization through `JSONSerializer`
 - HTML preview renderer
 - ReportLab PDF renderer
-- Text, field, line, and rectangle objects
-- Flask adapter with template storage, provider registration, preview, PDF export, and a simple JSON designer page
+- Text, field, line, rectangle, image, barcode, QR code, and table objects
+- Visual designer canvas
+- Drag and drop
+- Resize handles
+- Inspector and style inspector
+- Page properties
+- Image support
+- Local browser version history
+- Zoom, grid, and snap controls
+- Undo and redo
+- Multi-select
+- Align, distribute, and layer tools
+- Lock and unlock
+- Report bands: Page Header, Detail, and Page Footer
+- Group Header and Group Footer bands
+- Data Fields panel
+- Field search and binding picker
+- Sample data editor
+- Placeholder/sample data canvas toggle
+- `template.data.sample` support
+- `template.data.fields` support
+- Repeating Detail rows
+- Row-relative bindings for repeating data
+- Array-bound Table object with column editor, presets, grid controls, style aliases, section rows, and conditional formatting
+- Barcode and QR code objects with designer, HTML preview, and PDF export support
+- Basic multi-page pagination for repeating Detail rows and Detail-band tables
+- Advanced Table schema aliases for LIS-friendly JSON templates
+- Grouped reports with `group.value`, `group.count`, and group aggregates
+- Report aggregates such as `report.count.results` and `report.sum.results.value`
+- System variables such as `page.number`, `page.total_pages`, `date.today`, and `datetime.now`
+- Safe computed field formulas
+- Conditional formatting with style overrides and hide actions
+- Page print/export settings, safe PDF filenames, and PDF metadata
+- Flask printable preview and GET PDF export routes for saved templates
+- App-facing Flask render/export helper methods
+- Framework-agnostic template storage providers
+- Filesystem and optional SQLAlchemy template storage
+- Framework-agnostic asset provider interface for report images
+- Filesystem asset provider for logos, signatures, watermarks, and reusable image assets
+- Image object `assetId` resolution in HTML preview and PDF export
+- Flask asset listing/serving routes behind the configurable designer URL prefix
+- Flask-hosted preview and PDF export
 - CLI commands for validation, inspection, and rendering
+- Public convenience imports: `render_html`, `render_pdf`, and `normalize_template`
 
-Not implemented in this stabilization sprint:
+Current supported objects:
 
-- Tables
-- Barcode or QR rendering
-- Images
-- Designer drag and drop
+- Text
+- Field
+- Line
+- Rectangle
+- Image
+- Table
+- Barcode
+- QR Code
+
+Current supported report features:
+
+- Page Header
+- Detail
+- Page Footer
+- Group Header
+- Group Footer
+- Repeating Detail rows
+- Table object
 - Pagination
+- Data Fields panel
+- Binding picker
+- Aggregate/system variables
+- Safe formulas/computed fields
+- Conditional formatting
+- Print/export settings
+
+Not implemented yet:
+
+- Advanced table features such as nested tables, merged cells, per-cell formulas, and grouped table objects
+- Advanced pagination controls such as custom page breaks and widow/orphan rules
+- Django adapter
+- FastAPI adapter
+- Database migrations owned by Slim Report Designer
+- Production packaging and public release
+
+## Screenshots
+
+Screenshots coming soon. Place screenshots in `docs/assets/` and reference them here.
 
 ## Architecture Rules
 
 `slim_report_core` must never import Flask, Django, FastAPI, SQLAlchemy, or any web framework.
 
-Rendering belongs in `slim_report_core`. Framework adapters such as `slim_report_flask` should only handle framework concerns: routes, requests, responses, provider registration, storage orchestration, and calling the core.
+Rendering belongs in `slim_report_core`. Framework adapters such as `slim_report_flask` handle framework concerns: routes, requests, responses, provider registration, storage orchestration, and calling the core.
 
-Serialization belongs at the persistence boundary. JSON templates are converted into `Report` objects through `slim_report_core.serialization`; low-level renderers receive `Report`, not JSON.
+Serialization belongs at the persistence boundary. JSON templates are converted into `Report` objects through `slim_report_core.serialization`; renderers receive `Report`, not JSON.
 
-JSON is the first built-in persistence format, not a requirement for using the core. YAML, XML plugins, database storage, and REST-backed storage should all convert to and from `Report`.
-
-Validation belongs to the `Report` domain model. Use `report.validate()` after loading or building a report; normal validation failures return structured errors instead of raising exceptions.
-
-Cloning belongs to the domain model too. `report.clone()` creates a deep clone with new ids by default; use `report.clone(new_ids=False)` only when duplicate ids are intentional.
-
-Querying also belongs to `Report`: use `report.find("object_id")`, `report.find(lambda obj: ...)`, `report.fields()`, and `report.text_objects()` for developer-friendly object access.
-
-Events are exposed through `report.on()` and `report.off()` for framework-independent extension points such as audit logging, metrics, or designer synchronization.
-
-Builder code creates `Report` domain objects directly. It does not know about JSON, Flask, or rendering.
-
-For everyday development, `Report` is the primary API. Builders are optional convenience helpers.
-
-The architecture is intentionally simple:
-
-```text
-Python API / AI / Designer / Flask / CLI / Serializer
-                         |
-                         v
-                       Report
-                         |
-              +----------+----------+
-              v                     v
-         validate()           render HTML/PDF
-                         |
-                         v
-              serialize only when saving
-```
+The designer UI is framework-agnostic static HTML/CSS/JavaScript. Framework adapters host the same files and provide load, save, preview, and export APIs.
 
 ## Packages
 
 - `slim_report_core`: report models, expression resolution, rendering, widgets, exporters, and pure Python API
+- `slim_report_designer_ui`: framework-agnostic static designer UI
 - `slim_report_flask`: Flask extension, blueprint routes, template storage, and provider registration
 - `slim_report_cli`: command-line interface using only `slim_report_core`
 - `slim_report_django`: future Django adapter placeholder
 - `slim_report_fastapi`: future FastAPI adapter placeholder
 
-## Beginner Report API
+## Installation
+
+This repository uses a multi-package layout. For production or LIS installation from GitHub, install
+the package subdirectories:
+
+```bash
+python -m pip uninstall -y slim-report-core slim-report-flask slim-report-designer-ui UNKNOWN
+
+python -m pip install "git+https://github.com/slimshock/SLIM-REPORT-DESIGNER.git@develop#subdirectory=packages/slim_report_core"
+python -m pip install "git+https://github.com/slimshock/SLIM-REPORT-DESIGNER.git@develop#subdirectory=packages/slim_report_designer_ui"
+python -m pip install "git+https://github.com/slimshock/SLIM-REPORT-DESIGNER.git@develop#subdirectory=packages/slim_report_flask"
+```
+
+Verify the installed package path:
+
+```bash
+python -c "import slim_report_flask; print(slim_report_flask.__file__)"
+python -c "from slim_report_flask import SlimReportDesigner; print('OK Flask')"
+python -c "from slim_report_core.storage import FileSystemTemplateProvider, SQLAlchemyTemplateProvider, PyMySQLTemplateProvider; print('OK storage')"
+```
+
+The expected path in production is `site-packages`, not a local source checkout.
+
+For local development from a cloned repository, install the packages you need in editable mode from
+the repository root:
+
+```bash
+python -m pip install -e packages/slim_report_core
+python -m pip install -e packages/slim_report_designer_ui
+python -m pip install -e packages/slim_report_flask
+python -m pip install -e packages/slim_report_cli
+```
+
+`slim_report_core` depends on ReportLab for PDF export. `slim_report_flask` depends on Flask and the designer UI package.
+SQLAlchemy is optional and only needed for database template storage:
+
+```bash
+python -m pip install -e "packages/slim_report_core[sqlalchemy]"
+```
+
+There is no root `pip install -e .` package yet; install the package folders directly.
+
+See `docs/lis-integration-hardening.md` for Flask LIS/PyMySQL deployment guidance.
+See `docs/advanced-table-designer.md` for the Sprint 6.5 table schema and
+`docs/lis-table-layouts.md` for two-column LIS table layout guidance.
+See `docs/print-export-workflow.md` and `docs/lis-print-workflow.md` for Sprint 6.6
+print preview, GET PDF export, filename, and LIS button integration patterns.
+
+Flask/LIS pages can link directly to saved templates:
+
+```html
+<a href="/report-designer/print/lab_result?order_id=43" target="_blank">Print Preview</a>
+<a href="/report-designer/export/pdf/lab_result?order_id=43" target="_blank">Export PDF</a>
+<a href="/report-designer/export/pdf/lab_result?order_id=43&download=1">Download PDF</a>
+```
+
+For development tools:
+
+```bash
+python -m pip install pytest ruff
+python -m pytest
+python -m ruff check packages tests
+```
+
+## Quick Start
+
+### A. Pure Python Report
 
 ```python
+from pathlib import Path
+
 from slim_report_core import Report
 
 report = Report("CBC Report")
 page = report.page()
 
-data = {"patient": {"name": "JUAN DELA CRUZ"}}
+data = {"patient": {"name": "Juan Dela Cruz"}, "result": {"hgb": "14.2"}}
 
-page.text("Complete Blood Count", x=50, y=40, font_size=18, bold=True)
-page.field("patient.name", x=50, y=90)
+page.text("Complete Blood Count", x=50, y=40, width=300, height=28, font_size=18, bold=True)
+page.field("patient.name", x=50, y=90, width=250, height=20)
 page.line(x=50, y=120, width=500)
-page.rectangle(x=40, y=150, width=520, height=120)
+page.rectangle(x=50, y=150, width=500, height=80)
+page.field("result.hgb", x=70, y=175, width=120, height=20)
 
-result = report.validate()
 html = report.render_html(data)
 pdf_bytes = report.render_pdf(data)
-report.save_html("cbc.html", data)
-report.save_pdf("cbc.pdf", data)
+
+Path("cbc.html").write_text(html, encoding="utf-8")
+Path("cbc.pdf").write_bytes(pdf_bytes)
 ```
 
 Missing fields render as an empty string.
 
+### B. Static Designer UI
+
+```bash
+python examples/designer_static_server/serve.py
+```
+
+Open:
+
+```text
+http://127.0.0.1:8008/
+```
+
+The static designer works without Flask. JSON import/export works, local browser version history works, and `data.sample` / `data.fields` can be edited. PDF export requires a backend API.
+
+### C. Flask Designer UI
+
+```bash
+python examples/flask_app/app.py
+```
+
+Open:
+
+```text
+http://127.0.0.1:5000/report-designer/designer?template=lab_result
+http://127.0.0.1:5000/report-designer/designer?template=cerebro_cbc
+http://127.0.0.1:5000/report-designer/designer?template=repeating_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=table_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=grouped_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=aggregate_grouped_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=complete_sprint5_lab_report
+http://127.0.0.1:5000/report-designer/designer?template=computed_fields_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=conditional_lab_result
+http://127.0.0.1:5000/report-designer/designer?template=barcode_qr_lab_result
+```
+
+The Flask example loads templates from `examples/flask_app/sample_templates/`. Preview works, PDF export works, and sample/provider data can be used for field rendering. The examples cover fixed lab reports, paginated repeating rows, basic tables, grouping, aggregates, formulas, conditional formatting, barcode/QR objects, and a complete Sprint 5 demo template.
+
+For a production-style Flask setup with app factory, custom URL prefix, auth/permission hooks,
+read-only filesystem templates, CSRF header injection, and a LIS-style data provider, run:
+
+```bash
+python examples/flask_production_app/app.py
+```
+
+Open:
+
+```text
+http://127.0.0.1:5001/admin/reports/designer?template=complete_sprint5_lab_report&order_id=ORD-2026-0001
+```
+
+For SQLite-backed template storage with the framework-agnostic SQLAlchemy provider:
+
+```bash
+python examples/flask_database_app/app.py
+```
+
+Open:
+
+```text
+http://127.0.0.1:5000/report-designer/designer?template=complete_sprint5_lab_report&order_id=ORD-2026-0001
+```
+
+## Template Storage
+
+Preferred provider imports live in `slim_report_core.storage`:
+
+```python
+from slim_report_core.storage import FileSystemTemplateProvider, SQLAlchemyTemplateProvider
+from slim_report_flask import SlimReportDesigner
+
+designer = SlimReportDesigner(
+    template_provider=FileSystemTemplateProvider("sample_templates", allow_save=False),
+)
+```
+
+Database-backed apps can use their own SQLAlchemy model and session:
+
+```python
+provider = SQLAlchemyTemplateProvider(
+    session=db.session,
+    model=ReportTemplate,
+    allow_save=True,
+)
+
+designer = SlimReportDesigner(
+    template_provider=provider,
+    data_provider=lis_report_data_provider,
+)
+```
+
+The provider stores report template JSON, metadata, and optional sample data. The host application
+owns database migrations, LIS data queries, users, and permissions. Compatibility imports from
+`slim_report_flask` still work for existing Sprint 6.1 code.
+
+## Asset Manager
+
+Report images can reference reusable assets through `assetId`:
+
+```json
+{
+  "type": "image",
+  "assetId": "clinic_logo"
+}
+```
+
+Applications pass an optional provider into rendering or Flask integration:
+
+```python
+from slim_report_core.assets import FileSystemAssetProvider
+from slim_report_flask import SlimReportDesigner
+
+asset_provider = FileSystemAssetProvider(
+    "report_assets",
+    base_url="/report-designer/assets",
+)
+
+designer = SlimReportDesigner(asset_provider=asset_provider)
+```
+
+Existing image `src`, data URL, and bound field behavior remains compatible. See [Asset Manager](docs/asset-manager.md) and [LIS Asset Management](docs/lis-asset-management.md).
+
 ## Serialization
 
-Use `JSONSerializer` only when you want to load or save JSON:
+Use `JSONSerializer` when you want to load or save JSON:
 
 ```python
 from slim_report_core.serialization import JSONSerializer
@@ -115,10 +368,7 @@ serializer.save(report, "template.json")
 loaded = serializer.load("template.json")
 ```
 
-JSON is optional once a `Report` exists. Future serializers can support YAML, XML plugins, database records, REST payloads, or binary packages without changing renderers.
-
-Database-backed applications should follow the same rule: load or rehydrate a `Report`, work with
-that domain object in memory, then serialize or decompose it only when saving.
+JSON is optional after a `Report` exists. Applications can create reports directly in Python or load them through another serializer/storage boundary later.
 
 ## Existing JSON Templates
 
@@ -127,161 +377,24 @@ from slim_report_core import render_html, render_pdf
 from slim_report_core.serialization import JSONSerializer
 
 report = JSONSerializer().load("template.json")
-data = {"patient": {"name": "JUAN DELA CRUZ"}}
+data = {"patient": {"name": "Juan Dela Cruz"}}
 
 html = render_html(report, data)
 pdf_bytes = render_pdf(report, data)
 ```
 
-Optional builder conveniences reduce boilerplate for common report structure:
+Use `normalize_template` when accepting loose JSON from tools, examples, or designer clients:
 
 ```python
-from slim_report_core import ReportBuilder
+from slim_report_core import normalize_template
 
-report = (
-    ReportBuilder()
-    .metadata(title="Invoice", subtitle="July Billing")
-    .landscape()
-    .margin(36)
-    .header("ACME Billing")
-    .title("Invoice")
-    .subtitle("July Billing")
-    .field("customer.name", x=50, y=130)
-    .footer("Page {{ page }}")
-    .build()
-)
+template = normalize_template({"metadata": {"name": "Lab"}, "page": {}, "objects": [], "bands": []})
 ```
 
-Reusable styles can be shared across page calls and can inherit from base styles:
-
-```python
-from slim_report_core import Report, Style
-
-base_style = Style(font_family="Helvetica", font_size=12)
-title_style = base_style.inherit(font_size=18, bold=True)
-
-report = Report("Laboratory Report")
-page = report.page()
-page.text("Laboratory Report", x=50, y=40, style=title_style)
-page.text("Final Result", x=50, y=80, style=title_style)
-```
-
-Use `Position` and `Size` when explicit geometry reads better than raw coordinates:
-
-```python
-from slim_report_core import Position, Report, Size
-
-report = Report("Laboratory Report")
-page = report.page()
-page.text("Laboratory Report", position=Position(50, 40), size=Size(300, 30))
-page.field("patient.name", position=Position(50, 90), size=Size(300, 20))
-page.rectangle(position=Position(50, 150), size=Size(500, 100))
-```
-
-Multi-page reports can be built with explicit pages:
-
-```python
-report = Report("Invoice")
-cover = report.page()
-cover.text("Invoice", x=50, y=40)
-cover.field("customer.name", x=50, y=80)
-
-terms = report.new_page("Letter")
-terms.text("Terms", x=50, y=40)
-```
-
-Use `JSONSerializer` only when you want to persist the built report.
-
-## AI-Friendly Generation
-
-AI tools should generate the same public API that humans use:
-
-```python
-from slim_report_core import Report, Style
-
-title_style = Style(font_size=18, bold=True)
-
-report = Report("Laboratory Result")
-page = report.page()
-page.text("LABORATORY RESULT", x=50, y=40, style=title_style)
-page.field("patient.name", x=50, y=90)
-page.field("result.HGB", x=50, y=140)
-```
-
-When AI needs a storage format, it can generate JSON for `JSONSerializer`, but downstream code should still validate and render the resulting `Report`.
-
-An AI-generated report should be checked the same way as a human-written report:
-
-```python
-result = report.validate()
-if not result.is_valid:
-    for error in result.errors:
-        print(error.path, error.message)
-```
-
-## Validation
-
-```python
-from slim_report_core.serialization import JSONSerializer
-
-report = JSONSerializer().load("template.json")
-result = report.validate()
-
-if not result.is_valid:
-    for error in result.errors:
-        print(error.path, error.code, error.message)
-```
-
-The CLI uses the same validation API:
-
-```bash
-slim-report validate examples/flask_app/sample_templates/lab_result.json
-```
-
-For explicit persistence control:
-
-```python
-from slim_report_core import render_html
-from slim_report_core.serialization import JSONSerializer
-
-serializer = JSONSerializer()
-report = serializer.load("template.json")
-html = render_html(report, data)
-serializer.save(report, "template.json")
-```
-
-## Flask Example
-
-Install the local packages in editable mode:
-
-```bash
-python -m pip install -e packages/slim_report_core
-python -m pip install -e packages/slim_report_flask
-```
-
-Run the demo app:
-
-```bash
-python examples/flask_app/app.py
-```
-
-Open these routes:
-
-```text
-http://127.0.0.1:5000/report-designer/templates/lab_result/designer
-http://127.0.0.1:5000/report-designer/templates/lab_result/preview/sample
-http://127.0.0.1:5000/report-designer/templates/lab_result/export/pdf/sample
-```
-
-The demo provider is defined in `examples/flask_app/app.py`, and the sample template is in `examples/flask_app/sample_templates/lab_result.json`.
-
-Inside the adapter, templates are loaded into `Report` before preview or export:
-
-```python
-report = template_store.load_report("lab_result")
-html = report.render_html(data)
-pdf_bytes = report.render_pdf(data)
-```
+The normalizer accepts both flat templates with top-level `objects` and
+band-based templates where objects are nested under `bands[].objects`. If a
+template contains non-empty top-level `objects`, that flat list is preserved and
+nested band objects are not duplicated.
 
 ## CLI
 
@@ -292,32 +405,41 @@ slim-report render examples/flask_app/sample_templates/lab_result.json data.json
 slim-report render examples/flask_app/sample_templates/lab_result.json data.json output.pdf
 ```
 
-The current CLI accepts JSON files as input, but commands deserialize to `Report` before validation,
-inspection, or rendering.
+The CLI accepts JSON files as input, but commands deserialize to `Report` before validation, inspection, or rendering.
 
-## Development
+## Documentation
 
-This repository uses a Python `src/` layout for each package and shared tool configuration in the root `pyproject.toml`.
-
-```bash
-python -m pip install -e packages/slim_report_core
-python -m pip install -e packages/slim_report_flask
-python -m pip install -e packages/slim_report_cli
-python -m pip install pytest ruff
-python -m pytest
-python -m ruff check packages tests
-```
+- [Documentation index](docs/README.md)
+- [Designer UI](docs/designer-ui.md)
+- [Flask integration](docs/flask-integration.md)
+- [Flask production integration](docs/flask-production-integration.md)
+- [Template storage](docs/template-storage.md)
+- [LIS Flask template storage](docs/lis-flask-template-storage.md)
+- [Asset Manager](docs/asset-manager.md)
+- [LIS Asset Management](docs/lis-asset-management.md)
+- [JSON template schema](docs/json-template-schema.md)
+- [Data Fields](docs/data-fields.md)
+- [Repeating Detail rows](docs/repeating-detail-rows.md)
+- [Grouping](docs/grouping.md)
+- [Aggregate and system fields](docs/aggregate-and-system-fields.md)
+- [Formulas](docs/formulas.md)
+- [Conditional formatting](docs/conditional-formatting.md)
+- [Public API](docs/public-api.md)
+- [Architecture](docs/architecture.md)
+- [Roadmap](docs/roadmap.md)
 
 ## Repository Layout
 
 ```text
 packages/
   slim_report_core/
+  slim_report_designer_ui/
   slim_report_flask/
   slim_report_django/
   slim_report_fastapi/
   slim_report_cli/
 examples/
+  designer_static_server/
   pure_python/
   flask_app/
   django_app/

@@ -1,0 +1,659 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "title": "LIS Hematology Result Two Column",
+    "description": "Two-table LIS hematology layout using the advanced Table designer schema.",
+    "custom": {
+      "id": "lab_result_hematology_two_column",
+      "category": "lis"
+    }
+  },
+  "page": {
+    "width": 595,
+    "height": 842,
+    "unit": "px",
+    "background_color": "#ffffff"
+  },
+  "objects": [
+    {
+      "id": "clinic_name",
+      "type": "field",
+      "x": 40,
+      "y": 26,
+      "width": 320,
+      "height": 26,
+      "binding": "clinic.name",
+      "style": {
+        "font_size": 18,
+        "bold": true,
+        "color": "#111827"
+      },
+      "band": "page_header"
+    },
+    {
+      "id": "clinic_address",
+      "type": "field",
+      "x": 40,
+      "y": 54,
+      "width": 320,
+      "height": 18,
+      "binding": "clinic.address",
+      "style": {
+        "font_size": 10,
+        "color": "#4b5563"
+      },
+      "band": "page_header"
+    },
+    {
+      "id": "report_title",
+      "type": "text",
+      "x": 375,
+      "y": 30,
+      "width": 180,
+      "height": 26,
+      "text": "HEMATOLOGY",
+      "style": {
+        "font_size": 16,
+        "bold": true,
+        "align": "right",
+        "color": "#0f766e"
+      },
+      "band": "page_header"
+    },
+    {
+      "id": "header_line",
+      "type": "line",
+      "x": 40,
+      "y": 88,
+      "width": 515,
+      "height": 1,
+      "style": {
+        "stroke_width": 1,
+        "stroke_color": "#111827"
+      },
+      "band": "page_header"
+    },
+    {
+      "id": "patient_label",
+      "type": "text",
+      "x": 40,
+      "y": 110,
+      "width": 54,
+      "height": 16,
+      "text": "Patient:",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      },
+      "band": "detail"
+    },
+    {
+      "id": "patient_name",
+      "type": "field",
+      "x": 96,
+      "y": 110,
+      "width": 205,
+      "height": 16,
+      "binding": "patient.name",
+      "style": {
+        "font_size": 10
+      },
+      "band": "detail"
+    },
+    {
+      "id": "patient_meta",
+      "type": "field",
+      "x": 305,
+      "y": 110,
+      "width": 100,
+      "height": 16,
+      "binding": "patient.display_age_sex",
+      "style": {
+        "font_size": 10
+      },
+      "band": "detail"
+    },
+    {
+      "id": "order_label",
+      "type": "text",
+      "x": 415,
+      "y": 110,
+      "width": 54,
+      "height": 16,
+      "text": "Order:",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      },
+      "band": "detail"
+    },
+    {
+      "id": "order_id",
+      "type": "field",
+      "x": 468,
+      "y": 110,
+      "width": 87,
+      "height": 16,
+      "binding": "order.id",
+      "style": {
+        "font_size": 10,
+        "align": "right"
+      },
+      "band": "detail"
+    },
+    {
+      "id": "collection_label",
+      "type": "text",
+      "x": 40,
+      "y": 130,
+      "width": 74,
+      "height": 16,
+      "text": "Collected:",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      },
+      "band": "detail"
+    },
+    {
+      "id": "collection_time",
+      "type": "field",
+      "x": 116,
+      "y": 130,
+      "width": 150,
+      "height": 16,
+      "binding": "order.collected_at",
+      "style": {
+        "font_size": 10
+      },
+      "band": "detail"
+    },
+    {
+      "id": "reported_label",
+      "type": "text",
+      "x": 305,
+      "y": 130,
+      "width": 64,
+      "height": 16,
+      "text": "Reported:",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      },
+      "band": "detail"
+    },
+    {
+      "id": "reported_time",
+      "type": "field",
+      "x": 372,
+      "y": 130,
+      "width": 183,
+      "height": 16,
+      "binding": "order.reported_at",
+      "style": {
+        "font_size": 10,
+        "align": "right"
+      },
+      "band": "detail"
+    },
+    {
+      "id": "department_bar",
+      "type": "rectangle",
+      "x": 40,
+      "y": 158,
+      "width": 515,
+      "height": 24,
+      "style": {
+        "background_color": "#e0f2f1",
+        "border_width": 1,
+        "border_color": "#99f6e4"
+      },
+      "band": "detail"
+    },
+    {
+      "id": "department_name",
+      "type": "field",
+      "x": 48,
+      "y": 162,
+      "width": 300,
+      "height": 16,
+      "binding": "department.name",
+      "style": {
+        "font_size": 11,
+        "bold": true,
+        "color": "#115e59"
+      },
+      "band": "detail"
+    },
+    {
+      "id": "left_table",
+      "type": "table",
+      "x": 40,
+      "y": 198,
+      "width": 250,
+      "height": 308,
+      "dataSource": "left_results",
+      "autoHeight": true,
+      "showHeader": true,
+      "headerHeight": 24,
+      "rowHeight": 22,
+      "columns": [
+        {
+          "id": "test_name",
+          "title": "Test",
+          "field": "test_name",
+          "width": 78,
+          "wrap": true
+        },
+        {
+          "id": "result",
+          "title": "Result",
+          "field": "result",
+          "width": 50,
+          "align": "right",
+          "fontWeight": "bold"
+        },
+        {
+          "id": "unit",
+          "title": "Unit",
+          "field": "unit",
+          "width": 46
+        },
+        {
+          "id": "normal_values",
+          "title": "Normal",
+          "field": "normal_values",
+          "width": 58,
+          "fontSize": 8,
+          "wrap": true
+        },
+        {
+          "id": "flag",
+          "title": "Flag",
+          "field": "flag",
+          "width": 26,
+          "align": "center",
+          "fontSize": 8
+        }
+      ],
+      "headerStyle": {
+        "backgroundColor": "#f3f4f6",
+        "textColor": "#111827",
+        "fontSize": 9,
+        "fontWeight": "bold",
+        "align": "center"
+      },
+      "bodyStyle": {
+        "backgroundColor": "#ffffff",
+        "alternate_background_color": "#f8fafc",
+        "textColor": "#111827",
+        "fontSize": 9
+      },
+      "border": {
+        "show": true,
+        "width": 1,
+        "color": "#cbd5e1"
+      },
+      "grid": {
+        "showHorizontal": true,
+        "showVertical": true,
+        "width": 1,
+        "color": "#e2e8f0"
+      },
+      "sectionStyle": {
+        "backgroundColor": "#ecfdf5",
+        "textColor": "#047857",
+        "fontSize": 9,
+        "fontWeight": "bold"
+      },
+      "conditionalFormatting": [
+        {
+          "column": "result",
+          "when": "flag == 'HIGH'",
+          "style": {
+            "textColor": "#b91c1c",
+            "fontWeight": "bold",
+            "backgroundColor": "#fee2e2"
+          }
+        },
+        {
+          "column": "result",
+          "when": "flag == 'LOW'",
+          "style": {
+            "textColor": "#1d4ed8",
+            "fontWeight": "bold",
+            "backgroundColor": "#dbeafe"
+          }
+        },
+        {
+          "when": "flag == 'CRITICAL'",
+          "style": {
+            "textColor": "#ffffff",
+            "fontWeight": "bold",
+            "backgroundColor": "#7f1d1d"
+          }
+        }
+      ],
+      "band": "detail"
+    },
+    {
+      "id": "right_table",
+      "type": "table",
+      "x": 305,
+      "y": 198,
+      "width": 250,
+      "height": 308,
+      "dataSource": "right_results",
+      "autoHeight": true,
+      "showHeader": true,
+      "headerHeight": 24,
+      "rowHeight": 22,
+      "columns": [
+        {
+          "id": "test_name",
+          "title": "Test",
+          "field": "test_name",
+          "width": 78,
+          "wrap": true
+        },
+        {
+          "id": "result",
+          "title": "Result",
+          "field": "result",
+          "width": 50,
+          "align": "right",
+          "fontWeight": "bold"
+        },
+        {
+          "id": "unit",
+          "title": "Unit",
+          "field": "unit",
+          "width": 46
+        },
+        {
+          "id": "normal_values",
+          "title": "Normal",
+          "field": "normal_values",
+          "width": 58,
+          "fontSize": 8,
+          "wrap": true
+        },
+        {
+          "id": "flag",
+          "title": "Flag",
+          "field": "flag",
+          "width": 26,
+          "align": "center",
+          "fontSize": 8
+        }
+      ],
+      "headerStyle": {
+        "backgroundColor": "#f3f4f6",
+        "textColor": "#111827",
+        "fontSize": 9,
+        "fontWeight": "bold",
+        "align": "center"
+      },
+      "bodyStyle": {
+        "backgroundColor": "#ffffff",
+        "alternate_background_color": "#f8fafc",
+        "textColor": "#111827",
+        "fontSize": 9
+      },
+      "border": {
+        "show": true,
+        "width": 1,
+        "color": "#cbd5e1"
+      },
+      "grid": {
+        "showHorizontal": true,
+        "showVertical": true,
+        "width": 1,
+        "color": "#e2e8f0"
+      },
+      "sectionStyle": {
+        "backgroundColor": "#ecfdf5",
+        "textColor": "#047857",
+        "fontSize": 9,
+        "fontWeight": "bold"
+      },
+      "conditionalFormatting": [
+        {
+          "column": "result",
+          "when": "flag == 'HIGH'",
+          "style": {
+            "textColor": "#b91c1c",
+            "fontWeight": "bold",
+            "backgroundColor": "#fee2e2"
+          }
+        },
+        {
+          "column": "result",
+          "when": "flag == 'LOW'",
+          "style": {
+            "textColor": "#1d4ed8",
+            "fontWeight": "bold",
+            "backgroundColor": "#dbeafe"
+          }
+        },
+        {
+          "when": "flag == 'CRITICAL'",
+          "style": {
+            "textColor": "#ffffff",
+            "fontWeight": "bold",
+            "backgroundColor": "#7f1d1d"
+          }
+        }
+      ],
+      "band": "detail"
+    },
+    {
+      "id": "remarks_label",
+      "type": "text",
+      "x": 40,
+      "y": 530,
+      "width": 70,
+      "height": 16,
+      "text": "Remarks:",
+      "style": {
+        "font_size": 10,
+        "bold": true
+      },
+      "band": "detail"
+    },
+    {
+      "id": "remarks",
+      "type": "field",
+      "x": 112,
+      "y": 530,
+      "width": 443,
+      "height": 36,
+      "binding": "order.remarks",
+      "style": {
+        "font_size": 10
+      },
+      "band": "detail"
+    },
+    {
+      "id": "signature_image",
+      "type": "image",
+      "x": 365,
+      "y": 608,
+      "width": 145,
+      "height": 46,
+      "binding": "signatures.medtech",
+      "style": {
+        "object_fit": "contain"
+      },
+      "band": "page_footer"
+    },
+    {
+      "id": "signature_line",
+      "type": "line",
+      "x": 350,
+      "y": 662,
+      "width": 175,
+      "height": 1,
+      "style": {
+        "stroke_width": 1,
+        "stroke_color": "#111827"
+      },
+      "band": "page_footer"
+    },
+    {
+      "id": "verified_by",
+      "type": "field",
+      "x": 330,
+      "y": 668,
+      "width": 215,
+      "height": 16,
+      "binding": "order.verified_by",
+      "style": {
+        "font_size": 10,
+        "bold": true,
+        "align": "center"
+      },
+      "band": "page_footer"
+    },
+    {
+      "id": "verified_role",
+      "type": "text",
+      "x": 330,
+      "y": 686,
+      "width": 215,
+      "height": 14,
+      "text": "Medical Technologist",
+      "style": {
+        "font_size": 9,
+        "align": "center",
+        "color": "#4b5563"
+      },
+      "band": "page_footer"
+    }
+  ],
+  "bands": [
+    {
+      "id": "page_header",
+      "type": "page_header",
+      "y": 0,
+      "height": 100
+    },
+    {
+      "id": "detail",
+      "type": "detail",
+      "y": 100,
+      "height": 490
+    },
+    {
+      "id": "page_footer",
+      "type": "page_footer",
+      "y": 590,
+      "height": 120
+    }
+  ],
+  "assets": [],
+  "data": {
+    "sample": {
+      "clinic": {
+        "name": "Slim Diagnostics Laboratory",
+        "address": "123 Health Avenue, Manila"
+      },
+      "patient": {
+        "id": "P-000123",
+        "name": "Juan Dela Cruz",
+        "age": "34",
+        "sex": "M",
+        "display_age_sex": "34 / M"
+      },
+      "order": {
+        "id": "ORD-2026-0001",
+        "collected_at": "2026-07-09 08:15",
+        "reported_at": "2026-07-09 10:40",
+        "remarks": "Results must be correlated clinically. Manual differential is shown as section rows.",
+        "verified_by": "Maria Santos, RMT"
+      },
+      "department": {
+        "name": "Hematology"
+      },
+      "signatures": {
+        "medtech": ""
+      },
+      "left_results": [
+        {
+          "test_name": "WBC",
+          "result": "7.10",
+          "unit": "10^9/L",
+          "normal_values": "4.0 - 10.0",
+          "flag": ""
+        },
+        {
+          "test_name": "RBC",
+          "result": "5.02",
+          "unit": "10^12/L",
+          "normal_values": "4.2 - 5.8",
+          "flag": ""
+        },
+        {
+          "test_name": "Hemoglobin",
+          "result": "180",
+          "unit": "g/L",
+          "normal_values": "135 - 175",
+          "flag": "HIGH"
+        },
+        {
+          "test_name": "Hematocrit",
+          "result": "0.44",
+          "unit": "L/L",
+          "normal_values": "0.40 - 0.50",
+          "flag": ""
+        },
+        {
+          "test_name": "Platelet",
+          "result": "128",
+          "unit": "10^9/L",
+          "normal_values": "150 - 400",
+          "flag": "LOW"
+        }
+      ],
+      "right_results": [
+        {
+          "row_type": "section",
+          "label": "Red Cell Indices"
+        },
+        {
+          "test_name": "MCV",
+          "result": "87.6",
+          "unit": "fL",
+          "normal_values": "80 - 100",
+          "flag": ""
+        },
+        {
+          "test_name": "MCH",
+          "result": "29.5",
+          "unit": "pg",
+          "normal_values": "27 - 33",
+          "flag": ""
+        },
+        {
+          "row_type": "section",
+          "label": "Differential Count"
+        },
+        {
+          "test_name": "Neutrophils",
+          "result": "0.82",
+          "unit": "ratio",
+          "normal_values": "0.50 - 0.70",
+          "flag": "HIGH"
+        },
+        {
+          "test_name": "Lymphocytes",
+          "result": "0.14",
+          "unit": "ratio",
+          "normal_values": "0.20 - 0.40",
+          "flag": "LOW"
+        }
+      ],
+      "results": []
+    }
+  }
+}

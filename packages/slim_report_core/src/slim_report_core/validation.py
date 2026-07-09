@@ -9,7 +9,7 @@ from typing import Any
 
 from .models import Asset, Band, Layer, Object, Page, Style
 
-SUPPORTED_PAGE_SIZES = {"a4", "letter"}
+SUPPORTED_PAGE_SIZES = {"a4", "custom", "letter", "legal"}
 SUPPORTED_PAGE_UNITS = {"px", "pt", "in", "mm", "cm"}
 SUPPORTED_PAGE_ORIENTATIONS = {"portrait", "landscape"}
 SUPPORTED_OBJECT_TYPES = {
@@ -216,6 +216,13 @@ def _validate_object_binding(
 ) -> None:
     if obj.type == "field":
         expression = getattr(obj.binding, "expression", "") if obj.binding is not None else ""
+        properties = getattr(obj, "properties", {}) or {}
+        formula = str(properties.get("formula", getattr(obj, "formula", "")) or "")
+        formula_mode = bool(properties.get("formula_mode", getattr(obj, "formula_mode", False)))
+        if formula_mode and _has_text(formula):
+            if _has_text(expression):
+                _validate_expression(expression, result, f"{path}.binding")
+            return
         if not _has_text(expression):
             result.add_error(
                 "binding.required",
@@ -313,21 +320,35 @@ def _validate_style(style: Any, result: ReportValidationResult, path: str) -> No
                 key_path,
                 f"Style value {key!r} must be a positive number.",
             )
-        elif key in {"border_width", "line_width", "stroke_width"} and not _is_non_negative_number(
-            value
-        ):
+        elif key in {
+            "border_width",
+            "border_radius",
+            "line_width",
+            "opacity",
+            "stroke_width",
+        } and not _is_non_negative_number(value):
             result.add_error(
                 "style.value.invalid",
                 key_path,
                 f"Style value {key!r} must be a non-negative number.",
             )
-        elif key == "bold" and not isinstance(value, bool):
-            result.add_error("style.value.invalid", key_path, "Style value 'bold' must be boolean.")
+        elif key in {"bold", "italic", "underline"} and not isinstance(value, bool):
+            result.add_error(
+                "style.value.invalid",
+                key_path,
+                f"Style value {key!r} must be boolean.",
+            )
         elif key == "align" and str(value) not in {"left", "center", "right", "justify"}:
             result.add_error(
                 "style.value.invalid",
                 key_path,
                 "Style value 'align' must be left, center, right, or justify.",
+            )
+        elif key == "vertical_align" and str(value) not in {"top", "middle", "bottom"}:
+            result.add_error(
+                "style.value.invalid",
+                key_path,
+                "Style value 'vertical_align' must be top, middle, or bottom.",
             )
 
 
@@ -428,7 +449,35 @@ def _id_set(items: Iterable[Any]) -> set[str]:
 
 
 def _is_safe_path_part(part: str) -> bool:
-    return bool(part) and not part.startswith("_") and part.replace("_", "").isalnum()
+    name, valid = _split_path_part(part)
+    return valid and (bool(name) or "[" in part)
+
+
+def _split_path_part(part: str) -> tuple[str, bool]:
+    if not part:
+        return "", False
+    name = ""
+    seen_index = False
+    cursor = 0
+    while cursor < len(part):
+        char = part[cursor]
+        if char == "[":
+            seen_index = True
+            close = part.find("]", cursor + 1)
+            if close == -1:
+                return "", False
+            raw_index = part[cursor + 1:close]
+            if raw_index and not raw_index.isdigit():
+                return "", False
+            cursor = close + 1
+            continue
+        if seen_index:
+            return "", False
+        name += char
+        cursor += 1
+    if name and (name.startswith("_") or not name.replace("_", "").isalnum()):
+        return "", False
+    return name, True
 
 
 def _has_text(value: Any) -> bool:

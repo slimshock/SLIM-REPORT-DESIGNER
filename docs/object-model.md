@@ -47,19 +47,35 @@ Internally, those methods use `ObjectFactory` and call `page.add(...)`:
 page.add(TextObject("Laboratory Result", x=50, y=30))
 ```
 
-## Placeholder Objects
+## Additional Objects
 
-The following concrete objects exist as domain placeholders for future renderer support:
+Image, barcode, QR code, and basic table objects are supported by the current designer, HTML preview, and PDF export:
+
+```python
+page.barcode("ABC123", x=40, y=120, width=200, height=60)
+page.qrcode("https://example.test", x=40, y=200, width=100, height=100)
+```
+
+`page.image(...)` creates an `ImageObject` and is renderable:
 
 ```python
 page.image("logo.png", x=40, y=40, width=120, height=60)
-page.barcode("ABC123", x=40, y=120, width=200, height=60)
-page.qrcode("https://example.test", x=40, y=200, width=100, height=100)
-page.table(binding="results", x=40, y=320, width=520, height=200)
 ```
 
-They create `ImageObject`, `BarcodeObject`, `QRCodeObject`, and `TableObject` domain objects. HTML
-and PDF rendering for these placeholders is intentionally not implemented yet.
+`page.table(...)` creates a basic array-bound `TableObject`:
+
+```python
+page.table(
+    data_path="results",
+    columns=[{"label": "Test", "binding": "test"}],
+    x=40,
+    y=320,
+    width=520,
+    height=200,
+)
+```
+
+`page.barcode(...)` and `page.qrcode(...)` create renderable objects. They resolve `binding` first and fall back to literal `value` when no data value is available. Advanced table features such as nested tables, merged cells, formulas, and grouped tables are future work.
 
 ## Serialization
 

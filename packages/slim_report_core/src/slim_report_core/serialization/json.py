@@ -9,7 +9,7 @@ from typing import Any
 from ..models import Asset, Band, Layer, Metadata, Page, Style
 from ..object_factory import ObjectFactory
 from ..report import Report
-from ..schema import validate_template_mapping
+from ..schema import normalize_template_mapping, validate_template_mapping
 from ..utils import dump_json_object, parse_json_object
 from .base import BaseSerializer, PathValue
 
@@ -22,6 +22,7 @@ class JSONSerializer(BaseSerializer):
 
     def load_mapping(self, data: Mapping[str, Any]) -> Report:
         """Deserialize a JSON-compatible mapping into a report."""
+        data = normalize_template_mapping(data)
         validate_template_mapping(data)
         metadata = Metadata.from_dict(data["metadata"])
         page = Page.from_dict(data["page"])
@@ -45,6 +46,7 @@ class JSONSerializer(BaseSerializer):
             layers=layers,
             styles=styles,
             assets=assets,
+            data=dict(data.get("data", {})) if isinstance(data.get("data"), Mapping) else {},
         )
 
     def dump_mapping(self, report: Report) -> dict[str, Any]:
@@ -65,6 +67,8 @@ class JSONSerializer(BaseSerializer):
             data["styles"] = {
                 style_id: style.to_dict() for style_id, style in report.styles.items()
             }
+        if getattr(report, "data", None):
+            data["data"] = dict(report.data)
         return data
 
     def loads(self, payload: str | bytes | bytearray) -> Report:

@@ -1,0 +1,1492 @@
+import { ensureTemplateData, getArrayChildFields, normalizeArrayFieldPath } from "./data_fields.js";
+
+export function createDefaultTemplate() {
+  return normalizeTemplate({
+    version: "0.1",
+    metadata: {
+      name: "Untitled Report",
+      title: "Untitled Report"
+    },
+    page: {
+      size: "A4",
+      orientation: "portrait",
+      unit: "px",
+      width: 595,
+      height: 842,
+      margin_top: 24,
+      margin_right: 24,
+      margin_bottom: 24,
+      margin_left: 24,
+      background_color: "#ffffff",
+      transparent: false
+    },
+    objects: [],
+    bands: getDefaultBands({
+      width: 595,
+      height: 842,
+      unit: "px"
+    }),
+    assets: []
+  });
+}
+
+export function normalizeTemplate(template) {
+  const source = structuredClone(template || {});
+  const title = source.metadata?.title || source.metadata?.name || "Untitled Report";
+  source.version = String(source.version || "0.1");
+  source.metadata = {
+    ...(source.metadata || {}),
+    name: source.metadata?.name || title,
+    title
+  };
+  source.page = normalizePage(source.page || {}, title);
+  source.objects = Array.isArray(source.objects) ? source.objects.map(normalizeObject) : [];
+  source.bands = normalizeBands(source);
+  for (const object of source.objects) {
+    assignObjectBand(source, object);
+  }
+  source.assets = Array.isArray(source.assets) ? source.assets : [];
+  ensureTemplateData(source);
+  return source;
+}
+
+export function normalizeObject(object) {
+  const type = object.type || "text";
+  const normalized = {
+    id: object.id || uniqueId(type, []),
+    type,
+    x: numberValue(object.x, 40),
+    y: numberValue(object.y, 40),
+    width: numberValue(object.width, 160),
+    height: numberValue(object.height, defaultHeightForType(type)),
+    locked: Boolean(object.locked ?? object.properties?.locked ?? false),
+    properties: {
+      ...(object.properties || {})
+    }
+  };
+  normalized.band = String(
+    object.band ?? object.band_id ?? object.properties?.band ?? object.properties?.band_id ?? "detail"
+  );
+  normalized.band_id = normalized.band;
+  normalized.properties.band = normalized.band;
+  normalized.properties.band_id = normalized.band;
+  normalized.properties.locked = normalized.locked;
+
+  if (object.text !== undefined) {
+    normalized.text = String(object.text);
+    normalized.properties.text = normalized.text;
+  }
+  if (object.binding !== undefined) {
+    normalized.binding = String(object.binding);
+    normalized.properties.binding = normalized.binding;
+  }
+  const formula = object.formula ?? object.properties?.formula;
+  const formulaMode = object.formula_mode ?? object.properties?.formula_mode;
+  if (formula !== undefined) {
+    normalized.formula = String(formula);
+    normalized.properties.formula = normalized.formula;
+  }
+  if (formulaMode !== undefined) {
+    normalized.formula_mode = Boolean(formulaMode);
+    normalized.properties.formula_mode = normalized.formula_mode;
+  }
+  const conditions = object.conditions ?? object.properties?.conditions;
+  if (conditions !== undefined) {
+    normalized.conditions = normalizeConditionRules(conditions);
+    normalized.properties.conditions = normalized.conditions;
+  }
+  if (object.source_path !== undefined || object.properties?.source_path !== undefined) {
+    normalized.source_path = String(object.source_path ?? object.properties?.source_path ?? "");
+    normalized.properties.source_path = normalized.source_path;
+  }
+  const source = object.src ?? object.source ?? object.properties?.src ?? object.properties?.source;
+  if (type === "image") {
+    normalized.src = source === undefined ? "" : String(source);
+    normalized.alt = String(object.alt ?? object.properties?.alt ?? "");
+    normalized.assetId = String(object.assetId ?? object.asset_id ?? object.asset ?? object.properties?.assetId ?? object.properties?.asset_id ?? object.properties?.asset ?? "");
+    normalized.properties.src = normalized.src;
+    normalized.properties.source = normalized.src;
+    normalized.properties.alt = normalized.alt;
+    if (normalized.assetId) {
+      normalized.properties.assetId = normalized.assetId;
+    } else {
+      delete normalized.properties.assetId;
+      delete normalized.properties.asset_id;
+      delete normalized.properties.asset;
+    }
+    normalized.properties.maintain_aspect_ratio = Boolean(
+      object.maintain_aspect_ratio ?? object.properties?.maintain_aspect_ratio ?? true
+    );
+  }
+  if (type === "table") {
+    normalizeTableObject(normalized, object);
+  }
+  if (type === "barcode") {
+    normalizeBarcodeObject(normalized, object);
+  }
+  if (type === "qrcode") {
+    normalizeQrCodeObject(normalized, object);
+  }
+  const style = explicitStyle(object);
+  if (Object.keys(style).length > 0) {
+    normalized.style = style;
+    normalized.properties.style = style;
+  } else if (normalized.properties.style) {
+    delete normalized.properties.style;
+  }
+  return normalized;
+}
+
+export function createObject(type, template) {
+  const ids = template.objects.map((object) => object.id);
+  const base = {
+    id: uniqueId(type, ids),
+    type,
+    x: 60,
+    y: 60,
+    width: 160,
+    height: 32,
+    band: "detail",
+    properties: {
+      style: {}
+    }
+  };
+
+  if (type === "text") {
+    base.text = "Text";
+    base.properties.text = base.text;
+    base.properties.style = { font_size: 14 };
+  } else if (type === "field") {
+    base.width = 140;
+    base.height = 20;
+    base.binding = "";
+    base.formula = "";
+    base.formula_mode = false;
+    base.text = "{{  }}";
+    base.properties.binding = base.binding;
+    base.properties.formula = base.formula;
+    base.properties.formula_mode = base.formula_mode;
+    base.properties.text = base.text;
+    base.properties.style = { font_size: 14 };
+  } else if (type === "line") {
+    base.width = 220;
+    base.height = 0;
+    base.properties.style = { stroke_width: 1 };
+  } else if (type === "rectangle") {
+    base.width = 180;
+    base.height = 90;
+    base.properties.style = { border_width: 1 };
+  } else if (type === "image") {
+    base.x = 40;
+    base.y = 40;
+    base.width = 120;
+    base.height = 80;
+    base.src = "";
+    base.alt = "";
+    base.assetId = "";
+    base.properties.src = "";
+    base.properties.source = "";
+    base.properties.alt = "";
+    base.properties.maintain_aspect_ratio = true;
+    base.properties.style = defaultStyleForType("image");
+  } else if (type === "table") {
+    base.width = 500;
+    base.height = 220;
+    base.data_path = firstArrayDataPath(template);
+    base.autoHeight = true;
+    base.header = defaultTableHeader();
+    base.row = defaultTableRow();
+    base.border = defaultTableBorder();
+    base.columns = tableColumnsForDataPath(template, base.data_path);
+    base.properties.data_path = base.data_path;
+    base.properties.autoHeight = base.autoHeight;
+    base.properties.header = base.header;
+    base.properties.row = base.row;
+    base.properties.border = base.border;
+    base.properties.columns = base.columns;
+    base.properties.style = defaultStyleForType("table");
+  } else if (type === "barcode") {
+    base.width = 160;
+    base.height = 48;
+    base.value = "1234567890";
+    base.binding = firstUsefulBinding(template);
+    base.format = "code128";
+    base.show_text = true;
+    base.properties.value = base.value;
+    base.properties.binding = base.binding;
+    base.properties.format = base.format;
+    base.properties.symbology = base.format;
+    base.properties.show_text = base.show_text;
+    base.properties.style = defaultStyleForType("barcode");
+  } else if (type === "qrcode") {
+    base.width = 80;
+    base.height = 80;
+    base.value = "https://example.com";
+    base.binding = firstUsefulBinding(template);
+    base.error_correction = "M";
+    base.properties.value = base.value;
+    base.properties.binding = base.binding;
+    base.properties.error_correction = base.error_correction;
+    base.properties.style = defaultStyleForType("qrcode");
+  }
+
+  return normalizeObject(base);
+}
+
+export function duplicateObject(object, template) {
+  const clone = normalizeObject(structuredClone(object));
+  clone.id = uniqueId(`${object.type}_copy`, template.objects.map((item) => item.id));
+  clone.x += 20;
+  clone.y += 20;
+  clone.band = object.band || object.band_id || object.properties?.band || "detail";
+  clone.band_id = clone.band;
+  clone.properties.band = clone.band;
+  clone.properties.band_id = clone.band;
+  return clone;
+}
+
+export function getDefaultBands(page = {}) {
+  const height = Math.max(numberValue(page.height, 842), 160);
+  const headerHeight = Math.min(100, Math.max(60, Math.round(height * 0.12)));
+  const footerHeight = Math.min(60, Math.max(40, Math.round(height * 0.07)));
+  const detailHeight = Math.max(80, height - headerHeight - footerHeight);
+  return [
+    bandRecord("page_header", "page_header", "Page Header", 0, headerHeight),
+    bandRecord("detail", "detail", "Detail", headerHeight, detailHeight),
+    bandRecord("page_footer", "page_footer", "Page Footer", headerHeight + detailHeight, footerHeight)
+  ];
+}
+
+export function normalizeBands(template) {
+  const page = template.page || {};
+  const bands = Array.isArray(template.bands) ? template.bands : [];
+  if (bands.length === 0) {
+    return [bandRecord("detail", "detail", "Detail", 0, numberValue(page.height, 842))];
+  }
+  const normalized = bands.map((band, index) => normalizeBand(band, page, index));
+  if (normalized.length === 1 && normalized[0].id === "detail") {
+    normalized[0].y = 0;
+    normalized[0].height = numberValue(page.height, normalized[0].height);
+  }
+  return recalculateStandardBands({ page, bands: normalized }).bands;
+}
+
+export function getBandById(template, bandId) {
+  return (template.bands || []).find((band) => band.id === bandId) || null;
+}
+
+export function getGroupBands(template) {
+  return (template.bands || []).filter((band) => ["group_header", "group_footer"].includes(band.type));
+}
+
+export function getGroupHeaderBand(template) {
+  return (template.bands || []).find((band) => band.type === "group_header") || null;
+}
+
+export function getGroupFooterBand(template) {
+  return (template.bands || []).find((band) => band.type === "group_footer") || null;
+}
+
+export function getGroupField(template) {
+  return getGroupHeaderBand(template)?.group?.field || "";
+}
+
+export function getBandForObject(template, object) {
+  const bandId = object?.band || object?.band_id || object?.properties?.band || "detail";
+  return getBandById(template, bandId) || getBandById(template, "detail") || (template.bands || [])[0] || null;
+}
+
+export function addGroupBands(template) {
+  template.bands = Array.isArray(template.bands) ? template.bands : [];
+  const detail = getBandById(template, "detail") || template.bands[0] || bandRecord("detail", "detail", "Detail", 0, 500);
+  const repeat = detail.repeat || {};
+  const dataPath = repeat.data_path || firstArrayDataPath(template);
+  const fields = getArrayChildFields(template, dataPath);
+  const groupField = fields.find((field) => field.child_path === "section" || field.child_path === "group")
+    || fields[0]
+    || null;
+  const groupId = "result_group";
+  const existingIds = new Set(template.bands.map((band) => band.id));
+  if (!getGroupHeaderBand(template)) {
+    template.bands.push(bandRecord(uniqueBandId("group_header", existingIds), "group_header", "Group Header", detail.y, 28, {
+      background_color: "#f3f4f6",
+      group: {
+        id: groupId,
+        data_path: dataPath,
+        field: groupField?.child_path || "",
+        sort: "none"
+      }
+    }));
+  }
+  if (!getGroupFooterBand(template)) {
+    template.bands.push(bandRecord(uniqueBandId("group_footer", existingIds), "group_footer", "Group Footer", detail.y + detail.height, 24, {
+      group: { id: groupId },
+      visible: true
+    }));
+  }
+  template.bands = recalculateStandardBands(template).bands;
+  return getGroupHeaderBand(template);
+}
+
+export function assignObjectBand(template, object, bandId = null) {
+  const fallback = getBandById(template, "detail") || (template.bands || [])[0] || null;
+  const target = getBandById(template, bandId || object.band || object.band_id || object.properties?.band) || fallback;
+  object.band = target?.id || "detail";
+  object.band_id = object.band;
+  object.properties = object.properties || {};
+  object.properties.band = object.band;
+  object.properties.band_id = object.band;
+  return object.band;
+}
+
+export function setObjectBand(template, object, bandId) {
+  assignObjectBand(template, object, bandId);
+  clampObjectToBand(template, object);
+}
+
+export function setBandValue(template, bandId, key, value) {
+  const band = getBandById(template, bandId);
+  if (!band) {
+    return;
+  }
+  if (key === "height") {
+    band.height = Math.max(0, Number(value) || 0);
+    recalculateStandardBands(template);
+    return;
+  }
+  if (key === "visible" || key === "locked") {
+    band[key] = Boolean(value);
+    return;
+  }
+  if (key === "name" || key === "background_color") {
+    band[key] = String(value);
+  }
+}
+
+export function setBandRepeatValue(template, bandId, key, value) {
+  const band = getBandById(template, bandId);
+  if (!band || band.id !== "detail") {
+    return;
+  }
+  band.repeat = normalizeBandRepeat({
+    ...(band.repeat || {}),
+    [key]: value
+  });
+}
+
+export function setBandGroupValue(template, bandId, key, value) {
+  const band = getBandById(template, bandId);
+  if (!band || !["group_header", "group_footer"].includes(band.type)) {
+    return;
+  }
+  band.group = normalizeBandGroup({
+    ...(band.group || {}),
+    [key]: value
+  });
+  if (key === "id") {
+    for (const groupBand of getGroupBands(template)) {
+      groupBand.group = normalizeBandGroup({
+        ...(groupBand.group || {}),
+        id: String(value || "")
+      });
+    }
+  }
+  if (band.type === "group_header") {
+    const footer = getGroupFooterBand(template);
+    if (footer && !footer.group?.id) {
+      footer.group = normalizeBandGroup({ ...(footer.group || {}), id: band.group.id });
+    }
+  }
+}
+
+export function setGroupFooterVisible(template, visible) {
+  const footer = getGroupFooterBand(template);
+  if (footer) {
+    footer.visible = Boolean(visible);
+  }
+}
+
+export function clampObjectToBand(template, object) {
+  const band = getBandForObject(template, object);
+  const page = template.page || {};
+  const pageWidth = Number(page.width) || 595;
+  if (!band) {
+    return;
+  }
+  object.width = Math.max(8, Math.round(Number(object.width) || 8));
+  if (object.type === "line") {
+    object.height = Math.max(0, Math.round(Number(object.height) || 0));
+  } else {
+    object.height = Math.max(8, Math.round(Number(object.height) || 8));
+  }
+  object.x = Math.max(0, Math.min(Math.round(Number(object.x) || 0), pageWidth - object.width));
+  const bandTop = Number(band.y) || 0;
+  const bandBottom = bandTop + Math.max(Number(band.height) || 0, object.height);
+  object.y = Math.max(bandTop, Math.round(Number(object.y) || bandTop));
+  if (object.y + object.height > bandBottom) {
+    object.y = Math.max(bandTop, bandBottom - object.height);
+  }
+}
+
+export function objectStyle(object) {
+  return {
+    ...defaultStyleForType(object?.type),
+    ...explicitStyle(object || {})
+  };
+}
+
+export function setObjectStyleValue(object, key, value) {
+  object.properties = object.properties || {};
+  object.properties.style = object.properties.style || {};
+  object.properties.style[key] = value;
+  object.style = {
+    ...(object.style || {}),
+    [key]: value
+  };
+}
+
+export function addObjectCondition(object) {
+  const conditions = normalizeConditionRules(object.conditions ?? object.properties?.conditions);
+  conditions.push({
+    id: uniqueId("condition", conditions.map((condition) => condition.id)),
+    enabled: true,
+    condition: "",
+    style: {},
+    action: ""
+  });
+  setObjectConditions(object, conditions);
+}
+
+export function removeObjectCondition(object, index) {
+  const conditions = normalizeConditionRules(object.conditions ?? object.properties?.conditions)
+    .filter((_rule, ruleIndex) => ruleIndex !== index);
+  setObjectConditions(object, conditions);
+}
+
+export function setObjectConditionValue(object, index, path, value) {
+  const conditions = normalizeConditionRules(object.conditions ?? object.properties?.conditions);
+  const rule = conditions[index];
+  if (!rule) {
+    return;
+  }
+  if (path.startsWith("style.")) {
+    const key = path.slice("style.".length);
+    rule.style = rule.style || {};
+    if (value === "" || value === null || value === undefined) {
+      delete rule.style[key];
+    } else {
+      rule.style[key] = value;
+    }
+  } else if (path === "enabled") {
+    rule.enabled = Boolean(value);
+  } else if (path === "condition") {
+    rule.condition = String(value);
+  } else if (path === "action") {
+    rule.action = String(value || "");
+  } else {
+    rule[path] = value;
+  }
+  setObjectConditions(object, conditions);
+}
+
+export function setObjectConditions(object, conditions) {
+  object.conditions = normalizeConditionRules(conditions);
+  object.properties = object.properties || {};
+  object.properties.conditions = object.conditions;
+}
+
+export function defaultStyleForType(type) {
+  if (type === "rectangle") {
+    return {
+      border_width: 1,
+      border_color: "#111827",
+      background_color: "transparent",
+      border_radius: 0
+    };
+  }
+  if (type === "line") {
+    return {
+      stroke_width: 1,
+      stroke_color: "#111827"
+    };
+  }
+  if (type === "image") {
+    return {
+      object_fit: "contain",
+      opacity: 1,
+      border_radius: 0,
+      border_width: 0,
+      border_color: "#000000",
+      background_color: "transparent"
+    };
+  }
+  if (type === "table") {
+    return {
+      background_color: "#ffffff",
+      border_radius: 0,
+      overflow: "hidden"
+    };
+  }
+  if (type === "barcode") {
+    return {
+      foreground_color: "#111827",
+      background_color: "#ffffff",
+      font_size: 8
+    };
+  }
+  if (type === "qrcode") {
+    return {
+      foreground_color: "#111827",
+      background_color: "#ffffff"
+    };
+  }
+  return {
+    font_family: "Arial",
+    font_size: 12,
+    bold: false,
+    italic: false,
+    underline: false,
+    color: "#111827",
+    background_color: "transparent",
+    align: "left",
+    vertical_align: "top",
+    line_height: 1.2
+  };
+}
+
+export function setObjectText(object, value) {
+  object.text = value;
+  object.properties = object.properties || {};
+  object.properties.text = value;
+}
+
+export function setObjectBinding(object, value) {
+  const binding = String(value);
+  object.binding = binding;
+  object.properties = object.properties || {};
+  object.properties.binding = binding;
+  if (object.type === "field") {
+    setObjectText(object, binding ? `{{ ${binding} }}` : "{{  }}");
+  }
+}
+
+export function setObjectFormula(object, value) {
+  object.formula = String(value);
+  object.properties = object.properties || {};
+  object.properties.formula = object.formula;
+}
+
+export function setObjectFormulaMode(object, value) {
+  object.formula_mode = Boolean(value);
+  object.properties = object.properties || {};
+  object.properties.formula_mode = object.formula_mode;
+}
+
+export function setObjectSource(object, value) {
+  object.src = value;
+  object.properties = object.properties || {};
+  object.properties.src = value;
+  object.properties.source = value;
+}
+
+export function setObjectAssetId(object, value) {
+  const assetId = String(value || "").trim();
+  object.assetId = assetId;
+  object.properties = object.properties || {};
+  if (assetId) {
+    object.properties.assetId = assetId;
+  } else {
+    delete object.properties.assetId;
+  }
+  delete object.properties.asset_id;
+  delete object.properties.asset;
+}
+
+export function setObjectAlt(object, value) {
+  object.alt = value;
+  object.properties = object.properties || {};
+  object.properties.alt = value;
+}
+
+export function setObjectPropertyValue(object, key, value) {
+  object.properties = object.properties || {};
+  object.properties[key] = value;
+  object[key] = value;
+}
+
+export function setTableDataPath(object, value) {
+  const dataPath = normalizeArrayFieldPath(value);
+  object.data_path = dataPath;
+  object.dataSource = dataPath;
+  object.properties = object.properties || {};
+  object.properties.data_path = dataPath;
+  object.properties.dataSource = dataPath;
+}
+
+export function generateTableColumns(template, object) {
+  const dataPath = object.data_path || object.properties?.data_path || "";
+  const columns = tableColumnsForDataPath(template, dataPath);
+  object.columns = columns;
+  object.properties = object.properties || {};
+  object.properties.columns = columns;
+}
+
+export function addTableColumn(object) {
+  const columns = normalizedTableColumns(object).slice();
+  const index = columns.length + 1;
+  columns.push({
+    id: `column_${index}`,
+    label: `Column ${index}`,
+    binding: `column_${index}`,
+    width: 120,
+    align: "left"
+  });
+  setTableColumns(object, columns);
+}
+
+export function removeTableColumn(object, index) {
+  const columns = normalizedTableColumns(object).filter((_column, columnIndex) => columnIndex !== index);
+  setTableColumns(object, columns.length ? columns : defaultTableColumns());
+}
+
+export function moveTableColumn(object, index, direction) {
+  const columns = normalizedTableColumns(object).slice();
+  const target = index + direction;
+  if (index < 0 || index >= columns.length || target < 0 || target >= columns.length) {
+    return;
+  }
+  [columns[index], columns[target]] = [columns[target], columns[index]];
+  setTableColumns(object, columns);
+}
+
+export function setTableColumnValue(object, index, key, value) {
+  const columns = normalizedTableColumns(object).slice();
+  const column = { ...(columns[index] || {}) };
+  if (key === "width") {
+    column.width = Math.max(20, Math.round(Number(value) || 20));
+  } else if (key === "font_size") {
+    column.font_size = Math.max(6, Math.round(Number(value) || 10));
+    column.fontSize = column.font_size;
+  } else if (key === "bold" || key === "wrap") {
+    column[key] = Boolean(value);
+  } else if (key === "align") {
+    column.align = ["left", "center", "right"].includes(String(value)) ? String(value) : "left";
+  } else if (key === "label" || key === "title") {
+    column.label = String(value);
+    column.title = column.label;
+  } else if (key === "binding" || key === "field") {
+    column.binding = String(value);
+    column.field = column.binding;
+  } else {
+    column[key] = String(value);
+  }
+  if (key === "binding" && !column.id) {
+    column.id = String(value) || `column_${index + 1}`;
+  }
+  columns[index] = normalizeTableColumn(column, index);
+  setTableColumns(object, columns);
+}
+
+export function setTableSectionValue(object, sectionName, key, value) {
+  const current = normalizedTableSection(object, sectionName);
+  const next = {
+    ...current,
+    [key]: key === "visible" || key === "bold"
+      ? Boolean(value)
+      : ["height", "font_size", "width"].includes(key)
+        ? Number(value) || 0
+        : String(value)
+  };
+  object[sectionName] = next;
+  object.properties = object.properties || {};
+  object.properties[sectionName] = next;
+  if (sectionName === "header") {
+    object.showHeader = Boolean(next.visible);
+    object.headerHeight = Number(next.height) || 0;
+    object.properties.showHeader = object.showHeader;
+    object.properties.headerHeight = object.headerHeight;
+  }
+  if (sectionName === "row") {
+    object.rowHeight = Number(next.height) || 0;
+    object.properties.rowHeight = object.rowHeight;
+  }
+}
+
+export function setTableGridValue(object, key, value) {
+  const current = normalizedTableSection(object, "grid");
+  const next = {
+    ...current,
+    [key]: ["show_horizontal", "show_vertical", "showHorizontal", "showVertical"].includes(key)
+      ? Boolean(value)
+      : key === "width"
+        ? Number(value) || 0
+        : String(value)
+  };
+  next.showHorizontal = Boolean(next.show_horizontal ?? next.showHorizontal);
+  next.showVertical = Boolean(next.show_vertical ?? next.showVertical);
+  next.show_horizontal = next.showHorizontal;
+  next.show_vertical = next.showVertical;
+  object.grid = next;
+  object.properties = object.properties || {};
+  object.properties.grid = next;
+}
+
+export function applyTablePreset(object, presetName) {
+  const preset = tablePreset(presetName);
+  if (!preset) {
+    return;
+  }
+  object.properties = object.properties || {};
+  if (preset.data_path !== undefined) {
+    object.data_path = preset.data_path;
+    object.dataSource = preset.data_path;
+    object.properties.data_path = preset.data_path;
+    object.properties.dataSource = preset.data_path;
+  }
+  if (preset.columns) {
+    setTableColumns(object, preset.columns);
+  }
+  for (const key of [
+    "header",
+    "row",
+    "border",
+    "grid",
+    "sectionStyle",
+    "conditionalFormatting",
+    "autoHeight"
+  ]) {
+    if (preset[key] !== undefined) {
+      object[key] = structuredClone(preset[key]);
+      object.properties[key] = structuredClone(preset[key]);
+    }
+  }
+}
+
+export function setPageValue(template, key, value) {
+  template.page = normalizePage({
+    ...(template.page || {}),
+    [key]: value
+  }, templateTitle(template));
+}
+
+export function setPagePrintValue(template, key, value) {
+  const title = templateTitle(template);
+  const current = normalizePrintSettings(template.page?.print, title);
+  template.page = normalizePage({
+    ...(template.page || {}),
+    print: {
+      ...current,
+      [key]: value
+    }
+  }, title);
+}
+
+export function setPageSize(template, size) {
+  const page = normalizePage({ ...(template.page || {}), size }, templateTitle(template));
+  if (size !== "Custom") {
+    const dimensions = paperDimensions(size, page.unit, page.orientation);
+    page.width = dimensions.width;
+    page.height = dimensions.height;
+  }
+  template.page = page;
+}
+
+export function setPageUnit(template, unit) {
+  const current = normalizePage(template.page || {}, templateTitle(template));
+  const page = normalizePage({ ...current, unit }, templateTitle(template));
+  if (page.size !== "Custom") {
+    const dimensions = paperDimensions(page.size, unit, page.orientation);
+    page.width = dimensions.width;
+    page.height = dimensions.height;
+  }
+  template.page = page;
+}
+
+export function setPageOrientation(template, orientation) {
+  const page = normalizePage({ ...(template.page || {}), orientation }, templateTitle(template));
+  if (page.size !== "Custom") {
+    const dimensions = paperDimensions(page.size, page.unit, orientation);
+    page.width = dimensions.width;
+    page.height = dimensions.height;
+  } else if (
+    (orientation === "landscape" && page.width < page.height) ||
+    (orientation === "portrait" && page.width > page.height)
+  ) {
+    [page.width, page.height] = [page.height, page.width];
+  }
+  template.page = page;
+}
+
+export function templateTitle(template) {
+  return template.metadata?.title || template.metadata?.name || "Untitled Report";
+}
+
+export function uniqueId(prefix, existingIds) {
+  const safePrefix = String(prefix || "object").toLowerCase().replace(/[^a-z0-9]+/g, "_");
+  let index = 1;
+  let candidate = `${safePrefix}_${index}`;
+  while (existingIds.includes(candidate)) {
+    index += 1;
+    candidate = `${safePrefix}_${index}`;
+  }
+  return candidate;
+}
+
+function numberValue(value, fallback) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function bandRecord(id, type, name, y, height, patch = {}) {
+  return {
+    id,
+    type,
+    name,
+    y: Number(y) || 0,
+    height: Math.max(0, Number(height) || 0),
+    background_color: "transparent",
+    visible: true,
+    locked: false,
+    ...patch
+  };
+}
+
+function uniqueBandId(prefix, existingIds) {
+  let index = 1;
+  let candidate = `${prefix}_${index}`;
+  while (existingIds.has(candidate)) {
+    index += 1;
+    candidate = `${prefix}_${index}`;
+  }
+  existingIds.add(candidate);
+  return candidate;
+}
+
+function normalizeBand(band, page, index) {
+  const type = String(band.type || band.id || `band_${index + 1}`);
+  const id = String(band.id || type);
+  const names = {
+    page_header: "Page Header",
+    group_header: "Group Header",
+    detail: "Detail",
+    group_footer: "Group Footer",
+    page_footer: "Page Footer"
+  };
+  const normalized = bandRecord(
+    id,
+    type,
+    String(band.name || names[type] || id),
+    numberValue(band.y, 0),
+    numberValue(band.height, numberValue(page.height, 842)),
+    {
+      background_color: String(band.background_color || band.properties?.background_color || "transparent"),
+      visible: Boolean(band.visible ?? band.properties?.visible ?? true),
+      locked: Boolean(band.locked ?? band.properties?.locked ?? false)
+    }
+  );
+  const repeat = normalizeBandRepeat(band.repeat || band.properties?.repeat);
+  if (id === "detail" && repeat) {
+    normalized.repeat = repeat;
+  }
+  const group = normalizeBandGroup(band.group || band.properties?.group);
+  if (["group_header", "group_footer"].includes(type) && group) {
+    normalized.group = group;
+  }
+  return normalized;
+}
+
+function normalizeBandRepeat(repeat) {
+  if (!repeat || typeof repeat !== "object" || Array.isArray(repeat)) {
+    return null;
+  }
+  return {
+    enabled: Boolean(repeat.enabled),
+    data_path: String(repeat.data_path || ""),
+    row_height: Math.max(8, Math.round(Number(repeat.row_height) || 22)),
+    preview_rows: Math.min(100, Math.max(1, Math.round(Number(repeat.preview_rows) || 10))),
+    empty_message: String(repeat.empty_message || "No records")
+  };
+}
+
+function normalizeBandGroup(group) {
+  if (!group || typeof group !== "object" || Array.isArray(group)) {
+    return null;
+  }
+  const normalized = {
+    id: String(group.id || ""),
+    data_path: String(group.data_path || ""),
+    field: String(group.field || ""),
+    sort: ["none", "asc", "desc"].includes(String(group.sort)) ? String(group.sort) : "none"
+  };
+  return normalized;
+}
+
+function recalculateStandardBands(template) {
+  const bands = template.bands || [];
+  const header = bands.find((band) => band.id === "page_header");
+  const detail = bands.find((band) => band.id === "detail");
+  const footer = bands.find((band) => band.id === "page_footer");
+  if (!header || !detail || !footer) {
+    return template;
+  }
+  const pageHeight = Math.max(numberValue(template.page?.height, 842), 120);
+  const minDetail = Math.min(80, pageHeight);
+  header.height = Math.max(0, Math.min(Number(header.height) || 0, pageHeight - minDetail));
+  const groupHeaders = bands.filter((band) => band.type === "group_header" && band.visible !== false);
+  const groupFooters = bands.filter((band) => band.type === "group_footer" && band.visible !== false);
+  const groupHeaderHeight = groupHeaders.reduce((sum, band) => sum + (Number(band.height) || 0), 0);
+  const groupFooterHeight = groupFooters.reduce((sum, band) => sum + (Number(band.height) || 0), 0);
+  footer.height = Math.max(0, Math.min(Number(footer.height) || 0, pageHeight - header.height - minDetail));
+  detail.height = Math.max(minDetail, pageHeight - header.height - footer.height - groupHeaderHeight - groupFooterHeight);
+  header.y = 0;
+  let cursor = header.height;
+  for (const band of groupHeaders) {
+    band.y = cursor;
+    cursor += Number(band.height) || 0;
+  }
+  detail.y = cursor;
+  cursor += detail.height;
+  for (const band of groupFooters) {
+    band.y = cursor;
+    cursor += Number(band.height) || 0;
+  }
+  footer.y = cursor;
+  return template;
+}
+
+export function normalizePage(page, title = "Untitled Report") {
+  const size = page.size || "A4";
+  const orientation = page.orientation === "landscape" ? "landscape" : "portrait";
+  const unit = ["px", "mm", "in"].includes(page.unit) ? page.unit : "px";
+  const fallback = paperDimensions(size, unit, orientation);
+  const normalized = {
+    size,
+    orientation,
+    unit,
+    width: numberValue(page.width, fallback.width),
+    height: numberValue(page.height, fallback.height),
+    margin_top: numberValue(page.margin_top ?? page.margin?.top, unit === "px" ? 24 : unit === "mm" ? 10 : 0.4),
+    margin_right: numberValue(page.margin_right ?? page.margin?.right, unit === "px" ? 24 : unit === "mm" ? 10 : 0.4),
+    margin_bottom: numberValue(page.margin_bottom ?? page.margin?.bottom, unit === "px" ? 24 : unit === "mm" ? 10 : 0.4),
+    margin_left: numberValue(page.margin_left ?? page.margin?.left, unit === "px" ? 24 : unit === "mm" ? 10 : 0.4),
+    background_color: String(page.background_color || "#ffffff"),
+    transparent: Boolean(page.transparent)
+  };
+  if (page.print && typeof page.print === "object" && !Array.isArray(page.print)) {
+    normalized.print = normalizePrintSettings(page.print, title);
+  }
+  return normalized;
+}
+
+export function normalizePrintSettings(printSettings = {}, title = "Untitled Report") {
+  const defaults = defaultPrintSettings(title);
+  const source = printSettings && typeof printSettings === "object" && !Array.isArray(printSettings)
+    ? printSettings
+    : {};
+  return {
+    show_browser_print_button: Boolean(source.show_browser_print_button ?? defaults.show_browser_print_button),
+    default_filename: safePdfFilename(source.default_filename || defaults.default_filename),
+    pdf_title: String(source.pdf_title || defaults.pdf_title),
+    pdf_author: String(source.pdf_author || defaults.pdf_author),
+    pdf_subject: String(source.pdf_subject || defaults.pdf_subject),
+    print_background: Boolean(source.print_background ?? defaults.print_background)
+  };
+}
+
+export function defaultPrintSettings(title = "Untitled Report") {
+  const resolvedTitle = String(title || "Untitled Report").trim() || "Untitled Report";
+  return {
+    show_browser_print_button: true,
+    default_filename: safePdfFilename(resolvedTitle),
+    pdf_title: resolvedTitle,
+    pdf_author: "Slim Report Designer",
+    pdf_subject: "",
+    print_background: true
+  };
+}
+
+export function safePdfFilename(value = "report") {
+  const raw = String(value || "").trim().replace(/\.pdf$/i, "");
+  const slug = raw
+    .replace(/[<>:"/\\|?*\x00-\x1f]+/g, " ")
+    .replace(/[^A-Za-z0-9._ -]+/g, " ")
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^[ ._-]+|[ ._-]+$/g, "");
+  return `${(slug || "report").slice(0, 120)}.pdf`;
+}
+
+export function paperDimensions(size, unit, orientation) {
+  const key = String(size || "A4").toLowerCase();
+  const table = {
+    a4: { px: [595, 842], mm: [210, 297], in: [8.27, 11.69] },
+    letter: { px: [612, 792], mm: [215.9, 279.4], in: [8.5, 11] },
+    legal: { px: [612, 1008], mm: [215.9, 355.6], in: [8.5, 14] },
+    custom: { px: [595, 842], mm: [210, 297], in: [8.27, 11.69] }
+  };
+  const values = table[key]?.[unit] || table.a4.px;
+  let [width, height] = values;
+  if (orientation === "landscape" && width < height) {
+    [width, height] = [height, width];
+  }
+  if (orientation === "portrait" && width > height) {
+    [width, height] = [height, width];
+  }
+  return { width, height };
+}
+
+function defaultHeightForType(type) {
+  if (type === "line") {
+    return 0;
+  }
+  if (type === "image") {
+    return 80;
+  }
+  if (type === "table") {
+    return 220;
+  }
+  if (type === "barcode") {
+    return 48;
+  }
+  if (type === "qrcode") {
+    return 80;
+  }
+  return 32;
+}
+
+function explicitStyle(object) {
+  const properties = object.properties || {};
+  const style = {
+    ...(properties.style || {}),
+    ...(object.style || {})
+  };
+
+  for (const key of [
+    "align",
+    "background_color",
+    "bold",
+    "border_color",
+    "border_width",
+    "color",
+    "fill_color",
+    "font_family",
+    "font_size",
+    "foreground_color",
+    "italic",
+    "line_height",
+    "line_width",
+    "object_fit",
+    "overflow",
+    "opacity",
+    "border_radius",
+    "stroke_color",
+    "stroke_width",
+    "underline",
+    "vertical_align"
+  ]) {
+    if (properties[key] !== undefined && style[key] === undefined) {
+      style[key] = properties[key];
+    }
+  }
+
+  if (style.fill_color !== undefined && style.background_color === undefined) {
+    style.background_color = style.fill_color;
+  }
+  if (style.line_width !== undefined && style.stroke_width === undefined) {
+    style.stroke_width = style.line_width;
+  }
+  if (style.border_color !== undefined && style.stroke_color === undefined && object.type === "line") {
+    style.stroke_color = style.border_color;
+  }
+  return style;
+}
+
+function normalizeConditionRules(conditions) {
+  if (!Array.isArray(conditions)) {
+    return [];
+  }
+  return conditions
+    .filter((rule) => rule && typeof rule === "object" && !Array.isArray(rule))
+    .map((rule, index) => ({
+      id: String(rule.id || `condition_${index + 1}`),
+      enabled: Boolean(rule.enabled ?? true),
+      condition: String(rule.condition || ""),
+      style: rule.style && typeof rule.style === "object" && !Array.isArray(rule.style)
+        ? { ...rule.style }
+        : {},
+      action: typeof rule.action === "object"
+        ? String(rule.action?.type || rule.action?.name || "")
+        : String(rule.action || "")
+    }));
+}
+
+function normalizeTableObject(normalized, source) {
+  const properties = source.properties || {};
+  const dataPath = normalizeArrayFieldPath(
+    source.data_path
+      ?? source.dataSource
+      ?? properties.data_path
+      ?? properties.dataSource
+      ?? source.binding
+      ?? properties.binding
+      ?? ""
+  );
+  normalized.data_path = dataPath;
+  normalized.dataSource = dataPath;
+  normalized.properties.data_path = dataPath;
+  normalized.properties.dataSource = dataPath;
+  normalized.autoHeight = Boolean(
+    source.autoHeight ?? source.auto_height ?? properties.autoHeight ?? properties.auto_height ?? true
+  );
+  normalized.properties.autoHeight = normalized.autoHeight;
+  normalized.header = normalizeTableSection(
+    {
+      ...tableStyleAliases(source.headerStyle ?? properties.headerStyle),
+      ...(source.header ?? properties.header ?? {})
+    },
+    {
+      ...defaultTableHeader(),
+      ...(source.showHeader !== undefined || properties.showHeader !== undefined
+        ? { visible: Boolean(source.showHeader ?? properties.showHeader) }
+        : {}),
+      ...(source.headerHeight !== undefined || properties.headerHeight !== undefined
+        ? { height: Number(source.headerHeight ?? properties.headerHeight) || 24 }
+        : {})
+    }
+  );
+  normalized.row = normalizeTableSection(
+    {
+      ...tableStyleAliases(source.bodyStyle ?? properties.bodyStyle),
+      ...(source.row ?? properties.row ?? {})
+    },
+    {
+      ...defaultTableRow(),
+      ...(source.rowHeight !== undefined || properties.rowHeight !== undefined
+        ? { height: Number(source.rowHeight ?? properties.rowHeight) || 22 }
+        : {})
+    }
+  );
+  normalized.border = normalizeTableSection(source.border ?? properties.border, defaultTableBorder());
+  normalized.grid = normalizeTableSection(source.grid ?? properties.grid, defaultTableGrid());
+  normalized.sectionStyle = normalizeTableSection(
+    tableStyleAliases(source.sectionStyle ?? properties.sectionStyle),
+    defaultTableSectionStyle()
+  );
+  normalized.columns = normalizeTableColumns(source.columns ?? properties.columns);
+  normalized.properties.header = normalized.header;
+  normalized.properties.row = normalized.row;
+  normalized.properties.border = normalized.border;
+  normalized.properties.grid = normalized.grid;
+  normalized.properties.sectionStyle = normalized.sectionStyle;
+  normalized.properties.columns = normalized.columns;
+  normalized.showHeader = Boolean(normalized.header.visible);
+  normalized.headerHeight = Number(normalized.header.height) || 24;
+  normalized.rowHeight = Number(normalized.row.height) || 22;
+  normalized.properties.showHeader = normalized.showHeader;
+  normalized.properties.headerHeight = normalized.headerHeight;
+  normalized.properties.rowHeight = normalized.rowHeight;
+  const rules = source.conditionalFormatting ?? properties.conditionalFormatting;
+  if (Array.isArray(rules)) {
+    normalized.conditionalFormatting = rules.map((rule) => ({ ...rule }));
+    normalized.properties.conditionalFormatting = normalized.conditionalFormatting;
+  }
+  if (source.empty_message !== undefined || properties.empty_message !== undefined) {
+    normalized.empty_message = String(source.empty_message ?? properties.empty_message ?? "");
+    normalized.properties.empty_message = normalized.empty_message;
+  }
+}
+
+function normalizeBarcodeObject(normalized, source) {
+  const properties = source.properties || {};
+  const binding = String(source.binding ?? properties.binding ?? "");
+  normalized.binding = binding;
+  normalized.properties.binding = binding;
+  normalized.value = String(source.value ?? properties.value ?? "1234567890");
+  normalized.format = String(source.format ?? properties.format ?? properties.symbology ?? "code128");
+  normalized.show_text = Boolean(source.show_text ?? properties.show_text ?? true);
+  normalized.properties.value = normalized.value;
+  normalized.properties.format = normalized.format;
+  normalized.properties.symbology = normalized.format;
+  normalized.properties.show_text = normalized.show_text;
+}
+
+function normalizeQrCodeObject(normalized, source) {
+  const properties = source.properties || {};
+  const binding = String(source.binding ?? properties.binding ?? "");
+  normalized.binding = binding;
+  normalized.properties.binding = binding;
+  normalized.value = String(source.value ?? properties.value ?? "https://example.com");
+  normalized.error_correction = String(source.error_correction ?? properties.error_correction ?? "M");
+  if (!["L", "M", "Q", "H"].includes(normalized.error_correction)) {
+    normalized.error_correction = "M";
+  }
+  normalized.properties.value = normalized.value;
+  normalized.properties.error_correction = normalized.error_correction;
+}
+
+function tableColumnsForDataPath(template, dataPath) {
+  const fields = getArrayChildFields(template, dataPath).slice(0, 6);
+  if (fields.length === 0) {
+    return defaultTableColumns();
+  }
+  return fields.map((field, index) => normalizeTableColumn({
+    id: field.child_path || `column_${index + 1}`,
+    label: field.label || field.child_path,
+    title: field.label || field.child_path,
+    binding: field.child_path,
+    field: field.child_path,
+    source_path: field.path,
+    width: defaultColumnWidth(field.child_path),
+    align: defaultColumnAlign(field.child_path)
+  }, index));
+}
+
+function firstArrayDataPath(template) {
+  const fields = template?.data?.fields || [];
+  const arrayField = fields.find((field) => String(field.path || "").endsWith("[]"));
+  return normalizeArrayFieldPath(arrayField?.path || "");
+}
+
+function firstUsefulBinding(template) {
+  const fields = template?.data?.fields || [];
+  const paths = fields
+    .map((field) => String(field.path || ""))
+    .filter((path) => path && !path.includes("[]"));
+  return paths.find((path) => path === "order.id")
+    || paths.find((path) => path.endsWith(".id"))
+    || paths.find((path) => path.includes("patient_no"))
+    || paths[0]
+    || "";
+}
+
+function defaultTableColumns() {
+  return [
+    { id: "column_1", label: "Column 1", binding: "column_1", width: 150, align: "left" },
+    { id: "column_2", label: "Column 2", binding: "column_2", width: 120, align: "left" },
+    { id: "column_3", label: "Column 3", binding: "column_3", width: 120, align: "left" }
+  ];
+}
+
+function defaultTableHeader() {
+  return {
+    visible: true,
+    height: 24,
+    background_color: "#e5e7eb",
+    color: "#111827",
+    font_size: 10,
+    bold: true
+  };
+}
+
+function defaultTableRow() {
+  return {
+    height: 22,
+    background_color: "#ffffff",
+    alternate_background_color: "#f9fafb",
+    color: "#111827",
+    font_size: 10
+  };
+}
+
+function defaultTableBorder() {
+  return {
+    show: true,
+    width: 1,
+    color: "#d1d5db"
+  };
+}
+
+function defaultTableGrid() {
+  return {
+    show_horizontal: false,
+    show_vertical: false,
+    showHorizontal: false,
+    showVertical: false,
+    width: 1,
+    color: "#d1d5db"
+  };
+}
+
+function defaultTableSectionStyle() {
+  return {
+    font_size: 10,
+    bold: true,
+    background_color: "#ffffff",
+    color: "#111827",
+    align: "left"
+  };
+}
+
+function setTableColumns(object, columns) {
+  object.columns = columns.map(normalizeTableColumn);
+  object.properties = object.properties || {};
+  object.properties.columns = object.columns;
+}
+
+function normalizedTableColumns(object) {
+  return normalizeTableColumns(object.columns ?? object.properties?.columns);
+}
+
+function normalizeTableColumns(columns) {
+  if (!Array.isArray(columns) || columns.length === 0) {
+    return defaultTableColumns();
+  }
+  return columns.map(normalizeTableColumn);
+}
+
+function normalizeTableColumn(column, index = 0) {
+  const source = column && typeof column === "object" ? column : {};
+  const binding = String(source.binding || source.field || source.id || `column_${index + 1}`);
+  const label = String(source.label || source.title || labelForBinding(binding) || `Column ${index + 1}`);
+  const bold = source.bold ?? tableFontWeightIsBold(source.fontWeight ?? source.font_weight);
+  const normalized = {
+    id: String(source.id || binding || `column_${index + 1}`),
+    label,
+    title: label,
+    binding,
+    field: binding,
+    width: Math.max(20, Math.round(Number(source.width) || 120)),
+    align: ["left", "center", "right"].includes(String(source.align)) ? String(source.align) : "left",
+    bold: Boolean(bold),
+    fontWeight: Boolean(bold) ? "bold" : "normal",
+    color: source.color ? String(source.color) : "",
+    wrap: Boolean(source.wrap),
+    ...(source.source_path ? { source_path: String(source.source_path) } : {})
+  };
+  const fontSize = Number(source.font_size ?? source.fontSize);
+  if (Number.isFinite(fontSize) && fontSize > 0) {
+    normalized.font_size = fontSize;
+    normalized.fontSize = fontSize;
+  }
+  return normalized;
+}
+
+function normalizedTableSection(object, sectionName) {
+  const defaults = sectionName === "header"
+    ? defaultTableHeader()
+    : sectionName === "row"
+      ? defaultTableRow()
+      : sectionName === "grid"
+        ? defaultTableGrid()
+        : sectionName === "sectionStyle"
+          ? defaultTableSectionStyle()
+          : defaultTableBorder();
+  return normalizeTableSection(object[sectionName] ?? object.properties?.[sectionName], defaults);
+}
+
+function normalizeTableSection(value, defaults) {
+  const normalized = {
+    ...defaults,
+    ...(value && typeof value === "object" ? tableStyleAliases(value) : {})
+  };
+  if ("showHorizontal" in normalized || "show_horizontal" in normalized) {
+    normalized.show_horizontal = Boolean(
+      normalized.showHorizontal !== undefined ? normalized.showHorizontal : normalized.show_horizontal
+    );
+    normalized.showHorizontal = normalized.show_horizontal;
+  }
+  if ("showVertical" in normalized || "show_vertical" in normalized) {
+    normalized.show_vertical = Boolean(
+      normalized.showVertical !== undefined ? normalized.showVertical : normalized.show_vertical
+    );
+    normalized.showVertical = normalized.show_vertical;
+  }
+  return normalized;
+}
+
+function tableStyleAliases(value = {}) {
+  const source = value && typeof value === "object" && !Array.isArray(value) ? { ...value } : {};
+  if (source.fontSize !== undefined && source.font_size === undefined) {
+    source.font_size = source.fontSize;
+  }
+  if (source.backgroundColor !== undefined && source.background_color === undefined) {
+    source.background_color = source.backgroundColor;
+  }
+  if (source.textColor !== undefined && source.color === undefined) {
+    source.color = source.textColor;
+  }
+  if (source.fontWeight !== undefined && source.bold === undefined) {
+    source.bold = tableFontWeightIsBold(source.fontWeight);
+  }
+  return source;
+}
+
+function tableFontWeightIsBold(value) {
+  if (typeof value === "boolean") {
+    return value;
+  }
+  return ["bold", "700", "800", "900", "true"].includes(String(value || "").toLowerCase());
+}
+
+function tablePreset(name) {
+  const flaggedRules = [
+    { when: "flag == 'HIGH'", style: { color: "#dc2626", fontWeight: "bold" } },
+    { when: "flag == 'LOW'", style: { color: "#2563eb", fontWeight: "bold" } },
+    { when: "flag == 'CRITICAL'", style: { color: "#dc2626", fontWeight: "bold" } }
+  ];
+  const commonResultsColumns = [
+    { id: "test_name", title: "Test", field: "test_name", width: 180, align: "left" },
+    { id: "result", title: "Result", field: "result", width: 80, align: "right", bold: true },
+    { id: "normal_values", title: "Normal Values", field: "normal_values", width: 150, align: "left" },
+    { id: "flag", title: "Flag", field: "flag", width: 60, align: "center", bold: true }
+  ];
+  const presets = {
+    basic_results: {
+      columns: [
+        { id: "test", title: "Test", field: "test", width: 150, align: "left" },
+        { id: "result", title: "Result", field: "result", width: 90, align: "center" },
+        { id: "unit", title: "Unit", field: "unit", width: 80, align: "left" },
+        { id: "reference", title: "Reference", field: "reference", width: 130, align: "left" }
+      ]
+    },
+    hematology_left: {
+      data_path: "left_results",
+      columns: commonResultsColumns,
+      conditionalFormatting: flaggedRules
+    },
+    hematology_right: {
+      data_path: "right_results",
+      columns: commonResultsColumns,
+      sectionStyle: {
+        ...defaultTableSectionStyle(),
+        background_color: "#ecfdf5",
+        color: "#047857"
+      },
+      conditionalFormatting: flaggedRules
+    },
+    chemistry: {
+      data_path: "results",
+      columns: commonResultsColumns,
+      conditionalFormatting: flaggedRules
+    },
+    flagged_results: {
+      columns: commonResultsColumns,
+      conditionalFormatting: flaggedRules
+    }
+  };
+  return presets[name] || null;
+}
+
+function labelForBinding(binding) {
+  return String(binding || "")
+    .split(".")
+    .pop()
+    .replace(/\[(?:\d+)?\]/g, "")
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function defaultColumnWidth(binding) {
+  const key = String(binding || "").toLowerCase();
+  if (key.includes("result") || key.includes("value")) {
+    return 90;
+  }
+  if (key.includes("unit") || key.includes("flag")) {
+    return 70;
+  }
+  return 140;
+}
+
+function defaultColumnAlign(binding) {
+  const key = String(binding || "").toLowerCase();
+  return key.includes("result") || key.includes("value") || key.includes("flag") ? "center" : "left";
+}

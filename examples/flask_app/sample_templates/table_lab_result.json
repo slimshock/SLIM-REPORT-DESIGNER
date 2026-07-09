@@ -1,0 +1,637 @@
+{
+  "version": "0.1",
+  "metadata": {
+    "name": "Table Laboratory Result",
+    "title": "Table Laboratory Result",
+    "description": "Laboratory result template using the basic table object.",
+    "author": "Slim Report Designer",
+    "tags": [
+      "demo",
+      "lab",
+      "table"
+    ],
+    "custom": {
+      "id": "table_lab_result",
+      "provider": "table_lab_result"
+    }
+  },
+  "page": {
+    "size": "A4",
+    "orientation": "portrait",
+    "unit": "px",
+    "width": 595,
+    "height": 842,
+    "margin_top": 24,
+    "margin_right": 24,
+    "margin_bottom": 24,
+    "margin_left": 24,
+    "background_color": "#ffffff",
+    "transparent": false,
+    "pagination": {
+      "enabled": true,
+      "repeat_page_header": true,
+      "repeat_page_footer": true,
+      "respect_margins": true
+    }
+  },
+  "bands": [
+    {
+      "id": "page_header",
+      "type": "page_header",
+      "name": "Page Header",
+      "y": 0,
+      "height": 150,
+      "background_color": "#ffffff",
+      "visible": true,
+      "locked": false
+    },
+    {
+      "id": "detail",
+      "type": "detail",
+      "name": "Detail",
+      "y": 150,
+      "height": 620,
+      "background_color": "#ffffff",
+      "visible": true,
+      "locked": false
+    },
+    {
+      "id": "page_footer",
+      "type": "page_footer",
+      "name": "Page Footer",
+      "y": 770,
+      "height": 72,
+      "background_color": "#ffffff",
+      "visible": true,
+      "locked": false
+    }
+  ],
+  "objects": [
+    {
+      "id": "lab_name",
+      "type": "field",
+      "band": "page_header",
+      "x": 40,
+      "y": 24,
+      "width": 360,
+      "height": 24,
+      "binding": "laboratory.name",
+      "style": {
+        "font_size": 18,
+        "bold": true,
+        "color": "#111827"
+      }
+    },
+    {
+      "id": "report_title",
+      "type": "text",
+      "band": "page_header",
+      "x": 40,
+      "y": 58,
+      "width": 300,
+      "height": 22,
+      "text": "Laboratory Result",
+      "style": {
+        "font_size": 15,
+        "bold": true,
+        "color": "#2563eb"
+      }
+    },
+    {
+      "id": "patient_label",
+      "type": "text",
+      "band": "page_header",
+      "x": 40,
+      "y": 95,
+      "width": 80,
+      "height": 18,
+      "text": "Patient:",
+      "style": {
+        "font_size": 11,
+        "bold": true
+      }
+    },
+    {
+      "id": "patient_name",
+      "type": "field",
+      "band": "page_header",
+      "x": 120,
+      "y": 95,
+      "width": 250,
+      "height": 18,
+      "binding": "patient.name",
+      "style": {
+        "font_size": 11
+      }
+    },
+    {
+      "id": "order_label",
+      "type": "text",
+      "band": "page_header",
+      "x": 390,
+      "y": 95,
+      "width": 65,
+      "height": 18,
+      "text": "Order:",
+      "style": {
+        "font_size": 11,
+        "bold": true
+      }
+    },
+    {
+      "id": "order_id",
+      "type": "field",
+      "band": "page_header",
+      "x": 455,
+      "y": 95,
+      "width": 110,
+      "height": 18,
+      "binding": "order.id",
+      "style": {
+        "font_size": 11
+      }
+    },
+    {
+      "id": "header_line",
+      "type": "line",
+      "band": "page_header",
+      "x": 40,
+      "y": 144,
+      "width": 515,
+      "height": 1,
+      "style": {
+        "stroke_width": 1,
+        "stroke_color": "#111827"
+      }
+    },
+    {
+      "id": "results_table",
+      "type": "table",
+      "band": "detail",
+      "x": 40,
+      "y": 180,
+      "width": 515,
+      "height": 260,
+      "locked": false,
+      "data_path": "results",
+      "header": {
+        "visible": true,
+        "height": 24,
+        "background_color": "#e5e7eb",
+        "color": "#111827",
+        "font_size": 10,
+        "bold": true
+      },
+      "row": {
+        "height": 24,
+        "background_color": "#ffffff",
+        "alternate_background_color": "#f9fafb",
+        "color": "#111827",
+        "font_size": 10
+      },
+      "border": {
+        "width": 1,
+        "color": "#d1d5db"
+      },
+      "columns": [
+        {
+          "id": "test",
+          "label": "Test",
+          "binding": "test",
+          "width": 130,
+          "align": "left",
+          "source_path": "results[].test"
+        },
+        {
+          "id": "result",
+          "label": "Result",
+          "binding": "result",
+          "width": 90,
+          "align": "center",
+          "source_path": "results[].result"
+        },
+        {
+          "id": "unit",
+          "label": "Unit",
+          "binding": "unit",
+          "width": 80,
+          "align": "left",
+          "source_path": "results[].unit"
+        },
+        {
+          "id": "reference",
+          "label": "Reference",
+          "binding": "reference",
+          "width": 130,
+          "align": "left",
+          "source_path": "results[].reference"
+        },
+        {
+          "id": "flag",
+          "label": "Flag",
+          "binding": "flag",
+          "width": 45,
+          "align": "center",
+          "source_path": "results[].flag"
+        }
+      ],
+      "style": {
+        "background_color": "#ffffff",
+        "border_radius": 0,
+        "overflow": "hidden"
+      }
+    },
+    {
+      "id": "footer_line",
+      "type": "line",
+      "band": "page_footer",
+      "x": 40,
+      "y": 780,
+      "width": 515,
+      "height": 1,
+      "style": {
+        "stroke_width": 1,
+        "stroke_color": "#d1d5db"
+      }
+    },
+    {
+      "id": "footer",
+      "type": "text",
+      "band": "page_footer",
+      "x": 40,
+      "y": 802,
+      "width": 240,
+      "height": 16,
+      "text": "Generated by Slim Report Designer",
+      "style": {
+        "font_size": 10
+      }
+    }
+  ],
+  "assets": [],
+  "data": {
+    "sample": {
+      "laboratory": {
+        "name": "Cerebro Diagnostic System",
+        "address": "Cagayan de Oro City, Philippines"
+      },
+      "patient": {
+        "name": "JUAN DELA CRUZ",
+        "patient_no": "P-00001234",
+        "age": "34",
+        "sex": "Male"
+      },
+      "order": {
+        "id": "ORDER-1001",
+        "date": "2026-07-06",
+        "physician": "Dr. Maria Santos"
+      },
+      "results": [
+        {
+          "test": "WBC",
+          "result": "7.10",
+          "value": "7.10",
+          "unit": "10^9/L",
+          "reference": "4.00 - 10.00",
+          "flag": "N"
+        },
+        {
+          "test": "RBC",
+          "result": "5.02",
+          "value": "5.02",
+          "unit": "10^12/L",
+          "reference": "4.50 - 5.90",
+          "flag": "N"
+        },
+        {
+          "test": "HGB",
+          "result": "14.20",
+          "value": "14.20",
+          "unit": "g/dL",
+          "reference": "13.00 - 17.00",
+          "flag": "N"
+        },
+        {
+          "test": "HCT",
+          "result": "42.80",
+          "value": "42.80",
+          "unit": "%",
+          "reference": "40.00 - 50.00",
+          "flag": "N"
+        },
+        {
+          "test": "MCV",
+          "result": "85.30",
+          "value": "85.30",
+          "unit": "fL",
+          "reference": "80.00 - 100.00",
+          "flag": "N"
+        },
+        {
+          "test": "MCH",
+          "result": "28.30",
+          "value": "28.30",
+          "unit": "pg",
+          "reference": "27.00 - 32.00",
+          "flag": "N"
+        },
+        {
+          "test": "MCHC",
+          "result": "33.20",
+          "value": "33.20",
+          "unit": "g/dL",
+          "reference": "32.00 - 36.00",
+          "flag": "N"
+        },
+        {
+          "test": "RDW-CV",
+          "result": "13.10",
+          "value": "13.10",
+          "unit": "%",
+          "reference": "11.50 - 14.50",
+          "flag": "N"
+        },
+        {
+          "test": "PLT",
+          "result": "265",
+          "value": "265",
+          "unit": "10^9/L",
+          "reference": "150 - 400",
+          "flag": "N"
+        },
+        {
+          "test": "MPV",
+          "result": "9.40",
+          "value": "9.40",
+          "unit": "fL",
+          "reference": "7.50 - 11.50",
+          "flag": "N"
+        },
+        {
+          "test": "Neutrophils",
+          "result": "58",
+          "value": "58",
+          "unit": "%",
+          "reference": "50 - 70",
+          "flag": "N"
+        },
+        {
+          "test": "Lymphocytes",
+          "result": "32",
+          "value": "32",
+          "unit": "%",
+          "reference": "20 - 40",
+          "flag": "N"
+        },
+        {
+          "test": "Monocytes",
+          "result": "6",
+          "value": "6",
+          "unit": "%",
+          "reference": "2 - 8",
+          "flag": "N"
+        },
+        {
+          "test": "Eosinophils",
+          "result": "3",
+          "value": "3",
+          "unit": "%",
+          "reference": "1 - 4",
+          "flag": "N"
+        },
+        {
+          "test": "Basophils",
+          "result": "1",
+          "value": "1",
+          "unit": "%",
+          "reference": "0 - 1",
+          "flag": "N"
+        },
+        {
+          "test": "Glucose",
+          "result": "94",
+          "value": "94",
+          "unit": "mg/dL",
+          "reference": "70 - 99",
+          "flag": "N"
+        },
+        {
+          "test": "BUN",
+          "result": "14",
+          "value": "14",
+          "unit": "mg/dL",
+          "reference": "7 - 20",
+          "flag": "N"
+        },
+        {
+          "test": "Creatinine",
+          "result": "0.92",
+          "value": "0.92",
+          "unit": "mg/dL",
+          "reference": "0.70 - 1.30",
+          "flag": "N"
+        },
+        {
+          "test": "Uric Acid",
+          "result": "5.80",
+          "value": "5.80",
+          "unit": "mg/dL",
+          "reference": "3.50 - 7.20",
+          "flag": "N"
+        },
+        {
+          "test": "Total Cholesterol",
+          "result": "182",
+          "value": "182",
+          "unit": "mg/dL",
+          "reference": "< 200",
+          "flag": "N"
+        },
+        {
+          "test": "Triglycerides",
+          "result": "118",
+          "value": "118",
+          "unit": "mg/dL",
+          "reference": "< 150",
+          "flag": "N"
+        },
+        {
+          "test": "HDL",
+          "result": "48",
+          "value": "48",
+          "unit": "mg/dL",
+          "reference": "> 40",
+          "flag": "N"
+        },
+        {
+          "test": "LDL",
+          "result": "110",
+          "value": "110",
+          "unit": "mg/dL",
+          "reference": "< 130",
+          "flag": "N"
+        },
+        {
+          "test": "AST",
+          "result": "24",
+          "value": "24",
+          "unit": "U/L",
+          "reference": "0 - 40",
+          "flag": "N"
+        },
+        {
+          "test": "ALT",
+          "result": "29",
+          "value": "29",
+          "unit": "U/L",
+          "reference": "0 - 41",
+          "flag": "N"
+        },
+        {
+          "test": "Sodium",
+          "result": "139",
+          "value": "139",
+          "unit": "mmol/L",
+          "reference": "135 - 145",
+          "flag": "N"
+        },
+        {
+          "test": "Potassium",
+          "result": "4.20",
+          "value": "4.20",
+          "unit": "mmol/L",
+          "reference": "3.50 - 5.10",
+          "flag": "N"
+        },
+        {
+          "test": "Chloride",
+          "result": "102",
+          "value": "102",
+          "unit": "mmol/L",
+          "reference": "98 - 107",
+          "flag": "N"
+        },
+        {
+          "test": "Urine Color",
+          "result": "Yellow",
+          "value": "Yellow",
+          "unit": "",
+          "reference": "Yellow",
+          "flag": "N"
+        },
+        {
+          "test": "Urine Clarity",
+          "result": "Clear",
+          "value": "Clear",
+          "unit": "",
+          "reference": "Clear",
+          "flag": "N"
+        },
+        {
+          "test": "Specific Gravity",
+          "result": "1.020",
+          "value": "1.020",
+          "unit": "",
+          "reference": "1.005 - 1.030",
+          "flag": "N"
+        },
+        {
+          "test": "Urine pH",
+          "result": "6.0",
+          "value": "6.0",
+          "unit": "",
+          "reference": "5.0 - 8.0",
+          "flag": "N"
+        },
+        {
+          "test": "Protein",
+          "result": "Negative",
+          "value": "Negative",
+          "unit": "",
+          "reference": "Negative",
+          "flag": "N"
+        },
+        {
+          "test": "Glucose Urine",
+          "result": "Negative",
+          "value": "Negative",
+          "unit": "",
+          "reference": "Negative",
+          "flag": "N"
+        },
+        {
+          "test": "Ketones",
+          "result": "Negative",
+          "value": "Negative",
+          "unit": "",
+          "reference": "Negative",
+          "flag": "N"
+        },
+        {
+          "test": "Nitrite",
+          "result": "Negative",
+          "value": "Negative",
+          "unit": "",
+          "reference": "Negative",
+          "flag": "N"
+        }
+      ]
+    },
+    "fields": [
+      {
+        "path": "laboratory.name",
+        "label": "Laboratory Name",
+        "type": "string",
+        "sample": "Cerebro Diagnostic System"
+      },
+      {
+        "path": "patient.name",
+        "label": "Patient Name",
+        "type": "string",
+        "sample": "JUAN DELA CRUZ"
+      },
+      {
+        "path": "order.id",
+        "label": "Order ID",
+        "type": "string",
+        "sample": "ORDER-1001"
+      },
+      {
+        "path": "results[]",
+        "label": "Results",
+        "type": "array",
+        "sample": "36 rows"
+      },
+      {
+        "path": "results[].test",
+        "label": "Test",
+        "type": "string",
+        "sample": "WBC"
+      },
+      {
+        "path": "results[].result",
+        "label": "Result",
+        "type": "string",
+        "sample": "7.10"
+      },
+      {
+        "path": "results[].unit",
+        "label": "Unit",
+        "type": "string",
+        "sample": "10^9/L"
+      },
+      {
+        "path": "results[].reference",
+        "label": "Reference",
+        "type": "string",
+        "sample": "4.00 - 10.00"
+      },
+      {
+        "path": "results[].flag",
+        "label": "Flag",
+        "type": "string",
+        "sample": "N"
+      }
+    ]
+  }
+}

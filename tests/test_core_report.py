@@ -48,6 +48,8 @@ def test_create_default_template_has_required_empty_shape() -> None:
             "margin_right": 0.5,
             "margin_bottom": 0.5,
             "margin_left": 0.5,
+            "background_color": "#ffffff",
+            "transparent": False,
         },
         "objects": [],
         "bands": [],

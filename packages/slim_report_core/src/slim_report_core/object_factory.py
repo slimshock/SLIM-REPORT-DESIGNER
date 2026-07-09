@@ -190,6 +190,7 @@ class ObjectFactory:
         position: Position | Mapping[str, Any] | None = None,
         size: Size | Mapping[str, Any] | None = None,
         symbology: str = "code128",
+        show_text: bool | None = None,
         style: Style | Mapping[str, Any] | None = None,
         style_values: Mapping[str, Any] | None = None,
         properties: Mapping[str, Any] | None = None,
@@ -206,6 +207,7 @@ class ObjectFactory:
             position=position,
             size=size,
             symbology=symbology,
+            show_text=show_text,
             style=_style_with_values(style, style_values),
             properties=properties,
             **common,
@@ -222,6 +224,7 @@ class ObjectFactory:
         height: float = 100.0,
         position: Position | Mapping[str, Any] | None = None,
         size: Size | Mapping[str, Any] | None = None,
+        error_correction: str = "M",
         style: Style | Mapping[str, Any] | None = None,
         style_values: Mapping[str, Any] | None = None,
         properties: Mapping[str, Any] | None = None,
@@ -237,6 +240,7 @@ class ObjectFactory:
             height=height,
             position=position,
             size=size,
+            error_correction=str((properties or {}).get("error_correction", error_correction)),
             style=_style_with_values(style, style_values),
             properties=properties,
             **common,
@@ -251,7 +255,11 @@ class ObjectFactory:
         width: float = 300.0,
         height: float = 100.0,
         binding: str | None = None,
+        data_path: str | None = None,
         columns: list[Mapping[str, Any]] | None = None,
+        header: Mapping[str, Any] | None = None,
+        row: Mapping[str, Any] | None = None,
+        border: Mapping[str, Any] | None = None,
         position: Position | Mapping[str, Any] | None = None,
         size: Size | Mapping[str, Any] | None = None,
         style: Style | Mapping[str, Any] | None = None,
@@ -267,7 +275,11 @@ class ObjectFactory:
             width=width,
             height=height,
             binding=binding,
+            data_path=data_path,
             columns=columns,
+            header=header,
+            row=row,
+            border=border,
             position=position,
             size=size,
             style=_style_with_values(style, style_values),
@@ -349,13 +361,52 @@ class ObjectFactory:
                 properties[key] = value
 
         object_type = _required_str(mapping, "type", context="Report object")
+        if object_type == "table":
+            for key in (
+                "data_path",
+                "dataSource",
+                "autoHeight",
+                "auto_height",
+                "showHeader",
+                "rowHeight",
+                "headerHeight",
+                "header",
+                "row",
+                "border",
+                "grid",
+                "headerStyle",
+                "bodyStyle",
+                "sectionStyle",
+                "conditionalFormatting",
+                "columns",
+            ):
+                if key in mapping:
+                    properties[key] = mapping[key]
+        if object_type == "barcode":
+            for key in ("value", "format", "symbology", "show_text"):
+                if key in mapping:
+                    properties[key] = mapping[key]
+            if "format" in properties and "symbology" not in properties:
+                properties["symbology"] = properties["format"]
+        if object_type == "qrcode":
+            for key in ("value", "error_correction"):
+                if key in mapping:
+                    properties[key] = mapping[key]
+        if object_type == "field":
+            for key in ("formula", "formula_mode"):
+                if key in mapping:
+                    properties[key] = mapping[key]
+        if "conditions" in mapping:
+            properties["conditions"] = mapping["conditions"]
         target_class = object_class or _object_class(object_type)
         common = {
             "id": _required_str(mapping, "id", context="Report object"),
             "position": position,
             "size": size,
             "style": style,
-            "band_id": _optional_str(mapping.get("band_id")),
+            "band_id": _optional_str(
+                mapping.get("band", mapping.get("band_id", mapping.get("bandId")))
+            ),
             "layer_id": _optional_str(mapping.get("layer_id")),
             "z_index": int(mapping.get("z_index", 0)),
             "visible": bool(mapping.get("visible", True)),
@@ -372,20 +423,41 @@ class ObjectFactory:
         if target_class is RectangleObject:
             return self.create_rectangle(**common)
         if target_class is ImageObject:
-            return self.create_image(str(properties.get("source", "")), **common)
+            source = mapping.get(
+                "src",
+                mapping.get("source", properties.get("src", properties.get("source", ""))),
+            )
+            if source not in ("", None):
+                properties["src"] = str(source)
+            for key in ("assetId", "asset_id", "asset", "alt"):
+                if key in mapping:
+                    properties[key] = mapping[key]
+            return self.create_image(str(source or ""), **common)
         if target_class is BarcodeObject:
             return self.create_barcode(
                 str(properties.get("value", "")),
-                symbology=str(properties.get("symbology", "code128")),
+                symbology=str(properties.get("format", properties.get("symbology", "code128"))),
+                show_text=bool(properties.get("show_text", True)),
                 **common,
             )
         if target_class is QRCodeObject:
-            return self.create_qrcode(str(properties.get("value", "")), **common)
+            return self.create_qrcode(
+                str(properties.get("value", "")),
+                error_correction=str(properties.get("error_correction", "M")),
+                **common,
+            )
         if target_class is TableObject:
             columns = properties.get("columns")
+            header = properties.get("header")
+            row = properties.get("row")
+            border = properties.get("border")
             return self.create_table(
                 binding=properties.get("binding"),
+                data_path=properties.get("data_path"),
                 columns=columns if isinstance(columns, list) else None,
+                header=header if isinstance(header, Mapping) else None,
+                row=row if isinstance(row, Mapping) else None,
+                border=border if isinstance(border, Mapping) else None,
                 **common,
             )
         return self.create_custom(
@@ -462,6 +534,7 @@ def _required_str(mapping: Mapping[str, Any], key: str, *, context: str) -> str:
 
 _STYLE_KEYS = (
     "align",
+    "background_color",
     "bold",
     "border_color",
     "border_width",
@@ -469,6 +542,15 @@ _STYLE_KEYS = (
     "fill_color",
     "font_family",
     "font_size",
+    "foreground_color",
+    "italic",
+    "line_height",
     "line_width",
+    "object_fit",
+    "opacity",
+    "border_radius",
+    "stroke_color",
     "stroke_width",
+    "underline",
+    "vertical_align",
 )

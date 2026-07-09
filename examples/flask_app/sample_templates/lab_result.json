@@ -1,6 +1,7 @@
 {
   "version": "1.0",
   "metadata": {
+    "name": "Laboratory Result slim",
     "title": "Laboratory Result slim",
     "description": "Sample laboratory result report template.",
     "author": "Slim Report Designer",
@@ -21,7 +22,10 @@
     "margin_top": 0.5,
     "margin_right": 0.5,
     "margin_bottom": 0.5,
-    "margin_left": 0.5
+    "margin_left": 0.5,
+    "background_color": "#ffffff",
+    "transparent": false,
+    "size": "A4"
   },
   "objects": [
     {
@@ -31,15 +35,19 @@
       "y": 40.0,
       "width": 500.0,
       "height": 32.0,
-      "band_id": null,
       "z_index": 0,
       "visible": true,
       "properties": {
         "style": {
-          "font_size": 22,
-          "bold": true
+          "bold": true,
+          "font_size": 22
         },
         "text": "LABORATORY RESULT slim"
+      },
+      "text": "LABORATORY RESULT slim",
+      "style": {
+        "bold": true,
+        "font_size": 22
       }
     },
     {
@@ -49,15 +57,19 @@
       "y": 90.0,
       "width": 360.0,
       "height": 22.0,
-      "band_id": null,
       "z_index": 0,
       "visible": true,
       "properties": {
         "binding": "patient.name",
         "style": {
-          "font_size": 13,
-          "bold": true
+          "bold": true,
+          "font_size": 13
         }
+      },
+      "binding": "patient.name",
+      "style": {
+        "bold": true,
+        "font_size": 13
       }
     },
     {
@@ -67,7 +79,6 @@
       "y": 116.0,
       "width": 120.0,
       "height": 20.0,
-      "band_id": null,
       "z_index": 0,
       "visible": true,
       "properties": {
@@ -75,6 +86,10 @@
         "style": {
           "font_size": 12
         }
+      },
+      "binding": "patient.age",
+      "style": {
+        "font_size": 12
       }
     },
     {
@@ -84,7 +99,6 @@
       "y": 116.0,
       "width": 120.0,
       "height": 20.0,
-      "band_id": null,
       "z_index": 0,
       "visible": true,
       "properties": {
@@ -92,6 +106,10 @@
         "style": {
           "font_size": 12
         }
+      },
+      "binding": "patient.sex",
+      "style": {
+        "font_size": 12
       }
     },
     {
@@ -101,7 +119,6 @@
       "y": 142.0,
       "width": 260.0,
       "height": 20.0,
-      "band_id": null,
       "z_index": 0,
       "visible": true,
       "properties": {
@@ -109,6 +126,10 @@
         "style": {
           "font_size": 12
         }
+      },
+      "binding": "order.id",
+      "style": {
+        "font_size": 12
       }
     },
     {
@@ -118,29 +139,33 @@
       "y": 176.0,
       "width": 500.0,
       "height": 0.0,
-      "band_id": null,
       "z_index": 0,
       "visible": true,
       "properties": {
         "style": {
           "stroke_width": 1
         }
+      },
+      "style": {
+        "stroke_width": 1
       }
     },
     {
       "id": "result_box",
       "type": "rectangle",
-      "x": 50.0,
-      "y": 200.0,
+      "x": 86.0,
+      "y": 188.0,
       "width": 500.0,
       "height": 130.0,
-      "band_id": null,
       "z_index": 0,
       "visible": true,
       "properties": {
         "style": {
           "border_width": 1
         }
+      },
+      "style": {
+        "border_width": 1
       }
     },
     {
@@ -150,15 +175,21 @@
       "y": 226.0,
       "width": 80.0,
       "height": 20.0,
-      "band_id": null,
       "z_index": 0,
       "visible": true,
       "properties": {
         "style": {
-          "font_size": 12,
-          "bold": true
+          "bold": true,
+          "color": "#3e4f75",
+          "font_size": 12
         },
         "text": "HGB"
+      },
+      "text": "HGB",
+      "style": {
+        "bold": true,
+        "color": "#3e4f75",
+        "font_size": 12
       }
     },
     {
@@ -168,7 +199,6 @@
       "y": 226.0,
       "width": 120.0,
       "height": 20.0,
-      "band_id": null,
       "z_index": 0,
       "visible": true,
       "properties": {
@@ -176,6 +206,10 @@
         "style": {
           "font_size": 12
         }
+      },
+      "binding": "result.HGB",
+      "style": {
+        "font_size": 12
       }
     },
     {
@@ -185,15 +219,19 @@
       "y": 262.0,
       "width": 80.0,
       "height": 20.0,
-      "band_id": null,
       "z_index": 0,
       "visible": true,
       "properties": {
         "style": {
-          "font_size": 12,
-          "bold": true
+          "bold": true,
+          "font_size": 12
         },
         "text": "WBC"
+      },
+      "text": "WBC",
+      "style": {
+        "bold": true,
+        "font_size": 12
       }
     },
     {
@@ -203,7 +241,6 @@
       "y": 262.0,
       "width": 120.0,
       "height": 20.0,
-      "band_id": null,
       "z_index": 0,
       "visible": true,
       "properties": {
@@ -211,6 +248,10 @@
         "style": {
           "font_size": 12
         }
+      },
+      "binding": "result.WBC",
+      "style": {
+        "font_size": 12
       }
     },
     {
@@ -220,15 +261,19 @@
       "y": 298.0,
       "width": 80.0,
       "height": 20.0,
-      "band_id": null,
       "z_index": 0,
       "visible": true,
       "properties": {
         "style": {
-          "font_size": 12,
-          "bold": true
+          "bold": true,
+          "font_size": 12
         },
         "text": "PLT"
+      },
+      "text": "PLT",
+      "style": {
+        "bold": true,
+        "font_size": 12
       }
     },
     {
@@ -238,7 +283,6 @@
       "y": 298.0,
       "width": 120.0,
       "height": 20.0,
-      "band_id": null,
       "z_index": 0,
       "visible": true,
       "properties": {
@@ -246,9 +290,31 @@
         "style": {
           "font_size": 12
         }
+      },
+      "binding": "result.PLT",
+      "style": {
+        "font_size": 12
       }
     }
   ],
+  "data": {
+    "sample": {
+      "patient": {
+        "name": "JUAN DELA CRUZ",
+        "age": "35",
+        "sex": "MALE"
+      },
+      "order": {
+        "id": "ORDER-1001",
+        "date": "2026-07-05"
+      },
+      "result": {
+        "HGB": "14.5",
+        "WBC": "7.2",
+        "PLT": "250"
+      }
+    }
+  },
   "bands": [],
   "assets": []
 }

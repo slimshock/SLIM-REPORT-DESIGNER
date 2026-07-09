@@ -9,6 +9,17 @@ dist/
 *.egg-info/
 .eggs/
 pip-wheel-metadata/
+*.tmp.pdf
+*.pdf
+*.download
+downloads/
+browser-downloads/
+screenshots/
+examples/**/uploaded_assets/
+examples/**/report_assets_runtime/
+*.db
+*.sqlite
+*.sqlite3
 
 # Virtual environments
 .venv/
@@ -37,4 +48,6 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+Prompts.md
 

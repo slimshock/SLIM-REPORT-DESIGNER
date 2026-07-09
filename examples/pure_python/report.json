@@ -1,0 +1,71 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "title": "Pure Python Report",
+    "description": "A minimal report created without a web framework.",
+    "author": null,
+    "tags": [],
+    "custom": {}
+  },
+  "page": {
+    "width": 816,
+    "height": 1056,
+    "unit": "px",
+    "orientation": "portrait",
+    "margin_top": 0.5,
+    "margin_right": 0.5,
+    "margin_bottom": 0.5,
+    "margin_left": 0.5,
+    "background_color": "#ffffff",
+    "transparent": false,
+    "id": "page_1"
+  },
+  "objects": [
+    {
+      "id": "title",
+      "type": "text",
+      "x": 50,
+      "y": 40,
+      "width": 500,
+      "height": 32,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "text": "PURE PYTHON REPORT",
+        "style": {
+          "font_size": 22,
+          "bold": true
+        },
+        "page_id": "page_1"
+      },
+      "text": "PURE PYTHON REPORT",
+      "style": {
+        "font_size": 22,
+        "bold": true
+      }
+    },
+    {
+      "id": "patient_name",
+      "type": "field",
+      "x": 50,
+      "y": 90,
+      "width": 300,
+      "height": 22,
+      "z_index": 0,
+      "visible": true,
+      "properties": {
+        "binding": "patient.name",
+        "style": {
+          "font_size": 13
+        },
+        "page_id": "page_1"
+      },
+      "binding": "patient.name",
+      "style": {
+        "font_size": 13
+      }
+    }
+  ],
+  "bands": [],
+  "assets": []
+}
