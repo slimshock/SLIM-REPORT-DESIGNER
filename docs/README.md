@@ -20,6 +20,7 @@ Start with:
 - [LIS Print Workflow](lis-print-workflow.md)
 - [JSON template schema](json-template-schema.md)
 - [Data Sources](data-sources.md)
+- [SQL Validation](sql-validation.md)
 - [Data Fields](data-fields.md)
 - [Repeating Detail rows](repeating-detail-rows.md)
 - [Grouping](grouping.md)

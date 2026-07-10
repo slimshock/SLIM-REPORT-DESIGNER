@@ -377,3 +377,18 @@ It returns a new mapping with serializer defaults such as `version`, `metadata.t
 
 `ReportBuilder` remains available as an optional convenience API. It is not required for normal
 report creation.
+
+## SQL Validation
+
+Use `SQLValidator` with a dialect to validate report queries without connecting to a database:
+
+```python
+from slim_report_core import MySQLDialect, SQLValidator
+
+result = SQLValidator(MySQLDialect()).validate(
+    "SELECT * FROM patients WHERE id=:patient_id"
+)
+```
+
+See [SQL Validation](sql-validation.md) for supported statements, parameter syntax, normalization,
+policies, dataset checks, and the database-permission security boundary.
