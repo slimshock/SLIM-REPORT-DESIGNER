@@ -28,6 +28,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+mysql = ["PyMySQL>=1.1,<2"]
 sqlalchemy = ["SQLAlchemy>=1.4"]
 
 [tool.hatch.build.targets.wheel]

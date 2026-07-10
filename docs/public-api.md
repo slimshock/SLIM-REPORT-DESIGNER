@@ -392,3 +392,21 @@ result = SQLValidator(MySQLDialect()).validate(
 
 See [SQL Validation](sql-validation.md) for supported statements, parameter syntax, normalization,
 policies, dataset checks, and the database-permission security boundary.
+
+## MySQL Connection Provider
+
+Install the optional driver with `pip install "slim-report-core[mysql]"`, then register the provider:
+
+```python
+from slim_report_core import DataSourceProviderRegistry, MySQLDataSourceProvider
+
+registry = DataSourceProviderRegistry()
+registry.register(MySQLDataSourceProvider())
+provider = registry.get("mysql")
+result = provider.test_connection(data_source)
+```
+
+Use `provider.connection(data_source)` as a context manager when a later application service needs a
+configured connection. Sprint 7.3 does not execute dataset SQL. See
+[MySQL Data-Source Provider](mysql-data-source-provider.md) for the lifecycle, failure contract,
+read-only policy, compatibility limitations, and security model.

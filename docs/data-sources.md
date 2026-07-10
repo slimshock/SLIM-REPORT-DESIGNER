@@ -123,3 +123,6 @@ password = connection.resolve_password()
 
 Resolution checks a runtime password first, then a supplied resolver, then environment variables.
 The resolved password is not serialized by default.
+
+For secure connection creation, testing, read-only session enforcement, and provider registration,
+see [MySQL Data-Source Provider](mysql-data-source-provider.md).

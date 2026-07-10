@@ -21,6 +21,7 @@ Start with:
 - [JSON template schema](json-template-schema.md)
 - [Data Sources](data-sources.md)
 - [SQL Validation](sql-validation.md)
+- [MySQL Data-Source Provider](mysql-data-source-provider.md)
 - [Data Fields](data-fields.md)
 - [Repeating Detail rows](repeating-detail-rows.md)
 - [Grouping](grouping.md)

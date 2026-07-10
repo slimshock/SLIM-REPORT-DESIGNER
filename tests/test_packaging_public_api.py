@@ -7,7 +7,18 @@ from flask import Flask
 import slim_report_core
 import slim_report_designer_ui
 import slim_report_flask
-from slim_report_core import JSONSerializer, normalize_template, render_html, render_pdf
+from slim_report_core import (
+    ConnectionTestResult,
+    DataSourceConnectionError,
+    DataSourceProvider,
+    DataSourceProviderRegistry,
+    JSONSerializer,
+    MySQLConnectionPolicy,
+    MySQLDataSourceProvider,
+    normalize_template,
+    render_html,
+    render_pdf,
+)
 from slim_report_core.storage import (
     DBAPITemplateProvider,
     PyMySQLTemplateProvider,
@@ -40,6 +51,12 @@ def test_public_package_imports_are_stable() -> None:
     assert callable(render_html)
     assert callable(render_pdf)
     assert callable(normalize_template)
+    assert ConnectionTestResult is not None
+    assert DataSourceConnectionError is not None
+    assert DataSourceProvider is not None
+    assert DataSourceProviderRegistry is not None
+    assert MySQLConnectionPolicy is not None
+    assert MySQLDataSourceProvider is not None
     assert SlimReportDesigner is not None
     assert TemplateProvider is CoreTemplateProvider
     assert FileSystemTemplateProvider is CoreFileSystemTemplateProvider

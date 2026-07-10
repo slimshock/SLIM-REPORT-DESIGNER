@@ -76,6 +76,7 @@ Implemented now:
 - Filesystem and optional SQLAlchemy template storage
 - Framework-agnostic asset provider interface for report images
 - Framework-agnostic, validation-only MySQL SQL security engine
+- Optional PyMySQL read-only connection provider and provider registry
 - Filesystem asset provider for logos, signatures, watermarks, and reusable image assets
 - Image object `assetId` resolution in HTML preview and PDF export
 - Flask asset listing/serving routes behind the configurable designer URL prefix
