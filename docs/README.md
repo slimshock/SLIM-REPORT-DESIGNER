@@ -19,6 +19,7 @@ Start with:
 - [Print/Export Workflow](print-export-workflow.md)
 - [LIS Print Workflow](lis-print-workflow.md)
 - [JSON template schema](json-template-schema.md)
+- [Data Sources](data-sources.md)
 - [Data Fields](data-fields.md)
 - [Repeating Detail rows](repeating-detail-rows.md)
 - [Grouping](grouping.md)
@@ -55,6 +56,7 @@ Current implementation notes:
 - `ObjectFactory` is the shared construction point for report objects.
 - Serialization lives in `slim_report_core.serialization`.
 - Template storage providers live in `slim_report_core.storage`.
+- Data-source and dataset metadata live in `slim_report_core.data_sources`.
 - JSON is the first built-in serializer, not a required runtime model.
 - Domain validation lives on `Report.validate()`.
 - Low-level renderers receive `Report` objects, not JSON mappings.

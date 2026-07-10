@@ -10,8 +10,15 @@ from pathlib import Path
 from typing import Any
 
 from .constants import DEFAULT_REPORT_VERSION
+from .data_sources import ReportDataset, ReportDataSource
 from .events import EventDispatcher, EventListener, ReportEvent
-from .exceptions import ExporterError, ReportObjectNotFoundError, ReportValidationError
+from .exceptions import (
+    DatasetValidationError,
+    DataSourceValidationError,
+    ExporterError,
+    ReportObjectNotFoundError,
+    ReportValidationError,
+)
 from .models import (
     Asset,
     Band,
@@ -76,6 +83,22 @@ class ReportAssetCollection(list[Asset]):
         return self
 
 
+class ReportDataSourceCollection(list[ReportDataSource]):
+    """List-like data-source collection that can be called for convenience."""
+
+    def __call__(self) -> ReportDataSourceCollection:
+        """Return this data-source collection."""
+        return self
+
+
+class ReportDatasetCollection(list[ReportDataset]):
+    """List-like dataset collection that can be called for convenience."""
+
+    def __call__(self) -> ReportDatasetCollection:
+        """Return this dataset collection."""
+        return self
+
+
 class ReportStyleCollection(dict[str, Style]):
     """Dictionary-like style collection that can be called for convenience."""
 
@@ -124,6 +147,8 @@ class Report:
     layers: list[Layer]
     styles: ReportStyleCollection
     assets: ReportAssetCollection
+    data_sources: ReportDataSourceCollection
+    datasets: ReportDatasetCollection
     data: dict[str, Any]
     events: EventDispatcher
 
@@ -140,6 +165,8 @@ class Report:
         layers: list[Layer | Mapping[str, Any]] | None = None,
         styles: Mapping[str, Style | Mapping[str, Any]] | None = None,
         assets: list[Asset | Mapping[str, Any]] | None = None,
+        data_sources: list[ReportDataSource | Mapping[str, Any]] | None = None,
+        datasets: list[ReportDataset | Mapping[str, Any]] | None = None,
         data: Mapping[str, Any] | None = None,
     ) -> None:
         self.events = EventDispatcher()
@@ -159,6 +186,9 @@ class Report:
         self.layers = [_normalize_layer(item) for item in layers or []]
         self.styles = _normalize_styles(styles)
         self.assets = [_normalize_asset(item) for item in assets or []]
+        self.data_sources = _normalize_data_source_collection(data_sources)
+        self.datasets = _normalize_dataset_collection(datasets)
+        _validate_dataset_references(self.data_sources, self.datasets)
         self.data = copy.deepcopy(dict(data or {}))
 
     def __setattr__(self, name: str, value: Any) -> None:
@@ -170,6 +200,10 @@ class Report:
             value = _normalize_styles(value)
         elif name == "assets":
             value = _normalize_asset_collection(value)
+        elif name == "data_sources":
+            value = _normalize_data_source_collection(value)
+        elif name == "datasets":
+            value = _normalize_dataset_collection(value)
         super().__setattr__(name, value)
 
     @property
@@ -190,6 +224,8 @@ class Report:
             objects=self.objects,
             bands=self.bands,
             assets=self.assets,
+            data_sources=self.data_sources,
+            datasets=self.datasets,
             data=copy.deepcopy(self.data),
         )
 
@@ -414,6 +450,76 @@ class Report:
         self.assets.append(normalized)
         return normalized
 
+    def add_data_source(
+        self,
+        data_source: ReportDataSource | Mapping[str, Any],
+    ) -> ReportDataSource:
+        """Add a data source and return it."""
+        normalized = _normalize_data_source(data_source)
+        if any(existing.id == normalized.id for existing in self.data_sources):
+            raise DataSourceValidationError(
+                f"Report data-source id already exists: {normalized.id}."
+            )
+        self.data_sources.append(normalized)
+        return normalized
+
+    def get_data_source(self, data_source_id: str) -> ReportDataSource | None:
+        """Return a data source by id, or None when it does not exist."""
+        return next(
+            (item for item in self.data_sources if item.id == data_source_id),
+            None,
+        )
+
+    def remove_data_source(
+        self,
+        data_source_id: str,
+        *,
+        cascade: bool = False,
+    ) -> ReportDataSource:
+        """Remove a data source unless datasets still reference it."""
+        dependents = [
+            dataset for dataset in self.datasets if dataset.data_source_id == data_source_id
+        ]
+        if dependents and not cascade:
+            raise DataSourceValidationError(
+                f"Cannot remove data source {data_source_id}: it is used by a dataset."
+            )
+        if cascade:
+            self.datasets = [
+                dataset for dataset in self.datasets if dataset.data_source_id != data_source_id
+            ]
+
+        for index, data_source in enumerate(self.data_sources):
+            if data_source.id == data_source_id:
+                return self.data_sources.pop(index)
+
+        raise DataSourceValidationError(f"Report data source not found: {data_source_id}.")
+
+    def add_dataset(self, dataset: ReportDataset | Mapping[str, Any]) -> ReportDataset:
+        """Add a dataset after validating its data-source relationship."""
+        normalized = _normalize_dataset(dataset)
+        if any(existing.id == normalized.id for existing in self.datasets):
+            raise DatasetValidationError(f"Report dataset id already exists: {normalized.id}.")
+        if any(existing.name.lower() == normalized.name.lower() for existing in self.datasets):
+            raise DatasetValidationError(f"Report dataset name already exists: {normalized.name}.")
+        if self.get_data_source(normalized.data_source_id) is None:
+            raise DatasetValidationError(
+                f"Report dataset references missing data source: {normalized.data_source_id}."
+            )
+        self.datasets.append(normalized)
+        return normalized
+
+    def get_dataset(self, dataset_id: str) -> ReportDataset | None:
+        """Return a dataset by id, or None when it does not exist."""
+        return next((item for item in self.datasets if item.id == dataset_id), None)
+
+    def remove_dataset(self, dataset_id: str) -> ReportDataset:
+        """Remove and return a dataset by id."""
+        for index, dataset in enumerate(self.datasets):
+            if dataset.id == dataset_id:
+                return self.datasets.pop(index)
+        raise DatasetValidationError(f"Report dataset not found: {dataset_id}.")
+
     def clone(self, *, new_ids: bool = True, share_assets: bool = False) -> Report:
         """Return a deep clone of this report.
 
@@ -476,6 +582,8 @@ class Report:
             layers=cloned_layers,
             styles=cloned_styles,
             assets=cloned_assets,
+            data_sources=copy.deepcopy(self.data_sources),
+            datasets=copy.deepcopy(self.datasets),
             data=copy.deepcopy(self.data),
         )
 
@@ -491,6 +599,8 @@ class Report:
         self.layers = []
         self.styles = {}
         self.assets = template.assets
+        self.data_sources = template.data_sources
+        self.datasets = template.datasets
         self.data = copy.deepcopy(template.data)
 
     def _copy_from(self, report: Report) -> None:
@@ -503,6 +613,8 @@ class Report:
         self.layers = report.layers
         self.styles = report.styles
         self.assets = report.assets
+        self.data_sources = report.data_sources
+        self.datasets = report.datasets
         self.data = copy.deepcopy(report.data)
 
     def _page_index(self, page_id_or_index: str | int) -> int:
@@ -618,6 +730,104 @@ def _normalize_asset_collection(
     if isinstance(values, Mapping) or not isinstance(values, Iterable):
         raise ReportValidationError("assets must be an iterable of Asset instances or mappings.")
     return ReportAssetCollection(_normalize_asset(item) for item in values)
+
+
+def _normalize_data_source(value: ReportDataSource | Mapping[str, Any]) -> ReportDataSource:
+    if isinstance(value, ReportDataSource):
+        return value
+    if isinstance(value, Mapping):
+        return ReportDataSource.from_dict(value)
+    raise DataSourceValidationError("data_source must be a ReportDataSource or mapping.")
+
+
+def _normalize_data_source_collection(
+    values: Iterable[ReportDataSource | Mapping[str, Any]] | None,
+) -> ReportDataSourceCollection:
+    if isinstance(values, ReportDataSourceCollection):
+        return values
+    if values is None:
+        return ReportDataSourceCollection()
+    if isinstance(values, Mapping) or not isinstance(values, Iterable):
+        raise DataSourceValidationError(
+            "data_sources must be an iterable of ReportDataSource instances or mappings."
+        )
+    normalized = ReportDataSourceCollection(_normalize_data_source(item) for item in values)
+    _require_unique_ids(
+        [item.id for item in normalized],
+        "Report data-source",
+        DataSourceValidationError,
+    )
+    return normalized
+
+
+def _normalize_dataset(value: ReportDataset | Mapping[str, Any]) -> ReportDataset:
+    if isinstance(value, ReportDataset):
+        return value
+    if isinstance(value, Mapping):
+        return ReportDataset.from_dict(value)
+    raise DatasetValidationError("dataset must be a ReportDataset or mapping.")
+
+
+def _normalize_dataset_collection(
+    values: Iterable[ReportDataset | Mapping[str, Any]] | None,
+) -> ReportDatasetCollection:
+    if isinstance(values, ReportDatasetCollection):
+        return values
+    if values is None:
+        return ReportDatasetCollection()
+    if isinstance(values, Mapping) or not isinstance(values, Iterable):
+        raise DatasetValidationError(
+            "datasets must be an iterable of ReportDataset instances or mappings."
+        )
+    normalized = ReportDatasetCollection(_normalize_dataset(item) for item in values)
+    _require_unique_ids(
+        [item.id for item in normalized],
+        "Report dataset",
+        DatasetValidationError,
+    )
+    _require_unique_names(
+        [item.name for item in normalized],
+        "Report dataset",
+        DatasetValidationError,
+    )
+    return normalized
+
+
+def _validate_dataset_references(
+    data_sources: Iterable[ReportDataSource],
+    datasets: Iterable[ReportDataset],
+) -> None:
+    data_source_ids = {item.id for item in data_sources}
+    for dataset in datasets:
+        if dataset.data_source_id not in data_source_ids:
+            raise DatasetValidationError(
+                f"Report dataset references missing data source: {dataset.data_source_id}."
+            )
+
+
+def _require_unique_ids(
+    values: Iterable[str],
+    context: str,
+    error_type: type[Exception],
+) -> None:
+    seen: set[str] = set()
+    for value in values:
+        if value in seen:
+            raise error_type(f"{context} id already exists: {value}.")
+        seen.add(value)
+
+
+def _require_unique_names(
+    values: Iterable[str],
+    context: str,
+    error_type: type[Exception],
+) -> None:
+    seen: set[str] = set()
+    for value in values:
+        key = value.lower()
+        if key in seen:
+            raise error_type(f"{context} name already exists: {value}.")
+        seen.add(key)
 
 
 def _normalize_styles(

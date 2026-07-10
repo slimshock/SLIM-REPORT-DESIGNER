@@ -57,12 +57,13 @@ def normalize_template_mapping(data: Mapping[str, Any]) -> dict[str, Any]:
     if isinstance(normalized["objects"], list):
         if normalized["objects"]:
             normalized["objects"] = [
-                dict(item) if isinstance(item, Mapping) else item
-                for item in normalized["objects"]
+                dict(item) if isinstance(item, Mapping) else item for item in normalized["objects"]
             ]
         else:
             normalized["objects"] = _flatten_band_objects(normalized["bands"])
     normalized.setdefault("assets", [])
+    normalized.setdefault("dataSources", [])
+    normalized.setdefault("datasets", [])
     return normalized
 
 

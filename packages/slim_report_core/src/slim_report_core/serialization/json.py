@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+from ..data_sources import ReportDataset, ReportDataSource
 from ..models import Asset, Band, Layer, Metadata, Page, Style
 from ..object_factory import ObjectFactory
 from ..report import Report
@@ -31,11 +32,19 @@ class JSONSerializer(BaseSerializer):
         bands = [Band.from_dict(item) for item in data["bands"]]
         assets = [Asset.from_dict(item) for item in data["assets"]]
         layers = [
-            Layer.from_dict(item)
-            for item in data.get("layers", [])
-            if isinstance(item, Mapping)
+            Layer.from_dict(item) for item in data.get("layers", []) if isinstance(item, Mapping)
         ]
         styles = self._load_styles(data.get("styles"))
+        data_sources = [
+            ReportDataSource.from_dict(item)
+            for item in data.get("dataSources", [])
+            if isinstance(item, Mapping)
+        ]
+        datasets = [
+            ReportDataset.from_dict(item)
+            for item in data.get("datasets", [])
+            if isinstance(item, Mapping)
+        ]
 
         return Report(
             version=str(data["version"]),
@@ -46,6 +55,8 @@ class JSONSerializer(BaseSerializer):
             layers=layers,
             styles=styles,
             assets=assets,
+            data_sources=data_sources,
+            datasets=datasets,
             data=dict(data.get("data", {})) if isinstance(data.get("data"), Mapping) else {},
         )
 
@@ -67,6 +78,10 @@ class JSONSerializer(BaseSerializer):
             data["styles"] = {
                 style_id: style.to_dict() for style_id, style in report.styles.items()
             }
+        if report.data_sources:
+            data["dataSources"] = [item.to_dict() for item in report.data_sources]
+        if report.datasets:
+            data["datasets"] = [item.to_dict() for item in report.datasets]
         if getattr(report, "data", None):
             data["data"] = dict(report.data)
         return data

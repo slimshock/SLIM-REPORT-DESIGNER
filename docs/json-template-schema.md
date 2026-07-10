@@ -12,6 +12,8 @@ The JSON template format is early alpha. This page documents the practical shape
   "bands": [],
   "objects": [],
   "assets": [],
+  "dataSources": [],
+  "datasets": [],
   "data": {}
 }
 ```
@@ -24,9 +26,13 @@ Common top-level keys:
 - `bands`
 - `objects`
 - `assets`
+- `dataSources`
+- `datasets`
 - `data`
 
 Optional keys such as `pages`, `layers`, and `styles` may appear when the domain model contains them.
+Old templates without `dataSources` or `datasets` still load; missing collections default to empty
+lists.
 
 For compatibility with external builders, the serializer also accepts templates
 where objects are nested under `bands[].objects`. If top-level `objects` is
@@ -357,6 +363,52 @@ Common keys:
 
 - `data.sample`: sample render data for preview/export
 - `data.fields`: field metadata used by the designer
+
+## Data Sources And Datasets
+
+`dataSources` and `datasets` describe read-only database metadata. Sprint 7.1 stores metadata only;
+it does not connect to MySQL or execute SQL.
+
+```json
+{
+  "dataSources": [
+    {
+      "id": "main_mysql",
+      "name": "Main MySQL",
+      "type": "mysql",
+      "connection": {
+        "type": "mysql",
+        "host": "localhost",
+        "port": 3306,
+        "database": "lis",
+        "username": "report_user",
+        "passwordRef": "SLIM_REPORT_MYSQL_PASSWORD",
+        "charset": "utf8mb4",
+        "connectTimeout": 10,
+        "queryTimeout": 30
+      }
+    }
+  ],
+  "datasets": [
+    {
+      "id": "patient_results",
+      "name": "Patient Results",
+      "dataSourceId": "main_mysql",
+      "sourceType": "view",
+      "viewName": "report_patient_results",
+      "fields": [],
+      "parameters": []
+    }
+  ]
+}
+```
+
+Supported dataset source types are `view` and `query`. View names must be safe identifiers, with
+optional `database.view` qualification. Query datasets preserve query text, but SQL validation and
+execution are later work.
+
+Plain-text passwords are not serialized by default. Use `passwordRef` for environment-variable or
+resolver-backed runtime credential lookup.
 
 ## Minimal Example
 

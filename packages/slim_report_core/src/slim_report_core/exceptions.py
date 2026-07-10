@@ -23,3 +23,19 @@ class WidgetValidationError(ReportValidationError):
 
 class ExporterError(SlimReportError):
     """Raised when a report cannot be exported."""
+
+
+class DataSourceError(SlimReportError):
+    """Base exception for report data-source metadata errors."""
+
+
+class DataSourceValidationError(DataSourceError, ReportValidationError):
+    """Raised when a report data source is invalid."""
+
+
+class DatasetValidationError(DataSourceError, ReportValidationError):
+    """Raised when a report dataset is invalid."""
+
+
+class CredentialResolutionError(DataSourceError):
+    """Raised when a credential reference cannot be resolved safely."""

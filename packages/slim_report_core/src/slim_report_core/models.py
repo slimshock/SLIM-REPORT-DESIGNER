@@ -19,6 +19,7 @@ from .constants import (
     DEFAULT_PAGE_WIDTH,
     DEFAULT_REPORT_VERSION,
 )
+from .data_sources import ReportDataset, ReportDataSource
 from .exceptions import ReportObjectNotFoundError, ReportValidationError
 from .schema import validate_template_mapping
 from .utils import ensure_mapping
@@ -1545,6 +1546,8 @@ class ReportTemplate:
     objects: list[Object] = field(default_factory=list)
     bands: list[Band] = field(default_factory=list)
     assets: list[Asset] = field(default_factory=list)
+    data_sources: list[ReportDataSource] = field(default_factory=list)
+    datasets: list[ReportDataset] = field(default_factory=list)
     data: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
@@ -1558,6 +1561,16 @@ class ReportTemplate:
             objects=[Object.from_dict(item) for item in mapping["objects"]],
             bands=[Band.from_dict(item) for item in mapping["bands"]],
             assets=[Asset.from_dict(item) for item in mapping["assets"]],
+            data_sources=[
+                ReportDataSource.from_dict(item)
+                for item in mapping.get("dataSources", [])
+                if isinstance(item, Mapping)
+            ],
+            datasets=[
+                ReportDataset.from_dict(item)
+                for item in mapping.get("datasets", [])
+                if isinstance(item, Mapping)
+            ],
             data=(
                 copy.deepcopy(mapping.get("data", {}))
                 if isinstance(mapping.get("data"), Mapping)
@@ -1574,6 +1587,10 @@ class ReportTemplate:
             "bands": [item.to_dict() for item in self.bands],
             "assets": [item.to_dict() for item in self.assets],
         }
+        if self.data_sources:
+            data["dataSources"] = [item.to_dict() for item in self.data_sources]
+        if self.datasets:
+            data["datasets"] = [item.to_dict() for item in self.datasets]
         if self.data:
             data["data"] = copy.deepcopy(self.data)
         return data
