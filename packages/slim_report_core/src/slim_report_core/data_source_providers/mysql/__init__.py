@@ -1,5 +1,12 @@
-"""MySQL-compatible data-source provider."""
+"""MySQL-compatible provider and metadata services."""
 
+from .metadata import MySQLMetadataService
 from .provider import MySQLConnectionPolicy, MySQLDataSourceProvider
+from .types import MySQLTypeMapper
 
-__all__ = ["MySQLConnectionPolicy", "MySQLDataSourceProvider"]
+__all__ = [
+    "MySQLConnectionPolicy",
+    "MySQLDataSourceProvider",
+    "MySQLMetadataService",
+    "MySQLTypeMapper",
+]

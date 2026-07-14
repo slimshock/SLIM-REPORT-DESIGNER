@@ -22,6 +22,9 @@ Start with:
 - [Data Sources](data-sources.md)
 - [SQL Validation](sql-validation.md)
 - [MySQL Data-Source Provider](mysql-data-source-provider.md)
+- [MySQL Read-Only Metadata Service](mysql-metadata-service.md)
+- [Query Field Discovery](query-field-discovery.md)
+- [Data-Source and Dataset Management](data-source-management.md)
 - [Data Fields](data-fields.md)
 - [Repeating Detail rows](repeating-detail-rows.md)
 - [Grouping](grouping.md)
@@ -59,6 +62,7 @@ Current implementation notes:
 - Serialization lives in `slim_report_core.serialization`.
 - Template storage providers live in `slim_report_core.storage`.
 - Data-source and dataset metadata live in `slim_report_core.data_sources`.
+- Data-source and dataset configuration workflows live in `slim_report_core.data_management`.
 - JSON is the first built-in serializer, not a required runtime model.
 - Domain validation lives on `Report.validate()`.
 - Low-level renderers receive `Report` objects, not JSON mappings.

@@ -156,3 +156,6 @@ reason, applications must combine:
 - this provider's verified read-only session;
 - a dedicated account with least-privilege `SELECT` grants;
 - application timeouts, row limits, and safe operational logging.
+
+The provider-backed view discovery layer is documented in
+[MySQL Read-Only Metadata Service](mysql-metadata-service.md).

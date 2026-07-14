@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Home · Slim Report Database Example{% endblock %}
+{% block content %}
+  <section class="hero">
+    <p class="eyebrow">Sprint 7.3 and 7.4 browser verification</p>
+    <h1>MySQL read-only metadata explorer</h1>
+    <p>
+      This example lists approved views and inspects column definitions through
+      <code>information_schema</code>. It does not execute custom SQL or fetch report rows.
+    </p>
+  </section>
+
+  {% if services.setup_error %}
+    <div class="alert error" role="alert">
+      <h2>Setup required</h2>
+      <p>{{ services.setup_error }}</p>
+      <p>Configure the required environment variables described in the example README.</p>
+    </div>
+  {% else %}
+    <section class="panel">
+      <h2>Safe configuration summary</h2>
+      <dl class="facts">
+        <div><dt>Database</dt><dd>{{ connection.database }}</dd></div>
+        <div><dt>Username</dt><dd>{{ connection.username }}</dd></div>
+        <div><dt>Provider</dt><dd>{{ services.provider.provider_type }}</dd></div>
+        <div>
+          <dt>Allowed prefixes</dt>
+          <dd>{{ services.policy.allowed_view_prefixes|join(', ') or 'All views' }}</dd>
+        </div>
+        <div>
+          <dt>Allowed exact names</dt>
+          <dd>{{ services.policy.allowed_view_names|join(', ') or 'None configured' }}</dd>
+        </div>
+        <div>
+          <dt>Cross-schema access</dt>
+          <dd>{{ 'Enabled' if services.policy.allow_cross_schema else 'Disabled' }}</dd>
+        </div>
+      </dl>
+      <div class="actions">
+        <form method="post" action="{{ url_for('test_connection') }}">
+          <button class="button" type="submit">Test Connection</button>
+        </form>
+        <a class="button secondary" href="{{ url_for('list_views') }}">Browse Reporting Views</a>
+      </div>
+    </section>
+  {% endif %}
+
+  <aside class="security-note">
+    <strong>Security notice:</strong> Read-only session settings are defense in depth. Use a
+    dedicated MySQL account with only the required <code>SELECT</code> privileges on approved
+    reporting views.
+  </aside>
+{% endblock %}

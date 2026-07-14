@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Connection Test · Slim Report Database Example{% endblock %}
+{% block content %}
+  <h1>Connection test</h1>
+  <div class="alert {{ 'success' if result.success else 'error' }}" role="status">
+    <h2>{{ 'Connection succeeded' if result.success else 'Connection failed' }}</h2>
+    <p>{{ result.message }}</p>
+  </div>
+  <dl class="facts panel">
+    <div><dt>Provider</dt><dd>{{ result.provider }}</dd></div>
+    <div><dt>Database</dt><dd>{{ result.database or '—' }}</dd></div>
+    <div><dt>Server version</dt><dd>{{ result.server_version or '—' }}</dd></div>
+    <div>
+      <dt>Elapsed</dt>
+      <dd>{{ '%.3f ms'|format(result.elapsed_ms) if result.elapsed_ms is not none else '—' }}</dd>
+    </div>
+    <div>
+      <dt>Read-only verified</dt>
+      <dd>{{ 'Yes' if result.read_only_verified else 'No' }}</dd>
+    </div>
+  </dl>
+  {% if result.warnings %}
+    <section class="alert warning">
+      <h2>Warnings</h2>
+      <ul>{% for warning in result.warnings %}<li>{{ warning }}</li>{% endfor %}</ul>
+    </section>
+  {% endif %}
+  <p><a class="button secondary" href="{{ url_for('index') }}">Back to home</a></p>
+{% endblock %}

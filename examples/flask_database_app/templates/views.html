@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Reporting Views · Slim Report Database Example{% endblock %}
+{% block content %}
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Approved metadata</p>
+      <h1>Reporting views</h1>
+    </div>
+    <span class="badge">{{ views|length }} view{{ '' if views|length == 1 else 's' }}</span>
+  </div>
+  {% if views %}
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>View</th><th>Schema</th><th>Security</th><th>Updatable</th><th>Action</th></tr>
+        </thead>
+        <tbody>
+          {% for view in views %}
+            <tr>
+              <td><code>{{ view.view_name }}</code></td>
+              <td>{{ view.schema_name }}</td>
+              <td>{{ view.security_type or '—' }}</td>
+              <td>
+                {% if view.is_updatable is none %}—{% else %}{{ 'Yes' if view.is_updatable else 'No' }}{% endif %}
+              </td>
+              <td><a href="{{ url_for('inspect_view', view_name=view.view_name) }}">Inspect Columns</a></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <h2>No approved views found</h2>
+      <p>Check account visibility and the configured exact-name or prefix allowlists.</p>
+    </div>
+  {% endif %}
+  <aside class="security-note">
+    Results come only from <code>information_schema.VIEWS</code>. Base tables and report rows are not
+    returned.
+  </aside>
+{% endblock %}

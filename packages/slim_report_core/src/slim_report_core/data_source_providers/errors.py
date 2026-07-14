@@ -45,3 +45,31 @@ class ReadOnlySessionError(DataSourceConnectionError):
 
 class MissingDriverError(DataSourceConnectionError):
     """Raised when an optional database driver is unavailable."""
+
+
+class DataSourceMetadataError(DataSourceError):
+    """Base exception for safe data-source metadata operations."""
+
+
+class MetadataAccessDeniedError(DataSourceMetadataError):
+    """Raised when metadata is blocked by database permissions or policy."""
+
+
+class MetadataQueryError(DataSourceMetadataError):
+    """Raised when metadata cannot be queried or converted safely."""
+
+
+class MetadataLimitExceededError(DataSourceMetadataError):
+    """Raised when complete metadata exceeds a configured safety limit."""
+
+
+class ViewNotFoundError(DataSourceMetadataError):
+    """Raised when a requested reporting view is missing or concealed."""
+
+
+class InvalidViewIdentifierError(DataSourceMetadataError):
+    """Raised when a logical view identifier is not safe."""
+
+
+class UnsupportedMetadataOperationError(DataSourceMetadataError):
+    """Raised when a metadata policy requests an unsupported operation."""

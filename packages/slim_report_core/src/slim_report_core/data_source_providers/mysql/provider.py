@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from importlib import import_module
 from time import monotonic
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ...data_sources import (
     MYSQL_DATA_SOURCE_TYPE,
@@ -31,6 +31,9 @@ from ..errors import (
 )
 
 logger = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from ...query_discovery import ProviderFieldDiscoveryResult, QueryFieldDiscoveryPolicy
 
 _READ_ONLY_COMMAND = "SET SESSION TRANSACTION READ ONLY"
 _READ_ONLY_VERIFICATION_QUERIES = (
@@ -174,6 +177,24 @@ class MySQLDataSourceProvider:
         finally:
             if connection is not None:
                 self.close_connection(connection)
+
+    def discover_query_fields(
+        self,
+        *,
+        data_source: ReportDataSource,
+        sql: str,
+        parameters: Mapping[str, object],
+        policy: QueryFieldDiscoveryPolicy,
+    ) -> ProviderFieldDiscoveryResult:
+        """Discover fields for one already validated SELECT query."""
+        from .discovery import MySQLQueryFieldDiscovery
+
+        return MySQLQueryFieldDiscovery(self).discover_query_fields(
+            data_source=data_source,
+            sql=sql,
+            parameters=parameters,
+            policy=policy,
+        )
 
     def _open_configured_connection(
         self,

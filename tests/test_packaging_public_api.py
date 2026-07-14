@@ -9,12 +9,50 @@ import slim_report_designer_ui
 import slim_report_flask
 from slim_report_core import (
     ConnectionTestResult,
+    CreateMySQLDataSourceCommand,
+    CreateQueryDatasetCommand,
+    CreateViewDatasetCommand,
+    DatabaseColumnInfo,
+    DatabaseViewInfo,
+    DatabaseViewSchema,
+    DataManagementError,
+    DataManagementResult,
+    DataManagementValidationError,
+    DatasetConfigurationResult,
+    DatasetFieldChangeSummary,
+    DatasetNotFoundError,
+    DatasetSummary,
+    DatasetTypeMismatchError,
     DataSourceConnectionError,
+    DataSourceInUseError,
+    DataSourceManagementService,
+    DataSourceMetadataError,
+    DataSourceNotFoundError,
     DataSourceProvider,
     DataSourceProviderRegistry,
+    DataSourceSummary,
+    DesignerDataService,
+    DuplicateOutputColumnError,
+    InvalidDatasetOperationError,
     JSONSerializer,
+    MetadataAccessPolicy,
+    MissingQueryParameterValueError,
     MySQLConnectionPolicy,
     MySQLDataSourceProvider,
+    MySQLMetadataService,
+    MySQLTypeMapper,
+    QueryExecutionError,
+    QueryExecutionTimeoutError,
+    QueryFieldDiscoveryError,
+    QueryFieldDiscoveryPolicy,
+    QueryFieldDiscoveryResult,
+    QueryFieldDiscoveryService,
+    QueryParameterValueConverter,
+    QueryReturnedNoColumnsError,
+    StaleDiscoveryResultError,
+    TooManyOutputColumnsError,
+    UpdateMySQLDataSourceCommand,
+    ViewNotFoundError,
     normalize_template,
     render_html,
     render_pdf,
@@ -52,11 +90,49 @@ def test_public_package_imports_are_stable() -> None:
     assert callable(render_pdf)
     assert callable(normalize_template)
     assert ConnectionTestResult is not None
+    assert CreateMySQLDataSourceCommand is not None
+    assert CreateQueryDatasetCommand is not None
+    assert CreateViewDatasetCommand is not None
+    assert DatabaseColumnInfo is not None
+    assert DatabaseViewInfo is not None
+    assert DatabaseViewSchema is not None
+    assert DataManagementError is not None
+    assert DataManagementResult is not None
+    assert DataManagementValidationError is not None
     assert DataSourceConnectionError is not None
+    assert DataSourceInUseError is not None
+    assert DataSourceManagementService is not None
+    assert DataSourceMetadataError is not None
+    assert DataSourceNotFoundError is not None
     assert DataSourceProvider is not None
     assert DataSourceProviderRegistry is not None
+    assert DataSourceSummary is not None
+    assert DatasetConfigurationResult is not None
+    assert DatasetFieldChangeSummary is not None
+    assert DatasetNotFoundError is not None
+    assert DatasetSummary is not None
+    assert DatasetTypeMismatchError is not None
+    assert DesignerDataService is DataSourceManagementService
+    assert DuplicateOutputColumnError is not None
+    assert InvalidDatasetOperationError is not None
     assert MySQLConnectionPolicy is not None
     assert MySQLDataSourceProvider is not None
+    assert MetadataAccessPolicy is not None
+    assert MissingQueryParameterValueError is not None
+    assert MySQLMetadataService is not None
+    assert MySQLTypeMapper is not None
+    assert QueryExecutionError is not None
+    assert QueryExecutionTimeoutError is not None
+    assert QueryFieldDiscoveryError is not None
+    assert QueryFieldDiscoveryPolicy is not None
+    assert QueryFieldDiscoveryResult is not None
+    assert QueryFieldDiscoveryService is not None
+    assert QueryParameterValueConverter is not None
+    assert QueryReturnedNoColumnsError is not None
+    assert StaleDiscoveryResultError is not None
+    assert TooManyOutputColumnsError is not None
+    assert UpdateMySQLDataSourceCommand is not None
+    assert ViewNotFoundError is not None
     assert SlimReportDesigner is not None
     assert TemplateProvider is CoreTemplateProvider
     assert FileSystemTemplateProvider is CoreFileSystemTemplateProvider

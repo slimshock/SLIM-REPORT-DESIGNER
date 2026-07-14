@@ -77,6 +77,9 @@ Implemented now:
 - Framework-agnostic asset provider interface for report images
 - Framework-agnostic, validation-only MySQL SQL security engine
 - Optional PyMySQL read-only connection provider and provider registry
+- Views-only MySQL metadata discovery with approved-view filtering and type normalization
+- Safe query field discovery for custom read-only SELECT datasets
+- Framework-agnostic data-source and dataset management service for Designer integrations
 - Filesystem asset provider for logos, signatures, watermarks, and reusable image assets
 - Image object `assetId` resolution in HTML preview and PDF export
 - Flask asset listing/serving routes behind the configurable designer URL prefix
@@ -287,7 +290,7 @@ Open:
 http://127.0.0.1:5001/admin/reports/designer?template=complete_sprint5_lab_report&order_id=ORD-2026-0001
 ```
 
-For SQLite-backed template storage with the framework-agnostic SQLAlchemy provider:
+For SQLite-backed template storage plus the MySQL read-only connection and metadata browser:
 
 ```bash
 python examples/flask_database_app/app.py
@@ -296,8 +299,12 @@ python examples/flask_database_app/app.py
 Open:
 
 ```text
+http://127.0.0.1:5000
 http://127.0.0.1:5000/report-designer/designer?template=complete_sprint5_lab_report&order_id=ORD-2026-0001
 ```
+
+MySQL environment setup and the metadata-only security boundary are documented in
+`examples/flask_database_app/README.md`.
 
 ## Template Storage
 

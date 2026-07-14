@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Slim Report Database Example{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+</head>
+<body>
+  <header class="site-header">
+    <div>
+      <a class="brand" href="{{ url_for('index') }}">Slim Report Database Example</a>
+      <span class="badge">Metadata only — no report rows fetched</span>
+    </div>
+    <nav aria-label="Primary navigation">
+      <a href="{{ url_for('index') }}">Home</a>
+      <form method="post" action="{{ url_for('test_connection') }}">
+        <button class="link-button" type="submit">Test Connection</button>
+      </form>
+      <a href="{{ url_for('list_views') }}">Reporting Views</a>
+      {% if designer_enabled %}
+        <a href="/report-designer/designer?template=complete_sprint5_lab_report">Designer</a>
+      {% endif %}
+    </nav>
+  </header>
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

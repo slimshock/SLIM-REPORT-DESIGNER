@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{{ schema.view.view_name }} · Slim Report Database Example{% endblock %}
+{% block content %}
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">{{ schema.view.schema_name }}</p>
+      <h1>{{ schema.view.view_name }}</h1>
+    </div>
+    <span class="badge">{{ schema.columns|length }} column{{ '' if schema.columns|length == 1 else 's' }}</span>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th><th>Name</th><th>Database Type</th><th>Report Type</th><th>Nullable</th>
+          <th>Length</th><th>Precision</th><th>Scale</th><th>Comment</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for column in schema.columns %}
+          <tr>
+            <td>{{ column.ordinal_position }}</td>
+            <td><code>{{ column.name }}</code></td>
+            <td><code>{{ column.database_type }}</code></td>
+            <td><span class="type-pill">{{ column.normalized_type }}</span></td>
+            <td>{{ 'Yes' if column.nullable else 'No' }}</td>
+            <td>{{ column.character_maximum_length if column.character_maximum_length is not none else '—' }}</td>
+            <td>{{ column.numeric_precision if column.numeric_precision is not none else '—' }}</td>
+            <td>{{ column.numeric_scale if column.numeric_scale is not none else '—' }}</td>
+            <td>{{ column.column_comment or '—' }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <aside class="security-note">
+    Column definitions were read from <code>information_schema.COLUMNS</code>. The reporting view
+    itself was not executed.
+  </aside>
+  <p><a class="button secondary" href="{{ url_for('list_views') }}">Back to reporting views</a></p>
+{% endblock %}

@@ -410,3 +410,86 @@ Use `provider.connection(data_source)` as a context manager when a later applica
 configured connection. Sprint 7.3 does not execute dataset SQL. See
 [MySQL Data-Source Provider](mysql-data-source-provider.md) for the lifecycle, failure contract,
 read-only policy, compatibility limitations, and security model.
+
+## MySQL Metadata Service
+
+Discover approved views and column types without executing report rows:
+
+```python
+from slim_report_core import MetadataAccessPolicy, MySQLMetadataService
+
+metadata = MySQLMetadataService(
+    provider=provider,
+    policy=MetadataAccessPolicy(allowed_view_prefixes=("report_",)),
+)
+
+views = metadata.list_views(data_source)
+view_schema = metadata.inspect_view(data_source, "report_patient_results")
+```
+
+See [MySQL Read-Only Metadata Service](mysql-metadata-service.md) for view allowlists,
+cross-schema restrictions, identifier rules, metadata limits, type normalization, and the security
+boundary between metadata inspection and report-query execution.
+
+## Query Field Discovery
+
+Discover output fields for a query-backed dataset without fetching full report data:
+
+```python
+from slim_report_core import (
+    DataSourceProviderRegistry,
+    MySQLDataSourceProvider,
+    MySQLDialect,
+    QueryFieldDiscoveryService,
+    SQLValidator,
+)
+
+registry = DataSourceProviderRegistry()
+registry.register(MySQLDataSourceProvider())
+
+discovery = QueryFieldDiscoveryService(
+    provider_registry=registry,
+    sql_validator=SQLValidator(MySQLDialect()),
+)
+
+result = discovery.discover_fields(
+    dataset=dataset,
+    data_source=data_source,
+    parameter_values={"date_from": date_from, "date_to": date_to},
+)
+```
+
+Discovery validates SQL before opening a connection, binds parameters through the driver, fetches at
+most the configured discovery row count, returns only `DatasetField` metadata, and leaves dataset
+mutation to an explicit `apply_fields()` call. See [Query Field Discovery](query-field-discovery.md)
+for timeout and server-side work tradeoffs.
+
+## Data-Source and Dataset Management
+
+Use `DataSourceManagementService` to configure report data sources and datasets from Designer or a
+backend without adding web-framework dependencies to core:
+
+```python
+from slim_report_core import (
+    CreateMySQLDataSourceCommand,
+    DataSourceManagementService,
+)
+
+data_source = service.create_mysql_data_source(
+    report,
+    CreateMySQLDataSourceCommand(
+        name="Main LIS MySQL",
+        host="db.internal",
+        port=3306,
+        database="lis",
+        username="report_user",
+        password_ref="LIS_REPORT_PASSWORD",
+    ),
+)
+```
+
+The service provides immutable command/result models, credential-safe summaries, approved-view
+inspection, view dataset creation/refresh, query dataset validation and field discovery, query
+parameter management, and explicit dependency checks for removals. See
+[Data-Source and Dataset Management](data-source-management.md) for workflows and security
+boundaries.
