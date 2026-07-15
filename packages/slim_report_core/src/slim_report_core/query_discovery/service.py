@@ -81,6 +81,10 @@ class QueryFieldDiscoveryService:
         except SQLValidationError as exc:
             raise QueryValidationFailedError(str(exc)) from exc
 
+        self._validate_query_against_discovery_policy(
+            validation.normalized_sql,
+            validation.parameters,
+        )
         declared = {parameter.name: parameter for parameter in dataset.parameters}
         converted = self._resolve_parameter_values(
             declared=declared,
@@ -117,6 +121,7 @@ class QueryFieldDiscoveryService:
             sample_row_count=provider_result.sample_row_count,
             elapsed_ms=provider_result.elapsed_ms,
             warnings=warnings,
+            columns=provider_result.columns,
         )
 
     def apply_fields(
@@ -236,4 +241,22 @@ class QueryFieldDiscoveryService:
         if self.policy.max_parameters > sql_policy.max_parameters:
             raise QueryValidationFailedError(
                 "The discovery parameter policy cannot exceed the SQL validator policy."
+            )
+
+    def _validate_query_against_discovery_policy(
+        self,
+        normalized_sql: str,
+        parameters: tuple[str, ...],
+    ) -> None:
+        query_length = len(normalized_sql)
+        if query_length > self.policy.max_query_length:
+            raise QueryValidationFailedError(
+                f"The query contains {query_length} characters, exceeding the "
+                f"field-discovery limit of {self.policy.max_query_length}."
+            )
+        parameter_count = len(parameters)
+        if parameter_count > self.policy.max_parameters:
+            raise QueryValidationFailedError(
+                f"The query uses {parameter_count} parameters, exceeding the "
+                f"field-discovery limit of {self.policy.max_parameters}."
             )

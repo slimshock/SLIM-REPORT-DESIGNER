@@ -3,6 +3,10 @@ members = ["packages/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+  "mysql_integration: requires an explicitly configured live MySQL server",
+  "browser: requires the optional browser test environment",
+]
 pythonpath = [
   "packages/slim_report_core/src",
   "packages/slim_report_designer_ui",

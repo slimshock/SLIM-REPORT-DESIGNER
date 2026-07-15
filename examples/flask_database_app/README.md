@@ -1,4 +1,4 @@
-# Flask Database and MySQL Metadata Example
+# Flask Database and MySQL Report Demo
 
 This browser example combines the existing SQLite/SQLAlchemy report-template storage demo with the
 Sprint 7.3 and Sprint 7.4 MySQL services:
@@ -8,8 +8,9 @@ Sprint 7.3 and Sprint 7.4 MySQL services:
 - column metadata inspection and report-type normalization;
 - the existing visual report designer and SQLite template storage.
 
-The MySQL portion reads metadata only. It does not execute reporting views, fetch report rows, or
-accept custom SQL.
+The home page explores approved metadata. The embedded Report Designer provides the complete 0.7.0
+workflow: data-source testing, view and query datasets, named parameters, field discovery, bindings,
+safe persistence, reopen, and bounded live HTML preview.
 
 ## Setup
 
@@ -42,7 +43,7 @@ same values without a file when preferred:
 ```bash
 export SLIM_REPORT_MYSQL_HOST=localhost
 export SLIM_REPORT_MYSQL_PORT=3306
-export SLIM_REPORT_MYSQL_DATABASE=slim_report_test
+export SLIM_REPORT_MYSQL_DATABASE=slim_report_demo
 export SLIM_REPORT_MYSQL_USERNAME=slim_report_reader
 export SLIM_REPORT_MYSQL_PASSWORD='TestPassword123!'
 export SLIM_REPORT_ALLOWED_VIEW_PREFIXES=report_
@@ -63,12 +64,12 @@ resolved value.
 ## Run
 
 ```bash
-python examples/flask_database_app/app.py
+.\examples\flask_database_app\run_demo.ps1
 ```
 
-Direct execution prefers the package sources in this checkout, so an older globally installed
-`slim_report_core` cannot shadow the Sprint 7 APIs. Editable installation is still recommended so
-the optional driver and all example dependencies are available.
+On POSIX systems use `./examples/flask_database_app/run_demo.sh`. The launcher creates an isolated
+environment, installs all coordinated distributions through normal package metadata, and starts the
+app without `PYTHONPATH` or source injection. Copy `.env.example` to `.env` before launch.
 
 Open <http://127.0.0.1:5000>. The browser workflow is:
 
@@ -81,52 +82,34 @@ Home
   -> Return to view list
 ```
 
-The existing designer remains available at
-<http://127.0.0.1:5000/report-designer/designer?template=complete_sprint5_lab_report>.
-It stores templates in the ignored local file `report_templates.db` and seeds examples from the
-repository's sample-template directories.
+The designer is available at
+<http://127.0.0.1:5000/report-designer/designer?template=view_laboratory_results>.
+It stores templates in the ignored local file `report_templates.db` and seeds the two reports in
+`reports/`. Loopback-only safe diagnostics are available at <http://127.0.0.1:5000/diagnostics>.
 
-## Optional Test Database
+Inside the Designer, open **Data Sources** to configure a report-owned MySQL connection, then open
+**Datasets** to import an approved reporting view or validate and discover fields for a custom
+read-only SELECT query. See the [Dataset Manager documentation](../../docs/designer-dataset-manager.md)
+for parameter and security behavior.
 
-Run this setup using a MySQL administrator account, not the restricted report account:
+## Demo Database
 
-```sql
-CREATE DATABASE slim_report_test;
+Run the scripts in order using a MySQL administrator account, not the restricted report account:
 
-USE slim_report_test;
-
-CREATE TABLE patients (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    patient_no VARCHAR(30) NOT NULL,
-    patient_name VARCHAR(150) NOT NULL,
-    birthdate DATE NULL,
-    balance DECIMAL(12,2) NOT NULL DEFAULT 0,
-    active TINYINT(1) NOT NULL DEFAULT 1,
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE VIEW report_patient_results AS
-SELECT
-    id,
-    patient_no,
-    patient_name,
-    birthdate,
-    balance,
-    active,
-    created_at
-FROM patients;
-
-CREATE USER 'slim_report_reader'@'localhost'
-IDENTIFIED BY 'replace-this-password';
-
-GRANT SELECT ON slim_report_test.report_patient_results
-TO 'slim_report_reader'@'localhost';
-
-FLUSH PRIVILEGES;
+```bash
+mysql -u root -p < examples/flask_database_app/sql/sample_schema.sql
+mysql -u root -p < examples/flask_database_app/sql/sample_data.sql
+mysql -u root -p < examples/flask_database_app/sql/reporting_views.sql
+mysql -u root -p < examples/flask_database_app/sql/restricted_user.sql
 ```
 
 Set `SLIM_REPORT_MYSQL_PASSWORD` to the reader password after replacing the placeholder. The Flask
 application must run as `slim_report_reader`, not as the administrator that created the schema.
+Saved reports contain only `passwordRef: "SLIM_REPORT_MYSQL_PASSWORD"`. The example injects
+`EnvironmentCredentialResolver` into `SlimReportDesigner`; the environment value is resolved only
+for connection, discovery, and live preview and is never returned in template JSON. Stop and restart
+the process without the variable to verify that the report reopens for editing with an unresolved
+credential warning, then restore the variable to reconnect without editing the template.
 
 Depending on MySQL or MariaDB metadata visibility rules, the account may need narrowly scoped
 permission to see the approved view's `information_schema` records. Do not grant broad privileges
@@ -134,24 +117,27 @@ merely to make discovery convenient.
 
 ## What the Example Executes
 
-The only MySQL operations are those implemented by the public core APIs:
+All MySQL operations use public core APIs:
 
 - read-only session configuration and verification;
 - `SELECT 1` connection health check;
 - `SELECT DATABASE()` safe connection metadata;
 - parameterized reads from `information_schema.VIEWS`;
 - parameterized reads from `information_schema.COLUMNS`.
+- one validated, parameter-bound SELECT for field discovery;
+- bounded, unbuffered SELECT execution for live preview.
 
-There is no SQL text area, query editor, row preview, export, custom query route, or report-data
-execution path.
+The home-page explorer has no SQL editor. The Designer query editor accepts only a single validated
+read-only SELECT and the runtime binds values through PyMySQL. Preview rows are streamed, escaped,
+bounded, returned with `no-store`, and never copied into the saved report.
 
 ## Manual Acceptance Check
 
 1. Start the app with the restricted account environment.
 2. Confirm the home page shows database, username, provider, and allowlists—but no password.
 3. Run **Test Connection** and confirm read-only verification succeeds.
-4. Open **Reporting Views** and confirm `report_patient_results` appears while `patients` does not.
-5. Inspect the view and confirm `decimal(12,2)` maps to `decimal` and `tinyint(1)` maps to `boolean`.
+4. Open **Reporting Views** and confirm both `report_` views appear while base tables do not.
+5. Inspect `report_laboratory_results` and confirm decimal, boolean, date, and datetime fields map correctly.
 6. Open `/views/report_view%3B` and confirm the invalid identifier is rejected safely.
 7. Confirm no page displays report rows or credentials.
 
@@ -176,5 +162,5 @@ python -m pip uninstall -y slim-report-core
 python -m pip install -e "packages/slim_report_core[mysql,sqlalchemy]"
 ```
 
-The direct example command above bootstraps local source paths itself, but other Python entry points
-continue to follow the active environment's normal package resolution.
+The app intentionally contains no checkout path injection. Verify imports resolve from the launcher's
+isolated environment when troubleshooting.

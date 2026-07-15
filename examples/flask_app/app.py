@@ -590,7 +590,9 @@ def ensure_sample_templates() -> None:
     ensure_report_template("cerebro_cbc", create_cerebro_cbc_report)
     ensure_report_template("repeating_lab_result", create_repeating_lab_result_report)
     ensure_report_template("grouped_lab_result", create_grouped_lab_result_report)
-    ensure_report_template("aggregate_grouped_lab_result", create_aggregate_grouped_lab_result_report)
+    ensure_report_template(
+        "aggregate_grouped_lab_result", create_aggregate_grouped_lab_result_report
+    )
     ensure_report_template("computed_fields_lab_result", create_computed_fields_lab_result_report)
     ensure_report_template("conditional_lab_result", create_conditional_lab_result_report)
     ensure_report_template("table_lab_result", create_table_lab_result_report)

@@ -1,6 +1,7 @@
 import { createDefaultTemplate, normalizeTemplate, objectStyle, safePdfFilename } from "./objects.js";
 import { conditionalStyleResult, ensureTemplateData, evaluateFormula, getArrayByPath, getFieldValue, getRowValue, resolveBinding } from "./data_fields.js";
 import { qrSvgMarkup } from "./qrcode.js";
+import { currentReportSessionKey, safeTemplateSnapshot } from "./persistence.js";
 
 export async function loadTemplate() {
   if (!apiBase()) {
@@ -19,7 +20,7 @@ export async function loadTemplate() {
 }
 
 export async function saveTemplate(template) {
-  const normalized = normalizeTemplate(template);
+  const normalized = normalizeTemplate(safeTemplateSnapshot(template));
   if (!apiBase()) {
     localStorage.setItem("slim-report-template", JSON.stringify(normalized));
     return normalized;
@@ -47,6 +48,214 @@ export async function saveTemplate(template) {
   return normalizeTemplate(saved);
 }
 
+export async function listDataSources(template) {
+  return dataSourceRequest("/designer/data-sources/list", "POST", template, {});
+}
+
+export async function createMysqlDataSource(template, values) {
+  return dataSourceRequest("/designer/data-sources/mysql", "POST", template, values);
+}
+
+export async function updateMysqlDataSource(template, dataSourceId, values) {
+  return dataSourceRequest(
+    `/designer/data-sources/${encodeURIComponent(dataSourceId)}`,
+    "PUT",
+    template,
+    values
+  );
+}
+
+export async function deleteMysqlDataSource(template, dataSourceId) {
+  return dataSourceRequest(
+    `/designer/data-sources/${encodeURIComponent(dataSourceId)}`,
+    "DELETE",
+    template,
+    {}
+  );
+}
+
+export async function testMysqlDataSource(values) {
+  if (!apiBase()) {
+    throw new Error("Data source management requires a backend API.");
+  }
+  return jsonRequest(`${apiBase()}/designer/data-sources/test`, {
+    method: "POST",
+    headers: requestHeaders(),
+    body: JSON.stringify({
+      template_id: currentTemplateId(),
+      ...values
+    })
+  });
+}
+
+export async function testSavedMysqlDataSource(template, dataSourceId, runtimePassword = null) {
+  const values = runtimePassword === null ? {} : { runtimePassword };
+  return dataSourceRequest(
+    `/designer/data-sources/${encodeURIComponent(dataSourceId)}/test`,
+    "POST",
+    template,
+    values
+  );
+}
+
+export async function listDatasets(template) {
+  return dataSourceRequest("/designer/datasets/list", "POST", template, {});
+}
+
+export async function getDataset(template, datasetId) {
+  return dataSourceRequest(
+    `/designer/datasets/${encodeURIComponent(datasetId)}/get`,
+    "POST",
+    template,
+    {}
+  );
+}
+
+export async function listReportingViews(template, dataSourceId) {
+  return dataSourceRequest(
+    `/designer/data-sources/${encodeURIComponent(dataSourceId)}/views/list`,
+    "POST",
+    template,
+    {}
+  );
+}
+
+export async function inspectReportingView(template, dataSourceId, viewName) {
+  return dataSourceRequest(
+    `/designer/data-sources/${encodeURIComponent(dataSourceId)}/views/inspect`,
+    "POST",
+    template,
+    { viewName }
+  );
+}
+
+export async function validateDatasetQuery(template, values) {
+  return dataSourceRequest("/designer/query/validate", "POST", template, values);
+}
+
+export async function discoverDatasetQuery(template, values) {
+  return dataSourceRequest("/designer/query/discover", "POST", template, values);
+}
+
+export async function createViewDataset(template, values) {
+  return dataSourceRequest("/designer/datasets/view", "POST", template, values);
+}
+
+export async function createQueryDataset(template, values) {
+  return dataSourceRequest("/designer/datasets/query", "POST", template, values);
+}
+
+export async function buildNewReport(configuration) {
+  if (!apiBase()) {
+    throw new Error("The New Report Wizard requires a backend API for final validation.");
+  }
+  return jsonRequest(`${apiBase()}/designer/new-report/build`, {
+    method: "POST",
+    headers: requestHeaders(),
+    body: JSON.stringify({
+      template_id: currentTemplateId(),
+      configuration
+    })
+  });
+}
+
+export async function getRuntimeParameterSchema(template, datasetId) {
+  return dataSourceRequest(
+    `/designer/datasets/${encodeURIComponent(datasetId)}/runtime-parameters`,
+    "POST",
+    template,
+    {}
+  );
+}
+
+export async function validateRuntimeParameters(template, datasetId, values) {
+  if (!apiBase()) {
+    throw new Error("Runtime parameter validation requires a backend API.");
+  }
+  const response = await fetch(
+    `${apiBase()}/designer/datasets/${encodeURIComponent(datasetId)}/runtime-parameters/validate`,
+    {
+      method: "POST",
+      headers: requestHeaders(),
+      body: JSON.stringify({
+        ...templateRequestPayload(template),
+        values
+      })
+    }
+  );
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok && payload.valid === false && Array.isArray(payload.errors)) {
+    return payload;
+  }
+  if (!response.ok) {
+    throw new Error(payload?.error_detail?.message || payload?.error || "Parameter validation failed.");
+  }
+  return payload;
+}
+
+export async function updateViewDataset(template, datasetId, values) {
+  return dataSourceRequest(
+    `/designer/datasets/${encodeURIComponent(datasetId)}/view`,
+    "PUT",
+    template,
+    values
+  );
+}
+
+export async function updateQueryDataset(template, datasetId, values) {
+  return dataSourceRequest(
+    `/designer/datasets/${encodeURIComponent(datasetId)}/query`,
+    "PUT",
+    template,
+    values
+  );
+}
+
+export async function refreshViewDatasetFields(template, datasetId) {
+  return dataSourceRequest(
+    `/designer/datasets/${encodeURIComponent(datasetId)}/refresh-view-fields`,
+    "POST",
+    template,
+    {}
+  );
+}
+
+export async function checkDatasetFreshness(template, datasetId, parameterValues = {}) {
+  return dataSourceRequest(
+    `/designer/datasets/${encodeURIComponent(datasetId)}/freshness`,
+    "POST",
+    template,
+    { parameterValues }
+  );
+}
+
+export async function discoverExistingDatasetFields(template, datasetId, parameterValues) {
+  return dataSourceRequest(
+    `/designer/datasets/${encodeURIComponent(datasetId)}/discover-fields`,
+    "POST",
+    template,
+    { parameterValues }
+  );
+}
+
+export async function applyExistingDatasetFields(template, datasetId, parameterValues) {
+  return dataSourceRequest(
+    `/designer/datasets/${encodeURIComponent(datasetId)}/apply-fields`,
+    "POST",
+    template,
+    { parameterValues }
+  );
+}
+
+export async function deleteDataset(template, datasetId) {
+  return dataSourceRequest(
+    `/designer/datasets/${encodeURIComponent(datasetId)}`,
+    "DELETE",
+    template,
+    {}
+  );
+}
+
 export async function previewTemplate(template) {
   if (!apiBase()) {
     openHtmlPreview(localPreviewHtml(template));
@@ -62,6 +271,83 @@ export async function previewTemplate(template) {
   }
   const html = await response.text();
   openHtmlPreview(html);
+}
+
+export async function startLivePreview(template, request) {
+  if (!apiBase()) {
+    throw new Error("Live data preview requires a backend API.");
+  }
+  const response = await fetch(`${apiBase()}/designer/preview/live`, {
+    method: "POST",
+    headers: requestHeaders(),
+    body: JSON.stringify({
+      ...templateRequestPayload(template),
+      requestId: request.requestId,
+      datasetId: request.datasetId,
+      parameterValues: request.parameterValues || {},
+      options: request.options || {}
+    })
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(
+      payload?.error?.message || payload?.error_detail?.message || "Live preview failed."
+    );
+    error.code = payload?.error?.code || payload?.error_detail?.code || "preview_failed";
+    throw error;
+  }
+  return payload;
+}
+
+export async function inspectReopenedTemplate(template) {
+  if (!apiBase()) {
+    return { valid: true, canEdit: true, canPreview: true, issues: [] };
+  }
+  return dataSourceRequest("/designer/reopen/inspect", "POST", template, {});
+}
+
+export async function inspectPreviewReadiness(template, datasetId = null) {
+  if (!apiBase()) {
+    return { ready: true, datasetId, issues: [] };
+  }
+  return dataSourceRequest("/designer/preview/readiness", "POST", template, { datasetId });
+}
+
+export async function validateTemplateSave(template) {
+  if (!apiBase()) {
+    return { canSave: true, structurallyValid: true, runtimeReady: true, warnings: [] };
+  }
+  return dataSourceRequest("/designer/save/validate", "POST", template, {});
+}
+
+export async function clearRuntimeCredentials(dataSourceId = null) {
+  if (!apiBase()) {
+    return { ok: true };
+  }
+  return jsonRequest(`${apiBase()}/designer/credentials/clear`, {
+    method: "POST",
+    headers: requestHeaders(),
+    body: JSON.stringify({
+      template_id: currentTemplateId(),
+      reportSessionKey: currentReportSessionKey(),
+      dataSourceId
+    })
+  });
+}
+
+export async function cancelLivePreview(requestId) {
+  if (!apiBase()) {
+    return { success: false, cancelled: false };
+  }
+  const response = await fetch(
+    `${apiBase()}/designer/preview/${encodeURIComponent(requestId)}/cancel`,
+    {
+      method: "POST",
+      headers: requestHeaders(),
+      body: JSON.stringify({ template_id: currentTemplateId() })
+    }
+  );
+  return response.json().catch(() => ({ success: false, cancelled: false }));
 }
 
 export async function printPreview(template) {
@@ -121,12 +407,41 @@ function requestHeaders() {
   return headers;
 }
 
+async function dataSourceRequest(path, method, template, values) {
+  if (!apiBase()) {
+    throw new Error("Data source management requires a backend API.");
+  }
+  return jsonRequest(`${apiBase()}${path}`, {
+    method,
+    headers: requestHeaders(),
+    body: JSON.stringify({
+      ...templateRequestPayload(template),
+      ...values
+    })
+  });
+}
+
+async function jsonRequest(url, options) {
+  const response = await fetch(url, options);
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const error = new Error(
+      payload?.error_detail?.message || payload?.error || "Data source request failed."
+    );
+    error.code = payload?.error_detail?.code || "data_source_request_failed";
+    error.dependents = Array.isArray(payload?.dependents) ? payload.dependents : [];
+    throw error;
+  }
+  return payload;
+}
+
 function templateRequestPayload(template) {
-  const normalized = normalizeTemplate(template);
+  const normalized = normalizeTemplate(safeTemplateSnapshot(template));
   const payload = {
     template_id: currentTemplateId() || normalized.metadata?.custom?.id || "",
     template: normalized,
-    request_args: currentQueryParams()
+    request_args: currentQueryParams(),
+    reportSessionKey: currentReportSessionKey()
   };
   if (normalized.data?.sample && typeof normalized.data.sample === "object") {
     payload.data = normalized.data.sample;

@@ -26,8 +26,10 @@ from slim_report_core import (
     QueryParameterError,
     QueryParameterValueConverter,
     QueryReturnedNoColumnsError,
+    QueryValidationFailedError,
     ReportDataset,
     ReportDataSource,
+    SQLValidationPolicy,
     SQLValidator,
     TooManyOutputColumnsError,
     UnsupportedDataSourceProviderError,
@@ -375,9 +377,11 @@ class FakeConnectionProvider(MySQLDataSourceProvider):
     def __init__(self, connection: FakeConnection) -> None:
         super().__init__()
         self.connection_instance = connection
+        self.data_sources: list[ReportDataSource] = []
 
     @contextmanager
     def connection(self, data_source: ReportDataSource):  # type: ignore[no-untyped-def]
+        self.data_sources.append(data_source)
         try:
             yield self.connection_instance
         finally:
@@ -390,13 +394,15 @@ def test_mysql_discovery_executes_bound_query_fetches_limited_rows_and_closes_re
         rows=[(1,), (2,)],
     )
     connection = FakeConnection(cursor)
-    discovery = MySQLQueryFieldDiscovery(FakeConnectionProvider(connection))
+    provider = FakeConnectionProvider(connection)
+    discovery = MySQLQueryFieldDiscovery(provider)
+    source = data_source()
 
     result = discovery.discover_query_fields(
-        data_source=data_source(),
+        data_source=source,
         sql="SELECT id FROM patients WHERE id = :id",
         parameters={"id": 1},
-        policy=QueryFieldDiscoveryPolicy(max_preview_rows=1),
+        policy=QueryFieldDiscoveryPolicy(max_preview_rows=1, execution_timeout_seconds=5),
     )
 
     assert cursor.executed == ("SELECT id FROM patients WHERE id = %(id)s", {"id": 1})
@@ -406,6 +412,130 @@ def test_mysql_discovery_executes_bound_query_fetches_limited_rows_and_closes_re
     assert cursor.closed
     assert connection.closed
     assert not cursor.fetchall_called
+    assert source.connection.query_timeout == 30
+    assert provider.data_sources[0] is not source
+    assert provider.data_sources[0].connection.query_timeout == 5
+    arguments = MySQLDataSourceProvider._connection_arguments(
+        provider.data_sources[0].connection,
+        "driver-only-secret",
+    )
+    assert arguments["read_timeout"] == 5
+    assert arguments["write_timeout"] == 5
+
+
+def test_discovery_enforces_query_length_before_conversion_or_provider_access() -> None:
+    provider = FakeDiscoveryProvider()
+
+    class TrackingRegistry(DataSourceProviderRegistry):
+        def __init__(self) -> None:
+            super().__init__()
+            self.get_calls = 0
+
+        def get(self, provider_type: str):  # type: ignore[no-untyped-def]
+            self.get_calls += 1
+            return super().get(provider_type)
+
+    class RecordingConverter(QueryParameterValueConverter):
+        def __init__(self) -> None:
+            self.calls: list[object] = []
+
+        def convert(self, **values: object) -> object:
+            self.calls.append(values)
+            return "converted"
+
+    converter = RecordingConverter()
+    registry = TrackingRegistry()
+    registry.register(provider)
+    service = QueryFieldDiscoveryService(
+        provider_registry=registry,
+        sql_validator=SQLValidator(
+            MySQLDialect(),
+            SQLValidationPolicy(max_query_length=1000, max_parameters=10),
+        ),
+        policy=QueryFieldDiscoveryPolicy(max_query_length=50, max_parameters=2),
+        parameter_converter=converter,
+    )
+    query = "SELECT :secret_value, '" + ("x" * 50) + "'"
+
+    with pytest.raises(QueryValidationFailedError, match="field-discovery limit of 50") as caught:
+        service.discover_fields(
+            dataset=dataset(
+                query=query,
+                parameters=[QueryParameter("secret_value", "string", required=True)],
+            ),
+            data_source=data_source(),
+            parameter_values={"secret_value": "never-include-this-value"},
+        )
+
+    assert "never-include-this-value" not in str(caught.value)
+    assert converter.calls == []
+    assert provider.calls == []
+    assert registry.get_calls == 0
+
+    short_query = "SELECT '" + ("x" * 31) + "'"
+    assert len(short_query) == 40
+    result = service.discover_fields(
+        dataset=dataset(query=short_query, parameters=[]),
+        data_source=data_source(),
+    )
+    assert result.fields[0].name == "patient_id"
+    assert len(provider.calls) == 1
+    assert registry.get_calls == 1
+
+
+def test_discovery_enforces_unique_parameter_limit_before_provider_access() -> None:
+    provider = FakeDiscoveryProvider()
+    service = discovery_service(provider, max_parameters=2)
+    parameters = [
+        QueryParameter("a", "integer", required=True),
+        QueryParameter("b", "integer", required=True),
+        QueryParameter("c", "integer", required=True),
+    ]
+
+    repeated = service.discover_fields(
+        dataset=dataset(query="SELECT :a, :a", parameters=parameters[:1]),
+        data_source=data_source(),
+        parameter_values={"a": 1},
+    )
+    assert repeated.parameters == ("a",)
+    assert len(provider.calls) == 1
+
+    provider.calls.clear()
+    with pytest.raises(QueryValidationFailedError, match="3 parameters"):
+        service.discover_fields(
+            dataset=dataset(query="SELECT :a, :b, :c", parameters=parameters),
+            data_source=data_source(),
+            parameter_values={"a": 1, "b": 2, "c": 3},
+        )
+    assert provider.calls == []
+
+
+def test_discovery_policy_cannot_exceed_sql_validator_policy() -> None:
+    provider = FakeDiscoveryProvider()
+    registry = DataSourceProviderRegistry()
+    registry.register(provider)
+    validator = SQLValidator(
+        MySQLDialect(),
+        SQLValidationPolicy(max_query_length=50, max_parameters=2),
+    )
+
+    length_service = QueryFieldDiscoveryService(
+        registry,
+        validator,
+        QueryFieldDiscoveryPolicy(max_query_length=51, max_parameters=2),
+    )
+    with pytest.raises(QueryValidationFailedError, match="length policy"):
+        length_service.discover_fields(dataset=dataset(), data_source=data_source())
+
+    parameter_service = QueryFieldDiscoveryService(
+        registry,
+        validator,
+        QueryFieldDiscoveryPolicy(max_query_length=50, max_parameters=3),
+    )
+    with pytest.raises(QueryValidationFailedError, match="parameter policy"):
+        parameter_service.discover_fields(dataset=dataset(), data_source=data_source())
+
+    assert provider.calls == []
 
 
 def test_mysql_discovery_maps_unknown_types_to_warning_and_timeout_errors() -> None:
@@ -420,8 +550,9 @@ def test_mysql_discovery_maps_unknown_types_to_warning_and_timeout_errors() -> N
             raise TimeoutError("timed out with hidden-secret")
 
     cursor = TimeoutCursor(description=(), rows=[])
+    connection = FakeConnection(cursor)
     with pytest.raises(QueryExecutionTimeoutError) as caught:
-        MySQLQueryFieldDiscovery(FakeConnectionProvider(FakeConnection(cursor))).discover_query_fields(
+        MySQLQueryFieldDiscovery(FakeConnectionProvider(connection)).discover_query_fields(
             data_source=data_source(),
             sql="SELECT :id",
             parameters={"id": "hidden-secret"},
@@ -429,6 +560,8 @@ def test_mysql_discovery_maps_unknown_types_to_warning_and_timeout_errors() -> N
         )
 
     assert "hidden-secret" not in str(caught.value)
+    assert cursor.closed
+    assert connection.closed
 
 
 @pytest.mark.parametrize(

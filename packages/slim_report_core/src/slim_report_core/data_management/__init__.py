@@ -9,6 +9,7 @@ from .commands import (
 from .errors import (
     DataManagementError,
     DataManagementValidationError,
+    DatasetInUseError,
     DatasetNotFoundError,
     DatasetTypeMismatchError,
     DataSourceInUseError,
@@ -38,6 +39,7 @@ __all__ = [
     "DataSourceSummary",
     "DatasetConfigurationResult",
     "DatasetFieldChangeSummary",
+    "DatasetInUseError",
     "DatasetNotFoundError",
     "DatasetSummary",
     "DatasetTypeMismatchError",

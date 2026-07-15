@@ -80,9 +80,6 @@ class SQLValidator:
             raise MultipleStatementsError("SQL must contain exactly one statement.")
         if parsed.statement_count > 1:
             raise MultipleStatementsError("SQL must contain exactly one statement.")
-        if parsed.forbidden_clauses:
-            clause = parsed.forbidden_clauses[0]
-            raise UnsafeSQLConstructError(f"SQL clause is not allowed: {clause}.")
         if parsed.forbidden_comments:
             raise UnsafeSQLConstructError(
                 "Executable SQL comments are not allowed by the selected dialect."
@@ -92,6 +89,19 @@ class SQLValidator:
             raise InvalidSQLParameterError(
                 f"Unsupported SQL parameter syntax {style!r}; use :name parameters only."
             )
+        if self.dialect.name == "mysql" and parsed.has_user_variables:
+            raise UnsafeSQLConstructError("MySQL user variables are not allowed in report queries.")
+        if self.dialect.name == "mysql" and parsed.has_system_variables:
+            raise UnsafeSQLConstructError(
+                "MySQL system variables are not allowed in report queries."
+            )
+        if self.dialect.name == "mysql" and parsed.has_assignment_operator:
+            raise UnsafeSQLConstructError(
+                "SQL assignment operators are not allowed in report queries."
+            )
+        if parsed.forbidden_clauses:
+            clause = parsed.forbidden_clauses[0]
+            raise UnsafeSQLConstructError(f"SQL clause is not allowed: {clause}.")
 
         root_statement = parsed.root_statement
         if root_statement not in self.dialect.allowed_root_statements():

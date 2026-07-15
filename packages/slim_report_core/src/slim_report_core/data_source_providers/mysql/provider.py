@@ -33,6 +33,10 @@ from ..errors import (
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
+    from ...dataset_execution.provider import (
+        ProviderDatasetExecutionRequest,
+        ProviderDatasetRowStream,
+    )
     from ...query_discovery import ProviderFieldDiscoveryResult, QueryFieldDiscoveryPolicy
 
 _READ_ONLY_COMMAND = "SET SESSION TRANSACTION READ ONLY"
@@ -196,6 +200,15 @@ class MySQLDataSourceProvider:
             policy=policy,
         )
 
+    def open_dataset_stream(
+        self,
+        request: ProviderDatasetExecutionRequest,
+    ) -> ProviderDatasetRowStream:
+        """Open one unbuffered read-only dataset stream."""
+        from .execution import MySQLProviderDatasetRowStream
+
+        return MySQLProviderDatasetRowStream.open(self, request)
+
     def _open_configured_connection(
         self,
         data_source: ReportDataSource,
@@ -260,7 +273,9 @@ class MySQLDataSourceProvider:
             or not isinstance(config.port, int)
             or not 1 <= config.port <= 65535
         ):
-            raise DataSourceValidationError("The MySQL port must be between 1 and 65535.")
+            raise DataSourceValidationError(
+                "connection.port must be an integer between 1 and 65535."
+            )
         if not isinstance(config.database, str) or not config.database.strip():
             raise DataSourceValidationError("The MySQL database must not be empty.")
         if not isinstance(config.username, str) or not config.username.strip():
@@ -272,9 +287,13 @@ class MySQLDataSourceProvider:
             or not isinstance(config.connect_timeout, int)
             or config.connect_timeout < 1
         ):
-            raise DataSourceValidationError(
-                "The MySQL connect timeout must be at least one second."
-            )
+            raise DataSourceValidationError("connection.connectTimeout must be a positive integer.")
+        if (
+            isinstance(config.query_timeout, bool)
+            or not isinstance(config.query_timeout, int)
+            or config.query_timeout < 1
+        ):
+            raise DataSourceValidationError("connection.queryTimeout must be a positive integer.")
         if config.password_ref is not None and (
             not isinstance(config.password_ref, str) or not config.password_ref.strip()
         ):
@@ -290,7 +309,7 @@ class MySQLDataSourceProvider:
             ) from exc
         if password is None and config.password_ref is not None:
             raise CredentialUnavailableError(
-                f"The credential reference {config.password_ref!r} could not be resolved."
+                "The configured MySQL credential could not be resolved."
             )
         return password if password is not None else ""
 
@@ -304,6 +323,8 @@ class MySQLDataSourceProvider:
             "database": config.database,
             "charset": config.charset,
             "connect_timeout": config.connect_timeout,
+            "read_timeout": config.query_timeout,
+            "write_timeout": config.query_timeout,
             "autocommit": True,
         }
 

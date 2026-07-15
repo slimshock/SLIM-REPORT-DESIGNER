@@ -331,6 +331,8 @@ class ObjectFactory:
         """Create a report object from a JSON-compatible mapping."""
         mapping = ensure_mapping(data, context="Report object")
         properties = dict(mapping.get("properties", {}))
+        if "dataBinding" in mapping:
+            properties["dataBinding"] = mapping["dataBinding"]
         position_value = mapping.get("position", properties.pop("position", None))
         size_value = mapping.get("size", properties.pop("size", None))
         position = Position.from_value(

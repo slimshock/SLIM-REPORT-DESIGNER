@@ -1,28 +1,16 @@
-"""Flask example for database template storage and MySQL metadata discovery."""
-
-# Direct execution must bootstrap this checkout before importing possibly stale installed packages.
-# ruff: noqa: E402
+"""Flask example for database template storage and MySQL report preview."""
 
 from __future__ import annotations
 
 import os
-import sys
 from dataclasses import dataclass
+from importlib import metadata
 from pathlib import Path
+from platform import python_version
 from typing import Any
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
-for package_source in (
-    REPO_ROOT / "packages" / "slim_report_core" / "src",
-    REPO_ROOT / "packages" / "slim_report_designer_ui",
-    REPO_ROOT / "packages" / "slim_report_flask" / "src",
-):
-    source_path = str(package_source)
-    if source_path not in sys.path:
-        sys.path.insert(0, source_path)
-
 from dotenv import load_dotenv
-from flask import Flask, render_template
+from flask import Flask, abort, jsonify, render_template, request
 from sqlalchemy import JSON, Boolean, Column, DateTime, Integer, String, Text, create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
@@ -30,6 +18,7 @@ from slim_report_core import (
     DataSourceConnectionError,
     DataSourceMetadataError,
     DataSourceValidationError,
+    EnvironmentCredentialResolver,
     InvalidViewIdentifierError,
     MetadataAccessDeniedError,
     MetadataAccessPolicy,
@@ -41,11 +30,11 @@ from slim_report_core import (
     ViewNotFoundError,
 )
 from slim_report_core.storage import FileSystemTemplateProvider, SQLAlchemyTemplateProvider
-from slim_report_flask import SlimReportDesigner
+from slim_report_designer_ui import static_file
+from slim_report_flask import SlimReportDesigner, map_safe_error
 
 BASE_DIR = Path(__file__).resolve().parent
-SAMPLE_TEMPLATE_DIR = REPO_ROOT / "examples" / "flask_app" / "sample_templates"
-LIS_TEMPLATE_DIR = REPO_ROOT / "examples" / "lis_templates"
+REPORT_TEMPLATE_DIR = BASE_DIR / "reports"
 DATABASE_PATH = BASE_DIR / "report_templates.db"
 Base = declarative_base()
 
@@ -93,6 +82,7 @@ def create_app(
 ) -> Flask:
     """Create the database-backed designer and metadata demonstration app."""
     app = Flask(__name__)
+    app.config["SECRET_KEY"] = os.getenv("FLASK_SECRET_KEY", "local-demo-only-change-me")
     try:
         app.config["DEBUG"] = parse_boolean_environment("SLIM_REPORT_EXAMPLE_DEBUG", default=False)
         services = build_example_services(
@@ -145,6 +135,41 @@ def create_app(
         ready = require_services(services)
         schema = ready.metadata_service.inspect_view(ready.data_source, view_name)
         return render_template("view_schema.html", schema=schema)
+
+    @app.get("/diagnostics")
+    def diagnostics():
+        if request.remote_addr not in {"127.0.0.1", "::1"}:
+            abort(403)
+        credential_ref = (
+            services.data_source.connection.password_ref if services.data_source else None
+        )
+        connection_result = None
+        read_only = None
+        if services.data_source and services.provider:
+            result = services.provider.test_connection(services.data_source)
+            connection_result = result.success
+            read_only = result.read_only_verified
+        return jsonify(
+            {
+                "status": "ok" if services.setup_error is None else "setup_required",
+                "python": python_version(),
+                "packages": {
+                    name: installed_version(name)
+                    for name in (
+                        "slim-report-core",
+                        "slim-report-designer-ui",
+                        "slim-report-flask",
+                    )
+                },
+                "mysqlDriverInstalled": installed_version("PyMySQL") is not None,
+                "designerAssetsAvailable": static_file("index.html").is_file(),
+                "reportTemplatePath": str(REPORT_TEMPLATE_DIR),
+                "credentialReferenceConfigured": bool(credential_ref),
+                "credentialResolved": bool(credential_ref and os.getenv(credential_ref)),
+                "connectionTest": connection_result,
+                "readOnlyVerified": read_only,
+            }
+        )
 
     register_error_handlers(app)
     return app
@@ -281,8 +306,18 @@ def register_error_handlers(app: Flask) -> None:
     """Render concise project errors without raw driver or credential details."""
 
     def error_page(error: Exception, title: str, status: int):
-        app.logger.warning("%s (%s).", title, type(error).__name__)
-        return render_template("error.html", title=title, message=str(error), status=status), status
+        mapped = map_safe_error(error)
+        response_status = mapped.status if mapped.code != "server_error" else status
+        app.logger.warning("%s: code=%s.", title, mapped.code)
+        return (
+            render_template(
+                "error.html",
+                title=title,
+                message=mapped.message,
+                status=response_status,
+            ),
+            response_status,
+        )
 
     @app.errorhandler(InvalidViewIdentifierError)
     def invalid_identifier(error: InvalidViewIdentifierError):
@@ -314,7 +349,17 @@ def register_error_handlers(app: Flask) -> None:
 
     @app.errorhandler(ExampleConfigurationError)
     def configuration_error(error: ExampleConfigurationError):
-        return error_page(error, "Example setup required", 500)
+        del error
+        status = 503
+        return (
+            render_template(
+                "error.html",
+                title="Example setup required",
+                message="Required demo environment variables are not configured.",
+                status=status,
+            ),
+            status,
+        )
 
 
 def configure_designer(app: Flask) -> None:
@@ -330,6 +375,7 @@ def configure_designer(app: Flask) -> None:
     designer = SlimReportDesigner(
         template_provider=template_provider,
         data_provider=demo_data_provider(template_provider),
+        credential_resolver=EnvironmentCredentialResolver(),
     )
     designer.init_app(app)
 
@@ -341,19 +387,19 @@ def create_session():
 
 
 def seed_templates(provider: SQLAlchemyTemplateProvider) -> None:
-    """Seed selected sample templates into SQLite if they do not exist."""
-    source = FileSystemTemplateProvider(SAMPLE_TEMPLATE_DIR)
-    for template_id in (
-        "complete_sprint5_lab_report",
-        "conditional_lab_result",
-        "aggregate_grouped_lab_result",
-    ):
+    """Seed self-contained MySQL demo templates into SQLite if absent."""
+    source = FileSystemTemplateProvider(REPORT_TEMPLATE_DIR)
+    for template_id in ("view_laboratory_results", "parameterized_daily_orders"):
         if not provider.exists(template_id):
             provider.save_template(template_id, source.get_template(template_id))
-    lis_source = FileSystemTemplateProvider(LIS_TEMPLATE_DIR)
-    for template_id in ("lab_result_hematology_two_column",):
-        if not provider.exists(template_id):
-            provider.save_template(template_id, lis_source.get_template(template_id))
+
+
+def installed_version(distribution: str) -> str | None:
+    """Return safe package presence/version metadata."""
+    try:
+        return metadata.version(distribution)
+    except metadata.PackageNotFoundError:
+        return None
 
 
 def demo_data_provider(provider: SQLAlchemyTemplateProvider):

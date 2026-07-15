@@ -1,3 +1,5 @@
+import { safeTemplateSnapshot } from "./persistence.js";
+
 const MAX_VERSIONS = 20;
 
 export function getHistoryKey(templateId) {
@@ -15,7 +17,7 @@ export function createVersion(templateId, template, label) {
     created_at: new Date().toISOString(),
     label: label || "Version",
     object_count: Array.isArray(template?.objects) ? template.objects.length : 0,
-    template: structuredClone(template)
+    template: safeTemplateSnapshot(template)
   };
   versions.unshift(version);
   writeVersions(templateId, versions.slice(0, MAX_VERSIONS));
@@ -24,7 +26,7 @@ export function createVersion(templateId, template, label) {
 
 export function restoreVersion(templateId, versionId) {
   const version = readVersions(templateId).find((item) => item.id === versionId);
-  return version ? structuredClone(version.template) : null;
+  return version ? safeTemplateSnapshot(version.template) : null;
 }
 
 export function deleteVersion(templateId, versionId) {
@@ -38,7 +40,15 @@ export function clearVersions(templateId) {
 function readVersions(templateId) {
   try {
     const payload = JSON.parse(localStorage.getItem(getHistoryKey(templateId)) || "[]");
-    return Array.isArray(payload) ? payload : [];
+    if (!Array.isArray(payload)) {
+      return [];
+    }
+    const sanitized = payload.map((version) => ({
+      ...version,
+      template: safeTemplateSnapshot(version.template)
+    }));
+    localStorage.setItem(getHistoryKey(templateId), JSON.stringify(sanitized));
+    return sanitized;
   } catch (error) {
     return [];
   }

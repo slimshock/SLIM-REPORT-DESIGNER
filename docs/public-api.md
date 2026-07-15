@@ -1,5 +1,12 @@
 # Public API
 
+## Flask safe errors
+
+`slim_report_flask.SafeError` and `slim_report_flask.map_safe_error()` define the adapter-level
+client error contract. `SafeError.to_dict()` returns `code`, `message`, and `details`; it never copies
+raw exception content. Applications should use the centralized mapper for custom Flask endpoints and
+clients should branch on stable codes documented in [Safe Error Codes](error-codes.md).
+
 `Report` is the primary developer API for Slim Report Designer.
 
 Developers should be able to create useful reports without constructing internal template
@@ -493,3 +500,38 @@ inspection, view dataset creation/refresh, query dataset validation and field di
 parameter management, and explicit dependency checks for removals. See
 [Data-Source and Dataset Management](data-source-management.md) for workflows and security
 boundaries.
+
+## Dataset Execution
+
+Use `DatasetExecutionService` with a registered MySQL provider, MySQL SQL validator,
+and runtime parameter resolver to open a bounded, context-managed row stream. Stable
+contracts include `DatasetExecutionPolicy`, `DatasetExecutionOptions`,
+`DatasetExecutionSchema`, `DatasetRow`, `DatasetRowBatch`,
+`DatasetExecutionSummary`, `DatasetRowStream`, and
+`DatasetExecutionCancellationToken`.
+
+Provider requests, driver rows, cursors, connections, SQL text, and resolved values
+are intentionally not part of the public API. See
+[Read-Only MySQL Dataset Execution](dataset-execution.md).
+
+## Runtime Rendering
+
+Live rendering exports `RuntimeReportRenderService`, `RuntimePreviewPolicy`,
+`RuntimePreviewOptions`, `RuntimePreviewResult`, `RuntimePreviewSummary`,
+`RuntimePreviewWarning`, `RuntimeBindingResolver`, `RuntimeValueFormatter`, and focused safe
+runtime rendering errors. These framework-independent contracts do not expose Flask, PyMySQL,
+connections, cursors, SQL, parameter values, or rows in result metadata. See
+[Live MySQL Report Preview](live-mysql-preview.md).
+
+## Template Persistence and Safe Reopen
+
+Persistence exports `CredentialPersistencePolicy`, `CompositeCredentialResolver`,
+`CredentialResolutionStatus`, `TemplateCompatibilityResult`,
+`TemplateSecurityInspectionResult`, `ReportTemplateReopenService`,
+`ReportPreviewReadinessService`, `ReportSaveValidationService`,
+`DatasetFreshnessService`, `inspect_template_security()`, and
+`create_persistable_report_snapshot()`.
+
+The Flask adapter exports `RuntimeCredentialStore` and the development-oriented
+`InMemoryRuntimeCredentialStore`, and accepts an optional `credential_resolver=` in
+`SlimReportDesigner`. See [Template Persistence and Safe Reopen](template-persistence-security.md).

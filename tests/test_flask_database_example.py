@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-import os
-import subprocess
-import sys
 from pathlib import Path
 
 import pytest
@@ -223,7 +220,7 @@ def test_missing_driver_uses_safe_error_page() -> None:
 
     response = app.test_client().post("/connection/test")
 
-    assert response.status_code == 500
+    assert response.status_code == 503
     assert "MySQL driver unavailable" in response.get_data(as_text=True)
 
 
@@ -342,7 +339,7 @@ def test_generic_metadata_failure_does_not_render_raw_details() -> None:
     response = app.test_client().get("/views/report_patient_results")
     text = response.get_data(as_text=True)
 
-    assert response.status_code == 502
+    assert response.status_code == 503
     assert "Metadata operation failed" in text
     assert "password=raw-secret" not in text
 
@@ -374,6 +371,26 @@ def test_no_custom_sql_or_report_row_routes_exist() -> None:
     assert rules >= {"/", "/connection/test", "/views", "/views/<view_name>"}
 
 
+def test_diagnostics_are_loopback_only_and_never_expose_runtime_values() -> None:
+    app, _, _ = create_test_app()
+    local = app.test_client().get("/diagnostics")
+    remote = app.test_client().get(
+        "/diagnostics", environ_base={"REMOTE_ADDR": "192.0.2.10"}
+    )
+
+    assert local.status_code == 200
+    payload = local.get_json()
+    assert payload["designerAssetsAvailable"] is True
+    assert payload["credentialReferenceConfigured"] is False
+    assert payload["connectionTest"] is True
+    assert payload["readOnlyVerified"] is True
+    serialized = local.get_data(as_text=True)
+    assert "browser-test-secret" not in serialized
+    assert "SELECT" not in serialized
+    assert "previewHtml" not in serialized
+    assert remote.status_code == 403
+
+
 def test_missing_environment_renders_useful_setup_error(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -393,7 +410,7 @@ def test_missing_environment_renders_useful_setup_error(
     assert "Setup required" in text
     assert "SLIM_REPORT_MYSQL_DATABASE" in text
     assert "browser-test-secret" not in text
-    assert app.test_client().get("/views").status_code == 500
+    assert app.test_client().get("/views").status_code == 503
 
 
 def test_environment_builders_use_password_reference_and_safe_policy(
@@ -500,28 +517,9 @@ def test_designer_integration_remains_available() -> None:
     assert "SLIM_REPORT_API_BASE" in response.get_data(as_text=True)
 
 
-def test_direct_script_execution_bootstraps_repository_packages() -> None:
-    environment = os.environ.copy()
-    environment.pop("PYTHONPATH", None)
-    command = (
-        "import runpy; "
-        "runpy.run_path('examples/flask_database_app/app.py', run_name='import_test'); "
-        "import slim_report_core; "
-        "print(slim_report_core.__file__)"
-    )
+def test_demo_uses_normal_installed_package_resolution() -> None:
+    source = (REPO_ROOT / "examples/flask_database_app/app.py").read_text(encoding="utf-8")
 
-    completed = subprocess.run(
-        [sys.executable, "-c", command],
-        cwd=REPO_ROOT,
-        env=environment,
-        check=True,
-        capture_output=True,
-        text=True,
-        timeout=30,
-    )
-
-    imported_path = Path(completed.stdout.strip()).resolve()
-    expected_path = (
-        REPO_ROOT / "packages" / "slim_report_core" / "src" / "slim_report_core" / "__init__.py"
-    ).resolve()
-    assert imported_path == expected_path
+    assert "sys.path" not in source
+    assert "PYTHONPATH" not in source
+    assert "packages/slim_report_core" not in source

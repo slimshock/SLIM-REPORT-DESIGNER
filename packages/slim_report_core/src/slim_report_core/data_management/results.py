@@ -29,6 +29,9 @@ class DataSourceSummary:
     username: str | None
     password_configured: bool
     password_ref_configured: bool
+    charset: str | None = None
+    connect_timeout: int | None = None
+    query_timeout: int | None = None
 
 
 @dataclass(frozen=True)

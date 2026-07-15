@@ -6,13 +6,14 @@ executing a full report or returning row values.
 It is intentionally a metadata-only workflow:
 
 1. Validate the dataset SQL with `SQLValidator`.
-2. Convert declared parameter values to Python values for driver binding.
-3. Resolve a provider through `DataSourceProviderRegistry`.
-4. Open the provider's verified read-only connection.
-5. Execute the validated `SELECT` with bound parameters.
-6. Read DB-API cursor metadata.
-7. Fetch at most `QueryFieldDiscoveryPolicy.max_preview_rows`.
-8. Return `DatasetField` definitions and close every cursor and connection.
+2. Enforce discovery-specific query-length and unique-parameter limits.
+3. Convert declared parameter values to Python values for driver binding.
+4. Resolve a provider through `DataSourceProviderRegistry`.
+5. Open the provider's verified read-only connection.
+6. Execute the validated `SELECT` with bound parameters.
+7. Read DB-API cursor metadata.
+8. Fetch at most `QueryFieldDiscoveryPolicy.max_preview_rows`.
+9. Return `DatasetField` definitions and close every cursor and connection.
 
 ## Example
 
@@ -84,8 +85,19 @@ Discovery uses cursor-side row limiting with `fetchmany(max_preview_rows)`. It d
 `LIMIT 1` or wrap arbitrary SQL, because that can change semantics for CTEs, unions, comments, and
 queries that already contain limits.
 
+The discovery query-length and unique-parameter limits are enforced against the validated query,
+even when `SQLValidationPolicy` permits a larger query. Discovery limits may not exceed the SQL
+validator limits. Limit failures happen before parameter conversion, provider resolution, or any
+connection attempt. Repeated use of one named parameter counts once.
+
 `fetchmany(1)` does not necessarily prevent the database server from fully processing a complex
 query. Query timeout configuration, approved views, indexing, and reviewed SQL remain important.
+For MySQL discovery, `execution_timeout_seconds` creates a temporary connection configuration whose
+query timeout is passed to PyMySQL socket read/write timeouts. The report's original configuration
+is not mutated.
+
+Query timeout limits how long the client waits for database I/O. It does not guarantee immediate
+server-side query cancellation, and the server may continue work after a client timeout.
 
 ## MySQL Type Mapping
 
@@ -114,6 +126,10 @@ perform substantial server-side work for complex queries.
 
 Production report users must use minimum SELECT privileges, and report queries should be reviewed
 and optimized.
+
+User-supplied report SQL may not read or assign MySQL user variables or system variables. Internal
+provider queries used to verify connection state are trusted provider operations and are not user
+report queries.
 
 The SQL validator does not replace database privileges. The discovery service does not permit write
 SQL, multiple statements, string-interpolated parameters, sample row return values, full report data

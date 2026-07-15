@@ -6,17 +6,21 @@ from datetime import date
 import pytest
 
 from slim_report_core import (
+    Band,
     ConnectionTestResult,
     CreateMySQLDataSourceCommand,
     CreateQueryDatasetCommand,
     CreateViewDatasetCommand,
     DatasetField,
+    DatasetFieldBinding,
+    DatasetInUseError,
     DatasetNotFoundError,
     DatasetTypeMismatchError,
     DataSourceInUseError,
     DataSourceManagementService,
     DataSourceNotFoundError,
     DataSourceProviderRegistry,
+    DataSourceValidationError,
     DiscoveredColumn,
     InvalidSQLParameterError,
     MetadataQueryError,
@@ -32,6 +36,7 @@ from slim_report_core import (
     ReportDataSource,
     SQLValidator,
     StaleDiscoveryResultError,
+    TextObject,
     UnsupportedStatementError,
     UpdateMySQLDataSourceCommand,
 )
@@ -301,6 +306,27 @@ def test_create_data_source_failure_is_atomic_and_connection_test_does_not_mutat
         service.test_data_source_connection(report, "missing")
 
 
+@pytest.mark.parametrize("field", ["connect_timeout", "query_timeout"])
+def test_management_timeout_validation_is_model_owned_and_atomic(field: str) -> None:
+    service = management_service(FakeMySQLProvider())
+    report = report_with_source()
+    source = report.get_data_source("main_mysql")
+    assert source is not None
+    before = source.to_dict(include_password=True)
+
+    with pytest.raises(DataSourceValidationError, match="positive integer"):
+        service.update_mysql_data_source(
+            report,
+            UpdateMySQLDataSourceCommand(
+                data_source_id=source.id,
+                **{field: 0},  # type: ignore[arg-type]
+            ),
+        )
+
+    assert report.get_data_source(source.id) is source
+    assert source.to_dict(include_password=True) == before
+
+
 def test_remove_data_source_rejects_in_use_and_cascades_explicitly() -> None:
     service = management_service(FakeMySQLProvider())
     report = report_with_source()
@@ -403,6 +429,18 @@ def test_create_query_dataset_failure_does_not_insert() -> None:
     assert report.datasets == []
 
 
+def test_unsaved_query_validation_detects_parameters_before_definitions_exist() -> None:
+    service = management_service(FakeMySQLProvider())
+
+    result = service.validate_query_dataset_configuration(
+        query="SELECT id FROM report_orders WHERE day >= :date_from AND client = :client_id",
+        parameters=(QueryParameter("unused", label="Unused"),),
+    )
+
+    assert result.parameters == ("date_from", "client_id")
+    assert result.warnings == ("Dataset parameter 'unused' is not referenced by the SQL query.",)
+
+
 def test_validate_discover_and_apply_query_fields_are_explicit() -> None:
     provider = FakeMySQLProvider()
     service = management_service(provider)
@@ -480,6 +518,88 @@ def test_update_view_dataset_rejects_query_dataset_and_remove_dataset_preserves_
     assert report.get_data_source("main_mysql") is not None
     with pytest.raises(DatasetNotFoundError):
         service.get_dataset(report, dataset.id)
+
+
+def test_dataset_and_cascading_source_removal_are_blocked_by_bindings() -> None:
+    service = management_service(FakeMySQLProvider())
+    report = report_with_source()
+    dataset = report.add_dataset(query_dataset())
+    report.bands.append(Band(id="detail", type="detail", dataset_id=dataset.id))
+    report.add_object(
+        TextObject(
+            "{{orders.old_field}}",
+            id="bound_text",
+            band_id="detail",
+            properties={
+                "dataBinding": {
+                    "type": "datasetField",
+                    "datasetId": dataset.id,
+                    "field": "old_field",
+                }
+            },
+        )
+    )
+
+    with pytest.raises(DatasetInUseError):
+        service.remove_dataset(report, dataset.id)
+    with pytest.raises(DatasetInUseError):
+        service.remove_data_source(report, "main_mysql", cascade=True)
+
+    assert report.get_dataset(dataset.id) is dataset
+    assert report.get_data_source("main_mysql") is not None
+
+
+def test_field_refresh_warns_and_preserves_affected_bindings() -> None:
+    service = management_service(FakeMySQLProvider())
+    report = report_with_source()
+    dataset = report.add_dataset(query_dataset())
+    report.add_object(
+        TextObject(
+            "{{orders.old_field}}",
+            id="bound_text",
+            properties={
+                "dataBinding": DatasetFieldBinding(dataset.id, "old_field").to_dict()
+            },
+        )
+    )
+    discovery = service.discover_query_fields(
+        report,
+        dataset.id,
+        parameter_values={"date_from": date(2026, 1, 1)},
+    )
+
+    result = service.apply_discovered_fields(report, dataset.id, discovery)
+
+    assert any("missing field 'old_field'" in warning for warning in result.warnings)
+    assert report.objects[0].dataset_binding == DatasetFieldBinding("orders", "old_field")
+
+
+def test_field_refresh_warns_when_a_bound_field_type_changes() -> None:
+    service = management_service(FakeMySQLProvider())
+    report = report_with_source()
+    dataset = report.add_dataset(query_dataset())
+    report.add_object(
+        TextObject(
+            "{{orders.old_field}}",
+            id="bound_text",
+            properties={"dataBinding": DatasetFieldBinding("orders", "old_field").to_dict()},
+        )
+    )
+    discovery = QueryFieldDiscoveryResult(
+        dataset_id="orders",
+        dataset_name="Orders",
+        provider="mysql",
+        dialect="mysql",
+        fields=(DatasetField("old_field", "integer"),),
+        parameters=tuple(dataset.parameters),
+        sample_row_count=0,
+        elapsed_ms=1.0,
+    )
+
+    result = service.apply_discovered_fields(report, dataset.id, discovery)
+
+    assert any("changed type" in warning for warning in result.warnings)
+    assert report.objects[0].dataset_binding.field_name == "old_field"
 
 
 def test_summaries_do_not_include_full_sql_or_credentials() -> None:

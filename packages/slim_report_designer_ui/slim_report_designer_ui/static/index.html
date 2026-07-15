@@ -11,7 +11,7 @@
     <header class="top-toolbar" aria-label="Designer toolbar">
       <div class="brand">
         <span class="brand-mark">SR</span>
-        <span>Slim Report Designer</span>
+        <span>Report Designer</span>
       </div>
       <div class="toolbar-spacer"></div>
       <div class="toolbar-actions" id="toolbar-actions"></div>
@@ -62,14 +62,31 @@
       <section class="left-panel" data-panel="fields" hidden>
         <div class="panel-title">Data Fields</div>
         <div class="field-panel-actions">
-          <input id="field-search" type="search" placeholder="Search fields" aria-label="Search fields">
+          <label class="field-search-control" for="field-search">
+            <span>Search Fields</span>
+            <input id="field-search" type="search" placeholder="Dataset or field">
+          </label>
+          <button id="field-search-clear" class="toolbar-button icon-action" type="button" title="Clear field search" aria-label="Clear field search" data-icon="close"></button>
+          <button id="dataset-manager-open" class="toolbar-button icon-action" type="button" title="Manage datasets" aria-label="Manage datasets" data-icon="table"></button>
           <button id="sample-data-open" class="toolbar-button icon-action" type="button" title="View or edit sample data" aria-label="View or edit sample data" data-icon="database"></button>
         </div>
+        <button id="dataset-field-insert" class="toolbar-button field-insert-button" type="button" disabled>Insert Field</button>
         <div id="fields-list" class="fields-list"></div>
       </section>
     </aside>
 
     <section class="canvas-shell" aria-label="Report canvas">
+      <div id="report-attention" class="report-attention" role="status" hidden>
+        <div>
+          <strong id="report-attention-title">Report needs attention</strong>
+          <span id="report-attention-message"></span>
+        </div>
+        <div class="report-attention-actions">
+          <button id="report-attention-data-sources" class="toolbar-button" type="button">Data Sources</button>
+          <button id="report-attention-datasets" class="toolbar-button" type="button">Datasets</button>
+          <button id="report-attention-dismiss" class="modal-icon-button" type="button" title="Dismiss report notice" aria-label="Dismiss report notice"></button>
+        </div>
+      </div>
       <div class="canvas-scroller">
         <div class="canvas-zoom-shell" id="canvas-zoom-shell">
           <div id="page-canvas" class="page-canvas" tabindex="0" aria-label="A4 page canvas"></div>
@@ -108,6 +125,24 @@
     </section>
   </div>
 
+  <div id="save-warning-modal" class="modal-backdrop" hidden>
+    <section class="save-warning-modal" role="dialog" aria-modal="true" aria-labelledby="save-warning-title">
+      <header class="history-header">
+        <div>
+          <h2 id="save-warning-title">Save report with runtime warnings?</h2>
+          <p class="history-subtitle">The report can be edited later, but live preview is currently unavailable.</p>
+        </div>
+      </header>
+      <ul id="save-warning-list" class="save-warning-list"></ul>
+      <footer class="data-source-form-actions">
+        <button id="save-warning-review" class="toolbar-button" type="button">Review Issues</button>
+        <span class="form-spacer"></span>
+        <button id="save-warning-cancel" class="toolbar-button" type="button">Cancel</button>
+        <button id="save-warning-confirm" class="toolbar-button primary" type="button">Save Anyway</button>
+      </footer>
+    </section>
+  </div>
+
   <div id="sample-data-modal" class="modal-backdrop" hidden>
     <section class="sample-data-modal" role="dialog" aria-modal="true" aria-labelledby="sample-data-title">
       <header class="history-header">
@@ -124,6 +159,196 @@
       <footer class="sample-data-actions">
         <button id="sample-data-apply" class="toolbar-button primary" type="button">Apply</button>
       </footer>
+    </section>
+  </div>
+
+  <div id="data-source-modal" class="modal-backdrop" hidden>
+    <section class="data-source-modal" role="dialog" aria-modal="true" aria-labelledby="data-source-title">
+      <header class="history-header">
+        <div>
+          <h2 id="data-source-title">MySQL Data Sources</h2>
+          <p class="history-subtitle">Connections configured for this report</p>
+        </div>
+        <button id="data-source-close" class="modal-icon-button" type="button" title="Close data sources" aria-label="Close data sources"></button>
+      </header>
+
+      <div id="data-source-list-view" class="data-source-view">
+        <div class="data-source-view-actions">
+          <button id="data-source-add" class="toolbar-button primary text-action" type="button">Add MySQL Data Source</button>
+        </div>
+        <div id="data-source-list-status" class="data-source-message" role="status">Loading MySQL data sources...</div>
+        <div id="data-source-list" class="data-source-list"></div>
+      </div>
+
+      <div id="data-source-form-view" class="data-source-view" hidden>
+        <form id="data-source-form" class="data-source-form" novalidate>
+          <div class="data-source-form-heading">
+            <div>
+              <h3 id="data-source-form-title">Add MySQL Data Source</h3>
+              <p id="data-source-credential-status" class="history-subtitle"></p>
+            </div>
+          </div>
+          <div id="data-source-form-error" class="data-source-message is-error" role="alert" hidden></div>
+
+          <div class="data-source-form-grid">
+            <label class="data-source-field is-wide">
+              <span>Data Source Name</span>
+              <input name="name" type="text" autocomplete="off" required>
+              <span class="data-source-field-error" data-error-for="name"></span>
+            </label>
+            <label class="data-source-field">
+              <span>Host</span>
+              <input name="host" type="text" autocomplete="off" required>
+              <span class="data-source-field-error" data-error-for="host"></span>
+            </label>
+            <label class="data-source-field">
+              <span>Port</span>
+              <input name="port" type="number" min="1" max="65535" step="1" inputmode="numeric" required>
+              <span class="data-source-field-error" data-error-for="port"></span>
+            </label>
+            <label class="data-source-field">
+              <span>Database</span>
+              <input name="database" type="text" autocomplete="off" required>
+              <span class="data-source-field-error" data-error-for="database"></span>
+            </label>
+            <label class="data-source-field">
+              <span>Username</span>
+              <input name="username" type="text" autocomplete="username" required>
+              <span class="data-source-field-error" data-error-for="username"></span>
+            </label>
+          </div>
+
+          <fieldset class="credential-method">
+            <legend>Credential Method</legend>
+            <label><input type="radio" name="credentialMode" value="runtimePassword"> Runtime password</label>
+            <label><input type="radio" name="credentialMode" value="passwordRef"> Environment-variable reference</label>
+            <label><input type="radio" name="credentialMode" value="none"> No password</label>
+          </fieldset>
+
+          <label id="runtime-password-field" class="data-source-field is-wide">
+            <span>Password</span>
+            <input name="password" type="password" autocomplete="new-password">
+            <span class="data-source-field-error" data-error-for="password"></span>
+          </label>
+          <label id="password-reference-field" class="data-source-field is-wide" hidden>
+            <span>Password Reference</span>
+            <input name="passwordRef" type="text" autocomplete="off">
+            <span class="data-source-field-error" data-error-for="passwordRef"></span>
+          </label>
+
+          <details class="data-source-advanced">
+            <summary>Advanced</summary>
+            <div class="data-source-form-grid">
+              <label class="data-source-field is-wide">
+                <span>Charset</span>
+                <input name="charset" type="text" required>
+                <span class="data-source-field-error" data-error-for="charset"></span>
+              </label>
+              <label class="data-source-field">
+                <span>Connection Timeout</span>
+                <input name="connectTimeout" type="number" min="1" step="1" inputmode="numeric" required>
+                <span class="data-source-field-error" data-error-for="connectTimeout"></span>
+              </label>
+              <label class="data-source-field">
+                <span>Query Timeout</span>
+                <input name="queryTimeout" type="number" min="1" step="1" inputmode="numeric" required>
+                <span class="data-source-field-error" data-error-for="queryTimeout"></span>
+              </label>
+            </div>
+          </details>
+
+          <div id="data-source-test-result" class="connection-test-result" role="status" hidden></div>
+          <footer class="data-source-form-actions">
+            <button id="data-source-test" class="toolbar-button" type="button">Test Connection</button>
+            <span class="button-spacer"></span>
+            <button id="data-source-form-cancel" class="toolbar-button" type="button">Cancel</button>
+            <button id="data-source-save" class="toolbar-button primary" type="submit">Save</button>
+          </footer>
+        </form>
+      </div>
+
+      <div id="data-source-delete-view" class="data-source-view data-source-delete" hidden>
+        <div>
+          <h3>Delete MySQL data source?</h3>
+          <p id="data-source-delete-message"></p>
+          <p>If it is used by a dataset, remove or reassign that dataset first.</p>
+          <div id="data-source-delete-error" class="data-source-message is-error" role="alert" hidden></div>
+        </div>
+        <footer class="data-source-form-actions">
+          <span class="button-spacer"></span>
+          <button id="data-source-delete-cancel" class="toolbar-button" type="button">Cancel</button>
+          <button id="data-source-delete-confirm" class="toolbar-button danger-solid" type="button">Delete</button>
+        </footer>
+      </div>
+    </section>
+  </div>
+
+  <div id="dataset-modal" class="modal-backdrop" hidden>
+    <section class="dataset-modal" role="dialog" aria-modal="true" aria-labelledby="dataset-title">
+      <header class="history-header">
+        <div>
+          <h2 id="dataset-title">Datasets</h2>
+          <p id="dataset-subtitle" class="history-subtitle">MySQL views and read-only queries</p>
+        </div>
+        <button id="dataset-close" class="modal-icon-button" type="button" title="Close datasets" aria-label="Close datasets"></button>
+      </header>
+      <div id="dataset-content" class="dataset-content" aria-live="polite"></div>
+    </section>
+  </div>
+
+  <div id="runtime-parameter-modal" class="modal-backdrop runtime-parameter-backdrop" hidden>
+    <section class="runtime-parameter-modal" role="dialog" aria-modal="true" aria-labelledby="runtime-parameter-title" aria-describedby="runtime-parameter-subtitle">
+      <header class="history-header">
+        <div>
+          <h2 id="runtime-parameter-title">Report Parameters</h2>
+          <p id="runtime-parameter-subtitle" class="history-subtitle">Query dataset</p>
+        </div>
+        <button id="runtime-parameter-close" class="modal-icon-button" type="button" title="Cancel runtime parameters" aria-label="Cancel runtime parameters"></button>
+      </header>
+      <form id="runtime-parameter-form" class="runtime-parameter-form" novalidate>
+        <div id="runtime-parameter-status" class="runtime-parameter-status" role="status" aria-live="polite"></div>
+        <div id="runtime-parameter-fields" class="runtime-parameter-fields"></div>
+        <footer class="runtime-parameter-actions">
+          <button id="runtime-parameter-defaults" class="toolbar-button" type="button">Use Defaults</button>
+          <button id="runtime-parameter-clear" class="toolbar-button" type="button">Clear Values</button>
+          <span class="button-spacer"></span>
+          <button id="runtime-parameter-cancel" class="toolbar-button" type="button">Cancel</button>
+          <button id="runtime-parameter-validate" class="toolbar-button primary" type="submit">Validate Parameters</button>
+        </footer>
+      </form>
+    </section>
+  </div>
+
+  <div id="live-preview-modal" class="modal-backdrop live-preview-backdrop" hidden>
+    <section class="live-preview-modal" role="dialog" aria-modal="true" aria-labelledby="live-preview-title" aria-describedby="live-preview-status">
+      <header class="history-header">
+        <div>
+          <h2 id="live-preview-title">Live Report Preview</h2>
+          <p id="live-preview-status" class="live-preview-status" role="status" aria-live="polite"></p>
+        </div>
+        <button id="live-preview-close" class="modal-icon-button" type="button" title="Close live preview" aria-label="Close live preview"></button>
+      </header>
+      <div id="live-preview-summary" class="live-preview-summary" aria-live="polite"></div>
+      <div class="live-preview-frame-shell">
+        <iframe id="live-preview-frame" title="Rendered report preview" sandbox="allow-same-origin"></iframe>
+      </div>
+      <footer class="live-preview-actions">
+        <span class="button-spacer"></span>
+        <button id="live-preview-cancel" class="toolbar-button" type="button">Cancel Preview</button>
+      </footer>
+    </section>
+  </div>
+
+  <div id="new-report-modal" class="modal-backdrop" hidden>
+    <section class="new-report-modal" role="dialog" aria-modal="true" aria-labelledby="new-report-title">
+      <header class="history-header">
+        <div>
+          <h2 id="new-report-title">New Report</h2>
+          <p id="new-report-subtitle" class="history-subtitle">Create a blank or MySQL report</p>
+        </div>
+        <button id="new-report-close" class="modal-icon-button" type="button" title="Cancel new report" aria-label="Cancel new report"></button>
+      </header>
+      <div id="new-report-content" class="new-report-content"></div>
     </section>
   </div>
 

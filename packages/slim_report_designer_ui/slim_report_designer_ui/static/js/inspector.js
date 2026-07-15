@@ -4,10 +4,16 @@ import {
   addObjectCondition,
   addTableColumn,
   applyTablePreset,
+  clearDatasetFieldBinding,
+  datasetFieldBindingStatus,
+  datasetFieldObjectDefaults,
   generateTableColumns,
   objectStyle,
   normalizePrintSettings,
   getBandById,
+  getBandDatasetId,
+  getDatasetById,
+  getDatasetFieldBinding,
   moveTableColumn,
   removeTableColumn,
   removeObjectCondition,
@@ -16,6 +22,7 @@ import {
   setBandRepeatValue,
   setGroupFooterVisible,
   setObjectAssetId,
+  setDatasetFieldBinding,
   setObjectConditionValue,
   setObjectAlt,
   setObjectBand,
@@ -198,7 +205,7 @@ export function renderInspector(
     fieldRow("band", object.band || "detail", {
       type: "select",
       name: "band",
-      options: bandOptions(template)
+      options: bandOptions(template, object)
     })
   ]));
   form.appendChild(section("Position", [
@@ -214,6 +221,7 @@ export function renderInspector(
     form.appendChild(section("Content", [
       fieldRow("text", object.text || object.properties?.text || "")
     ]));
+    form.appendChild(section("Data Binding", datasetBindingFields(object, template)));
     form.appendChild(section("Style", textStyleFields(object)));
   } else if (object.type === "field") {
     form.appendChild(section("Content", fieldContentFields(object, template, fields, sampleData)));
@@ -918,6 +926,27 @@ function applyInput(template, object, input) {
     setObjectBand(template, object, String(value));
     return;
   }
+  if (input.name === "dataset_binding.dataset") {
+    if (!String(value)) {
+      clearDatasetFieldBinding(template, object);
+      return;
+    }
+    const dataset = getDatasetById(template, String(value));
+    const current = getDatasetFieldBinding(object);
+    const field = dataset?.fields?.find((item) => item.name === current?.field)
+      || dataset?.fields?.find((item) => datasetFieldObjectDefaults(item.dataType ?? item.data_type));
+    if (dataset && field) {
+      setDatasetFieldBinding(template, object, dataset.id, field.name);
+    }
+    return;
+  }
+  if (input.name === "dataset_binding.field") {
+    const binding = getDatasetFieldBinding(object);
+    if (binding) {
+      setDatasetFieldBinding(template, object, binding.datasetId, String(value));
+    }
+    return;
+  }
   if (input.name === "src") {
     setObjectSource(object, String(value));
     return;
@@ -1275,8 +1304,17 @@ function fieldRow(labelText, value, options = {}) {
   if (input instanceof HTMLSelectElement) {
     for (const optionValue of options.options || []) {
       const option = document.createElement("option");
-      option.value = optionValue;
-      option.textContent = optionValue;
+      if (Array.isArray(optionValue)) {
+        option.value = optionValue[0];
+        option.textContent = optionValue[1];
+      } else if (optionValue && typeof optionValue === "object") {
+        option.value = optionValue.value;
+        option.textContent = optionValue.label ?? optionValue.value;
+        option.disabled = Boolean(optionValue.disabled);
+      } else {
+        option.value = optionValue;
+        option.textContent = optionValue;
+      }
       input.appendChild(option);
     }
     input.value = value ?? "";
@@ -1295,6 +1333,62 @@ function fieldRow(labelText, value, options = {}) {
     row.append(label, input);
   }
   return row;
+}
+
+function datasetBindingFields(object, template) {
+  const binding = getDatasetFieldBinding(object);
+  const status = datasetFieldBindingStatus(template, object);
+  const band = getBandById(template, object.band || object.band_id || "detail");
+  const bandDatasetId = getBandDatasetId(band);
+  const datasets = (template.datasets || []).filter((dataset) => {
+    return !bandDatasetId || dataset.id === bandDatasetId || dataset.id === binding?.datasetId;
+  });
+  const datasetOptions = [
+    ["", "Not bound"],
+    ...datasets.map((dataset) => ({
+      value: dataset.id,
+      label: dataset.name || dataset.id,
+      disabled: dataset.id !== binding?.datasetId
+        && !(dataset.fields || []).some((field) => {
+          return datasetFieldObjectDefaults(field.dataType ?? field.data_type);
+        })
+    }))
+  ];
+  if (binding && !datasets.some((dataset) => dataset.id === binding.datasetId)) {
+    datasetOptions.push([binding.datasetId, `${binding.datasetId} (missing)`]);
+  }
+  const selectedDataset = getDatasetById(template, binding?.datasetId || "");
+  const fieldOptions = [["", "Select field"], ...(selectedDataset?.fields || [])
+    .filter((field) => datasetFieldObjectDefaults(field.dataType ?? field.data_type))
+    .map((field) => [field.name, field.label || field.name])];
+  if (binding && !selectedDataset?.fields?.some((field) => field.name === binding.field)) {
+    fieldOptions.push([binding.field, `${binding.field} (missing)`]);
+  }
+
+  const statusRow = document.createElement("div");
+  statusRow.className = `binding-status is-${status.state}`;
+  statusRow.textContent = status.label;
+  const clear = document.createElement("button");
+  clear.type = "button";
+  clear.className = "toolbar-button";
+  clear.dataset.inspectorCommand = "clearDatasetBinding";
+  clear.textContent = "Clear Binding";
+  clear.disabled = !binding;
+  return [
+    fieldRow("dataset", binding?.datasetId || "", {
+      type: "select",
+      name: "dataset_binding.dataset",
+      options: datasetOptions
+    }),
+    fieldRow("field", binding?.field || "", {
+      type: "select",
+      name: "dataset_binding.field",
+      options: fieldOptions,
+      disabled: !binding
+    }),
+    statusRow,
+    clear
+  ];
 }
 
 function tableCommandButton(command, label) {
@@ -1397,12 +1491,23 @@ function fontFamilyOptions() {
   return ["Arial", "Helvetica", "Times-Roman", "Courier"];
 }
 
-function bandOptions(template) {
+function bandOptions(template, object = null) {
   const bands = template.bands || [];
   if (bands.length === 0) {
     return ["detail"];
   }
-  return bands.map((band) => band.id);
+  const binding = getDatasetFieldBinding(object);
+  const currentBandId = object?.band || object?.band_id || "detail";
+  return bands.map((band) => ({
+    value: band.id,
+    label: band.name || band.id,
+    disabled: Boolean(
+      binding
+      && band.id !== currentBandId
+      && getBandDatasetId(band)
+      && getBandDatasetId(band) !== binding.datasetId
+    )
+  }));
 }
 
 function repeatForObject(template, object) {

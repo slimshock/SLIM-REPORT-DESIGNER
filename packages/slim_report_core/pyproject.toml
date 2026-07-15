@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "slim-report-core"
-version = "0.6.0a0"
+version = "0.7.0"
 description = "Framework-agnostic core for Slim Report Designer."
 readme = "../../README.md"
 requires-python = ">=3.10"
@@ -30,6 +30,11 @@ dependencies = [
 [project.optional-dependencies]
 mysql = ["PyMySQL>=1.1,<2"]
 sqlalchemy = ["SQLAlchemy>=1.4"]
+database = ["PyMySQL>=1.1,<2", "SQLAlchemy>=1.4"]
+test = ["pytest>=8,<9"]
+dev = ["build>=1.2,<2", "mypy>=1.10,<2", "pytest>=8,<9", "ruff>=0.6,<1", "twine>=5,<7"]
+docs = ["mkdocs>=1.6,<2"]
+all = ["PyMySQL>=1.1,<2", "SQLAlchemy>=1.4"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/slim_report_core"]

@@ -71,6 +71,11 @@ export function normalizeObject(object) {
   normalized.properties.band = normalized.band;
   normalized.properties.band_id = normalized.band;
   normalized.properties.locked = normalized.locked;
+  delete normalized.properties.dataBinding;
+  const datasetBinding = normalizeDatasetFieldBinding(object.dataBinding ?? object.data_binding);
+  if (datasetBinding) {
+    normalized.dataBinding = datasetBinding;
+  }
 
   if (object.text !== undefined) {
     normalized.text = String(object.text);
@@ -275,6 +280,168 @@ export function getBandById(template, bandId) {
   return (template.bands || []).find((band) => band.id === bandId) || null;
 }
 
+export function getDatasetById(template, datasetId) {
+  return (template.datasets || []).find((dataset) => dataset.id === datasetId) || null;
+}
+
+export function normalizeDatasetFieldBinding(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+  const type = String(value.type || "datasetField");
+  const datasetId = String(value.datasetId ?? value.dataset_id ?? "").trim();
+  const field = String(value.field || "").trim();
+  if (type !== "datasetField" || !datasetId || !field) {
+    return null;
+  }
+  return { type: "datasetField", datasetId, field };
+}
+
+export function getDatasetFieldBinding(object) {
+  return normalizeDatasetFieldBinding(object?.dataBinding ?? object?.data_binding);
+}
+
+export function getBandDatasetId(band) {
+  const value = band?.dataBinding?.datasetId ?? band?.dataBinding?.dataset_id;
+  return value === undefined || value === null ? "" : String(value);
+}
+
+export function setBandDatasetId(band, datasetId) {
+  if (!band) {
+    return;
+  }
+  const value = String(datasetId || "").trim();
+  if (value) {
+    band.dataBinding = { datasetId: value };
+  } else {
+    delete band.dataBinding;
+  }
+}
+
+export function datasetFieldBindingStatus(template, object) {
+  const binding = getDatasetFieldBinding(object);
+  if (!binding) {
+    return { state: "unbound", label: "Not bound", binding: null };
+  }
+  const dataset = getDatasetById(template, binding.datasetId);
+  if (!dataset) {
+    return { state: "missing-dataset", label: "Missing dataset", binding };
+  }
+  if (!(dataset.fields || []).some((field) => field.name === binding.field)) {
+    return { state: "missing-field", label: "Missing field", binding, dataset };
+  }
+  const band = getBandById(template, object.band || object.band_id || "detail");
+  if (band && getBandDatasetId(band) && getBandDatasetId(band) !== binding.datasetId) {
+    return { state: "band-mismatch", label: "Band dataset conflict", binding, dataset };
+  }
+  return { state: "bound", label: "Bound", binding, dataset };
+}
+
+export function setDatasetFieldBinding(template, object, datasetId, fieldName) {
+  if (!object || object.type !== "text") {
+    return false;
+  }
+  const dataset = getDatasetById(template, String(datasetId));
+  const field = dataset?.fields?.find((item) => item.name === String(fieldName));
+  if (!dataset || !field) {
+    return false;
+  }
+  const band = getBandById(template, object.band || object.band_id || "detail");
+  const bandDatasetId = getBandDatasetId(band);
+  if (bandDatasetId && bandDatasetId !== dataset.id) {
+    return false;
+  }
+  object.dataBinding = {
+    type: "datasetField",
+    datasetId: dataset.id,
+    field: field.name
+  };
+  object.properties = object.properties || {};
+  delete object.properties.dataBinding;
+  setObjectText(object, `{{${dataset.id}.${field.name}}}`);
+  setBandDatasetId(band, dataset.id);
+  return true;
+}
+
+export function clearDatasetFieldBinding(template, object) {
+  const binding = getDatasetFieldBinding(object);
+  if (!binding) {
+    return false;
+  }
+  delete object.dataBinding;
+  delete object.data_binding;
+  if (object.properties) {
+    delete object.properties.dataBinding;
+  }
+  clearEmptyBandDatasetContexts(template, [object.band || object.band_id || "detail"]);
+  return true;
+}
+
+export function clearEmptyBandDatasetContexts(template, bandIds = null) {
+  const targets = bandIds ? new Set(bandIds) : null;
+  for (const band of template.bands || []) {
+    if (targets && !targets.has(band.id)) {
+      continue;
+    }
+    const hasBinding = (template.objects || []).some((object) => {
+      const objectBand = object.band || object.band_id || "detail";
+      return objectBand === band.id && Boolean(getDatasetFieldBinding(object));
+    });
+    if (!hasBinding) {
+      setBandDatasetId(band, "");
+    }
+  }
+}
+
+export function datasetFieldObjectDefaults(dataType) {
+  const type = String(dataType || "unknown").toLowerCase();
+  if (["binary", "blob", "bytes", "unknown"].includes(type)) {
+    return null;
+  }
+  if (["integer", "number", "decimal", "float", "double"].includes(type)) {
+    return { width: type === "integer" ? 90 : 100, height: 24, align: "right" };
+  }
+  if (["boolean", "bool"].includes(type)) {
+    return { width: 70, height: 24, align: "center" };
+  }
+  if (type === "date") {
+    return { width: 100, height: 24, align: "left" };
+  }
+  if (type === "time") {
+    return { width: 90, height: 24, align: "left" };
+  }
+  if (["datetime", "timestamp"].includes(type)) {
+    return { width: 150, height: 24, align: "left" };
+  }
+  return { width: 180, height: 24, align: "left" };
+}
+
+export function datasetFieldDragPayload(datasetId, fieldName, dataType) {
+  return JSON.stringify({
+    kind: "datasetField",
+    datasetId: String(datasetId),
+    fieldName: String(fieldName),
+    dataType: String(dataType || "unknown")
+  });
+}
+
+export function parseDatasetFieldDragPayload(value) {
+  try {
+    const payload = JSON.parse(String(value || ""));
+    if (payload?.kind !== "datasetField" || !payload.datasetId || !payload.fieldName) {
+      return null;
+    }
+    return {
+      kind: "datasetField",
+      datasetId: String(payload.datasetId),
+      fieldName: String(payload.fieldName),
+      dataType: String(payload.dataType || "unknown")
+    };
+  } catch {
+    return null;
+  }
+}
+
 export function getGroupBands(template) {
   return (template.bands || []).filter((band) => ["group_header", "group_footer"].includes(band.type));
 }
@@ -340,8 +507,22 @@ export function assignObjectBand(template, object, bandId = null) {
 }
 
 export function setObjectBand(template, object, bandId) {
+  const sourceBandId = object.band || object.band_id || "detail";
+  const target = getBandById(template, bandId);
+  const binding = getDatasetFieldBinding(object);
+  if (binding && target) {
+    const targetDatasetId = getBandDatasetId(target);
+    if (targetDatasetId && targetDatasetId !== binding.datasetId) {
+      return false;
+    }
+  }
   assignObjectBand(template, object, bandId);
+  if (binding) {
+    setBandDatasetId(target, binding.datasetId);
+    clearEmptyBandDatasetContexts(template, [sourceBandId]);
+  }
   clampObjectToBand(template, object);
+  return true;
 }
 
 export function setBandValue(template, bandId, key, value) {
@@ -891,6 +1072,10 @@ function normalizeBand(band, page, index) {
   const group = normalizeBandGroup(band.group || band.properties?.group);
   if (["group_header", "group_footer"].includes(type) && group) {
     normalized.group = group;
+  }
+  const datasetId = getBandDatasetId(band);
+  if (datasetId) {
+    normalized.dataBinding = { datasetId };
   }
   return normalized;
 }

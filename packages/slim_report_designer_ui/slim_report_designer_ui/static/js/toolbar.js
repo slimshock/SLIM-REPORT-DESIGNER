@@ -6,7 +6,15 @@ export function createToolbar({ container, onCommand }) {
     {
       label: "File",
       actions: [
+        ["newReport", "New Report", "text-action", "Create a new report", "New Report", "plus"],
         ["save", "Save", "primary text-action", "Save template", "Save", "save"]
+      ]
+    },
+    {
+      label: "Data",
+      actions: [
+        ["dataSources", "Data Sources", "text-action", "Manage MySQL data sources", "Data Sources", "database"],
+        ["datasets", "Datasets", "text-action", "Manage report datasets", "Datasets", "table"]
       ]
     },
     {

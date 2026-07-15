@@ -19,10 +19,31 @@ from slim_report_core import (
     DataManagementResult,
     DataManagementValidationError,
     DatasetConfigurationResult,
+    DatasetExecutionCancellationToken,
+    DatasetExecutionCancelledError,
+    DatasetExecutionConfigurationError,
+    DatasetExecutionError,
+    DatasetExecutionField,
+    DatasetExecutionOptions,
+    DatasetExecutionPolicy,
+    DatasetExecutionProviderError,
+    DatasetExecutionSchema,
+    DatasetExecutionService,
+    DatasetExecutionSummary,
+    DatasetExecutionTimeoutError,
     DatasetFieldChangeSummary,
+    DatasetNotExecutableError,
     DatasetNotFoundError,
+    DatasetResultLimitError,
+    DatasetRow,
+    DatasetRowBatch,
+    DatasetRowShapeError,
+    DatasetRowStream,
+    DatasetRuntimeParameterSchema,
+    DatasetSchemaMismatchError,
     DatasetSummary,
     DatasetTypeMismatchError,
+    DatasetValueTypeError,
     DataSourceConnectionError,
     DataSourceInUseError,
     DataSourceManagementService,
@@ -49,6 +70,19 @@ from slim_report_core import (
     QueryFieldDiscoveryService,
     QueryParameterValueConverter,
     QueryReturnedNoColumnsError,
+    ReportRuntimeParameterService,
+    ResolvedParameterSet,
+    RuntimeParameterConversionError,
+    RuntimeParameterDatasetError,
+    RuntimeParameterDefinitionError,
+    RuntimeParameterError,
+    RuntimeParameterIssue,
+    RuntimeParameterMissingError,
+    RuntimeParameterRequirement,
+    RuntimeParameterResolutionPolicy,
+    RuntimeParameterResolver,
+    RuntimeParameterUnknownError,
+    RuntimeParameterValidationResult,
     StaleDiscoveryResultError,
     TooManyOutputColumnsError,
     UpdateMySQLDataSourceCommand,
@@ -83,9 +117,9 @@ from slim_report_flask import TemplateNotFoundError as FlaskTemplateNotFoundErro
 
 
 def test_public_package_imports_are_stable() -> None:
-    assert slim_report_core.__version__ == "0.6.0a0"
-    assert slim_report_flask.__version__ == "0.6.0a0"
-    assert slim_report_designer_ui.__version__ == "0.6.0a0"
+    assert slim_report_core.__version__ == "0.7.0"
+    assert slim_report_flask.__version__ == "0.7.0"
+    assert slim_report_designer_ui.__version__ == "0.7.0"
     assert callable(render_html)
     assert callable(render_pdf)
     assert callable(normalize_template)
@@ -108,10 +142,31 @@ def test_public_package_imports_are_stable() -> None:
     assert DataSourceProviderRegistry is not None
     assert DataSourceSummary is not None
     assert DatasetConfigurationResult is not None
+    assert DatasetExecutionCancellationToken is not None
+    assert DatasetExecutionCancelledError is not None
+    assert DatasetExecutionConfigurationError is not None
+    assert DatasetExecutionError is not None
+    assert DatasetExecutionField is not None
+    assert DatasetExecutionOptions is not None
+    assert DatasetExecutionPolicy is not None
+    assert DatasetExecutionProviderError is not None
+    assert DatasetExecutionSchema is not None
+    assert DatasetExecutionService is not None
+    assert DatasetExecutionSummary is not None
+    assert DatasetExecutionTimeoutError is not None
     assert DatasetFieldChangeSummary is not None
+    assert DatasetNotExecutableError is not None
     assert DatasetNotFoundError is not None
+    assert DatasetResultLimitError is not None
+    assert DatasetRow is not None
+    assert DatasetRowBatch is not None
+    assert DatasetRowShapeError is not None
+    assert DatasetRowStream is not None
+    assert DatasetRuntimeParameterSchema is not None
+    assert DatasetSchemaMismatchError is not None
     assert DatasetSummary is not None
     assert DatasetTypeMismatchError is not None
+    assert DatasetValueTypeError is not None
     assert DesignerDataService is DataSourceManagementService
     assert DuplicateOutputColumnError is not None
     assert InvalidDatasetOperationError is not None
@@ -129,6 +184,19 @@ def test_public_package_imports_are_stable() -> None:
     assert QueryFieldDiscoveryService is not None
     assert QueryParameterValueConverter is not None
     assert QueryReturnedNoColumnsError is not None
+    assert ReportRuntimeParameterService is not None
+    assert ResolvedParameterSet is not None
+    assert RuntimeParameterConversionError is not None
+    assert RuntimeParameterDatasetError is not None
+    assert RuntimeParameterDefinitionError is not None
+    assert RuntimeParameterError is not None
+    assert RuntimeParameterIssue is not None
+    assert RuntimeParameterMissingError is not None
+    assert RuntimeParameterRequirement is not None
+    assert RuntimeParameterResolutionPolicy is not None
+    assert RuntimeParameterResolver is not None
+    assert RuntimeParameterUnknownError is not None
+    assert RuntimeParameterValidationResult is not None
     assert StaleDiscoveryResultError is not None
     assert TooManyOutputColumnsError is not None
     assert UpdateMySQLDataSourceCommand is not None

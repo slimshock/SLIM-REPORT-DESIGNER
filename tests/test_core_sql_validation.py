@@ -14,6 +14,7 @@ from slim_report_core import (
     QueryParameter,
     ReportDataset,
     SQLDialect,
+    SQLParser,
     SQLValidationError,
     SQLValidationPolicy,
     SQLValidationResult,
@@ -93,15 +94,19 @@ def test_validator_rejects_non_query_roots(
         "LOAD_FILE('/etc/passwd')",
         "GET_LOCK('x', 10)",
         "RELEASE_LOCK('x')",
+        "IS_FREE_LOCK('x')",
+        "IS_USED_LOCK('x')",
         "MASTER_POS_WAIT('log', 10)",
+        "SOURCE_POS_WAIT('log', 10)",
     ],
 )
 def test_validator_rejects_dangerous_functions_case_insensitively(
     validator: SQLValidator,
     function: str,
 ) -> None:
-    with pytest.raises(UnsafeSQLConstructError, match="function is not allowed"):
-        validator.validate(f"SELECT {function.lower()}")
+    for candidate in (function.lower(), function.title()):
+        with pytest.raises(UnsafeSQLConstructError, match="function is not allowed"):
+            validator.validate(f"SELECT {candidate}")
 
 
 @pytest.mark.parametrize(
@@ -111,7 +116,6 @@ def test_validator_rejects_dangerous_functions_case_insensitively(
         ("SELECT * FROM patients LOCK IN SHARE MODE", "LOCK IN SHARE MODE"),
         ("SELECT * INTO OUTFILE '/tmp/patients.csv' FROM patients", "INTO OUTFILE"),
         ("SELECT * INTO DUMPFILE '/tmp/patients.dat' FROM patients", "INTO DUMPFILE"),
-        ("SELECT * INTO @result FROM patients", "INTO @"),
     ],
 )
 def test_validator_rejects_dangerous_mysql_clauses(
@@ -133,6 +137,111 @@ def test_clause_and_function_text_in_literals_comments_and_identifiers_is_safe(
     """
 
     assert validator.validate(sql).root_statement == "SELECT"
+
+
+@pytest.mark.parametrize(
+    "expression",
+    [
+        "COUNT(value)",
+        "SUM(value)",
+        "AVG(value)",
+        "MIN(value)",
+        "MAX(value)",
+        "COALESCE(value, 0)",
+        "DATE_FORMAT(value, '%Y-%m-%d')",
+        "CONCAT(value, 'x')",
+        "IFNULL(value, '')",
+    ],
+)
+def test_validator_allows_normal_reporting_functions(
+    validator: SQLValidator,
+    expression: str,
+) -> None:
+    assert validator.validate(f"SELECT {expression} FROM results").root_statement == "SELECT"
+
+
+@pytest.mark.parametrize(
+    "sql",
+    [
+        "SELECT @x",
+        "SELECT @current_user",
+        "SELECT @x + 1",
+        "SELECT @x := 1",
+        "SELECT * FROM patients WHERE id = @patient_id",
+        "SELECT id INTO @patient_id FROM patients",
+        "SeLeCt @MixedCase",
+    ],
+)
+def test_validator_rejects_mysql_user_variables(
+    validator: SQLValidator,
+    sql: str,
+) -> None:
+    with pytest.raises(UnsafeSQLConstructError, match="user variables"):
+        validator.validate(sql)
+
+
+@pytest.mark.parametrize(
+    "sql",
+    [
+        "SELECT @@version",
+        "SELECT @@session.sql_mode",
+        "SELECT @@global.max_connections",
+        "SELECT @@transaction_read_only",
+        "SeLeCt @@SeSsIoN.transaction_read_only",
+    ],
+)
+def test_validator_rejects_mysql_system_variables(
+    validator: SQLValidator,
+    sql: str,
+) -> None:
+    with pytest.raises(UnsafeSQLConstructError, match="system variables"):
+        validator.validate(sql)
+
+
+def test_validator_rejects_assignment_operator_without_raw_matching(
+    validator: SQLValidator,
+) -> None:
+    with pytest.raises(UnsafeSQLConstructError, match="assignment operators"):
+        validator.validate("SELECT 1 := 1")
+
+    for safe_sql in (
+        "SELECT 1 = 1",
+        "SELECT * FROM patients WHERE active = 1",
+        "SELECT '12:30:00'",
+        "SELECT :value",
+    ):
+        assert validator.validate(safe_sql).root_statement == "SELECT"
+
+
+def test_variable_like_text_in_strings_and_comments_preserves_named_parameters(
+    validator: SQLValidator,
+) -> None:
+    result = validator.validate(
+        """
+        SELECT :id, '@x', '@@version', 'user@example.com', ':patient_id'
+        /* @comment_variable */
+        -- @@comment_system_variable
+        """
+    )
+
+    assert result.parameters == ("id",)
+
+
+def test_parser_exposes_library_neutral_mysql_safety_facts() -> None:
+    parser = SQLParser()
+    dialect = MySQLDialect()
+
+    user = parser.parse("SELECT @x", dialect)
+    system = parser.parse("SELECT @@version", dialect)
+    assignment = parser.parse("SELECT 1 := 1", dialect)
+    safe = parser.parse("SELECT :id, '@x', '@@version'", dialect)
+
+    assert user.has_user_variables
+    assert system.has_system_variables
+    assert assignment.has_assignment_operator
+    assert not safe.has_user_variables
+    assert not safe.has_system_variables
+    assert not safe.has_assignment_operator
 
 
 def test_mysql_executable_comments_are_rejected_but_literal_text_is_safe(
@@ -262,9 +371,7 @@ def test_dataset_validation_checks_declared_and_unused_parameters(
     result = validator.validate_dataset(dataset)
 
     assert result.parameters == ("patient_id",)
-    assert result.warnings == (
-        "Dataset parameter 'unused' is not referenced by the SQL query.",
-    )
+    assert result.warnings == ("Dataset parameter 'unused' is not referenced by the SQL query.",)
 
 
 def test_dataset_validation_rejects_missing_parameter_declarations(

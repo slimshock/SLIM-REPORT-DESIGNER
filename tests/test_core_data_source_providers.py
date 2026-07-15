@@ -175,6 +175,8 @@ def test_provider_builds_safe_driver_arguments_without_mutating_config(
         "database": "lis",
         "charset": "utf8mb4",
         "connect_timeout": 7,
+        "read_timeout": 30,
+        "write_timeout": 30,
         "autocommit": True,
     }
     assert "client_flag" not in driver.arguments
@@ -218,22 +220,24 @@ def test_unresolved_password_reference_raises_safe_error(
     monkeypatch.delenv("UNRESOLVED_MYSQL_PASSWORD", raising=False)
     provider = MySQLDataSourceProvider(credential_resolver=StaticResolver(None))
 
-    with pytest.raises(CredentialUnavailableError, match="UNRESOLVED_MYSQL_PASSWORD") as caught:
+    with pytest.raises(CredentialUnavailableError, match="configured MySQL credential") as caught:
         provider.create_connection(source)
 
     assert "runtime-secret" not in str(caught.value)
+    assert "UNRESOLVED_MYSQL_PASSWORD" not in str(caught.value)
 
 
 @pytest.mark.parametrize(
     "field, value, message",
     [
         ("host", "", "host must not be empty"),
-        ("port", 0, "port must be between"),
-        ("port", 70000, "port must be between"),
+        ("port", 0, "port must be an integer between"),
+        ("port", 70000, "port must be an integer between"),
         ("database", "", "database must not be empty"),
         ("username", "", "username must not be empty"),
         ("charset", "", "charset must not be empty"),
-        ("connect_timeout", 0, "timeout must be at least"),
+        ("connect_timeout", 0, "connectTimeout must be a positive integer"),
+        ("query_timeout", 0, "queryTimeout must be a positive integer"),
     ],
 )
 def test_provider_revalidates_mutated_connection_configuration(

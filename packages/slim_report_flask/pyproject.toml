@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "slim-report-flask"
-version = "0.6.0a0"
+version = "0.7.0"
 description = "Flask adapter for Slim Report Designer."
 readme = "../../README.md"
 requires-python = ">=3.10"
@@ -21,9 +21,14 @@ classifiers = [
 ]
 dependencies = [
   "Flask>=3.0",
-  "slim-report-core==0.6.0a0",
-  "slim-report-designer-ui==0.6.0a0",
+  "slim-report-core==0.7.0",
+  "slim-report-designer-ui==0.7.0",
 ]
+
+[project.optional-dependencies]
+mysql = ["PyMySQL>=1.1,<2"]
+sqlalchemy = ["SQLAlchemy>=1.4"]
+database = ["PyMySQL>=1.1,<2", "SQLAlchemy>=1.4"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/slim_report_flask"]

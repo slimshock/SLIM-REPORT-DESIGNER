@@ -1,0 +1,62 @@
+{
+  "version": "1.0",
+  "metadata": {
+    "name": "Daily Laboratory Orders",
+    "template_id": "parameterized_daily_orders",
+    "description": "Parameterized read-only query demo",
+    "author": "SLIM REPORT DESIGNER"
+  },
+  "page": {"size": "A4", "orientation": "portrait", "unit": "px", "width": 595, "height": 842},
+  "bands": [
+    {"id": "page_header", "type": "page_header", "y": 0, "height": 72},
+    {"id": "detail", "type": "detail", "y": 72, "height": 30, "dataBinding": {"datasetId": "daily_orders"}},
+    {"id": "page_footer", "type": "page_footer", "y": 790, "height": 28}
+  ],
+  "objects": [
+    {"id": "title", "type": "text", "x": 24, "y": 20, "width": 547, "height": 30, "text": "Daily Laboratory Orders", "band": "page_header", "properties": {"text": "Daily Laboratory Orders"}},
+    {"id": "order_number", "type": "text", "x": 24, "y": 76, "width": 180, "height": 22, "text": "Order", "band": "detail", "properties": {"text": "Order"}, "dataBinding": {"type": "datasetField", "datasetId": "daily_orders", "field": "order_number"}},
+    {"id": "patient_name", "type": "text", "x": 214, "y": 76, "width": 220, "height": 22, "text": "Patient", "band": "detail", "properties": {"text": "Patient"}, "dataBinding": {"type": "datasetField", "datasetId": "daily_orders", "field": "patient_name"}},
+    {"id": "status", "type": "text", "x": 444, "y": 76, "width": 100, "height": 22, "text": "Status", "band": "detail", "properties": {"text": "Status"}, "dataBinding": {"type": "datasetField", "datasetId": "daily_orders", "field": "status"}}
+  ],
+  "assets": [],
+  "dataSources": [
+    {
+      "id": "demo_mysql",
+      "name": "Demo MySQL",
+      "type": "mysql",
+      "connection": {
+        "type": "mysql",
+        "host": "localhost",
+        "port": 3306,
+        "database": "slim_report_demo",
+        "username": "slim_report_reader",
+        "passwordRef": "SLIM_REPORT_MYSQL_PASSWORD",
+        "charset": "utf8mb4",
+        "connectTimeout": 10,
+        "queryTimeout": 30
+      }
+    }
+  ],
+  "datasets": [
+    {
+      "id": "daily_orders",
+      "name": "Daily Orders",
+      "dataSourceId": "demo_mysql",
+      "sourceType": "query",
+      "query": "SELECT order_id, order_number, ordered_at, order_date, status, medical_record_number, patient_name FROM report_daily_orders WHERE order_date >= :date_from AND order_date <= :date_to ORDER BY ordered_at, order_number",
+      "fields": [
+        {"name": "order_id", "dataType": "integer", "nullable": false},
+        {"name": "order_number", "dataType": "string", "nullable": false},
+        {"name": "ordered_at", "dataType": "datetime", "nullable": false},
+        {"name": "order_date", "dataType": "date", "nullable": false},
+        {"name": "status", "dataType": "string", "nullable": false},
+        {"name": "medical_record_number", "dataType": "string", "nullable": false},
+        {"name": "patient_name", "dataType": "string", "nullable": false}
+      ],
+      "parameters": [
+        {"name": "date_from", "dataType": "date", "required": true, "label": "From date"},
+        {"name": "date_to", "dataType": "date", "required": true, "label": "To date"}
+      ]
+    }
+  ]
+}

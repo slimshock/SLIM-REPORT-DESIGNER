@@ -1,5 +1,8 @@
 # MySQL Data-Source Provider
 
+See [Read-Only MySQL Dataset Execution](dataset-execution.md) for the bounded
+unbuffered runtime used to execute configured report datasets.
+
 Sprint 7.3 adds a framework-independent provider for opening and testing read-only MySQL-compatible
 connections. It establishes connections, configures and verifies session state, performs a minimal
 health check, captures safe metadata, and closes every resource. It does not execute report dataset
@@ -65,6 +68,19 @@ credential-reference validation.
 The driver receives explicit keyword arguments with autocommit enabled. The provider does not pass
 `local_infile`, `client_flag`, multi-statement flags, or any capability that enables `LOAD DATA
 LOCAL` or multiple statements.
+
+## Timeout Semantics
+
+`connect_timeout` limits the time allowed to establish the MySQL connection. `query_timeout` is
+passed to PyMySQL as both `read_timeout` and `write_timeout`, limiting how long the client waits for
+database socket I/O while sending a query or waiting for its response. These generic timeout names
+remain the only timeout fields stored in report JSON; PyMySQL-specific options are provider details.
+
+Query timeout is enforced through client socket timeout settings. It limits how long the client
+waits for database I/O but does not guarantee immediate server-side query cancellation. A MySQL
+server may continue processing after the client disconnects. Complex reporting queries still need
+review, appropriate indexes, and a dedicated SELECT-only account. Future provider work may add
+server-side execution limits where supported.
 
 ## Provider Registry and Connection Testing
 

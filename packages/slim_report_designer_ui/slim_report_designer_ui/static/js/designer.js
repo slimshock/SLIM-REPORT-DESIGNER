@@ -12,10 +12,21 @@ import {
   addGroupBands,
   assignObjectBand,
   clampObjectToBand,
+  clearDatasetFieldBinding,
+  clearEmptyBandDatasetContexts,
   duplicateObject,
+  datasetFieldBindingStatus,
+  datasetFieldDragPayload,
+  datasetFieldObjectDefaults,
   getBandById,
+  getBandDatasetId,
+  getDatasetById,
+  getDatasetFieldBinding,
   normalizeTemplate,
+  parseDatasetFieldDragPayload,
+  setDatasetFieldBinding,
   setObjectBinding,
+  setObjectStyleValue,
   templateTitle
 } from "./objects.js";
 import {
@@ -27,10 +38,13 @@ import {
 } from "./data_fields.js";
 import {
   exportPdf,
+  inspectPreviewReadiness,
+  inspectReopenedTemplate,
   loadTemplate,
   printPreview,
   previewTemplate,
-  saveTemplate
+  saveTemplate,
+  validateTemplateSave
 } from "./api.js";
 import {
   clearVersions,
@@ -42,6 +56,12 @@ import {
 } from "./history.js";
 import { applyIcon } from "./icons.js";
 import { createToolbar } from "./toolbar.js";
+import { createDataSourceManager } from "./data_sources.js";
+import { createDatasetManager } from "./datasets.js";
+import { createNewReportWizard } from "./new_report_wizard.js";
+import { createRuntimeParameterDialog } from "./runtime_parameters.js";
+import { createLivePreview } from "./live_preview.js";
+import { rotateReportSessionKey, safeTemplateSnapshot } from "./persistence.js";
 
 const HISTORY_LIMIT = 50;
 
@@ -54,7 +74,9 @@ const state = {
   undoStack: [],
   redoStack: [],
   dirty: false,
-  statusMessage: "Ready"
+  statusMessage: "Ready",
+  collapsedDatasetIds: new Set(),
+  selectedDatasetField: null
 };
 
 const elements = {
@@ -62,7 +84,10 @@ const elements = {
   canvasScroller: document.querySelector(".canvas-scroller"),
   toolbox: document.querySelector(".toolbox"),
   fieldSearch: document.querySelector("#field-search"),
+  fieldSearchClear: document.querySelector("#field-search-clear"),
   fieldsList: document.querySelector("#fields-list"),
+  datasetFieldInsert: document.querySelector("#dataset-field-insert"),
+  datasetManagerOpen: document.querySelector("#dataset-manager-open"),
   sampleDataOpen: document.querySelector("#sample-data-open"),
   sampleDataModal: document.querySelector("#sample-data-modal"),
   sampleDataClose: document.querySelector("#sample-data-close"),
@@ -81,8 +106,23 @@ const elements = {
   historyCreate: document.querySelector("#history-create"),
   historyClear: document.querySelector("#history-clear"),
   historyList: document.querySelector("#history-list"),
-  historyKey: document.querySelector("#history-key")
+  historyKey: document.querySelector("#history-key"),
+  dataSourceModal: document.querySelector("#data-source-modal"),
+  datasetModal: document.querySelector("#dataset-modal"),
+  runtimeParameterModal: document.querySelector("#runtime-parameter-modal"),
+  livePreviewModal: document.querySelector("#live-preview-modal"),
+  newReportModal: document.querySelector("#new-report-modal")
 };
+elements.reportAttention = document.querySelector("#report-attention");
+elements.reportAttentionMessage = document.querySelector("#report-attention-message");
+elements.reportAttentionDataSources = document.querySelector("#report-attention-data-sources");
+elements.reportAttentionDatasets = document.querySelector("#report-attention-datasets");
+elements.reportAttentionDismiss = document.querySelector("#report-attention-dismiss");
+elements.saveWarningModal = document.querySelector("#save-warning-modal");
+elements.saveWarningList = document.querySelector("#save-warning-list");
+elements.saveWarningReview = document.querySelector("#save-warning-review");
+elements.saveWarningCancel = document.querySelector("#save-warning-cancel");
+elements.saveWarningConfirm = document.querySelector("#save-warning-confirm");
 
 const canvasController = createCanvasController({
   canvas: elements.canvas,
@@ -118,6 +158,59 @@ const toolbar = createToolbar({
   onCommand: handleCommand
 });
 
+const dataSourceManager = createDataSourceManager({
+  root: elements.dataSourceModal,
+  getTemplate: () => state.template,
+  onTemplateChange: applyDataSourceTemplate,
+  onStatus: setStatus
+});
+
+const runtimeParameterDialog = createRuntimeParameterDialog({
+  root: elements.runtimeParameterModal,
+  getTemplate: () => state.template,
+  onStatus: setStatus
+});
+
+const livePreview = createLivePreview({
+  root: elements.livePreviewModal,
+  getTemplate: () => state.template,
+  onStatus: setStatus
+});
+
+const datasetManager = createDatasetManager({
+  root: elements.datasetModal,
+  getTemplate: () => state.template,
+  onTemplateChange: applyDataSourceTemplate,
+  onStatus: setStatus,
+  openDataSources: () => dataSourceManager.open(
+    elements.toolbar.querySelector('[data-command="dataSources"]')
+  ),
+  openParameters: (datasetId, openingControl) => runtimeParameterDialog.open(
+    datasetId,
+    { openingControl }
+  )
+});
+
+const newReportWizard = createNewReportWizard({
+  root: elements.newReportModal,
+  getTemplate: () => state.template,
+  isDirty: () => state.dirty,
+  onSave: saveCurrentReport,
+  onCreate: loadCreatedReport,
+  onStatus: setStatus
+});
+applyIcon(elements.newReportModal.querySelector("#new-report-close"), "close");
+applyIcon(elements.reportAttentionDismiss, "close");
+elements.reportAttentionDismiss.addEventListener("click", () => {
+  elements.reportAttention.hidden = true;
+});
+elements.reportAttentionDataSources.addEventListener("click", () => dataSourceManager.open(
+  elements.reportAttentionDataSources
+));
+elements.reportAttentionDatasets.addEventListener("click", () => datasetManager.open(
+  elements.reportAttentionDatasets
+));
+
 initializeToolboxIcons();
 initializeHistoryUi();
 initializeSampleDataUi();
@@ -126,6 +219,31 @@ elements.toolbox.addEventListener("click", (event) => {
   const tab = event.target.closest("button[data-panel-tab]");
   if (tab) {
     showLeftPanel(tab.dataset.panelTab);
+    return;
+  }
+  const datasetToggle = event.target.closest("button[data-dataset-toggle]");
+  if (datasetToggle) {
+    const datasetId = datasetToggle.dataset.datasetToggle;
+    if (state.collapsedDatasetIds.has(datasetId)) {
+      state.collapsedDatasetIds.delete(datasetId);
+    } else {
+      state.collapsedDatasetIds.add(datasetId);
+    }
+    renderFieldsPanel();
+    return;
+  }
+  const datasetField = event.target.closest("button[data-dataset-field]");
+  if (datasetField && !datasetField.disabled) {
+    selectDatasetFieldButton(datasetField);
+    return;
+  }
+  const fieldsAction = event.target.closest("button[data-fields-action]");
+  if (fieldsAction?.dataset.fieldsAction === "dataSources") {
+    void dataSourceManager.open(fieldsAction);
+    return;
+  }
+  if (fieldsAction?.dataset.fieldsAction === "datasets") {
+    void datasetManager.open(fieldsAction);
     return;
   }
   const fieldButton = event.target.closest("button[data-field-path]");
@@ -149,6 +267,22 @@ elements.toolbox.addEventListener("click", (event) => {
 });
 
 elements.toolbox.addEventListener("dragstart", (event) => {
+  const datasetField = event.target.closest("button[data-dataset-field]");
+  if (datasetField && !datasetField.disabled && event.dataTransfer) {
+    const payload = datasetFieldDragPayload(
+      datasetField.dataset.datasetId,
+      datasetField.dataset.fieldName,
+      datasetField.dataset.dataType
+    );
+    event.dataTransfer.setData("application/x-slim-report-dataset-field", payload);
+    event.dataTransfer.setData(
+      "text/plain",
+      `${datasetField.dataset.datasetId}.${datasetField.dataset.fieldName}`
+    );
+    event.dataTransfer.effectAllowed = "copy";
+    datasetField.classList.add("is-dragging");
+    return;
+  }
   const fieldButton = event.target.closest("button[data-field-path]");
   if (!fieldButton || !event.dataTransfer) {
     return;
@@ -157,7 +291,47 @@ elements.toolbox.addEventListener("dragstart", (event) => {
   event.dataTransfer.effectAllowed = "copy";
 });
 
+elements.toolbox.addEventListener("dragend", (event) => {
+  event.target.closest("button[data-dataset-field]")?.classList.remove("is-dragging");
+  elements.canvas.classList.remove("is-dataset-field-drop-target");
+});
+
+elements.toolbox.addEventListener("dblclick", (event) => {
+  const datasetField = event.target.closest("button[data-dataset-field]");
+  if (!datasetField || datasetField.disabled) {
+    return;
+  }
+  selectDatasetFieldButton(datasetField);
+  insertSelectedDatasetField();
+});
+
+elements.toolbox.addEventListener("keydown", (event) => {
+  const datasetToggle = event.target.closest("button[data-dataset-toggle]");
+  if (datasetToggle && ["ArrowLeft", "ArrowRight"].includes(event.key)) {
+    const collapsed = state.collapsedDatasetIds.has(datasetToggle.dataset.datasetToggle);
+    const shouldCollapse = event.key === "ArrowLeft";
+    if (collapsed !== shouldCollapse) {
+      datasetToggle.click();
+    }
+    event.preventDefault();
+    return;
+  }
+  const datasetField = event.target.closest("button[data-dataset-field]");
+  if (!datasetField || datasetField.disabled || !["Enter", " "].includes(event.key)) {
+    return;
+  }
+  event.preventDefault();
+  selectDatasetFieldButton(datasetField);
+  insertSelectedDatasetField();
+});
+
 elements.canvas.addEventListener("dragover", (event) => {
+  if (event.dataTransfer?.types.includes("application/x-slim-report-dataset-field")) {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+    elements.canvas.classList.add("is-dataset-field-drop-target");
+    return;
+  }
   if (!event.dataTransfer?.types.includes("application/x-slim-report-field")) {
     return;
   }
@@ -166,6 +340,15 @@ elements.canvas.addEventListener("dragover", (event) => {
 });
 
 elements.canvas.addEventListener("drop", (event) => {
+  const datasetPayload = parseDatasetFieldDragPayload(
+    event.dataTransfer?.getData("application/x-slim-report-dataset-field")
+  );
+  if (datasetPayload) {
+    event.preventDefault();
+    elements.canvas.classList.remove("is-dataset-field-drop-target");
+    addDatasetFieldObject(datasetPayload, canvasDropPosition(event));
+    return;
+  }
   const path = event.dataTransfer?.getData("application/x-slim-report-field");
   if (!path) {
     return;
@@ -175,6 +358,15 @@ elements.canvas.addEventListener("drop", (event) => {
 });
 
 elements.fieldSearch.addEventListener("input", () => renderFieldsPanel());
+elements.fieldSearchClear.addEventListener("click", () => {
+  elements.fieldSearch.value = "";
+  elements.fieldSearch.focus();
+  renderFieldsPanel();
+});
+elements.datasetFieldInsert.addEventListener("click", insertSelectedDatasetField);
+elements.datasetManagerOpen.addEventListener("click", async () => {
+  await datasetManager.open(elements.datasetManagerOpen);
+});
 
 elements.importFile.addEventListener("change", async () => {
   const file = elements.importFile.files?.[0];
@@ -187,7 +379,9 @@ elements.importFile.addEventListener("change", async () => {
       recordUndo("Import JSON");
     }
     const payload = JSON.parse(await file.text());
-    state.template = normalizeTemplate(payload);
+    await dataSourceManager.clearRuntimePasswords();
+    rotateReportSessionKey();
+    state.template = normalizeTemplate(safeTemplateSnapshot(payload));
     ensureActiveBand();
     clearSelection();
     markDirty(`Imported ${file.name}`);
@@ -199,6 +393,11 @@ elements.importFile.addEventListener("change", async () => {
 });
 
 document.addEventListener("keydown", (event) => {
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "n") {
+    event.preventDefault();
+    newReportWizard.open(elements.toolbar.querySelector('[data-command="newReport"]'));
+    return;
+  }
   if (isEditingText(event.target)) {
     return;
   }
@@ -239,6 +438,7 @@ async function initialize() {
     state.template = normalizeTemplate(await loadTemplate());
     ensureActiveBand();
     setStatus("Ready");
+    await inspectCurrentReport();
   } catch (error) {
     setStatus(error.message);
     state.template = normalizeTemplate({});
@@ -250,13 +450,11 @@ async function initialize() {
 async function handleCommand(command, payload = {}) {
   try {
     if (command === "save") {
-      state.template = normalizeTemplate(await saveTemplate(state.template));
-      state.dirty = false;
-      createVersion(currentTemplateId(), state.template, "Saved");
-      setStatus("Saved");
+      await saveCurrentReport();
+    } else if (command === "newReport") {
+      newReportWizard.open(elements.toolbar.querySelector('[data-command="newReport"]'));
     } else if (command === "preview") {
-      await previewTemplate(state.template);
-      setStatus("Preview opened");
+      await previewReport(payload.openingControl);
     } else if (command === "printPreview") {
       await printPreview(state.template);
       setStatus("Print preview opened");
@@ -297,10 +495,25 @@ async function handleCommand(command, payload = {}) {
       setLockedSelected(false);
     } else if (command === "history") {
       openHistory();
+    } else if (command === "dataSources") {
+      await dataSourceManager.open(
+        elements.toolbar.querySelector('[data-command="dataSources"]')
+      );
+    } else if (command === "datasets") {
+      await datasetManager.open(
+        elements.toolbar.querySelector('[data-command="datasets"]')
+      );
     } else if (command === "chooseField") {
       showLeftPanel("fields");
       elements.fieldSearch.focus();
       setStatus("Choose a field from the Fields panel");
+    } else if (command === "clearDatasetBinding") {
+      const object = getSelectedObject();
+      if (object && getDatasetFieldBinding(object)) {
+        recordUndo("Clear data binding");
+        clearDatasetFieldBinding(state.template, object);
+        markDirty("Data binding cleared");
+      }
     } else if (command === "addGroup") {
       addGroup();
     } else if (command === "zoomIn") {
@@ -321,6 +534,155 @@ async function handleCommand(command, payload = {}) {
   }
 }
 
+async function previewReport(openingControl = null) {
+  const dataset = primaryRuntimeDataset(state.template);
+  if (!dataset) {
+    await previewTemplate(state.template);
+    setStatus("Preview opened");
+    return;
+  }
+  const readiness = await inspectPreviewReadiness(state.template, dataset.id);
+  if (!readiness.ready) {
+    showReportAttention(readiness.issues);
+    setStatus("Live preview is unavailable until report issues are resolved.");
+    return;
+  }
+  let parameterValues = {};
+  const isQuery = dataset.sourceType === "query" || dataset.source_type === "query";
+  if (isQuery && (dataset.parameters || []).length > 0) {
+    const collected = await runtimeParameterDialog.collectRuntimeParameters(dataset.id, {
+      openingControl: openingControl
+        || elements.toolbar.querySelector('[data-command="preview"]'),
+      actionLabel: "Preview Report"
+    });
+    if (collected.cancelled) {
+      setStatus("Preview cancelled");
+      return;
+    }
+    parameterValues = collected.values;
+  }
+  await livePreview.open(dataset.id, parameterValues, {
+    openingControl: openingControl
+      || elements.toolbar.querySelector('[data-command="preview"]')
+  });
+}
+
+function primaryRuntimeDataset(template) {
+  const detailIds = new Set(
+    (template.bands || [])
+      .filter((band) => band.id === "detail" || band.type === "detail")
+      .map((band) => getBandDatasetId(band))
+      .filter(Boolean)
+  );
+  if (detailIds.size !== 1) {
+    return null;
+  }
+  return getDatasetById(template, [...detailIds][0]);
+}
+
+async function saveCurrentReport() {
+  const validation = await validateTemplateSave(state.template);
+  if (!validation.canSave) {
+    showReportAttention(validation.errors);
+    setStatus("Save blocked by structural or security errors.");
+    return false;
+  }
+  if (validation.warnings?.length) {
+    const decision = await showSaveWarning(validation.warnings);
+    if (decision !== "save") {
+      if (decision === "review") {
+        showReportAttention(validation.warnings);
+      }
+      setStatus("Save cancelled");
+      return false;
+    }
+  }
+  state.template = normalizeTemplate(await saveTemplate(state.template));
+  state.dirty = false;
+  createVersion(currentTemplateId(), state.template, "Saved");
+  setStatus("Saved");
+  return true;
+}
+
+async function inspectCurrentReport() {
+  try {
+    const result = await inspectReopenedTemplate(state.template);
+    if (result.issues?.length) {
+      showReportAttention(result.issues);
+    } else {
+      elements.reportAttention.hidden = true;
+    }
+  } catch (error) {
+    showReportAttention([{
+      code: "inspection_unavailable",
+      message: "Report readiness could not be checked. Editing remains available."
+    }]);
+  }
+}
+
+function showReportAttention(issues = []) {
+  const actionable = issues.filter((issue) => issue.severity !== "info");
+  const visible = actionable.length ? actionable : issues;
+  if (!visible.length) {
+    elements.reportAttention.hidden = true;
+    return;
+  }
+  const first = visible[0]?.message || "Review the saved report configuration.";
+  const remaining = visible.length - 1;
+  elements.reportAttentionMessage.textContent = remaining > 0
+    ? `${first} ${remaining} more issue${remaining === 1 ? "" : "s"}.`
+    : first;
+  elements.reportAttentionDataSources.hidden = !visible.some((issue) => (
+    issue.dataSourceId || String(issue.code || "").includes("credential")
+  ));
+  elements.reportAttentionDatasets.hidden = !visible.some((issue) => (
+    issue.datasetId || String(issue.code || "").includes("dataset")
+      || String(issue.code || "").includes("binding")
+  ));
+  elements.reportAttention.hidden = false;
+}
+
+function showSaveWarning(warnings) {
+  elements.saveWarningList.replaceChildren();
+  for (const warning of warnings) {
+    const item = document.createElement("li");
+    item.textContent = warning.message;
+    elements.saveWarningList.appendChild(item);
+  }
+  elements.saveWarningModal.hidden = false;
+  elements.saveWarningConfirm.focus();
+  return new Promise((resolve) => {
+    const finish = (decision) => {
+      elements.saveWarningModal.hidden = true;
+      elements.saveWarningConfirm.onclick = null;
+      elements.saveWarningReview.onclick = null;
+      elements.saveWarningCancel.onclick = null;
+      resolve(decision);
+    };
+    elements.saveWarningConfirm.onclick = () => finish("save");
+    elements.saveWarningReview.onclick = () => finish("review");
+    elements.saveWarningCancel.onclick = () => finish("cancel");
+  });
+}
+
+async function loadCreatedReport(template) {
+  await dataSourceManager.clearRuntimePasswords();
+  rotateReportSessionKey();
+  state.template = normalizeTemplate(safeTemplateSnapshot(template));
+  state.selectedIds = [];
+  state.primarySelectedId = null;
+  state.activeBandId = getBandById(state.template, "detail")?.id
+    || state.template.bands?.[0]?.id
+    || "detail";
+  state.undoStack = [];
+  state.redoStack = [];
+  state.collapsedDatasetIds.clear();
+  state.selectedDatasetField = null;
+  state.dirty = true;
+  state.statusMessage = "New report created.";
+  render();
+}
+
 function addGroup() {
   recordUndo("Add group bands");
   const groupHeader = addGroupBands(state.template);
@@ -328,6 +690,13 @@ function addGroup() {
   state.selectedIds = [];
   state.primarySelectedId = null;
   markDirty("Group bands added");
+}
+
+function applyDataSourceTemplate(template, historyLabel, statusMessage) {
+  recordUndo(historyLabel);
+  state.template = normalizeTemplate(template);
+  ensureActiveBand();
+  markDirty(statusMessage);
 }
 
 function updateCanvasSettings(patch) {
@@ -457,8 +826,12 @@ function deleteSelected() {
   }
   recordUndo("Delete selected");
   const selected = new Set(state.selectedIds);
+  const affectedBands = state.template.objects
+    .filter((object) => selected.has(object.id) && getDatasetFieldBinding(object))
+    .map((object) => object.band || object.band_id || "detail");
   const count = state.template.objects.filter((object) => selected.has(object.id)).length;
   state.template.objects = state.template.objects.filter((object) => !selected.has(object.id));
+  clearEmptyBandDatasetContexts(state.template, affectedBands);
   state.selectedIds = [];
   state.primarySelectedId = null;
   markDirty(`Deleted ${count} ${count === 1 ? "object" : "objects"}`);
@@ -592,7 +965,7 @@ async function copyJson() {
 }
 
 function toJson() {
-  return `${JSON.stringify(state.template, null, 2)}\n`;
+  return `${JSON.stringify(safeTemplateSnapshot(state.template), null, 2)}\n`;
 }
 
 function addFieldObject(path, position = null) {
@@ -618,6 +991,11 @@ function addFieldObject(path, position = null) {
     object.y = position.y;
   } else {
     placeObjectOnCanvas(object, state.template, state.canvasSettings, elements.canvasScroller);
+    const insertionIndex = state.template.objects.filter((item) => {
+      return (item.band || item.band_id || "detail") === band.id && getDatasetFieldBinding(item);
+    }).length;
+    object.x += (insertionIndex % 6) * 8;
+    object.y += (insertionIndex % 6) * 8;
   }
   if (repeat) {
     const band = getBandById(state.template, "detail");
@@ -631,37 +1009,258 @@ function addFieldObject(path, position = null) {
   markDirty(`Field added: ${binding}`);
 }
 
+function selectDatasetFieldButton(button) {
+  state.selectedDatasetField = {
+    datasetId: button.dataset.datasetId,
+    fieldName: button.dataset.fieldName,
+    dataType: button.dataset.dataType
+  };
+  renderFieldsPanel();
+}
+
+function insertSelectedDatasetField() {
+  if (!state.selectedDatasetField) {
+    setStatus("Select a dataset field first");
+    return;
+  }
+  addDatasetFieldObject(state.selectedDatasetField);
+}
+
+function addDatasetFieldObject(payload, position = null) {
+  const dataset = getDatasetById(state.template, payload.datasetId);
+  const field = dataset?.fields?.find((item) => item.name === payload.fieldName);
+  const dataType = field?.dataType ?? field?.data_type ?? "unknown";
+  const defaults = datasetFieldObjectDefaults(dataType);
+  if (!dataset || !field) {
+    setStatus("The dataset field no longer exists");
+    renderFieldsPanel();
+    return;
+  }
+  if (!defaults) {
+    setStatus(`Fields of type ${dataType} cannot be inserted as text`);
+    return;
+  }
+  const band = position ? bandAtPagePosition(position.y) : getBandById(state.template, state.activeBandId);
+  if (!band) {
+    setStatus("No active band is available for the field");
+    return;
+  }
+  const bandDatasetId = getBandDatasetId(band);
+  if (bandDatasetId && bandDatasetId !== dataset.id) {
+    setStatus(`Band ${band.name || band.id} already uses dataset ${bandDatasetId}`);
+    return;
+  }
+
+  recordUndo(`Insert ${dataset.name}.${field.name}`);
+  const object = createObject("text", state.template);
+  object.width = defaults.width;
+  object.height = defaults.height;
+  assignObjectBand(state.template, object, band.id);
+  setObjectStyleValue(object, "align", defaults.align);
+  if (!setDatasetFieldBinding(state.template, object, dataset.id, field.name)) {
+    setStatus("The field could not be bound to the selected band");
+    return;
+  }
+  if (position) {
+    object.x = position.x;
+    object.y = position.y;
+  } else {
+    placeObjectOnCanvas(object, state.template, state.canvasSettings, elements.canvasScroller);
+  }
+  clampObjectToBand(state.template, object);
+  state.template.objects.push(object);
+  state.activeBandId = band.id;
+  selectOnly(object.id);
+  markDirty(`Inserted ${dataset.name}.${field.name}`);
+}
+
+function bandAtPagePosition(y) {
+  return (state.template.bands || []).find((band) => {
+    const top = Number(band.y) || 0;
+    const bottom = top + (Number(band.height) || 0);
+    return band.visible !== false && y >= top && y <= bottom;
+  }) || getBandById(state.template, state.activeBandId);
+}
+
 function renderFieldsPanel() {
   const query = String(elements.fieldSearch.value || "").trim().toLowerCase();
-  const fields = getTemplateFields(state.template).filter((field) => {
+  const sampleFields = getTemplateFields(state.template).filter((field) => {
     if (!query) {
       return true;
     }
     return [field.path, field.label, field.sample].some((value) => String(value || "").toLowerCase().includes(query));
   });
   elements.fieldsList.innerHTML = "";
-  if (fields.length === 0) {
-    const empty = document.createElement("div");
-    empty.className = "empty-state";
-    empty.textContent = state.template?.data?.sample
-      ? "No fields match the search."
-      : "No sample data yet. Use the data button to add JSON or enter bindings manually in the inspector.";
-    elements.fieldsList.appendChild(empty);
-    return;
-  }
-  elements.fieldsList.appendChild(formulaExamplesPanel());
-  for (const [groupName, groupFields] of Object.entries(groupFieldsByRoot(fields))) {
-    const group = document.createElement("section");
-    group.className = "field-group";
-    const title = document.createElement("div");
-    title.className = "field-group-title";
-    title.textContent = groupName;
-    group.appendChild(title);
-    for (const field of groupFields) {
-      group.appendChild(fieldListItem(field));
+  elements.fieldsList.appendChild(bindingWarningsPanel());
+  let visibleDatasetFieldCount = 0;
+  for (const dataset of state.template.datasets || []) {
+    const datasetMatches = [dataset.name, dataset.id]
+      .some((value) => String(value || "").toLowerCase().includes(query));
+    const fields = (dataset.fields || []).filter((field) => {
+      if (!query || datasetMatches) {
+        return true;
+      }
+      return [field.name, field.label, field.dataType, field.data_type]
+        .some((value) => String(value || "").toLowerCase().includes(query));
+    });
+    if (query && !datasetMatches && fields.length === 0) {
+      continue;
     }
-    elements.fieldsList.appendChild(group);
+    visibleDatasetFieldCount += fields.length;
+    elements.fieldsList.appendChild(datasetFieldGroup(dataset, fields, Boolean(query)));
   }
+  if (sampleFields.length > 0) {
+    elements.fieldsList.appendChild(formulaExamplesPanel());
+    for (const [groupName, groupFields] of Object.entries(groupFieldsByRoot(sampleFields))) {
+      const group = document.createElement("section");
+      group.className = "field-group";
+      const title = document.createElement("div");
+      title.className = "field-group-title";
+      title.textContent = `Sample: ${groupName}`;
+      group.appendChild(title);
+      for (const field of groupFields) {
+        group.appendChild(fieldListItem(field));
+      }
+      elements.fieldsList.appendChild(group);
+    }
+  }
+  const selected = state.selectedDatasetField;
+  const selectedStillExists = selected && getDatasetById(state.template, selected.datasetId)?.fields
+    ?.some((field) => field.name === selected.fieldName && datasetFieldObjectDefaults(field.dataType ?? field.data_type));
+  if (!selectedStillExists) {
+    state.selectedDatasetField = null;
+  }
+  elements.datasetFieldInsert.disabled = !state.selectedDatasetField;
+  if (visibleDatasetFieldCount === 0 && sampleFields.length === 0) {
+    if (query) {
+      elements.fieldsList.appendChild(fieldsEmptyState("No fields match the search."));
+    } else if ((state.template.dataSources || []).length === 0) {
+      elements.fieldsList.appendChild(fieldsEmptyState(
+        "No data source is configured. Add a MySQL data source before creating datasets.",
+        "Open Data Sources",
+        "dataSources"
+      ));
+    } else if ((state.template.datasets || []).length === 0) {
+      elements.fieldsList.appendChild(fieldsEmptyState(
+        "No datasets are configured. Create a dataset from an approved MySQL view or a read-only SELECT query.",
+        "Open Datasets",
+        "datasets"
+      ));
+    }
+  }
+}
+
+function datasetFieldGroup(dataset, fields, searchActive) {
+  const group = document.createElement("section");
+  group.className = "field-group dataset-group";
+  const collapsed = !searchActive && state.collapsedDatasetIds.has(dataset.id);
+  const header = document.createElement("div");
+  header.className = "dataset-group-header";
+  const toggle = document.createElement("button");
+  toggle.type = "button";
+  toggle.className = "dataset-toggle";
+  toggle.dataset.datasetToggle = dataset.id;
+  toggle.setAttribute("aria-expanded", String(!collapsed));
+  toggle.title = collapsed ? "Expand dataset" : "Collapse dataset";
+  toggle.textContent = collapsed ? ">" : "v";
+  const title = document.createElement("span");
+  title.className = "dataset-title";
+  const name = document.createElement("span");
+  name.textContent = dataset.name || dataset.id;
+  const source = document.createElement("span");
+  source.className = "dataset-source-summary";
+  const sourceLabel = dataset.sourceType === "query" || dataset.source_type === "query"
+    ? "Custom SELECT query"
+    : String(dataset.viewName ?? dataset.view_name ?? "Approved view");
+  const parameterCount = (dataset.parameters || []).length;
+  source.textContent = `${sourceLabel} | ${(dataset.fields || []).length} fields${parameterCount ? ` | ${parameterCount} parameters` : ""}`;
+  title.append(name, source);
+  title.title = `${dataset.name || dataset.id} (${dataset.id})`;
+  header.append(toggle, title);
+  group.appendChild(header);
+  if (!collapsed) {
+    const list = document.createElement("div");
+    list.className = "dataset-fields";
+    if (fields.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "empty-state";
+      empty.textContent = "This dataset has no discovered fields.";
+      const manage = document.createElement("button");
+      manage.type = "button";
+      manage.className = "toolbar-button";
+      manage.dataset.fieldsAction = "datasets";
+      manage.textContent = "Open Datasets";
+      list.append(empty, manage);
+    }
+    for (const field of fields) {
+      list.appendChild(datasetFieldListItem(dataset, field));
+    }
+    group.appendChild(list);
+  }
+  return group;
+}
+
+function fieldsEmptyState(message, actionLabel = "", action = "") {
+  const container = document.createElement("div");
+  container.className = "empty-state fields-empty-state";
+  const text = document.createElement("div");
+  text.textContent = message;
+  container.appendChild(text);
+  if (actionLabel && action) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "toolbar-button";
+    button.dataset.fieldsAction = action;
+    button.textContent = actionLabel;
+    container.appendChild(button);
+  }
+  return container;
+}
+
+function datasetFieldListItem(dataset, field) {
+  const dataType = String(field.dataType ?? field.data_type ?? "unknown");
+  const supported = Boolean(datasetFieldObjectDefaults(dataType));
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "dataset-field-item";
+  button.dataset.datasetField = "true";
+  button.dataset.datasetId = dataset.id;
+  button.dataset.fieldName = field.name;
+  button.dataset.dataType = dataType;
+  button.draggable = supported;
+  button.disabled = !supported;
+  button.title = supported
+    ? `${dataset.name}.${field.name} (${dataType})`
+    : `${field.name} cannot be inserted as text (${dataType})`;
+  if (state.selectedDatasetField?.datasetId === dataset.id
+      && state.selectedDatasetField?.fieldName === field.name) {
+    button.classList.add("is-selected");
+  }
+  const name = document.createElement("span");
+  name.className = "dataset-field-name";
+  name.textContent = field.label || field.name;
+  const type = document.createElement("span");
+  type.className = "dataset-field-type";
+  type.textContent = dataType;
+  button.append(name, type);
+  return button;
+}
+
+function bindingWarningsPanel() {
+  const panel = document.createElement("div");
+  const warnings = (state.template.objects || [])
+    .map((object) => ({ object, status: datasetFieldBindingStatus(state.template, object) }))
+    .filter(({ status }) => !["unbound", "bound"].includes(status.state));
+  if (warnings.length === 0) {
+    return panel;
+  }
+  panel.className = "binding-warning-list";
+  for (const { object, status } of warnings) {
+    const warning = document.createElement("div");
+    warning.textContent = `${object.id}: ${status.label}`;
+    panel.appendChild(warning);
+  }
+  return panel;
 }
 
 function formulaExamplesPanel() {
@@ -983,7 +1582,7 @@ function markDirty(message = "Unsaved changes", options = {}) {
 }
 
 function captureHistorySnapshot() {
-  return state.template ? structuredClone(state.template) : null;
+  return state.template ? safeTemplateSnapshot(state.template) : null;
 }
 
 function commitHistorySnapshot(snapshot, label = "Edit") {
@@ -1051,7 +1650,9 @@ function redo() {
 }
 
 function restoreTemplateSnapshot(snapshot) {
-  state.template = normalizeTemplate(structuredClone(snapshot));
+  void dataSourceManager.clearRuntimePasswords();
+  rotateReportSessionKey();
+  state.template = normalizeTemplate(safeTemplateSnapshot(snapshot));
   ensureActiveBand();
   const existing = new Set(state.template.objects.map((object) => object.id));
   state.selectedIds = state.selectedIds.filter((id) => existing.has(id));

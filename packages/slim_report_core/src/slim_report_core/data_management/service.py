@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import replace
 
+from ..bindings import ReportBindingService
 from ..data_source_providers import (
     ConnectionTestResult,
     DatabaseColumnInfo,
@@ -26,7 +28,7 @@ from ..data_sources import (
 )
 from ..query_discovery import QueryFieldDiscoveryResult, QueryFieldDiscoveryService
 from ..report import Report
-from ..sql import SQLValidationResult, SQLValidator
+from ..sql import InvalidSQLParameterError, SQLValidationResult, SQLValidator
 from .commands import (
     CreateMySQLDataSourceCommand,
     CreateQueryDatasetCommand,
@@ -35,6 +37,7 @@ from .commands import (
 )
 from .errors import (
     DataManagementValidationError,
+    DatasetInUseError,
     DatasetNotFoundError,
     DatasetTypeMismatchError,
     DataSourceInUseError,
@@ -176,6 +179,9 @@ class DataSourceManagementService:
                 f"The data source {data_source_id!r} is used by {len(dependents)} datasets "
                 "and cannot be removed without cascade confirmation."
             )
+        if cascade:
+            for dataset in dependents:
+                self._assert_dataset_not_referenced(report, dataset.id)
         report.remove_data_source(data_source_id, cascade=cascade)
         return DataManagementResult(
             success=True,
@@ -276,6 +282,9 @@ class DataSourceManagementService:
         fields, warnings = self._fields_from_columns(schema.columns)
         replacement = self._copy_dataset(dataset, fields=list(fields))
         changes = self._field_changes(dataset.fields, replacement.fields)
+        warnings += self._binding_change_warnings(
+            report, dataset.id, dataset.fields, replacement.fields
+        )
         self._replace_dataset(report, index, replacement)
         return DatasetConfigurationResult(
             dataset=replacement,
@@ -283,6 +292,30 @@ class DataSourceManagementService:
             parameters=tuple(replacement.parameters),
             warnings=warnings,
             changes=changes,
+        )
+
+    def inspect_view_dataset_fields(
+        self,
+        report: Report,
+        dataset_id: str,
+        *,
+        metadata_policy: MetadataAccessPolicy | None = None,
+    ) -> DatasetConfigurationResult:
+        """Discover current view fields without changing the report."""
+        dataset = self.get_dataset(report, dataset_id)
+        self._require_dataset_type(dataset, DatasetSourceType.VIEW)
+        data_source = self.get_data_source(report, dataset.data_source_id)
+        schema = self._metadata_service(data_source, metadata_policy).inspect_view(
+            data_source,
+            dataset.view_name or "",
+        )
+        fields, warnings = self._fields_from_columns(schema.columns)
+        return DatasetConfigurationResult(
+            dataset=dataset,
+            fields=fields,
+            parameters=tuple(dataset.parameters),
+            warnings=warnings,
+            changes=self._field_changes(dataset.fields, list(fields)),
         )
 
     def create_query_dataset(
@@ -330,15 +363,24 @@ class DataSourceManagementService:
         query: str,
         parameters: tuple[QueryParameter, ...] = (),
     ) -> SQLValidationResult:
-        """Validate a query dataset shape without saving or opening a connection."""
-        dataset = ReportDataset(
-            name="Query validation",
-            data_source_id="validation",
-            source_type=DatasetSourceType.QUERY,
-            query=query,
-            parameters=list(parameters),
+        """Validate an unsaved query and report parameters before definitions are complete."""
+        result = self.sql_validator.validate(query)
+        declared_names = [parameter.name for parameter in parameters]
+        seen: set[str] = set()
+        for name in declared_names:
+            normalized = name.casefold()
+            if normalized in seen:
+                raise InvalidSQLParameterError(
+                    f"Dataset contains a duplicate parameter declaration: {name}."
+                )
+            seen.add(normalized)
+        referenced = {name.casefold() for name in result.parameters}
+        warnings = tuple(
+            f"Dataset parameter {name!r} is not referenced by the SQL query."
+            for name in declared_names
+            if name.casefold() not in referenced
         )
-        return self.sql_validator.validate_dataset(dataset)
+        return replace(result, warnings=result.warnings + warnings)
 
     def validate_dataset_query(self, report: Report, dataset_id: str) -> SQLValidationResult:
         """Validate an existing query dataset without opening a connection."""
@@ -399,12 +441,15 @@ class DataSourceManagementService:
                 "The discovery result does not belong to the target dataset."
             )
         replacement = self.query_discovery_service.apply_fields(dataset, discovery_result)
+        warnings = discovery_result.warnings + self._binding_change_warnings(
+            report, dataset.id, dataset.fields, replacement.fields
+        )
         self._replace_dataset(report, index, replacement)
         return DatasetConfigurationResult(
             dataset=replacement,
             fields=tuple(replacement.fields),
             parameters=tuple(replacement.parameters),
-            warnings=discovery_result.warnings,
+            warnings=warnings,
             changes=self._field_changes(dataset.fields, replacement.fields),
         )
 
@@ -429,11 +474,15 @@ class DataSourceManagementService:
             fields=[] if query_changed else list(dataset.fields),
         )
         self.sql_validator.validate_dataset(replacement)
+        warnings = self._binding_change_warnings(
+            report, dataset.id, dataset.fields, replacement.fields
+        )
         self._replace_dataset(report, index, replacement)
         return DatasetConfigurationResult(
             dataset=replacement,
             fields=tuple(replacement.fields),
             parameters=tuple(replacement.parameters),
+            warnings=warnings,
         )
 
     def update_view_dataset(
@@ -466,6 +515,9 @@ class DataSourceManagementService:
             view_name=final_view,
             fields=fields,
             parameters=[],
+        )
+        warnings += self._binding_change_warnings(
+            report, dataset.id, dataset.fields, replacement.fields
         )
         self._replace_dataset(report, index, replacement)
         return DatasetConfigurationResult(
@@ -518,9 +570,7 @@ class DataSourceManagementService:
             if parameter.name == parameter_name:
                 parameters[index] = replacement
                 return self.replace_query_parameters(report, dataset_id, tuple(parameters))
-        raise InvalidDatasetOperationError(
-            f"The query parameter {parameter_name!r} was not found."
-        )
+        raise InvalidDatasetOperationError(f"The query parameter {parameter_name!r} was not found.")
 
     def remove_query_parameter(
         self,
@@ -594,6 +644,9 @@ class DataSourceManagementService:
             port=config.port if config is not None else None,
             database=config.database if config is not None else None,
             username=config.username if config is not None else None,
+            charset=config.charset if config is not None else None,
+            connect_timeout=config.connect_timeout if config is not None else None,
+            query_timeout=config.query_timeout if config is not None else None,
             password_configured=bool(config and config.password is not None),
             password_ref_configured=bool(config and config.password_ref is not None),
         )
@@ -719,9 +772,7 @@ class DataSourceManagementService:
     ) -> None:
         if dataset.source_type is not source_type:
             display = (
-                "view-based"
-                if dataset.source_type is DatasetSourceType.VIEW
-                else "query-based"
+                "view-based" if dataset.source_type is DatasetSourceType.VIEW else "query-based"
             )
             raise DatasetTypeMismatchError(
                 f"The dataset {dataset.id!r} is {display} and cannot be used for this operation."
@@ -734,9 +785,7 @@ class DataSourceManagementService:
     ) -> DatasetFieldChangeSummary:
         before_by_key = {field.name.casefold(): field for field in before}
         after_by_key = {field.name.casefold(): field for field in after}
-        added = tuple(
-            field.name for key, field in after_by_key.items() if key not in before_by_key
-        )
+        added = tuple(field.name for key, field in after_by_key.items() if key not in before_by_key)
         removed = tuple(
             field.name for key, field in before_by_key.items() if key not in after_by_key
         )
@@ -750,9 +799,43 @@ class DataSourceManagementService:
 
     @staticmethod
     def _assert_dataset_not_referenced(report: Report, dataset_id: str) -> None:
-        # Current report objects bind to data paths, not dataset IDs. This is the extension point
-        # for future Designer bindings that explicitly reference datasets.
-        del report, dataset_id
+        service = ReportBindingService()
+        objects = service.dataset_references(report, dataset_id)
+        bands = service.dataset_band_references(report, dataset_id)
+        if objects or bands:
+            raise DatasetInUseError(
+                f"The dataset {dataset_id!r} is used by {len(objects)} report objects "
+                f"and {len(bands)} bands and cannot be removed."
+            )
+
+    @staticmethod
+    def _binding_change_warnings(
+        report: Report,
+        dataset_id: str,
+        before: list[DatasetField],
+        after: list[DatasetField],
+    ) -> tuple[str, ...]:
+        references = ReportBindingService().dataset_references(report, dataset_id)
+        if not references:
+            return ()
+        before_by_name = {field.name: field for field in before}
+        after_by_name = {field.name: field for field in after}
+        warnings: list[str] = []
+        for report_object in references:
+            field_name = report_object.dataset_binding.field
+            previous = before_by_name.get(field_name)
+            current = after_by_name.get(field_name)
+            if current is None:
+                warnings.append(
+                    f"Binding on object {report_object.id!r} now references missing field "
+                    f"{field_name!r}; the binding was preserved."
+                )
+            elif previous is not None and previous.data_type != current.data_type:
+                warnings.append(
+                    f"Bound field {field_name!r} on object {report_object.id!r} changed "
+                    f"type from {previous.data_type!r} to {current.data_type!r}."
+                )
+        return tuple(warnings)
 
 
 DesignerDataService = DataSourceManagementService

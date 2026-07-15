@@ -21,6 +21,15 @@ There is no React, no Vue, no npm build step, and no frontend framework dependen
 
 Framework adapters such as Flask host the same static files and provide API routes for loading, saving, previewing, and exporting templates.
 
+The Flask-hosted Designer also provides MySQL-only [Data Source](designer-data-source-manager.md)
+and [Dataset](designer-dataset-manager.md) managers backed by the core data-management service.
+Parameterized query datasets also expose the temporary, non-persistent
+[Runtime Parameters](runtime-parameters.md) dialog.
+Stored dataset fields feed the [Fields panel and structured text bindings](designer-dataset-fields.md)
+without fetching database rows or executing complete datasets.
+The [New MySQL Report Wizard](new-report-wizard.md) creates blank or metadata-driven
+starting reports without replacing the active report until final validation succeeds.
+
 ## Run Static Mode
 
 ```bash
@@ -92,6 +101,8 @@ http://127.0.0.1:5000/report-designer/designer?template=barcode_qr_lab_result
 - Safe computed formulas
 - Conditional formatting rules
 - Print/export settings
+- MySQL data-source configuration and connection testing
+- MySQL reporting-view and read-only query dataset configuration
 - Basic preview/export pagination for repeating Detail rows and Detail-band tables
 
 ## Local Version History
@@ -110,6 +121,8 @@ Static mode:
 - works without a framework adapter
 - supports browser-local editing and JSON import/export
 - cannot export PDF unless connected to a backend API
+- cannot manage MySQL data sources without a backend API
+- cannot manage or discover MySQL datasets without a backend API
 
 Flask mode:
 
@@ -118,6 +131,8 @@ Flask mode:
 - previews HTML through `slim_report_core`
 - exports PDF through `slim_report_core`
 - can use provider data and `template.data.sample`
+- manages MySQL data sources through thin Flask routes backed by `DataSourceManagementService`
+- configures MySQL datasets and field discovery through the same management service
 
 ## Known Limitations
 

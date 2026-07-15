@@ -46,12 +46,22 @@ The validator rejects:
 - multiple statements, including two `SELECT` statements;
 - all write, DDL, administrative, inspection, and execution statements;
 - `FOR UPDATE`, `LOCK IN SHARE MODE`, `INTO OUTFILE`, `INTO DUMPFILE`, and `INTO @variable`;
-- `SLEEP`, `BENCHMARK`, `LOAD_FILE`, `GET_LOCK`, `RELEASE_LOCK`, and `MASTER_POS_WAIT` calls;
+- MySQL user variables (`@name`), system variables (`@@name`), and assignment operators (`:=`);
+- `SLEEP`, `BENCHMARK`, `LOAD_FILE`, `GET_LOCK`, `RELEASE_LOCK`, `IS_FREE_LOCK`,
+  `IS_USED_LOCK`, `MASTER_POS_WAIT`, and `SOURCE_POS_WAIT` calls;
 - MySQL executable/version comments (`/*! ... */`), whose contents may be run by the server;
 - malformed SQL and unsupported parameter styles.
 
 Checks are case-insensitive and syntax-aware. SQL-looking text inside string literals, comments,
 or quoted identifiers does not become an operation or a statement separator.
+
+User-supplied report SQL may not read or assign MySQL user variables or system variables.
+Internal provider queries used to verify connection state are trusted provider operations and are
+not user report queries.
+
+`SQLParser` keeps sqlglot token details behind the parser boundary and returns immutable,
+library-neutral facts for user variables, system variables, and assignment syntax. The validator
+does not use raw substring matching for these checks.
 
 ## Named Parameters
 

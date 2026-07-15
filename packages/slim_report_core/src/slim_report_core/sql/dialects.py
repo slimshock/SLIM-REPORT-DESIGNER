@@ -69,7 +69,10 @@ class MySQLDialect:
             "LOAD_FILE",
             "GET_LOCK",
             "RELEASE_LOCK",
+            "IS_FREE_LOCK",
+            "IS_USED_LOCK",
             "MASTER_POS_WAIT",
+            "SOURCE_POS_WAIT",
         }
     )
     _FORBIDDEN_CLAUSES: ClassVar[frozenset[str]] = frozenset(

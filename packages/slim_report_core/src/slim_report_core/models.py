@@ -836,6 +836,48 @@ class Binding:
         return Binding(expression=self.expression)
 
 
+@dataclass(frozen=True)
+class DatasetFieldBinding:
+    """Immutable reference from a report object to one stored dataset field."""
+
+    dataset_id: str
+    field_name: str
+    type: str = "datasetField"
+
+    def __post_init__(self) -> None:
+        dataset_id = str(self.dataset_id).strip()
+        field_name = str(self.field_name).strip()
+        if self.type != "datasetField":
+            raise ReportValidationError("Dataset field binding type must be 'datasetField'.")
+        if not dataset_id:
+            raise ReportValidationError("Dataset field binding requires a datasetId.")
+        if not field_name:
+            raise ReportValidationError("Dataset field binding requires a field name.")
+        object.__setattr__(self, "dataset_id", dataset_id)
+        object.__setattr__(self, "field_name", field_name)
+
+    @property
+    def field(self) -> str:
+        """Return the serialized field name for concise compatibility."""
+        return self.field_name
+
+    @classmethod
+    def from_value(cls, value: Any) -> DatasetFieldBinding | None:
+        if value is None:
+            return None
+        if isinstance(value, cls):
+            return value
+        mapping = ensure_mapping(value, context="Dataset field binding")
+        return cls(
+            dataset_id=str(mapping.get("datasetId", mapping.get("dataset_id", ""))),
+            field_name=str(mapping.get("field", mapping.get("field_name", ""))),
+            type=str(mapping.get("type", "datasetField")),
+        )
+
+    def to_dict(self) -> dict[str, str]:
+        return {"type": self.type, "datasetId": self.dataset_id, "field": self.field_name}
+
+
 @dataclass(init=False)
 class Object:
     """Positioned report object."""
@@ -848,6 +890,7 @@ class Object:
     height: float = 0.0
     text: str = ""
     binding: Binding | None = None
+    dataset_binding: DatasetFieldBinding | None = None
     style: Style = field(default_factory=Style)
     band_id: str | None = None
     layer_id: str | None = None
@@ -892,6 +935,9 @@ class Object:
         self.z_index = z_index
         self.visible = visible
         self.properties = dict(properties or {})
+        self.dataset_binding = DatasetFieldBinding.from_value(
+            self.properties.pop("dataBinding", None)
+        )
         self.__post_init__()
 
     def __post_init__(self) -> None:
@@ -960,6 +1006,8 @@ class Object:
             data["properties"]["binding"] = self.binding.expression
         elif "binding" in data["properties"]:
             data["binding"] = data["properties"]["binding"]
+        if self.dataset_binding is not None:
+            data["dataBinding"] = self.dataset_binding.to_dict()
         for key in ("formula", "formula_mode", "conditions"):
             if key in data["properties"]:
                 data[key] = data["properties"][key]
@@ -990,6 +1038,7 @@ class Object:
         cloned.size = self.size.clone()
         cloned.text = self.text
         cloned.binding = self.binding.clone() if self.binding is not None else None
+        cloned.dataset_binding = self.dataset_binding
         cloned.style = self.style.clone()
         cloned.band_id = self.band_id
         cloned.layer_id = self.layer_id
@@ -1408,13 +1457,25 @@ class Band:
     locked: bool = False
     repeat: dict[str, Any] = field(default_factory=dict)
     group: dict[str, Any] = field(default_factory=dict)
+    dataset_id: str | None = None
     properties: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> Band:
         mapping = ensure_mapping(data, context="Report band")
         raw_properties = mapping.get("properties", {})
-        properties = ensure_mapping(raw_properties or {}, context="Report band properties")
+        properties = dict(
+            ensure_mapping(raw_properties or {}, context="Report band properties")
+        )
+        raw_data_binding = mapping.get("dataBinding", properties.pop("dataBinding", None))
+        dataset_id = None
+        if raw_data_binding is not None:
+            data_binding = ensure_mapping(raw_data_binding, context="Report band dataBinding")
+            dataset_id = _optional_str(
+                data_binding.get("datasetId", data_binding.get("dataset_id"))
+            )
+            if dataset_id is None or not dataset_id.strip():
+                raise ReportValidationError("Report band dataBinding requires a datasetId.")
         return cls(
             id=_required_str(mapping, "id", context="Report band"),
             type=_required_str(mapping, "type", context="Report band"),
@@ -1431,6 +1492,7 @@ class Band:
             locked=bool(mapping.get("locked", False)),
             repeat=_normalize_repeat(mapping.get("repeat", properties.get("repeat"))),
             group=_normalize_group(mapping.get("group", properties.get("group"))),
+            dataset_id=dataset_id,
             properties=dict(properties),
         )
 
@@ -1442,6 +1504,9 @@ class Band:
             data.pop("repeat", None)
         if not self.group:
             data.pop("group", None)
+        dataset_id = data.pop("dataset_id", None)
+        if dataset_id is not None:
+            data["dataBinding"] = {"datasetId": dataset_id}
         return data
 
     def clone(self, *, new_ids: bool = True) -> Band:
@@ -1457,6 +1522,7 @@ class Band:
             locked=self.locked,
             repeat=copy.deepcopy(self.repeat),
             group=copy.deepcopy(self.group),
+            dataset_id=self.dataset_id,
             properties=copy.deepcopy(self.properties),
         )
 

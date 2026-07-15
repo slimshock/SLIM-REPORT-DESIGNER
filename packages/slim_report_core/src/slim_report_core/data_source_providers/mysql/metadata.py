@@ -191,6 +191,19 @@ class MySQLMetadataService:
         )
         return DatabaseViewSchema(view=view, columns=columns)
 
+    def resolve_view_identifier(
+        self,
+        data_source: ReportDataSource,
+        identifier: str,
+    ) -> tuple[str, str]:
+        """Structurally validate one view against the current access policy."""
+        schema, view_name = self._resolve_view_identifier(data_source, identifier)
+        if not self._view_is_allowed(view_name):
+            raise MetadataAccessDeniedError(
+                "The configured reporting view is not available for execution."
+            )
+        return schema, view_name
+
     def _get_view_using_connection(
         self,
         connection: object,

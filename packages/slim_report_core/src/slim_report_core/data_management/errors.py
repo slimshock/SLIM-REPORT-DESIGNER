@@ -17,6 +17,10 @@ class DatasetNotFoundError(DataManagementError):
     """Raised when a requested report dataset is missing."""
 
 
+class DatasetInUseError(DataManagementError):
+    """Raised when a dataset is referenced by report bindings."""
+
+
 class DataSourceInUseError(DataManagementError):
     """Raised when a data source has dependent datasets."""
 

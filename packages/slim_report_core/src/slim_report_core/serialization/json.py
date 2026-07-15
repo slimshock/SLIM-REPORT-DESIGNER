@@ -6,9 +6,15 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
+from ..constants import DEFAULT_REPORT_VERSION
 from ..data_sources import ReportDataset, ReportDataSource
 from ..models import Asset, Band, Layer, Metadata, Page, Style
 from ..object_factory import ObjectFactory
+from ..persistence import (
+    CredentialPersistencePolicy,
+    inspect_template_security,
+    prepare_template_for_load,
+)
 from ..report import Report
 from ..schema import normalize_template_mapping, validate_template_mapping
 from ..utils import dump_json_object, parse_json_object
@@ -18,11 +24,19 @@ from .base import BaseSerializer, PathValue
 class JSONSerializer(BaseSerializer):
     """Convert JSON-compatible data to and from ``Report``."""
 
-    def __init__(self, object_factory: ObjectFactory | None = None) -> None:
+    def __init__(
+        self,
+        object_factory: ObjectFactory | None = None,
+        credential_policy: CredentialPersistencePolicy | None = None,
+    ) -> None:
         self.object_factory = object_factory or ObjectFactory()
+        self.credential_policy = credential_policy or CredentialPersistencePolicy()
 
     def load_mapping(self, data: Mapping[str, Any]) -> Report:
         """Deserialize a JSON-compatible mapping into a report."""
+        data, compatibility, migration_issues = prepare_template_for_load(
+            data, self.credential_policy
+        )
         data = normalize_template_mapping(data)
         validate_template_mapping(data)
         metadata = Metadata.from_dict(data["metadata"])
@@ -46,7 +60,7 @@ class JSONSerializer(BaseSerializer):
             if isinstance(item, Mapping)
         ]
 
-        return Report(
+        report = Report(
             version=str(data["version"]),
             metadata=metadata,
             pages=pages,
@@ -56,14 +70,24 @@ class JSONSerializer(BaseSerializer):
             styles=styles,
             assets=assets,
             data_sources=data_sources,
-            datasets=datasets,
+            datasets=[],
             data=dict(data.get("data", {})) if isinstance(data.get("data"), Mapping) else {},
         )
+        # Reopen must preserve repairable broken relationships for inspection.
+        report.datasets = datasets
+        report._template_compatibility = compatibility
+        report._reopen_migration_issues = migration_issues
+        return report
 
-    def dump_mapping(self, report: Report) -> dict[str, Any]:
+    def dump_mapping(
+        self,
+        report: Report,
+        *,
+        inspect_security: bool = True,
+    ) -> dict[str, Any]:
         """Serialize a report into a JSON-compatible mapping."""
         data = {
-            "version": report.version,
+            "version": DEFAULT_REPORT_VERSION,
             "metadata": report.metadata.to_dict(),
             "page": report.page.to_dict(),
             "objects": [item.to_dict() for item in report.objects],
@@ -80,10 +104,18 @@ class JSONSerializer(BaseSerializer):
             }
         if report.data_sources:
             data["dataSources"] = [item.to_dict() for item in report.data_sources]
+            if not self.credential_policy.allow_password_reference:
+                for source in data["dataSources"]:
+                    source["connection"].pop("passwordRef", None)
         if report.datasets:
             data["datasets"] = [item.to_dict() for item in report.datasets]
         if getattr(report, "data", None):
             data["data"] = dict(report.data)
+        if inspect_security:
+            inspection = inspect_template_security(data)
+            if not inspection.safe:
+                paths = ", ".join(inspection.issues)
+                raise ValueError(f"Unsafe persisted report fields: {paths}.")
         return data
 
     def loads(self, payload: str | bytes | bytearray) -> Report:

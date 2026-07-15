@@ -45,3 +45,4 @@ class QueryFieldDiscoveryResult:
     sample_row_count: int
     elapsed_ms: float
     warnings: tuple[str, ...] = ()
+    columns: tuple[DiscoveredColumn, ...] = ()

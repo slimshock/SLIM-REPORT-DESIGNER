@@ -103,7 +103,10 @@ def test_flask_adapter_serves_framework_agnostic_designer_ui(tmp_path: Path) -> 
     assert default_response.status_code == 200
     assert conditional_response.status_code == 200
     html = response.get_data(as_text=True)
-    assert "Slim Report Designer" in html
+    assert ">Report Designer</span>" in html
+    assert ">Slim Report Designer</span>" not in html
+    assert "<title>Slim Report Designer</title>" in html
+    assert '<span class="brand-mark">SR</span>' in html
     assert "Click a tool to add it to the page." in html
     assert 'id="selected-object"' in html
     assert 'window.SLIM_REPORT_API_BASE = "/report-designer/api";' in html
@@ -228,13 +231,8 @@ def test_flask_asset_routes_return_clean_errors_and_block_saves(tmp_path: Path) 
     )
 
     assert missing_response.status_code == 404
-    assert missing_response.get_json() == {
-        "ok": False,
-        "error": {
-            "code": "asset_not_found",
-            "message": "Asset not found: missing_logo",
-        },
-    }
+    assert missing_response.get_json()["error"]["code"] == "asset_not_found"
+    assert "missing_logo" not in missing_response.get_data(as_text=True)
     assert invalid_response.status_code in {400, 404}
     assert save_response.status_code == 403
     assert save_response.get_json()["error"]["code"] == "asset_forbidden"
@@ -436,7 +434,8 @@ def test_flask_designer_api_unknown_template_returns_json_404(tmp_path: Path) ->
     response = app.test_client().get("/report-designer/api/templates/missing-template")
 
     assert response.status_code == 404
-    assert "missing-template" in response.get_json()["error"]
+    assert response.get_json()["error_detail"]["code"] == "template_not_found"
+    assert "missing-template" not in response.get_data(as_text=True)
 
 
 def test_flask_designer_api_save_preserves_repeating_template_data(tmp_path: Path) -> None:
@@ -719,7 +718,8 @@ def test_flask_designer_api_data_provider_exception_returns_clean_error(tmp_path
     payload = response.get_json()
     assert payload["ok"] is False
     assert payload["error_detail"]["code"] == "server_error"
-    assert "Data unavailable" in payload["error"]
+    assert payload["error"] == "The operation could not be completed."
+    assert "lab-template" not in response.get_data(as_text=True)
 
 
 def test_flask_designer_provider_exception_returns_clean_storage_error() -> None:
@@ -749,7 +749,8 @@ def test_flask_designer_provider_exception_returns_clean_storage_error() -> None
     payload = response.get_json()
     assert payload["ok"] is False
     assert payload["error_detail"]["code"] == "template_storage_error"
-    assert payload["error_detail"]["message"] == "Could not connect to MySQL."
+    assert payload["error_detail"]["message"] == "The report template could not be stored."
+    assert "Could not connect" not in response.get_data(as_text=True)
 
 
 def test_flask_auth_hook_blocks_designer_and_api(tmp_path: Path) -> None:
@@ -859,10 +860,10 @@ def test_flask_designer_api_rejects_empty_preview_and_export(tmp_path: Path) -> 
     pdf_response = client.post("/report-designer/api/export/pdf", json=payload)
 
     assert preview_response.status_code == 400
-    assert "at least one object" in preview_response.get_json()["error"]
+    assert preview_response.get_json()["error_detail"]["code"] == "invalid_request"
     assert pdf_response.status_code == 400
-    assert "at least one object" in pdf_response.get_json()["error"]
-    assert pdf_response.get_json()["type"] == "ValueError"
+    assert pdf_response.get_json()["error_detail"]["code"] == "invalid_request"
+    assert "type" not in pdf_response.get_json()
 
 
 def test_flask_designer_api_rejects_empty_band_based_preview(tmp_path: Path) -> None:
@@ -881,7 +882,7 @@ def test_flask_designer_api_rejects_empty_band_based_preview(tmp_path: Path) -> 
     response = app.test_client().post("/report-designer/api/preview", json=payload)
 
     assert response.status_code == 400
-    assert "at least one object" in response.get_json()["error"]
+    assert response.get_json()["error_detail"]["code"] == "invalid_request"
 
 
 def test_flask_export_uses_page_print_filename_and_safe_slug(tmp_path: Path) -> None:

@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import copy
+import math
 import os
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from datetime import date, datetime, time
+from decimal import Decimal
 from enum import Enum
 from typing import Any, Protocol
 
@@ -48,7 +51,12 @@ _SAFE_QUALIFIED_IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z
 class CredentialResolver(Protocol):
     """Resolve a credential reference to its runtime secret value."""
 
-    def resolve(self, reference: str) -> str | None:
+    def resolve(
+        self,
+        reference: str,
+        *,
+        data_source: ReportDataSource | None = None,
+    ) -> str | None:
         """Return the resolved secret value, or None when not found."""
         ...
 
@@ -56,9 +64,19 @@ class CredentialResolver(Protocol):
 class EnvironmentCredentialResolver:
     """Resolve credential references from environment variables."""
 
-    def resolve(self, reference: str) -> str | None:
+    source_label = "environment"
+
+    def resolve(
+        self,
+        reference: str,
+        *,
+        data_source: ReportDataSource | None = None,
+    ) -> str | None:
         """Return the value of the named environment variable."""
-        return os.getenv(reference)
+        del data_source
+        if not isinstance(reference, str) or not reference.strip() or "\x00" in reference:
+            raise ValueError("Credential reference must be a non-empty environment key.")
+        return os.getenv(reference.strip())
 
 
 @dataclass
@@ -73,7 +91,7 @@ class MySQLConnectionConfig:
     port: int = 3306
     database: str = ""
     username: str = ""
-    password: str | None = None
+    password: str | None = field(default=None, repr=False)
     password_ref: str | None = None
     charset: str = "utf8mb4"
     connect_timeout: int = 10
@@ -81,9 +99,7 @@ class MySQLConnectionConfig:
 
     def __post_init__(self) -> None:
         self.host = _required_text(self.host, "connection.host", DataSourceValidationError)
-        self.port = int(self.port)
-        if self.port < 1 or self.port > 65535:
-            raise DataSourceValidationError("connection.port must be between 1 and 65535.")
+        self.port = _mysql_port(self.port)
         self.database = _required_text(
             self.database,
             "connection.database",
@@ -95,10 +111,22 @@ class MySQLConnectionConfig:
             DataSourceValidationError,
         )
         self.password = _optional_text(self.password)
-        self.password_ref = _optional_text(self.password_ref)
-        self.charset = str(self.charset or "utf8mb4")
-        self.connect_timeout = int(self.connect_timeout or 10)
-        self.query_timeout = int(self.query_timeout or 30)
+        self.password_ref = _credential_reference(self.password_ref)
+        self.charset = _required_text(
+            self.charset,
+            "connection.charset",
+            DataSourceValidationError,
+        )
+        self.connect_timeout = _positive_mysql_timeout(
+            self.connect_timeout,
+            default=10,
+            field_name="connection.connectTimeout",
+        )
+        self.query_timeout = _positive_mysql_timeout(
+            self.query_timeout,
+            default=30,
+            field_name="connection.queryTimeout",
+        )
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> MySQLConnectionConfig:
@@ -109,16 +137,22 @@ class MySQLConnectionConfig:
             raise DataSourceValidationError(f"connection.type must be {MYSQL_DATA_SOURCE_TYPE!r}.")
         return cls(
             host=str(mapping.get("host") or "localhost"),
-            port=int(mapping.get("port", 3306)),
+            port=mapping.get("port", 3306),
             database=str(mapping.get("database") or ""),
             username=str(mapping.get("username") or ""),
             password=_optional_text(mapping.get("password")),
-            password_ref=_optional_text(mapping.get("passwordRef", mapping.get("password_ref"))),
-            charset=str(mapping.get("charset", "utf8mb4") or "utf8mb4"),
-            connect_timeout=int(
-                mapping.get("connectTimeout", mapping.get("connect_timeout", 10)) or 10
+            password_ref=_credential_reference(
+                mapping.get("passwordRef", mapping.get("password_ref"))
             ),
-            query_timeout=int(mapping.get("queryTimeout", mapping.get("query_timeout", 30)) or 30),
+            charset=str(mapping.get("charset", "utf8mb4") or "utf8mb4"),
+            connect_timeout=mapping.get(
+                "connectTimeout",
+                mapping.get("connect_timeout", 10),
+            ),
+            query_timeout=mapping.get(
+                "queryTimeout",
+                mapping.get("query_timeout", 30),
+            ),
         )
 
     def to_dict(self, *, include_password: bool = False) -> dict[str, Any]:
@@ -151,15 +185,27 @@ class MySQLConnectionConfig:
 
         if resolver is not None:
             try:
-                resolved = resolver.resolve(self.password_ref)
+                try:
+                    resolved = resolver.resolve(self.password_ref, data_source=None)
+                except TypeError:
+                    resolved = resolver.resolve(self.password_ref)
             except Exception as exc:  # pragma: no cover - defensive boundary
                 raise CredentialResolutionError(
-                    f"Could not resolve credential reference: {self.password_ref}."
+                    "Could not resolve the configured credential reference."
                 ) from exc
             if resolved is not None:
                 return resolved
 
         return EnvironmentCredentialResolver().resolve(self.password_ref)
+
+
+def _credential_reference(value: Any) -> str | None:
+    reference = _optional_text(value)
+    if reference is None:
+        return None
+    if "\x00" in reference:
+        raise DataSourceValidationError("connection.passwordRef must not contain null bytes.")
+    return reference
 
 
 @dataclass
@@ -288,6 +334,7 @@ class QueryParameter:
         self.data_type = _normalize_parameter_type(self.data_type)
         self.required = bool(self.required)
         self.default = copy.deepcopy(self.default)
+        query_parameter_default_to_json(self.default)
         self.label = _optional_text(self.label)
 
     @classmethod
@@ -310,10 +357,31 @@ class QueryParameter:
             "required": self.required,
         }
         if self.default is not None:
-            data["default"] = copy.deepcopy(self.default)
+            data["default"] = query_parameter_default_to_json(self.default)
         if self.label is not None:
             data["label"] = self.label
         return data
+
+
+def query_parameter_default_to_json(value: Any) -> Any:
+    """Return a deterministic JSON-safe query parameter default."""
+    if value is None or isinstance(value, (str, bool)):
+        return value
+    if isinstance(value, int):
+        return value
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            raise DatasetValidationError("parameter.default must be a finite value.")
+        return value
+    if isinstance(value, Decimal):
+        if not value.is_finite():
+            raise DatasetValidationError("parameter.default must be a finite value.")
+        return str(value)
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, (date, time)):
+        return value.isoformat()
+    raise DatasetValidationError("parameter.default must be a supported scalar value.")
 
 
 @dataclass
@@ -444,6 +512,39 @@ def _normalize_parameter_type(value: str) -> str:
     if normalized not in SUPPORTED_PARAMETER_TYPES:
         raise DatasetValidationError(f"Unsupported parameter.dataType: {value}.")
     return normalized
+
+
+def _mysql_port(value: Any) -> int:
+    if value is None:
+        return 3306
+    normalized = _strict_integer(value)
+    if normalized is None or not 1 <= normalized <= 65535:
+        raise DataSourceValidationError("connection.port must be an integer between 1 and 65535.")
+    return normalized
+
+
+def _positive_mysql_timeout(value: Any, *, default: int, field_name: str) -> int:
+    if value is None:
+        return default
+    normalized = _strict_integer(value)
+    if normalized is None or normalized < 1:
+        raise DataSourceValidationError(f"{field_name} must be a positive integer.")
+    return normalized
+
+
+def _strict_integer(value: Any) -> int | None:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        text = value.strip()
+        if re.fullmatch(r"[+-]?\d+", text) is not None:
+            try:
+                return int(text)
+            except (ValueError, OverflowError):
+                return None
+    return None
 
 
 def _required_text(value: Any, field_name: str, error_type: type[Exception]) -> str:

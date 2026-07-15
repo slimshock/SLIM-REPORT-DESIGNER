@@ -11,8 +11,18 @@ from typing import Any
 from flask import Flask, has_request_context, request
 
 from slim_report_core import (
+    CredentialResolver,
     DataProviderRegistry,
+    DatasetExecutionService,
+    DataSourceManagementService,
+    DataSourceProviderRegistry,
+    MySQLDataSourceProvider,
+    MySQLDialect,
+    QueryFieldDiscoveryService,
     Report,
+    RuntimeParameterResolver,
+    RuntimeReportRenderService,
+    SQLValidator,
     create_default_template,
     render_html,
     render_pdf,
@@ -29,12 +39,28 @@ from slim_report_core.storage import (
 
 from .blueprint import create_blueprint
 from .config import DEFAULT_CONFIG
+from .credentials import InMemoryRuntimeCredentialStore, RuntimeCredentialStore
+from .preview import PreviewCancellationRegistry
 
 DataProvider = Callable[[str, Any, Any], Any]
 AuthHook = Callable[[], bool]
 PermissionHook = Callable[[str], bool]
 CsrfTokenProvider = Callable[[], str | None]
 FilenameProvider = Callable[[str, dict[str, Any], Any], str]
+
+
+def _default_data_source_management_service(
+    credential_resolver: CredentialResolver | None = None,
+) -> DataSourceManagementService:
+    registry = DataSourceProviderRegistry()
+    registry.register(MySQLDataSourceProvider(credential_resolver=credential_resolver))
+    sql_validator = SQLValidator(MySQLDialect())
+    discovery = QueryFieldDiscoveryService(registry, sql_validator)
+    return DataSourceManagementService(
+        provider_registry=registry,
+        sql_validator=sql_validator,
+        query_discovery_service=discovery,
+    )
 
 
 class SlimReportDesigner:
@@ -57,6 +83,12 @@ class SlimReportDesigner:
         filename_provider: FilenameProvider | None = None,
         csrf_token_provider: CsrfTokenProvider | None = None,
         csrf_header_name: str = "X-CSRFToken",
+        data_source_management_service: DataSourceManagementService | None = None,
+        dataset_execution_service: DatasetExecutionService | None = None,
+        runtime_report_render_service: RuntimeReportRenderService | None = None,
+        preview_cancellation_registry: PreviewCancellationRegistry | None = None,
+        credential_resolver: CredentialResolver | None = None,
+        runtime_credential_store: RuntimeCredentialStore | None = None,
     ) -> None:
         self.app: Flask | None = None
         self.providers = DataProviderRegistry()
@@ -74,6 +106,24 @@ class SlimReportDesigner:
         self.csrf_token_provider = csrf_token_provider
         self.csrf_header_name = csrf_header_name
         self.serializer = JSONSerializer()
+        self.credential_resolver = credential_resolver
+        self.runtime_credential_store = runtime_credential_store or InMemoryRuntimeCredentialStore()
+        self.data_source_management_service = (
+            data_source_management_service
+            or _default_data_source_management_service(credential_resolver)
+        )
+        self.dataset_execution_service = dataset_execution_service or DatasetExecutionService(
+            provider_registry=self.data_source_management_service.provider_registry,
+            sql_validator=self.data_source_management_service.sql_validator,
+            parameter_resolver=RuntimeParameterResolver(),
+        )
+        self.runtime_report_render_service = (
+            runtime_report_render_service
+            or RuntimeReportRenderService(execution_service=self.dataset_execution_service)
+        )
+        self.preview_cancellation_registry = (
+            preview_cancellation_registry or PreviewCancellationRegistry()
+        )
 
         if app is not None:
             self.init_app(app)
@@ -166,9 +216,7 @@ class SlimReportDesigner:
         if callable(prepare):
             request_args = request.args if has_request_context() else None
             request_json = (
-                request.get_json(silent=True)
-                if has_request_context() and request.is_json
-                else None
+                request.get_json(silent=True) if has_request_context() and request.is_json else None
             )
             prepared = prepare(template_id, template, request_args, request_json)
             if isinstance(prepared, dict):

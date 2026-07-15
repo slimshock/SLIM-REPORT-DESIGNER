@@ -1,6 +1,6 @@
 # Slim Report Designer
 
-Slim Report Designer is an early-alpha / pre-release, framework-agnostic Python report designer and rendering toolkit.
+Slim Report Designer 0.7.0 is a pre-release, framework-agnostic Python report designer and rendering toolkit with a completed read-only MySQL workflow for Flask.
 
 It includes:
 
@@ -10,11 +10,11 @@ It includes:
 - PDF export
 - Static visual designer UI
 - Flask integration
-- Future adapters for Django and FastAPI
+- Placeholder adapters for Django and FastAPI
 
 The designer UI is plain HTML, CSS, and JavaScript. It has no React, no Vue, no npm build step, and no frontend framework dependency.
 
-The project is not production-ready yet. Sprint 6 starts the packaging and public API baseline, but the API and template format may still change before a stable release.
+The project is not production-ready yet. Package and template APIs may still change before a stable release; deploy the MySQL workflow only with the documented least-privilege and runtime limits.
 
 Suggested repository description:
 
@@ -54,6 +54,7 @@ Implemented now:
 - Group Header and Group Footer bands
 - Data Fields panel
 - Field search and binding picker
+- Stored MySQL dataset tree with structured dataset-field text bindings
 - Sample data editor
 - Placeholder/sample data canvas toggle
 - `template.data.sample` support
@@ -78,6 +79,8 @@ Implemented now:
 - Framework-agnostic, validation-only MySQL SQL security engine
 - Optional PyMySQL read-only connection provider and provider registry
 - Views-only MySQL metadata discovery with approved-view filtering and type normalization
+- Bounded read-only MySQL dataset execution with unbuffered row streaming
+- Live MySQL HTML preview with Detail repetition, pagination, safe limits, and cancellation
 - Safe query field discovery for custom read-only SELECT datasets
 - Framework-agnostic data-source and dataset management service for Designer integrations
 - Filesystem asset provider for logos, signatures, watermarks, and reusable image assets
@@ -122,7 +125,7 @@ Not implemented yet:
 - Django adapter
 - FastAPI adapter
 - Database migrations owned by Slim Report Designer
-- Production packaging and public release
+- Automatic database migrations and release publishing
 
 ## Screenshots
 
@@ -148,6 +151,19 @@ The designer UI is framework-agnostic static HTML/CSS/JavaScript. Framework adap
 - `slim_report_fastapi`: future FastAPI adapter placeholder
 
 ## Installation
+
+Published-distribution commands for the coordinated 0.7.0 packages are:
+
+```bash
+python -m pip install slim-report-core
+python -m pip install "slim-report-core[mysql]"
+python -m pip install slim-report-designer-ui
+python -m pip install "slim-report-flask[database]"
+```
+
+Core does not install Flask or PyMySQL by default. The `mysql` extra adds PyMySQL; the Flask
+distribution installs the core and Designer UI and offers `mysql`, `sqlalchemy`, and `database`
+extras.
 
 This repository uses a multi-package layout. For production or LIS installation from GitHub, install
 the package subdirectories:
@@ -180,8 +196,8 @@ python -m pip install -e packages/slim_report_flask
 python -m pip install -e packages/slim_report_cli
 ```
 
-`slim_report_core` depends on ReportLab for PDF export. `slim_report_flask` depends on Flask and the designer UI package.
-SQLAlchemy is optional and only needed for database template storage:
+`slim_report_core` depends on ReportLab and SQLGlot. SQLAlchemy is optional and only needed for
+database template storage:
 
 ```bash
 python -m pip install -e "packages/slim_report_core[sqlalchemy]"
@@ -203,13 +219,32 @@ Flask/LIS pages can link directly to saved templates:
 <a href="/report-designer/export/pdf/lab_result?order_id=43&download=1">Download PDF</a>
 ```
 
-For development tools:
+For development and release tools:
 
 ```bash
-python -m pip install pytest ruff
-python -m pytest
-python -m ruff check packages tests
+python -m pip install -e "packages/slim_report_core[dev,database]"
+python -m pytest -q
+python -m ruff check .
+python scripts/check_release_security.py
+python scripts/release_check.py
 ```
+
+The release script builds wheels and source distributions, checks metadata and contents, and performs
+a clean-wheel install. It never uploads artifacts.
+
+## MySQL Demo
+
+The self-contained Flask demo is in `examples/flask_database_app`. It includes deterministic schema
+and sample data, approved reporting views, a view-only reader grant, two report templates, protected
+diagnostics, and one-command launchers:
+
+```powershell
+.\examples\flask_database_app\run_demo.ps1
+```
+
+See its README plus the [MySQL security guide](docs/mysql-security.md),
+[manual acceptance test](docs/manual-acceptance-0.7.0.md), and
+[known limitations](docs/known-limitations.md).
 
 ## Quick Start
 
@@ -434,6 +469,7 @@ The CLI accepts JSON files as input, but commands deserialize to `Report` before
 - [Formulas](docs/formulas.md)
 - [Conditional formatting](docs/conditional-formatting.md)
 - [Public API](docs/public-api.md)
+- [Template Persistence and Safe Reopen](docs/template-persistence-security.md)
 - [Architecture](docs/architecture.md)
 - [Roadmap](docs/roadmap.md)
 

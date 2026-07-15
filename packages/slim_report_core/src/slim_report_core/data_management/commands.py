@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from ..data_sources import QueryParameter
 
@@ -16,7 +16,7 @@ class CreateMySQLDataSourceCommand:
     port: int
     database: str
     username: str
-    password: str | None = None
+    password: str | None = field(default=None, repr=False)
     password_ref: str | None = None
     charset: str = "utf8mb4"
     connect_timeout: int = 10
@@ -34,7 +34,7 @@ class UpdateMySQLDataSourceCommand:
     port: int | None = None
     database: str | None = None
     username: str | None = None
-    runtime_password: str | None = None
+    runtime_password: str | None = field(default=None, repr=False)
     password_ref: str | None = None
     clear_runtime_password: bool = False
     clear_password_ref: bool = False

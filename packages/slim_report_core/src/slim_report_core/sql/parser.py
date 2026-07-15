@@ -32,6 +32,9 @@ class ParsedSQL:
     has_cte: bool
     has_union: bool
     is_query: bool
+    has_user_variables: bool = False
+    has_system_variables: bool = False
+    has_assignment_operator: bool = False
     parse_error: str | None = None
 
 
@@ -51,6 +54,11 @@ class SQLParser:
         parameters, invalid_styles = self._parameters(sql, tokens)
         forbidden_clauses = self._matched_clauses(tokens, dialect.forbidden_clauses())
         forbidden_comments = self._matched_comment_markers(sql, tokens, dialect)
+        has_user_variables = any(token.token_type is TokenType.PARAMETER for token in tokens)
+        has_system_variables = any(
+            token.token_type is TokenType.SESSION_PARAMETER for token in tokens
+        )
+        has_assignment_operator = any(token.token_type is TokenType.COLON_EQ for token in tokens)
 
         try:
             statements = [
@@ -72,6 +80,9 @@ class SQLParser:
                 has_cte=False,
                 has_union=False,
                 is_query=False,
+                has_user_variables=has_user_variables,
+                has_system_variables=has_system_variables,
+                has_assignment_operator=has_assignment_operator,
                 parse_error=str(exc),
             )
 
@@ -94,6 +105,9 @@ class SQLParser:
             has_union=any(isinstance(node, exp.Union) for node in nodes),
             is_query=bool(statements)
             and all(isinstance(statement, exp.Query) for statement in statements),
+            has_user_variables=has_user_variables,
+            has_system_variables=has_system_variables,
+            has_assignment_operator=has_assignment_operator,
         )
 
     @staticmethod
@@ -131,8 +145,7 @@ class SQLParser:
     def _matched_clauses(tokens: list[Token], clauses: Set[str]) -> tuple[str, ...]:
         comparable = [
             "<QUOTED>"
-            if token.token_type is TokenType.IDENTIFIER
-            or "STRING" in token.token_type.name
+            if token.token_type is TokenType.IDENTIFIER or "STRING" in token.token_type.name
             else token.text.upper()
             for token in tokens
         ]
@@ -173,9 +186,7 @@ class SQLParser:
                     invalid_styles.append("%(name)s")
                 elif re.match(r"%s\b", fragment):
                     invalid_styles.append("%s")
-            elif token.text == "$" and re.match(
-                r"\$\{[A-Za-z_][A-Za-z0-9_]*\}", fragment
-            ):
+            elif token.text == "$" and re.match(r"\$\{[A-Za-z_][A-Za-z0-9_]*\}", fragment):
                 invalid_styles.append("${name}")
             elif token.token_type is TokenType.L_BRACE and re.match(
                 r"\{\{[A-Za-z_][A-Za-z0-9_]*\}\}", fragment

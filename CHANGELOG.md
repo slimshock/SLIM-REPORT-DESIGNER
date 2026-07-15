@@ -6,6 +6,23 @@ This project follows semantic versioning once public releases begin.
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-07-15
+
+### Added
+
+- End-to-end MySQL report design with approved views and validated single-statement SELECT queries.
+- Named runtime parameters, safe field discovery, dataset fields, canvas bindings, and New Report Wizard.
+- Bounded unbuffered dataset execution and escaped, sandboxed live HTML preview with cancellation.
+- Credential-reference persistence, offline-safe template reopen, freshness checks, and repair workflows.
+- Self-contained Flask/MySQL demo, least-privilege SQL, release checks, wheel verification, and CI gates.
+
+### Security
+
+- Centralized Flask error mapping prevents raw exceptions, SQL, values, rows, and credentials from
+  reaching clients.
+- MySQL sessions require verified read-only mode and runtime execution remains bounded and streamed.
+- Persisted reports reject plaintext or resolved credentials and omit runtime values and preview data.
+
 ### Changed
 
 - Bumped package versions to the Sprint 6 development baseline `0.6.0a0`.

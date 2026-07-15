@@ -97,6 +97,78 @@ def test_mysql_configuration_rejects_invalid_required_values(
         mysql_config(**{field: value})
 
 
+@pytest.mark.parametrize(
+    ("field", "value", "expected"),
+    [
+        ("port", 1, 1),
+        ("port", 3306, 3306),
+        ("port", "3306", 3306),
+        ("port", 65535, 65535),
+        ("port", None, 3306),
+        ("connect_timeout", 1, 1),
+        ("connect_timeout", "10", 10),
+        ("connect_timeout", None, 10),
+        ("query_timeout", 1, 1),
+        ("query_timeout", "30", 30),
+        ("query_timeout", None, 30),
+    ],
+)
+def test_mysql_integer_configuration_accepts_defaults_and_numeric_strings(
+    field: str,
+    value: object,
+    expected: int,
+) -> None:
+    config = mysql_config(**{field: value})
+
+    assert getattr(config, field) == expected
+    json_field = {
+        "port": "port",
+        "connect_timeout": "connectTimeout",
+        "query_timeout": "queryTimeout",
+    }[field]
+    payload = mysql_config().to_dict()
+    payload[json_field] = value
+    assert getattr(MySQLConnectionConfig.from_dict(payload), field) == expected
+
+
+@pytest.mark.parametrize(
+    ("field", "json_field", "value"),
+    [
+        ("port", "port", 0),
+        ("port", "port", 65536),
+        ("port", "port", -1),
+        ("port", "port", "invalid"),
+        ("port", "port", True),
+        ("port", "port", 3306.5),
+        ("port", "port", "9" * 5000),
+        ("connect_timeout", "connectTimeout", 0),
+        ("connect_timeout", "connectTimeout", -1),
+        ("connect_timeout", "connectTimeout", "invalid"),
+        ("connect_timeout", "connectTimeout", ""),
+        ("connect_timeout", "connectTimeout", True),
+        ("connect_timeout", "connectTimeout", 10.5),
+        ("query_timeout", "queryTimeout", 0),
+        ("query_timeout", "queryTimeout", -1),
+        ("query_timeout", "queryTimeout", "invalid"),
+        ("query_timeout", "queryTimeout", ""),
+        ("query_timeout", "queryTimeout", False),
+        ("query_timeout", "queryTimeout", 30.5),
+    ],
+)
+def test_mysql_integer_configuration_rejects_invalid_values_consistently(
+    field: str,
+    json_field: str,
+    value: object,
+) -> None:
+    with pytest.raises(DataSourceValidationError):
+        mysql_config(**{field: value})
+
+    payload = mysql_config().to_dict()
+    payload[json_field] = value
+    with pytest.raises(DataSourceValidationError):
+        MySQLConnectionConfig.from_dict(payload)
+
+
 def test_plain_text_password_is_excluded_from_normal_serialization() -> None:
     config = mysql_config(password="secret", password_ref=None)
 

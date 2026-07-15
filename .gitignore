@@ -23,6 +23,7 @@ examples/**/report_assets_runtime/
 
 # Virtual environments
 .venv/
+.venv-demo/
 venv/
 env/
 ENV/

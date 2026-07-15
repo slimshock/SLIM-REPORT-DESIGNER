@@ -7,7 +7,7 @@ from importlib.resources.abc import Traversable
 
 __all__ = ["get_designer_static_path", "static_file", "static_root"]
 
-__version__ = "0.6.0a0"
+__version__ = "0.7.0"
 
 
 def static_root() -> Traversable:
