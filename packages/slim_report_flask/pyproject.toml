@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "slim-report-flask"
 version = "0.7.0"
 description = "Flask adapter for Slim Report Designer."
-readme = "../../README.md"
+readme = { text = "Flask integration package for Slim Report Designer. See the project repository for full documentation.", content-type = "text/markdown" }
 requires-python = ">=3.10"
 license = "MIT"
 authors = [{ name = "Slim Report Designer contributors" }]

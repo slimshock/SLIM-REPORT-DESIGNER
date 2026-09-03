@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "slim-report-core"
 version = "0.7.0"
 description = "Framework-agnostic core for Slim Report Designer."
-readme = "../../README.md"
+readme = { text = "Framework-agnostic core package for Slim Report Designer. See the project repository for full documentation.", content-type = "text/markdown" }
 requires-python = ">=3.10"
 license = "MIT"
 authors = [{ name = "Slim Report Designer contributors" }]
