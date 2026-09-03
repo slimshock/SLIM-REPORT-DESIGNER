@@ -164,14 +164,43 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
             "saveEnabled": designer.save_enabled,
             **designer.csrf_config(),
         }
-        config = (
-            f'<base href="{asset_base}/">\n'
-            "<script>\n"
-            f"window.SLIM_REPORT_CONFIG = {json.dumps(runtime_config)};\n"
-            f"window.SLIM_REPORT_API_BASE = {json.dumps(api_base)};\n"
-            f"window.SLIM_REPORT_TEMPLATE_ID = {json.dumps(template_id)};\n"
-            "</script>"
-        )
+
+        config_parts = [
+            f'<base href="{escape(asset_base, quote=True)}/">',
+            (
+                '<meta name="slim-report-api-base" '
+                f'content="{escape(str(runtime_config["apiBase"]), quote=True)}">'
+            ),
+            (
+                '<meta name="slim-report-template-id" '
+                f'content="{escape(str(runtime_config["templateId"]), quote=True)}">'
+            ),
+            (
+                '<meta name="slim-report-can-save" '
+                f'content="{str(bool(runtime_config["canSave"])).lower()}">'
+            ),
+            (
+                '<meta name="slim-report-save-enabled" '
+                f'content="{str(bool(runtime_config["saveEnabled"])).lower()}">'
+            ),
+        ]
+
+        csrf_header_name = runtime_config.get("csrfHeaderName")
+        csrf_token = runtime_config.get("csrfToken")
+
+        if csrf_header_name:
+            config_parts.append(
+                '<meta name="slim-report-csrf-header" '
+                f'content="{escape(str(csrf_header_name), quote=True)}">'
+            )
+
+        if csrf_token:
+            config_parts.append(
+                '<meta name="slim-report-csrf-token" '
+                f'content="{escape(str(csrf_token), quote=True)}">'
+            )
+
+        config = "\n".join(config_parts)
         html = html.replace("<head>\n", f"<head>\n{config}\n", 1)
         return Response(html, mimetype="text/html")
 
