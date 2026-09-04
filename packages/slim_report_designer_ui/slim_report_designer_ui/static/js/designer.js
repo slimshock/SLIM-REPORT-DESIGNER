@@ -1,3 +1,4 @@
+import { runtimeConfig } from "./runtime_config.js";
 import { createCanvasController, placeObjectOnCanvas } from "./canvas.js";
 import {
   loadCanvasSettings,
@@ -101,6 +102,9 @@ const elements = {
   objectCount: document.querySelector("#object-count"),
   importFile: document.querySelector("#import-file"),
   templateTitle: document.querySelector("#template-title"),
+  brandMark: document.querySelector("#designer-brand-mark"),
+  brandName: document.querySelector("#designer-brand-name"),
+  backLink: document.querySelector("#designer-back-link"),
   historyModal: document.querySelector("#history-modal"),
   historyClose: document.querySelector("#history-close"),
   historyCreate: document.querySelector("#history-create"),
@@ -211,6 +215,7 @@ elements.reportAttentionDatasets.addEventListener("click", () => datasetManager.
   elements.reportAttentionDatasets
 ));
 
+applyHostBranding();
 initializeToolboxIcons();
 initializeHistoryUi();
 initializeSampleDataUi();
@@ -432,6 +437,28 @@ document.addEventListener("keydown", (event) => {
 });
 
 initialize();
+
+function applyHostBranding() {
+  const config = runtimeConfig();
+
+  if (config.brandMark) {
+    elements.brandMark.textContent = config.brandMark;
+  }
+
+  if (config.brandName) {
+    elements.brandName.textContent = config.brandName;
+  }
+
+  if (config.pageTitle) {
+    document.title = config.pageTitle;
+  }
+
+  if (config.backUrl) {
+    elements.backLink.href = config.backUrl;
+    elements.backLink.textContent = config.backLabel || "Back";
+    elements.backLink.hidden = false;
+  }
+}
 
 async function initialize() {
   try {

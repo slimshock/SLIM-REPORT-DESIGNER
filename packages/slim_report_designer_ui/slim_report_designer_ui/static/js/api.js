@@ -1,3 +1,4 @@
+import { runtimeConfig } from "./runtime_config.js";
 import { createDefaultTemplate, normalizeTemplate, objectStyle, safePdfFilename } from "./objects.js";
 import { conditionalStyleResult, ensureTemplateData, evaluateFormula, getArrayByPath, getFieldValue, getRowValue, resolveBinding } from "./data_fields.js";
 import { qrSvgMarkup } from "./qrcode.js";
@@ -392,39 +393,6 @@ function apiBase() {
 function currentTemplateId() {
   const params = new URLSearchParams(window.location.search);
   return params.get("template") || runtimeConfig().templateId || window.SLIM_REPORT_TEMPLATE_ID || "";
-}
-
-function runtimeConfig() {
-  const legacyConfig = window.SLIM_REPORT_CONFIG || {};
-
-  return {
-    apiBase: legacyConfig.apiBase || metaContent("slim-report-api-base"),
-    templateId: legacyConfig.templateId || metaContent("slim-report-template-id"),
-    canSave:
-      typeof legacyConfig.canSave === "boolean"
-        ? legacyConfig.canSave
-        : metaBoolean("slim-report-can-save"),
-    saveEnabled:
-      typeof legacyConfig.saveEnabled === "boolean"
-        ? legacyConfig.saveEnabled
-        : metaBoolean("slim-report-save-enabled"),
-    csrfHeaderName:
-      legacyConfig.csrfHeaderName || metaContent("slim-report-csrf-header"),
-    csrfToken:
-      legacyConfig.csrfToken || metaContent("slim-report-csrf-token")
-  };
-}
-
-function metaContent(name) {
-  return document.querySelector(`meta[name="${name}"]`)?.content || "";
-}
-
-function metaBoolean(name) {
-  const value = metaContent(name);
-  if (!value) {
-    return undefined;
-  }
-  return value.toLowerCase() === "true";
 }
 
 function requestHeaders() {

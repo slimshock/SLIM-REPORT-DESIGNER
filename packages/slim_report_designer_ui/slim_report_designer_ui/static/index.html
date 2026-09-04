@@ -3,16 +3,17 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Slim Report Designer</title>
+  <title id="designer-page-title">Slim Report Designer</title>
   <link rel="stylesheet" href="./css/designer.css">
 </head>
 <body>
   <main class="designer-app">
     <header class="top-toolbar" aria-label="Designer toolbar">
       <div class="brand">
-        <span class="brand-mark">SR</span>
-        <span>Report Designer</span>
+        <span class="brand-mark" id="designer-brand-mark">SR</span>
+        <span id="designer-brand-name">Report Designer</span>
       </div>
+      <a id="designer-back-link" class="toolbar-button" href="#" hidden>Back</a>
       <div class="toolbar-spacer"></div>
       <div class="toolbar-actions" id="toolbar-actions"></div>
       <div class="template-title" id="template-title">Untitled Report</div>

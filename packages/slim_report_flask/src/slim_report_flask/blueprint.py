@@ -162,6 +162,11 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
             "templateId": template_id,
             "canSave": designer.can_edit(template_id) if template_id else designer.save_enabled,
             "saveEnabled": designer.save_enabled,
+            "brandName": current_app.config["SLIM_REPORT_UI_BRAND_NAME"],
+            "brandMark": current_app.config["SLIM_REPORT_UI_BRAND_MARK"],
+            "pageTitle": current_app.config["SLIM_REPORT_UI_PAGE_TITLE"],
+            "backUrl": current_app.config["SLIM_REPORT_UI_BACK_URL"],
+            "backLabel": current_app.config["SLIM_REPORT_UI_BACK_LABEL"],
             **designer.csrf_config(),
         }
 
@@ -183,6 +188,22 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
                 '<meta name="slim-report-save-enabled" '
                 f'content="{str(bool(runtime_config["saveEnabled"])).lower()}">'
             ),
+            (
+                '<meta name="slim-report-brand-name" '
+                f'content="{escape(str(runtime_config["brandName"]), quote=True)}">'
+            ),
+            (
+                '<meta name="slim-report-brand-mark" '
+                f'content="{escape(str(runtime_config["brandMark"]), quote=True)}">'
+            ),
+            (
+                '<meta name="slim-report-page-title" '
+                f'content="{escape(str(runtime_config["pageTitle"]), quote=True)}">'
+            ),
+            (
+                '<meta name="slim-report-back-label" '
+                f'content="{escape(str(runtime_config["backLabel"]), quote=True)}">'
+            ),
         ]
 
         csrf_header_name = runtime_config.get("csrfHeaderName")
@@ -198,6 +219,13 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
             config_parts.append(
                 '<meta name="slim-report-csrf-token" '
                 f'content="{escape(str(csrf_token), quote=True)}">'
+            )
+
+        back_url = runtime_config.get("backUrl")
+        if back_url:
+            config_parts.append(
+                '<meta name="slim-report-back-url" '
+                f'content="{escape(str(back_url), quote=True)}">'
             )
 
         config = "\n".join(config_parts)
