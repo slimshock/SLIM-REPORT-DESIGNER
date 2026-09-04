@@ -45,6 +45,7 @@ from .preview import PreviewCancellationRegistry
 DataProvider = Callable[[str, Any, Any], Any]
 FieldCatalogProvider = Callable[[str, Any, Any], Any]
 AuthHook = Callable[[], bool]
+GlobalPermissionHook = Callable[[], bool]
 PermissionHook = Callable[[str], bool]
 CsrfTokenProvider = Callable[[], str | None]
 FilenameProvider = Callable[[str, dict[str, Any], Any], str]
@@ -81,9 +82,14 @@ class SlimReportDesigner:
         field_catalog_provider: FieldCatalogProvider | None = None,
         url_prefix: str | None = None,
         auth_required: AuthHook | None = None,
+        can_view_reports: GlobalPermissionHook | None = None,
+        can_edit_reports: GlobalPermissionHook | None = None,
+        can_export_reports: GlobalPermissionHook | None = None,
         can_view_template: PermissionHook | None = None,
         can_edit_template: PermissionHook | None = None,
         can_export_template: PermissionHook | None = None,
+        can_view_assets: GlobalPermissionHook | None = None,
+        can_edit_assets: GlobalPermissionHook | None = None,
         can_view_asset: PermissionHook | None = None,
         can_edit_asset: PermissionHook | None = None,
         filename_provider: FilenameProvider | None = None,
@@ -104,9 +110,14 @@ class SlimReportDesigner:
         self.field_catalog_provider = field_catalog_provider
         self.url_prefix = url_prefix
         self.auth_required = auth_required
+        self.can_view_reports = can_view_reports
+        self.can_edit_reports = can_edit_reports
+        self.can_export_reports = can_export_reports
         self.can_view_template = can_view_template
         self.can_edit_template = can_edit_template
         self.can_export_template = can_export_template
+        self.can_view_assets_hook = can_view_assets
+        self.can_edit_assets_hook = can_edit_assets
         self.can_view_asset_hook = can_view_asset
         self.can_edit_asset_hook = can_edit_asset
         self.filename_provider = filename_provider
@@ -430,6 +441,18 @@ class SlimReportDesigner:
             return True
         return bool(self.auth_required())
 
+    def can_view_global(self) -> bool:
+        """Return whether the current user may access report-wide view operations."""
+        return self._global_permission(self.can_view_reports)
+
+    def can_edit_global(self) -> bool:
+        """Return whether the current user may access report-wide edit operations."""
+        return self._global_permission(self.can_edit_reports)
+
+    def can_export_global(self) -> bool:
+        """Return whether the current user may access report-wide export operations."""
+        return self._global_permission(self.can_export_reports)
+
     def can_view(self, template_id: str) -> bool:
         return self._permission(self.can_view_template, template_id)
 
@@ -438,6 +461,14 @@ class SlimReportDesigner:
 
     def can_export(self, template_id: str) -> bool:
         return self._permission(self.can_export_template, template_id)
+
+    def can_view_assets_global(self) -> bool:
+        """Return whether the current user may list the host asset collection."""
+        return self._global_permission(self.can_view_assets_hook)
+
+    def can_edit_assets_global(self) -> bool:
+        """Return whether the current user may perform collection-level asset edits."""
+        return self._global_permission(self.can_edit_assets_hook)
 
     def can_view_asset(self, asset_id: str) -> bool:
         return self._permission(self.can_view_asset_hook, asset_id)
@@ -511,6 +542,11 @@ class SlimReportDesigner:
         except (TypeError, ValueError):
             pass
         return provider(template_id, request_args, request_json)
+
+    def _global_permission(self, hook: GlobalPermissionHook | None) -> bool:
+        if hook is None:
+            return True
+        return bool(hook())
 
     def _permission(self, hook: PermissionHook | None, template_id: str) -> bool:
         if hook is None:

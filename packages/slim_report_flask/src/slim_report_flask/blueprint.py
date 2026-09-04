@@ -161,7 +161,11 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         runtime_config = {
             "apiBase": api_base,
             "templateId": template_id,
-            "canSave": designer.can_edit(template_id) if template_id else designer.save_enabled,
+            "canSave": (
+                designer.can_edit(template_id)
+                if template_id
+                else designer.save_enabled and designer.can_edit_global()
+            ),
             "saveEnabled": designer.save_enabled,
             "brandName": current_app.config["SLIM_REPORT_UI_BRAND_NAME"],
             "brandMark": current_app.config["SLIM_REPORT_UI_BRAND_MARK"],
@@ -314,9 +318,8 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.post("/api/designer/reopen/inspect")
     def inspect_reopened_report() -> Response:
-        payload, template_id, report = _data_source_request(designer)
+        payload, template_id, report, blocked = _data_source_request(designer, "view")
         del payload
-        blocked = require_access(designer, "view", template_id or None, api=True)
         if blocked:
             return blocked
         service = ReportTemplateReopenService(credential_resolver=designer.credential_resolver)
@@ -324,8 +327,7 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.post("/api/designer/preview/readiness")
     def inspect_preview_readiness() -> Response:
-        payload, template_id, report = _data_source_request(designer)
-        blocked = require_access(designer, "view", template_id or None, api=True)
+        payload, template_id, report, blocked = _data_source_request(designer, "view")
         if blocked:
             return blocked
         reopen = ReportTemplateReopenService(credential_resolver=designer.credential_resolver)
@@ -337,8 +339,7 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.post("/api/designer/save/validate")
     def validate_designer_save() -> Response:
-        _payload, template_id, report = _data_source_request(designer)
-        blocked = require_access(designer, "edit", template_id or None, api=True)
+        _payload, template_id, report, blocked = _data_source_request(designer, "edit")
         if blocked:
             return blocked
         reopen = ReportTemplateReopenService(credential_resolver=designer.credential_resolver)
@@ -370,9 +371,8 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.post("/api/designer/data-sources/list")
     def list_active_data_sources() -> Response:
-        payload, template_id, report = _data_source_request(designer)
+        payload, template_id, report, blocked = _data_source_request(designer, "view")
         del payload
-        blocked = require_access(designer, "view", template_id or None, api=True)
         if blocked:
             return blocked
         return jsonify(_data_source_list_payload(designer, report))
@@ -387,8 +387,7 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         if unavailable:
             return unavailable
 
-        payload, template_id, report = _data_source_request(designer)
-        blocked = require_access(designer, "edit", template_id or None, api=True)
+        payload, template_id, report, blocked = _data_source_request(designer, "edit")
         if blocked:
             return blocked
         service = designer.data_source_management_service
@@ -413,8 +412,7 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         if unavailable:
             return unavailable
 
-        payload, template_id, report = _data_source_request(designer)
-        blocked = require_access(designer, "edit", template_id or None, api=True)
+        payload, template_id, report, blocked = _data_source_request(designer, "edit")
         if blocked:
             return blocked
         service = designer.data_source_management_service
@@ -444,8 +442,7 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         if unavailable:
             return unavailable
 
-        payload, template_id, report = _data_source_request(designer)
-        blocked = require_access(designer, "edit", template_id or None, api=True)
+        payload, template_id, report, blocked = _data_source_request(designer, "edit")
         if blocked:
             return blocked
         service = designer.data_source_management_service
@@ -506,8 +503,7 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         if unavailable:
             return unavailable
 
-        payload, template_id, report = _data_source_request(designer)
-        blocked = require_access(designer, "view", template_id or None, api=True)
+        payload, template_id, report, blocked = _data_source_request(designer, "view")
         if blocked:
             return blocked
         service = designer.data_source_management_service
@@ -538,9 +534,8 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         if unavailable:
             return unavailable
 
-        payload, template_id, report = _data_source_request(designer)
+        payload, template_id, report, blocked = _data_source_request(designer, "view")
         del payload
-        blocked = require_access(designer, "view", template_id or None, api=True)
         if blocked:
             return blocked
         return jsonify(_dataset_list_payload(designer, report))
@@ -555,9 +550,8 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         if unavailable:
             return unavailable
 
-        payload, template_id, report = _data_source_request(designer)
+        payload, template_id, report, blocked = _data_source_request(designer, "view")
         del payload
-        blocked = require_access(designer, "view", template_id or None, api=True)
         if blocked:
             return blocked
         dataset = designer.data_source_management_service.get_dataset(report, dataset_id)
@@ -573,9 +567,8 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         if unavailable:
             return unavailable
 
-        payload, template_id, report = _data_source_request(designer)
+        payload, template_id, report, blocked = _data_source_request(designer, "view")
         del payload
-        blocked = require_access(designer, "view", template_id or None, api=True)
         if blocked:
             return blocked
         views = designer.data_source_management_service.list_available_views(report, data_source_id)
@@ -603,8 +596,7 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         if unavailable:
             return unavailable
 
-        payload, template_id, report = _data_source_request(designer)
-        blocked = require_access(designer, "view", template_id or None, api=True)
+        payload, template_id, report, blocked = _data_source_request(designer, "view")
         if blocked:
             return blocked
         schema = designer.data_source_management_service.inspect_view(
@@ -624,8 +616,7 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         if unavailable:
             return unavailable
 
-        payload, template_id, _report = _data_source_request(designer)
-        blocked = require_access(designer, "view", template_id or None, api=True)
+        payload, template_id, _report, blocked = _data_source_request(designer, "view")
         if blocked:
             return blocked
         result = designer.data_source_management_service.validate_query_dataset_configuration(
@@ -655,8 +646,7 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         if unavailable:
             return unavailable
 
-        payload, template_id, report = _data_source_request(designer)
-        blocked = require_access(designer, "view", template_id or None, api=True)
+        payload, template_id, report, blocked = _data_source_request(designer, "view")
         if blocked:
             return blocked
         service = designer.data_source_management_service
@@ -679,8 +669,7 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         if unavailable:
             return unavailable
 
-        payload, template_id, report = _data_source_request(designer)
-        blocked = require_access(designer, "edit", template_id or None, api=True)
+        payload, template_id, report, blocked = _data_source_request(designer, "edit")
         if blocked:
             return blocked
         result = designer.data_source_management_service.create_view_dataset(
@@ -707,8 +696,7 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         if unavailable:
             return unavailable
 
-        payload, template_id, report = _data_source_request(designer)
-        blocked = require_access(designer, "edit", template_id or None, api=True)
+        payload, template_id, report, blocked = _data_source_request(designer, "edit")
         if blocked:
             return blocked
         result = designer.data_source_management_service.create_query_dataset(
@@ -798,8 +786,7 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         if unavailable:
             return unavailable
 
-        _payload, template_id, report = _data_source_request(designer)
-        blocked = require_access(designer, "view", template_id or None, api=True)
+        _payload, template_id, report, blocked = _data_source_request(designer, "view")
         if blocked:
             return blocked
         schema = ReportRuntimeParameterService().schema_for_primary_dataset(report, dataset_id)
@@ -815,8 +802,7 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         if unavailable:
             return unavailable
 
-        payload, template_id, report = _data_source_request(designer)
-        blocked = require_access(designer, "view", template_id or None, api=True)
+        payload, template_id, report, blocked = _data_source_request(designer, "view")
         if blocked:
             return blocked
         values = payload.get("values", {})
@@ -854,8 +840,7 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         if unavailable:
             return unavailable
 
-        payload, template_id, report = _data_source_request(designer)
-        blocked = require_access(designer, "edit", template_id or None, api=True)
+        payload, template_id, report, blocked = _data_source_request(designer, "edit")
         if blocked:
             return blocked
         result = designer.data_source_management_service.update_view_dataset(
@@ -877,8 +862,7 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         if unavailable:
             return unavailable
 
-        payload, template_id, report = _data_source_request(designer)
-        blocked = require_access(designer, "edit", template_id or None, api=True)
+        payload, template_id, report, blocked = _data_source_request(designer, "edit")
         if blocked:
             return blocked
         service = designer.data_source_management_service
@@ -918,9 +902,8 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         if unavailable:
             return unavailable
 
-        payload, template_id, report = _data_source_request(designer)
+        payload, template_id, report, blocked = _data_source_request(designer, "edit")
         del payload
-        blocked = require_access(designer, "edit", template_id or None, api=True)
         if blocked:
             return blocked
         result = designer.data_source_management_service.refresh_view_dataset_fields(
@@ -940,8 +923,7 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         if unavailable:
             return unavailable
 
-        payload, template_id, report = _data_source_request(designer)
-        blocked = require_access(designer, "view", template_id or None, api=True)
+        payload, template_id, report, blocked = _data_source_request(designer, "view")
         if blocked:
             return blocked
         service = designer.data_source_management_service
@@ -976,8 +958,7 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         if unavailable:
             return unavailable
 
-        payload, template_id, report = _data_source_request(designer)
-        blocked = require_access(designer, "view", template_id or None, api=True)
+        payload, template_id, report, blocked = _data_source_request(designer, "view")
         if blocked:
             return blocked
         result = designer.data_source_management_service.discover_query_fields(
@@ -997,8 +978,7 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         if unavailable:
             return unavailable
 
-        payload, template_id, report = _data_source_request(designer)
-        blocked = require_access(designer, "edit", template_id or None, api=True)
+        payload, template_id, report, blocked = _data_source_request(designer, "edit")
         if blocked:
             return blocked
         service = designer.data_source_management_service
@@ -1022,9 +1002,8 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         if unavailable:
             return unavailable
 
-        payload, template_id, report = _data_source_request(designer)
+        payload, template_id, report, blocked = _data_source_request(designer, "edit")
         del payload
-        blocked = require_access(designer, "edit", template_id or None, api=True)
         if blocked:
             return blocked
         designer.data_source_management_service.remove_dataset(report, dataset_id)
@@ -1418,20 +1397,34 @@ def _json_object_request() -> dict[str, Any]:
 
 def _data_source_request(
     designer: SlimReportDesigner,
-) -> tuple[dict[str, Any], str, Report]:
+    action: str,
+) -> tuple[
+    dict[str, Any],
+    str,
+    Report | None,
+    Response | tuple[Response, int] | None,
+]:
+    """Authorize before loading report state or injecting runtime credentials."""
     payload = _json_object_request()
     template = payload.get("template")
     template_id = str(payload.get("template_id") or "")
+
     if isinstance(template, dict):
         template_id = request_template_id(payload, template)
+    elif not template_id:
+        raise ValueError("A report template is required for data-source management.")
+
+    blocked = require_access(designer, action, template_id or None, api=True)
+    if blocked:
+        return payload, template_id, None, blocked
+
+    if isinstance(template, dict):
         report = load_report_from_payload(normalize_template_payload(template))
-        _inject_runtime_credentials(designer, payload, report)
-        return payload, template_id, report
-    if template_id:
+    else:
         report = designer.get_report(template_id)
-        _inject_runtime_credentials(designer, payload, report)
-        return payload, template_id, report
-    raise ValueError("A report template is required for data-source management.")
+
+    _inject_runtime_credentials(designer, payload, report)
+    return payload, template_id, report, None
 
 
 def _new_report_configuration(value: Any) -> NewReportConfiguration:
@@ -2097,10 +2090,17 @@ def require_access(
             "edit": designer.can_edit,
             "export": designer.can_export,
         }[action](template_id)
-        if not allowed:
-            if api:
-                return error_response("forbidden", "Permission denied.", 403)
-            return Response("Permission denied.", status=403, mimetype="text/plain")
+    else:
+        allowed = {
+            "view": designer.can_view_global,
+            "edit": designer.can_edit_global,
+            "export": designer.can_export_global,
+        }[action]()
+
+    if not allowed:
+        if api:
+            return error_response("forbidden", "Permission denied.", 403)
+        return Response("Permission denied.", status=403, mimetype="text/plain")
     return None
 
 
@@ -2121,10 +2121,17 @@ def require_asset_access(
             if action == "view"
             else designer.can_edit_asset(asset_id)
         )
-        if not allowed:
-            if api:
-                return asset_error_response(AssetPermissionError("Permission denied."))
-            return Response("Permission denied.", status=403, mimetype="text/plain")
+    else:
+        allowed = (
+            designer.can_view_assets_global()
+            if action == "view"
+            else designer.can_edit_assets_global()
+        )
+
+    if not allowed:
+        if api:
+            return asset_error_response(AssetPermissionError("Permission denied."))
+        return Response("Permission denied.", status=403, mimetype="text/plain")
     return None
 
 
