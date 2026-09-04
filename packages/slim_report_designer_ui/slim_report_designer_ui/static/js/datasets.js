@@ -62,7 +62,9 @@ export function createDatasetManager({
   onTemplateChange,
   onStatus,
   openDataSources,
-  openParameters
+  openParameters,
+  enabled = true,
+  dataSourcesEnabled = true
 }) {
   const ui = {
     close: root.querySelector("#dataset-close"),
@@ -97,6 +99,11 @@ export function createDatasetManager({
   return { open, close: attemptClose };
 
   async function open(openingControl = null) {
+    if (!enabled) {
+      onStatus?.("SQL dataset management is disabled.");
+      return;
+    }
+
     opener = openingControl || document.activeElement;
     resetTransientState();
     root.hidden = false;
@@ -142,12 +149,21 @@ export function createDatasetManager({
     if (sources.length === 0) {
       const empty = messageBlock(
         "No MySQL data source is configured.",
-        "Create and test a MySQL data source before adding a dataset."
+        dataSourcesEnabled
+          ? "Create and test a MySQL data source before adding a dataset."
+          : "Data source management is disabled by the host application."
       );
-      empty.appendChild(button("Open Data Sources", "", openDataSourceManager));
+
+      if (dataSourcesEnabled) {
+        empty.appendChild(
+          button("Open Data Sources", "", openDataSourceManager)
+        );
+      }
+
       ui.content.appendChild(empty);
       return;
     }
+
     if (datasets.length === 0) {
       ui.content.appendChild(messageBlock(
         "No datasets are configured.",
@@ -994,6 +1010,11 @@ export function createDatasetManager({
   }
 
   function openDataSourceManager() {
+    if (!dataSourcesEnabled) {
+      onStatus?.("Data source management is disabled.");
+      return;
+    }
+
     root.hidden = true;
     resetTransientState();
     openDataSources?.();

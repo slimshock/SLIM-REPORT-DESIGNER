@@ -81,6 +81,7 @@ from slim_report_designer_ui import static_file
 from .designer import render_designer_page, template_for_designer
 from .errors import map_safe_error
 
+
 if TYPE_CHECKING:
     from .extension import SlimReportDesigner
 
@@ -167,6 +168,8 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
             "pageTitle": current_app.config["SLIM_REPORT_UI_PAGE_TITLE"],
             "backUrl": current_app.config["SLIM_REPORT_UI_BACK_URL"],
             "backLabel": current_app.config["SLIM_REPORT_UI_BACK_LABEL"],
+            "databaseDataSourcesEnabled": designer.feature_enabled("database_data_sources"),
+            "sqlDatasetsEnabled": designer.feature_enabled("sql_datasets"),
             **designer.csrf_config(),
         }
 
@@ -195,6 +198,14 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
             (
                 '<meta name="slim-report-brand-mark" '
                 f'content="{escape(str(runtime_config["brandMark"]), quote=True)}">'
+            ),
+            (
+                '<meta name="slim-report-feature-database-data-sources" '
+                f'content="{str(bool(runtime_config["databaseDataSourcesEnabled"])).lower()}">'
+            ),
+            (
+                '<meta name="slim-report-feature-sql-datasets" '
+                f'content="{str(bool(runtime_config["sqlDatasetsEnabled"])).lower()}">'
             ),
             (
                 '<meta name="slim-report-page-title" '
@@ -310,6 +321,14 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.post("/api/designer/credentials/clear")
     def clear_runtime_credentials() -> Response:
+        unavailable = require_feature(
+            designer,
+            "database_data_sources",
+            "Database data-source management is unavailable.",
+        )
+        if unavailable:
+            return unavailable
+
         payload = _json_object_request()
         template_id = str(payload.get("template_id") or "")
         blocked = require_access(designer, "edit", template_id or None, api=True)
@@ -334,6 +353,14 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.post("/api/designer/data-sources/mysql")
     def create_mysql_data_source() -> tuple[Response, int] | Response:
+        unavailable = require_feature(
+            designer,
+            "database_data_sources",
+            "Database data-source management is unavailable.",
+        )
+        if unavailable:
+            return unavailable
+
         payload, template_id, report = _data_source_request(designer)
         blocked = require_access(designer, "edit", template_id or None, api=True)
         if blocked:
@@ -352,6 +379,14 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.put("/api/designer/data-sources/<data_source_id>")
     def update_mysql_data_source(data_source_id: str) -> Response:
+        unavailable = require_feature(
+            designer,
+            "database_data_sources",
+            "Database data-source management is unavailable.",
+        )
+        if unavailable:
+            return unavailable
+
         payload, template_id, report = _data_source_request(designer)
         blocked = require_access(designer, "edit", template_id or None, api=True)
         if blocked:
@@ -375,6 +410,14 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.delete("/api/designer/data-sources/<data_source_id>")
     def delete_mysql_data_source(data_source_id: str) -> tuple[Response, int] | Response:
+        unavailable = require_feature(
+            designer,
+            "database_data_sources",
+            "Database data-source management is unavailable.",
+        )
+        if unavailable:
+            return unavailable
+
         payload, template_id, report = _data_source_request(designer)
         blocked = require_access(designer, "edit", template_id or None, api=True)
         if blocked:
@@ -409,6 +452,14 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.post("/api/designer/data-sources/test")
     def test_mysql_configuration() -> Response:
+        unavailable = require_feature(
+            designer,
+            "database_data_sources",
+            "Database data-source management is unavailable.",
+        )
+        if unavailable:
+            return unavailable
+
         payload = _json_object_request()
         template_id = str(payload.get("template_id") or "")
         blocked = require_access(designer, "view", template_id or None, api=True)
@@ -421,6 +472,14 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.post("/api/designer/data-sources/<data_source_id>/test")
     def test_saved_mysql_data_source(data_source_id: str) -> Response:
+        unavailable = require_feature(
+            designer,
+            "database_data_sources",
+            "Database data-source management is unavailable.",
+        )
+        if unavailable:
+            return unavailable
+
         payload, template_id, report = _data_source_request(designer)
         blocked = require_access(designer, "view", template_id or None, api=True)
         if blocked:
@@ -445,6 +504,14 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.post("/api/designer/datasets/list")
     def list_active_datasets() -> Response:
+        unavailable = require_feature(
+            designer,
+            "sql_datasets",
+            "SQL dataset management is unavailable.",
+        )
+        if unavailable:
+            return unavailable
+
         payload, template_id, report = _data_source_request(designer)
         del payload
         blocked = require_access(designer, "view", template_id or None, api=True)
@@ -454,6 +521,14 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.post("/api/designer/datasets/<dataset_id>/get")
     def get_active_dataset(dataset_id: str) -> Response:
+        unavailable = require_feature(
+            designer,
+            "sql_datasets",
+            "SQL dataset management is unavailable.",
+        )
+        if unavailable:
+            return unavailable
+
         payload, template_id, report = _data_source_request(designer)
         del payload
         blocked = require_access(designer, "view", template_id or None, api=True)
@@ -464,6 +539,14 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.post("/api/designer/data-sources/<data_source_id>/views/list")
     def list_reporting_views(data_source_id: str) -> Response:
+        unavailable = require_feature(
+            designer,
+            "sql_datasets",
+            "SQL dataset management is unavailable.",
+        )
+        if unavailable:
+            return unavailable
+
         payload, template_id, report = _data_source_request(designer)
         del payload
         blocked = require_access(designer, "view", template_id or None, api=True)
@@ -486,6 +569,14 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.post("/api/designer/data-sources/<data_source_id>/views/inspect")
     def inspect_reporting_view(data_source_id: str) -> Response:
+        unavailable = require_feature(
+            designer,
+            "sql_datasets",
+            "SQL dataset management is unavailable.",
+        )
+        if unavailable:
+            return unavailable
+
         payload, template_id, report = _data_source_request(designer)
         blocked = require_access(designer, "view", template_id or None, api=True)
         if blocked:
@@ -499,6 +590,14 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.post("/api/designer/query/validate")
     def validate_dataset_query_configuration() -> Response:
+        unavailable = require_feature(
+            designer,
+            "sql_datasets",
+            "SQL dataset management is unavailable.",
+        )
+        if unavailable:
+            return unavailable
+
         payload, template_id, _report = _data_source_request(designer)
         blocked = require_access(designer, "view", template_id or None, api=True)
         if blocked:
@@ -522,6 +621,14 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.post("/api/designer/query/discover")
     def discover_dataset_query_configuration() -> Response:
+        unavailable = require_feature(
+            designer,
+            "sql_datasets",
+            "SQL dataset management is unavailable.",
+        )
+        if unavailable:
+            return unavailable
+
         payload, template_id, report = _data_source_request(designer)
         blocked = require_access(designer, "view", template_id or None, api=True)
         if blocked:
@@ -538,6 +645,14 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.post("/api/designer/datasets/view")
     def create_view_dataset() -> tuple[Response, int] | Response:
+        unavailable = require_feature(
+            designer,
+            "sql_datasets",
+            "SQL dataset management is unavailable.",
+        )
+        if unavailable:
+            return unavailable
+
         payload, template_id, report = _data_source_request(designer)
         blocked = require_access(designer, "edit", template_id or None, api=True)
         if blocked:
@@ -558,6 +673,14 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.post("/api/designer/datasets/query")
     def create_query_dataset() -> tuple[Response, int] | Response:
+        unavailable = require_feature(
+            designer,
+            "sql_datasets",
+            "SQL dataset management is unavailable.",
+        )
+        if unavailable:
+            return unavailable
+
         payload, template_id, report = _data_source_request(designer)
         blocked = require_access(designer, "edit", template_id or None, api=True)
         if blocked:
@@ -585,7 +708,47 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         blocked = require_access(designer, "edit", template_id or None, api=True)
         if blocked:
             return blocked
-        configuration = _new_report_configuration(payload.get("configuration"))
+
+        configuration_payload = payload.get("configuration")
+
+        if (
+            isinstance(configuration_payload, dict)
+            and configuration_payload.get("dataSource") is not None
+            and not designer.feature_enabled("database_data_sources")
+        ):
+            source_values = configuration_payload.get("dataSource")
+
+            if not isinstance(source_values, dict) or not template_id:
+                return error_response(
+                    "feature_unavailable",
+                    "Only an existing data source may be reused.",
+                    404,
+                )
+
+            source_id = str(source_values.get("id") or "")
+            stored_report = designer.get_report(template_id)
+            stored_source = stored_report.get_data_source(source_id)
+
+            if stored_source is None:
+                return error_response(
+                    "feature_unavailable",
+                    "Only an existing data source may be reused.",
+                    404,
+                )
+
+            configuration_payload = copy.deepcopy(configuration_payload)
+            configuration_payload["dataSource"] = stored_source.to_dict()
+
+        configuration = _new_report_configuration(configuration_payload)
+
+        if configuration.data is not None:
+            unavailable = require_feature(
+                designer,
+                "sql_datasets",
+                "SQL dataset management is unavailable.",
+            )
+            if unavailable:
+                return unavailable
         if configuration.data and configuration.data.dataset.source_type.value == "query":
             designer.data_source_management_service.sql_validator.validate_dataset(
                 configuration.data.dataset
@@ -601,6 +764,14 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.post("/api/designer/datasets/<dataset_id>/runtime-parameters")
     def runtime_parameter_schema(dataset_id: str) -> Response:
+        unavailable = require_feature(
+            designer,
+            "sql_datasets",
+            "SQL dataset management is unavailable.",
+        )
+        if unavailable:
+            return unavailable
+
         _payload, template_id, report = _data_source_request(designer)
         blocked = require_access(designer, "view", template_id or None, api=True)
         if blocked:
@@ -610,6 +781,14 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.post("/api/designer/datasets/<dataset_id>/runtime-parameters/validate")
     def validate_runtime_parameters(dataset_id: str) -> tuple[Response, int] | Response:
+        unavailable = require_feature(
+            designer,
+            "sql_datasets",
+            "SQL dataset management is unavailable.",
+        )
+        if unavailable:
+            return unavailable
+
         payload, template_id, report = _data_source_request(designer)
         blocked = require_access(designer, "view", template_id or None, api=True)
         if blocked:
@@ -641,6 +820,14 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.put("/api/designer/datasets/<dataset_id>/view")
     def update_view_dataset(dataset_id: str) -> Response:
+        unavailable = require_feature(
+            designer,
+            "sql_datasets",
+            "SQL dataset management is unavailable.",
+        )
+        if unavailable:
+            return unavailable
+
         payload, template_id, report = _data_source_request(designer)
         blocked = require_access(designer, "edit", template_id or None, api=True)
         if blocked:
@@ -656,6 +843,14 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.put("/api/designer/datasets/<dataset_id>/query")
     def update_query_dataset(dataset_id: str) -> Response:
+        unavailable = require_feature(
+            designer,
+            "sql_datasets",
+            "SQL dataset management is unavailable.",
+        )
+        if unavailable:
+            return unavailable
+
         payload, template_id, report = _data_source_request(designer)
         blocked = require_access(designer, "edit", template_id or None, api=True)
         if blocked:
@@ -689,6 +884,14 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.post("/api/designer/datasets/<dataset_id>/refresh-view-fields")
     def refresh_dataset_view_fields(dataset_id: str) -> Response:
+        unavailable = require_feature(
+            designer,
+            "sql_datasets",
+            "SQL dataset management is unavailable.",
+        )
+        if unavailable:
+            return unavailable
+
         payload, template_id, report = _data_source_request(designer)
         del payload
         blocked = require_access(designer, "edit", template_id or None, api=True)
@@ -703,6 +906,14 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.post("/api/designer/datasets/<dataset_id>/freshness")
     def check_dataset_freshness(dataset_id: str) -> Response:
+        unavailable = require_feature(
+            designer,
+            "sql_datasets",
+            "SQL dataset management is unavailable.",
+        )
+        if unavailable:
+            return unavailable
+
         payload, template_id, report = _data_source_request(designer)
         blocked = require_access(designer, "view", template_id or None, api=True)
         if blocked:
@@ -731,6 +942,14 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.post("/api/designer/datasets/<dataset_id>/discover-fields")
     def discover_existing_dataset_fields(dataset_id: str) -> Response:
+        unavailable = require_feature(
+            designer,
+            "sql_datasets",
+            "SQL dataset management is unavailable.",
+        )
+        if unavailable:
+            return unavailable
+
         payload, template_id, report = _data_source_request(designer)
         blocked = require_access(designer, "view", template_id or None, api=True)
         if blocked:
@@ -744,6 +963,14 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.post("/api/designer/datasets/<dataset_id>/apply-fields")
     def apply_existing_dataset_fields(dataset_id: str) -> Response:
+        unavailable = require_feature(
+            designer,
+            "sql_datasets",
+            "SQL dataset management is unavailable.",
+        )
+        if unavailable:
+            return unavailable
+
         payload, template_id, report = _data_source_request(designer)
         blocked = require_access(designer, "edit", template_id or None, api=True)
         if blocked:
@@ -761,6 +988,14 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.delete("/api/designer/datasets/<dataset_id>")
     def delete_dataset(dataset_id: str) -> Response:
+        unavailable = require_feature(
+            designer,
+            "sql_datasets",
+            "SQL dataset management is unavailable.",
+        )
+        if unavailable:
+            return unavailable
+
         payload, template_id, report = _data_source_request(designer)
         del payload
         blocked = require_access(designer, "edit", template_id or None, api=True)
@@ -883,6 +1118,14 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
 
     @blueprint.post("/api/designer/preview/live")
     def api_live_preview() -> tuple[Response, int] | Response:
+        unavailable = require_feature(
+            designer,
+            "sql_datasets",
+            "SQL dataset runtime preview is unavailable.",
+        )
+        if unavailable:
+            return unavailable
+
         request_id = ""
         try:
             request_payload = request.get_json(silent=True)
@@ -1793,6 +2036,22 @@ def _status_for_asset_exception(exc: AssetError) -> int:
 def asset_error_response(exc: AssetError) -> tuple[Response, int]:
     mapped = map_safe_error(exc)
     return jsonify({"ok": False, "error": mapped.to_dict()}), mapped.status
+
+
+def require_feature(
+    designer: SlimReportDesigner,
+    feature: str,
+    message: str,
+) -> tuple[Response, int] | None:
+    """Reject access to a host-disabled optional feature."""
+    if designer.feature_enabled(feature):
+        return None
+
+    return error_response(
+        "feature_unavailable",
+        message,
+        404,
+    )
 
 
 def require_access(

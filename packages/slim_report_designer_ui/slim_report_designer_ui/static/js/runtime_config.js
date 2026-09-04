@@ -18,6 +18,16 @@ export function runtimeConfig() {
         ? legacyConfig.saveEnabled
         : metaBoolean("slim-report-save-enabled"),
 
+    databaseDataSourcesEnabled:
+      typeof legacyConfig.databaseDataSourcesEnabled === "boolean"
+        ? legacyConfig.databaseDataSourcesEnabled
+        : metaBoolean("slim-report-feature-database-data-sources") ?? true,
+
+    sqlDatasetsEnabled:
+      typeof legacyConfig.sqlDatasetsEnabled === "boolean"
+        ? legacyConfig.sqlDatasetsEnabled
+        : metaBoolean("slim-report-feature-sql-datasets") ?? true,
+
     csrfHeaderName:
       legacyConfig.csrfHeaderName ||
       metaContent("slim-report-csrf-header"),

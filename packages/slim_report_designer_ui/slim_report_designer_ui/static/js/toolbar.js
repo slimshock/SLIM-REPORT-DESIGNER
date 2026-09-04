@@ -1,7 +1,9 @@
 import { icon } from "./icons.js";
 import { zoomPercent } from "./canvas_settings.js";
 
-export function createToolbar({ container, onCommand }) {
+export function createToolbar({ container, onCommand, hiddenCommands = [] }) {
+  const hiddenCommandSet = new Set(hiddenCommands);
+
   const groups = [
     {
       label: "File",
@@ -87,6 +89,10 @@ export function createToolbar({ container, onCommand }) {
     groupElement.setAttribute("aria-label", `${group.label} actions`);
 
     for (const [command, text, variant, title, display, iconName] of group.actions) {
+      if (hiddenCommandSet.has(command)) {
+        continue;
+      }
+
       const button = document.createElement("button");
       button.type = "button";
       button.className = `toolbar-button ${variant}`.trim();
@@ -97,7 +103,9 @@ export function createToolbar({ container, onCommand }) {
       groupElement.appendChild(button);
     }
 
-    container.appendChild(groupElement);
+    if (groupElement.childElementCount > 0) {
+      container.appendChild(groupElement);
+    }
   }
   container.appendChild(canvasControls());
 

@@ -117,6 +117,9 @@ const elements = {
   livePreviewModal: document.querySelector("#live-preview-modal"),
   newReportModal: document.querySelector("#new-report-modal")
 };
+
+const runtime = runtimeConfig();
+
 elements.reportAttention = document.querySelector("#report-attention");
 elements.reportAttentionMessage = document.querySelector("#report-attention-message");
 elements.reportAttentionDataSources = document.querySelector("#report-attention-data-sources");
@@ -157,9 +160,20 @@ const inspector = createInspector({
   onSelectBand: selectBand
 });
 
+const hiddenToolbarCommands = [];
+
+if (!runtime.databaseDataSourcesEnabled) {
+  hiddenToolbarCommands.push("dataSources");
+}
+
+if (!runtime.sqlDatasetsEnabled) {
+  hiddenToolbarCommands.push("datasets");
+}
+
 const toolbar = createToolbar({
   container: elements.toolbar,
-  onCommand: handleCommand
+  onCommand: handleCommand,
+  hiddenCommands: hiddenToolbarCommands
 });
 
 const dataSourceManager = createDataSourceManager({
@@ -192,7 +206,9 @@ const datasetManager = createDatasetManager({
   openParameters: (datasetId, openingControl) => runtimeParameterDialog.open(
     datasetId,
     { openingControl }
-  )
+  ),
+  enabled: runtime.sqlDatasetsEnabled,
+  dataSourcesEnabled: runtime.databaseDataSourcesEnabled
 });
 
 const newReportWizard = createNewReportWizard({
@@ -201,20 +217,38 @@ const newReportWizard = createNewReportWizard({
   isDirty: () => state.dirty,
   onSave: saveCurrentReport,
   onCreate: loadCreatedReport,
-  onStatus: setStatus
+  onStatus: setStatus,
+  databaseDataSourcesEnabled: runtime.databaseDataSourcesEnabled,
+  sqlDatasetsEnabled: runtime.sqlDatasetsEnabled
 });
 applyIcon(elements.newReportModal.querySelector("#new-report-close"), "close");
 applyIcon(elements.reportAttentionDismiss, "close");
 elements.reportAttentionDismiss.addEventListener("click", () => {
   elements.reportAttention.hidden = true;
 });
-elements.reportAttentionDataSources.addEventListener("click", () => dataSourceManager.open(
-  elements.reportAttentionDataSources
-));
-elements.reportAttentionDatasets.addEventListener("click", () => datasetManager.open(
-  elements.reportAttentionDatasets
-));
 
+elements.reportAttentionDataSources.addEventListener("click", () => {
+  if (!runtime.databaseDataSourcesEnabled) {
+    return;
+  }
+
+  dataSourceManager.open(elements.reportAttentionDataSources);
+});
+
+elements.reportAttentionDatasets.addEventListener("click", () => {
+  if (!runtime.sqlDatasetsEnabled) {
+    return;
+  }
+
+  datasetManager.open(elements.reportAttentionDatasets);
+});
+
+function applyFeatureVisibility() {
+  elements.datasetManagerOpen.hidden = !runtime.sqlDatasetsEnabled;
+  elements.datasetFieldInsert.hidden = !runtime.sqlDatasetsEnabled;
+}
+
+applyFeatureVisibility();
 applyHostBranding();
 initializeToolboxIcons();
 initializeHistoryUi();
@@ -243,11 +277,18 @@ elements.toolbox.addEventListener("click", (event) => {
     return;
   }
   const fieldsAction = event.target.closest("button[data-fields-action]");
-  if (fieldsAction?.dataset.fieldsAction === "dataSources") {
+  if (
+    fieldsAction?.dataset.fieldsAction === "dataSources"
+    && runtime.databaseDataSourcesEnabled
+  ) {
     void dataSourceManager.open(fieldsAction);
     return;
   }
-  if (fieldsAction?.dataset.fieldsAction === "datasets") {
+
+  if (
+    fieldsAction?.dataset.fieldsAction === "datasets"
+    && runtime.sqlDatasetsEnabled
+  ) {
     void datasetManager.open(fieldsAction);
     return;
   }
@@ -370,6 +411,10 @@ elements.fieldSearchClear.addEventListener("click", () => {
 });
 elements.datasetFieldInsert.addEventListener("click", insertSelectedDatasetField);
 elements.datasetManagerOpen.addEventListener("click", async () => {
+  if (!runtime.sqlDatasetsEnabled) {
+    return;
+  }
+
   await datasetManager.open(elements.datasetManagerOpen);
 });
 
@@ -475,6 +520,16 @@ async function initialize() {
 }
 
 async function handleCommand(command, payload = {}) {
+  if (command === "dataSources" && !runtime.databaseDataSourcesEnabled) {
+    setStatus("Data source management is disabled.");
+    return;
+  }
+
+  if (command === "datasets" && !runtime.sqlDatasetsEnabled) {
+    setStatus("SQL dataset management is disabled.");
+    return;
+  }
+
   try {
     if (command === "save") {
       await saveCurrentReport();
@@ -595,6 +650,9 @@ async function previewReport(openingControl = null) {
 }
 
 function primaryRuntimeDataset(template) {
+  if (!runtime.sqlDatasetsEnabled) {
+    return null;
+  }
   const detailIds = new Set(
     (template.bands || [])
       .filter((band) => band.id === "detail" || band.type === "detail")
@@ -659,13 +717,21 @@ function showReportAttention(issues = []) {
   elements.reportAttentionMessage.textContent = remaining > 0
     ? `${first} ${remaining} more issue${remaining === 1 ? "" : "s"}.`
     : first;
-  elements.reportAttentionDataSources.hidden = !visible.some((issue) => (
-    issue.dataSourceId || String(issue.code || "").includes("credential")
-  ));
-  elements.reportAttentionDatasets.hidden = !visible.some((issue) => (
-    issue.datasetId || String(issue.code || "").includes("dataset")
-      || String(issue.code || "").includes("binding")
-  ));
+
+  elements.reportAttentionDataSources.hidden =
+    !runtime.databaseDataSourcesEnabled
+    || !visible.some((issue) => (
+      issue.dataSourceId || String(issue.code || "").includes("credential")
+    ));
+
+  elements.reportAttentionDatasets.hidden =
+    !runtime.sqlDatasetsEnabled
+    || !visible.some((issue) => (
+      issue.datasetId
+        || String(issue.code || "").includes("dataset")
+        || String(issue.code || "").includes("binding")
+    ));
+
   elements.reportAttention.hidden = false;
 }
 
@@ -1120,21 +1186,23 @@ function renderFieldsPanel() {
   elements.fieldsList.innerHTML = "";
   elements.fieldsList.appendChild(bindingWarningsPanel());
   let visibleDatasetFieldCount = 0;
-  for (const dataset of state.template.datasets || []) {
-    const datasetMatches = [dataset.name, dataset.id]
-      .some((value) => String(value || "").toLowerCase().includes(query));
-    const fields = (dataset.fields || []).filter((field) => {
-      if (!query || datasetMatches) {
-        return true;
-      }
-      return [field.name, field.label, field.dataType, field.data_type]
+  if (runtime.sqlDatasetsEnabled) {
+    for (const dataset of state.template.datasets || []) {
+      const datasetMatches = [dataset.name, dataset.id]
         .some((value) => String(value || "").toLowerCase().includes(query));
-    });
-    if (query && !datasetMatches && fields.length === 0) {
-      continue;
+      const fields = (dataset.fields || []).filter((field) => {
+        if (!query || datasetMatches) {
+          return true;
+        }
+        return [field.name, field.label, field.dataType, field.data_type]
+          .some((value) => String(value || "").toLowerCase().includes(query));
+      });
+      if (query && !datasetMatches && fields.length === 0) {
+        continue;
+      }
+      visibleDatasetFieldCount += fields.length;
+      elements.fieldsList.appendChild(datasetFieldGroup(dataset, fields, Boolean(query)));
     }
-    visibleDatasetFieldCount += fields.length;
-    elements.fieldsList.appendChild(datasetFieldGroup(dataset, fields, Boolean(query)));
   }
   if (sampleFields.length > 0) {
     elements.fieldsList.appendChild(formulaExamplesPanel());
@@ -1157,22 +1225,37 @@ function renderFieldsPanel() {
   if (!selectedStillExists) {
     state.selectedDatasetField = null;
   }
-  elements.datasetFieldInsert.disabled = !state.selectedDatasetField;
+
+  elements.datasetFieldInsert.disabled =
+    !runtime.sqlDatasetsEnabled || !state.selectedDatasetField;
+
   if (visibleDatasetFieldCount === 0 && sampleFields.length === 0) {
     if (query) {
-      elements.fieldsList.appendChild(fieldsEmptyState("No fields match the search."));
-    } else if ((state.template.dataSources || []).length === 0) {
+      elements.fieldsList.appendChild(
+        fieldsEmptyState("No fields match the search.")
+      );
+    } else if (
+      runtime.sqlDatasetsEnabled
+      && (state.template.dataSources || []).length === 0
+    ) {
       elements.fieldsList.appendChild(fieldsEmptyState(
         "No data source is configured. Add a MySQL data source before creating datasets.",
         "Open Data Sources",
         "dataSources"
       ));
-    } else if ((state.template.datasets || []).length === 0) {
+    } else if (
+      runtime.sqlDatasetsEnabled
+      && (state.template.datasets || []).length === 0
+    ) {
       elements.fieldsList.appendChild(fieldsEmptyState(
         "No datasets are configured. Create a dataset from an approved MySQL view or a read-only SELECT query.",
         "Open Datasets",
         "datasets"
       ));
+    } else if (!runtime.sqlDatasetsEnabled) {
+      elements.fieldsList.appendChild(
+        fieldsEmptyState("No report fields are available.")
+      );
     }
   }
 }

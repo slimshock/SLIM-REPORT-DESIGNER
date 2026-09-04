@@ -16,7 +16,9 @@ export function createNewReportWizard({
   isDirty,
   onSave,
   onCreate,
-  onStatus = () => {}
+  onStatus = () => {},
+  databaseDataSourcesEnabled = true,
+  sqlDatasetsEnabled = true
 }) {
   const ui = {
     close: root.querySelector("#new-report-close"),
@@ -161,6 +163,20 @@ export function createNewReportWizard({
     if (stepId === "report" && !draft.reportName.trim()) {
       throw new Error("Report Name is required.");
     }
+    if (stepId === "report" && draft.mode === "mysql") {
+      if (!sqlDatasetsEnabled) {
+        throw new Error("SQL dataset creation is disabled.");
+      }
+
+      const existingSources = (getTemplate()?.dataSources || [])
+        .filter((item) => item.type === "mysql");
+
+      if (!databaseDataSourcesEnabled && existingSources.length === 0) {
+        throw new Error(
+          "MySQL report creation requires an existing data source."
+        );
+      }
+    }
     if (stepId === "page") {
       const dimensions = pageDimensions(draft);
       if (dimensions.width <= 0 || dimensions.height <= 0) {
@@ -196,6 +212,12 @@ export function createNewReportWizard({
   }
 
   async function prepareSource() {
+    if (
+      draft.sourceMode === "new"
+      && !databaseDataSourcesEnabled
+    ) {
+      throw new Error("Data source creation is disabled.");
+    }
     const fingerprint = sourceFingerprint(draft);
     if (draft.sourceFingerprint === fingerprint && draft.sourceId) {
       return;
@@ -228,6 +250,9 @@ export function createNewReportWizard({
   }
 
   async function testConnection() {
+    if (!databaseDataSourcesEnabled) {
+      throw new Error("Data source testing is disabled.");
+    }
     if (draft.sourceMode === "new") {
       const response = await testMysqlDataSource(newSourceValues(draft));
       draft.message = response.message || "Connection succeeded.";
@@ -240,6 +265,9 @@ export function createNewReportWizard({
   }
 
   async function validateQuery() {
+    if (!sqlDatasetsEnabled) {
+      throw new Error("SQL dataset creation is disabled.");
+    }
     await prepareSource();
     const response = await validateDatasetQuery(draft.template, {
       query: draft.query,
@@ -261,6 +289,9 @@ export function createNewReportWizard({
   }
 
   async function prepareDataset(force = false) {
+    if (!sqlDatasetsEnabled) {
+      throw new Error("SQL dataset creation is disabled.");
+    }
     await prepareSource();
     const fingerprint = datasetFingerprint(draft);
     if (!force && draft.datasetFingerprint === fingerprint && draft.fields.length) {
@@ -372,9 +403,24 @@ export function createNewReportWizard({
   }
 
   function stepMarkup(id) {
-    if (id === "report") return reportStep(draft);
+    if (id === "report") {
+      return reportStep(
+        draft,
+        getTemplate(),
+        databaseDataSourcesEnabled,
+        sqlDatasetsEnabled
+      );
+    }
+
     if (id === "page") return pageStep(draft);
-    if (id === "source") return sourceStep(draft, getTemplate());
+
+    if (id === "source") {
+      return sourceStep(
+        draft,
+        getTemplate(),
+        databaseDataSourcesEnabled
+      );
+    }
     if (id === "dataset") return datasetStep(draft);
     if (id === "fields") return fieldsStep(draft);
     if (id === "layout") return layoutStep(draft);
@@ -547,13 +593,35 @@ export function buildConfiguration(draft) {
   };
 }
 
-function reportStep(draft) {
+function reportStep(
+  draft,
+  activeTemplate,
+  databaseDataSourcesEnabled,
+  sqlDatasetsEnabled
+) {
+  const existingMysqlSources = (activeTemplate?.dataSources || [])
+    .filter((item) => item.type === "mysql");
+
+  const mysqlReportEnabled =
+    sqlDatasetsEnabled
+    && (
+      databaseDataSourcesEnabled
+      || existingMysqlSources.length > 0
+    );
   return `<form data-wizard-form><h3>Report Information</h3><div class="wizard-grid">
     ${field("Report Name", "reportName", draft.reportName, "text", true)}
     ${field("Description", "description", draft.description, "text")}
     <fieldset class="wizard-field is-wide"><legend>Start With</legend><div class="wizard-choice-list">
       ${choice("mode", "blank", draft.mode, "Blank Report", "Create a report without a data source or dataset.", true)}
-      ${choice("mode", "mysql", draft.mode, "MySQL Report", "Use an approved reporting view or validated read-only SELECT query.", true)}
+      ${choice(
+        "mode",
+        "mysql",
+        draft.mode,
+        "MySQL Report",
+        "Use an approved reporting view or validated read-only SELECT query.",
+        true,
+        !mysqlReportEnabled
+      )}
     </div></fieldset></div></form>`;
 }
 
@@ -570,18 +638,32 @@ function pageStep(draft) {
   </div></form>`;
 }
 
-function sourceStep(draft, activeTemplate) {
+function sourceStep(
+  draft,
+  activeTemplate,
+  databaseDataSourcesEnabled
+) {
   const sources = (activeTemplate.dataSources || []).filter((item) => item.type === "mysql");
   const existingOptions = sources.map((source) => `<option value="${escapeAttr(source.id)}" ${source.id === draft.existingSourceId ? "selected" : ""}>${escapeHtml(source.name || source.id)}</option>`).join("");
   return `<form data-wizard-form><h3>MySQL Data Source</h3>
     <div class="wizard-choice-list">
       ${choice("sourceMode", "existing", draft.sourceMode, "Use Existing", "Copy a safe MySQL definition from the current report.", true, !sources.length)}
-      ${choice("sourceMode", "new", draft.sourceMode, "Create New", "Configure a new MySQL data source in the temporary draft.", true)}
+      ${choice(
+        "sourceMode",
+        "new",
+        draft.sourceMode,
+        "Create New",
+        "Configure a new MySQL data source in the temporary draft.",
+        true,
+        !databaseDataSourcesEnabled
+      )}
     </div>
     <div class="wizard-grid" style="margin-top:12px">
       ${draft.sourceMode === "existing" ? `<label class="wizard-field is-wide"><span>Existing Data Source</span><select name="existingSourceId">${existingOptions}</select></label>` : newSourceFields(draft)}
     </div>
-    <div style="margin-top:12px"><button class="toolbar-button" type="button" data-wizard-action="testConnection">Test Connection</button></div>
+    ${databaseDataSourcesEnabled
+      ? '<div style="margin-top:12px"><button class="toolbar-button" type="button" data-wizard-action="testConnection">Test Connection</button></div>'
+      : ""}
   </form>`;
 }
 

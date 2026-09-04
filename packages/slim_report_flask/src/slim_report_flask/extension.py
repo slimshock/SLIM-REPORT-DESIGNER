@@ -47,6 +47,10 @@ AuthHook = Callable[[], bool]
 PermissionHook = Callable[[str], bool]
 CsrfTokenProvider = Callable[[], str | None]
 FilenameProvider = Callable[[str, dict[str, Any], Any], str]
+FEATURE_CONFIG_KEYS = {
+    "database_data_sources": "SLIM_REPORT_FEATURE_DATABASE_DATA_SOURCES",
+    "sql_datasets": "SLIM_REPORT_FEATURE_SQL_DATASETS",
+}
 
 
 def _default_data_source_management_service(
@@ -164,6 +168,22 @@ class SlimReportDesigner:
     def save_enabled(self) -> bool:
         provider = self._provider()
         return bool(getattr(provider, "allow_save", True))
+
+    def feature_enabled(self, feature: str) -> bool:
+        """Return whether a host-controlled designer feature is enabled."""
+        config_key = FEATURE_CONFIG_KEYS.get(str(feature))
+        if config_key is None:
+            return False
+
+        if self.app is None:
+            return bool(DEFAULT_CONFIG.get(config_key, False))
+
+        return bool(
+            self.app.config.get(
+                config_key,
+                DEFAULT_CONFIG.get(config_key, False),
+            )
+        )
 
     def provider(self, name: str) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Register a named data provider with decorator syntax."""
