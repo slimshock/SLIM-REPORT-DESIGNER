@@ -341,6 +341,105 @@ http://127.0.0.1:5000/report-designer/designer?template=complete_sprint5_lab_rep
 MySQL environment setup and the metadata-only security boundary are documented in
 `examples/flask_database_app/README.md`.
 
+## Secure Host Application Integration
+
+Slim Report Designer can be embedded in an ERP, LIS, or other host application without giving the
+Designer direct access to the host application's operational database. In this mode, the host owns
+authentication, authorization, tenant or organization scope, business queries, and report data.
+Slim owns the report layout, field bindings, preview, rendering, and export.
+
+A secure host integration should keep direct database and SQL dataset features disabled unless the
+host intentionally exposes them:
+
+```python
+app.config.update(
+    SLIM_REPORT_FEATURE_DATABASE_DATA_SOURCES=False,
+    SLIM_REPORT_FEATURE_SQL_DATASETS=False,
+    SLIM_REPORT_UI_BRAND_NAME="SERVE Report Designer",
+    SLIM_REPORT_UI_BRAND_MARK="SR",
+    SLIM_REPORT_UI_PAGE_TITLE="SERVE ERP - Report Designer",
+    SLIM_REPORT_UI_BACK_URL="/reports",
+    SLIM_REPORT_UI_BACK_LABEL="Back to Reports",
+)
+```
+
+The Flask extension accepts report-wide, template-specific, asset, and host field-catalog hooks:
+
+```python
+from slim_report_flask import SlimReportDesigner
+
+
+def report_field_catalog(template_id, request_args, request_json):
+    if template_id != "logistics.client_delivery_receipt":
+        return []
+
+    return [
+        {"name": "company.name", "label": "Company Name", "dataType": "string"},
+        {"name": "delivery.number", "label": "Delivery Number", "dataType": "string"},
+        {"name": "items[].quantity", "label": "Quantity", "dataType": "decimal"},
+        {"name": "items[].uom", "label": "UOM", "dataType": "string"},
+        {"name": "items[].description", "label": "Description", "dataType": "string"},
+    ]
+
+
+designer = SlimReportDesigner(
+    data_provider=host_report_data_provider,
+    field_catalog_provider=report_field_catalog,
+
+    # Report-wide or unsaved-report access.
+    can_view_reports=lambda: host_can("reports.templates.read"),
+    can_edit_reports=lambda: host_can("reports.templates.design"),
+    can_export_reports=lambda: host_can("reports.export"),
+
+    # Saved-template access.
+    can_view_template=lambda template_id: host_can_view_report(template_id),
+    can_edit_template=lambda template_id: host_can_edit_report(template_id),
+    can_export_template=lambda template_id: host_can_export_report(template_id),
+
+    # Asset collection and per-asset access.
+    can_view_assets=lambda: host_can("reports.templates.read"),
+    can_edit_assets=lambda: host_can("reports.templates.design"),
+    can_view_asset=lambda asset_id: host_can_view_asset(asset_id),
+    can_edit_asset=lambda asset_id: host_can_edit_asset(asset_id),
+)
+```
+
+`field_catalog_provider` exposes only the field names and metadata that the host application chooses
+to make available in the Designer. It may return nested scalar fields such as
+`client.address.city` and collection fields such as `items[].quantity`. When a Detail band repeats
+over `items`, collection bindings are inserted row-relative, for example
+`items[].quantity` becomes `quantity` inside that repeating row.
+
+The field catalog endpoint requires template `view` permission before the host provider is called.
+Report loading, report normalization, and runtime credential injection for Designer data-source
+operations also occur only after the applicable host permission check. Asset listing is protected by
+the collection-level asset hook, while individual asset reads and writes use the per-asset hooks.
+
+When `SLIM_REPORT_FEATURE_DATABASE_DATA_SOURCES=False` and
+`SLIM_REPORT_FEATURE_SQL_DATASETS=False`, the corresponding Designer controls are hidden and their
+backend endpoints return `feature_unavailable`. Host field catalogs, normal host-supplied report
+data, HTML preview, and PDF export remain independent of those optional database features.
+
+The intended host-owned data flow is:
+
+```text
+User
+  -> Host report page / filters
+  -> Host authentication + permission + organization/tenant scope
+  -> Host data provider / business service
+  -> dict/list report data
+  -> Slim Report Designer renderer
+  -> HTML / PDF
+```
+
+Do not use a field catalog as an authorization mechanism. The host must still enforce permission and
+scope in its data provider and business services. Likewise, disabling Slim's direct database
+features does not replace host-side authorization; it keeps the Designer from becoming an alternate
+query path around host business rules.
+
+All host permission hooks are optional for standalone use. If they are omitted, Slim preserves its
+existing standalone behavior and allows the corresponding operation by default.
+
 ## Template Storage
 
 Preferred provider imports live in `slim_report_core.storage`:
@@ -457,6 +556,7 @@ The CLI accepts JSON files as input, but commands deserialize to `Report` before
 - [Designer UI](docs/designer-ui.md)
 - [Flask integration](docs/flask-integration.md)
 - [Flask production integration](docs/flask-production-integration.md)
+- [Secure host application integration](#secure-host-application-integration)
 - [Template storage](docs/template-storage.md)
 - [LIS Flask template storage](docs/lis-flask-template-storage.md)
 - [Asset Manager](docs/asset-manager.md)
