@@ -275,6 +275,32 @@ def create_blueprint(designer: SlimReportDesigner) -> Blueprint:
         template = designer.serializer.dump_mapping(report)
         return jsonify(template_response(template_id, template))
 
+    @blueprint.post("/api/designer/fields/catalog")
+    def api_field_catalog() -> Response:
+        payload = _json_object_request()
+        template_id = str(payload.get("template_id") or "")
+        if not template_id:
+            raise ValueError("A template id is required.")
+
+        blocked = require_access(designer, "view", template_id, api=True)
+        if blocked:
+            return blocked
+
+        fields = designer.resolve_field_catalog(
+            template_id,
+            request_args=request.args,
+            request_json=payload,
+        )
+        return _no_store(
+            jsonify(
+                {
+                    "ok": True,
+                    "templateId": template_id,
+                    "fields": fields,
+                }
+            )
+        )
+
     @blueprint.get("/api/designer/data-sources")
     def list_saved_data_sources() -> Response:
         template_id = str(request.args.get("template") or "")

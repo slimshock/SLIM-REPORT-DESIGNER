@@ -43,6 +43,7 @@ from .credentials import InMemoryRuntimeCredentialStore, RuntimeCredentialStore
 from .preview import PreviewCancellationRegistry
 
 DataProvider = Callable[[str, Any, Any], Any]
+FieldCatalogProvider = Callable[[str, Any, Any], Any]
 AuthHook = Callable[[], bool]
 PermissionHook = Callable[[str], bool]
 CsrfTokenProvider = Callable[[], str | None]
@@ -77,6 +78,7 @@ class SlimReportDesigner:
         template_provider: TemplateProvider | None = None,
         asset_provider: AssetProvider | None = None,
         data_provider: DataProvider | None = None,
+        field_catalog_provider: FieldCatalogProvider | None = None,
         url_prefix: str | None = None,
         auth_required: AuthHook | None = None,
         can_view_template: PermissionHook | None = None,
@@ -99,6 +101,7 @@ class SlimReportDesigner:
         self.template_provider = template_provider
         self.asset_provider = asset_provider
         self.data_provider = data_provider
+        self.field_catalog_provider = field_catalog_provider
         self.url_prefix = url_prefix
         self.auth_required = auth_required
         self.can_view_template = can_view_template
@@ -197,6 +200,46 @@ class SlimReportDesigner:
     def register_provider(self, name: str, func: Callable[..., Any]) -> Callable[..., Any]:
         """Register a named data provider directly."""
         return self.providers.register(name, func)
+
+    def resolve_field_catalog(
+        self,
+        template_id: str,
+        *,
+        request_args: Any | None = None,
+        request_json: Any | None = None,
+    ) -> list[dict[str, Any]]:
+        """Return validated host-supplied field metadata for a report template."""
+        if self.field_catalog_provider is None:
+            return []
+
+        catalog = self._call_field_catalog_provider(
+            template_id,
+            request_args,
+            request_json,
+        )
+        if catalog is None:
+            return []
+        if not isinstance(catalog, (list, tuple)):
+            raise ValueError("Field catalog provider must return a list of field objects.")
+
+        fields: list[dict[str, Any]] = []
+        seen_names: set[str] = set()
+        for item in catalog:
+            if not isinstance(item, dict):
+                raise ValueError("Every field catalog entry must be an object.")
+
+            name = str(item.get("name") or "").strip()
+            if not name:
+                raise ValueError("Field catalog entries require a non-empty 'name'.")
+            if name in seen_names:
+                raise ValueError(f"Duplicate field catalog entry: {name!r}.")
+
+            normalized = dict(item)
+            normalized["name"] = name
+            fields.append(normalized)
+            seen_names.add(name)
+
+        return fields
 
     def list_templates(self) -> list[TemplateRecord]:
         """Return saved report templates."""
@@ -440,6 +483,25 @@ class SlimReportDesigner:
         provider = self.data_provider
         if provider is None:
             return {}
+        try:
+            params = signature(provider).parameters
+            if len(params) <= 1:
+                return provider(template_id)  # type: ignore[misc]
+            if len(params) == 2:
+                return provider(template_id, request_args)  # type: ignore[misc]
+        except (TypeError, ValueError):
+            pass
+        return provider(template_id, request_args, request_json)
+
+    def _call_field_catalog_provider(
+        self,
+        template_id: str,
+        request_args: Any,
+        request_json: Any,
+    ) -> Any:
+        provider = self.field_catalog_provider
+        if provider is None:
+            return []
         try:
             params = signature(provider).parameters
             if len(params) <= 1:

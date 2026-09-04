@@ -573,14 +573,7 @@ export function getRowValue(row, binding, repeatDataPath = "") {
   if (!normalized) {
     return "";
   }
-  const repeatPath = normalizeArrayFieldPath(repeatDataPath);
-  let rowPath = normalized;
-  const arrayPrefix = repeatPath ? `${repeatPath}[]` : "";
-  if (arrayPrefix && normalized.startsWith(`${arrayPrefix}.`)) {
-    rowPath = normalized.slice(arrayPrefix.length + 1);
-  } else if (repeatPath && normalized.startsWith(`${repeatPath}[].`)) {
-    rowPath = normalized.slice(`${repeatPath}[].`.length);
-  }
+  const rowPath = relativeFieldPathForCollection(normalized, repeatDataPath);
   const value = getValueByPath(row, rowPath);
   return value === undefined || value === null ? "" : value;
 }
@@ -591,6 +584,53 @@ export function normalizeArrayFieldPath(path) {
 
 export function isArrayFieldPath(path) {
   return /\[(?:\d*)\]/.test(normalizeFieldPath(path));
+}
+
+export function collectionPathsForField(path) {
+  const normalized = normalizeFieldPath(path);
+  if (!normalized) {
+    return [];
+  }
+
+  const paths = [];
+  const prefix = [];
+  for (const part of normalized.split(".")) {
+    const name = part.replace(/\[(?:\d+)?\]/g, "");
+    if (!name) {
+      continue;
+    }
+    prefix.push(name);
+    if (/\[(?:\d*)\]/.test(part)) {
+      paths.push(prefix.join("."));
+    }
+  }
+  return paths;
+}
+
+export function relativeFieldPathForCollection(path, dataPath) {
+  const normalized = normalizeFieldPath(path);
+  const collectionPath = normalizeArrayFieldPath(dataPath);
+  if (!normalized || !collectionPath) {
+    return normalized;
+  }
+
+  const parts = normalized.split(".");
+  const prefix = [];
+  for (let index = 0; index < parts.length; index += 1) {
+    const part = parts[index];
+    const name = part.replace(/\[(?:\d+)?\]/g, "");
+    if (!name) {
+      continue;
+    }
+    prefix.push(name);
+    if (
+      /\[(?:\d*)\]/.test(part)
+      && prefix.join(".") === collectionPath
+    ) {
+      return parts.slice(index + 1).join(".");
+    }
+  }
+  return normalized;
 }
 
 export function fieldExists(template, path) {

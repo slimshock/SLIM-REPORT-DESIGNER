@@ -49,6 +49,33 @@ export async function saveTemplate(template) {
   return normalizeTemplate(saved);
 }
 
+export async function loadFieldCatalog(templateId = currentTemplateId()) {
+  if (!apiBase() || !templateId) {
+    return [];
+  }
+
+  const params = new URLSearchParams(currentQueryParams());
+  const query = params.toString();
+  const response = await fetch(
+    `${apiBase()}/designer/fields/catalog${query ? `?${query}` : ""}`,
+    {
+      method: "POST",
+      headers: requestHeaders(),
+      body: JSON.stringify({
+        template_id: templateId,
+        request_args: currentQueryParams()
+      })
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(await errorMessage(response, "Field catalog load failed"));
+  }
+
+  const payload = await response.json().catch(() => ({}));
+  return Array.isArray(payload.fields) ? payload.fields : [];
+}
+
 export async function listDataSources(template) {
   return dataSourceRequest("/designer/data-sources/list", "POST", template, {});
 }

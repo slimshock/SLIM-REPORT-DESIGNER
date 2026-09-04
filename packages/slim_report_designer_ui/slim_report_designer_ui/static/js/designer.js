@@ -34,13 +34,14 @@ import {
   getFieldValue,
   getTemplateFields,
   inferFieldsFromSample,
-  normalizeArrayFieldPath,
-  normalizeFieldPath
+  normalizeFieldPath,
+  relativeFieldPathForCollection
 } from "./data_fields.js";
 import {
   exportPdf,
   inspectPreviewReadiness,
   inspectReopenedTemplate,
+  loadFieldCatalog,
   loadTemplate,
   printPreview,
   previewTemplate,
@@ -77,7 +78,8 @@ const state = {
   dirty: false,
   statusMessage: "Ready",
   collapsedDatasetIds: new Set(),
-  selectedDatasetField: null
+  selectedDatasetField: null,
+  hostFields: []
 };
 
 const elements = {
@@ -151,7 +153,7 @@ const inspector = createInspector({
   getSelectedObject,
   getSelectedObjects,
   getActiveBandId: () => state.activeBandId,
-  getFields: () => getTemplateFields(state.template),
+  getFields: () => availableTemplateFields(),
   getSampleData: () => state.template?.data?.sample || {},
   onBeforeChange: recordUndo,
   onChange: markDirty,
@@ -432,7 +434,13 @@ elements.importFile.addEventListener("change", async () => {
     await dataSourceManager.clearRuntimePasswords();
     rotateReportSessionKey();
     state.template = normalizeTemplate(safeTemplateSnapshot(payload));
+    state.hostFields = [];
     ensureActiveBand();
+    try {
+      await refreshHostFieldCatalog();
+    } catch (error) {
+      setStatus(`Host field catalog unavailable: ${error.message}`);
+    }
     clearSelection();
     markDirty(`Imported ${file.name}`);
   } catch (error) {
@@ -509,11 +517,20 @@ async function initialize() {
   try {
     state.template = normalizeTemplate(await loadTemplate());
     ensureActiveBand();
-    setStatus("Ready");
+
+    let fieldCatalogWarning = "";
+    try {
+      await refreshHostFieldCatalog();
+    } catch (error) {
+      fieldCatalogWarning = `Host field catalog unavailable: ${error.message}`;
+    }
+
+    setStatus(fieldCatalogWarning || "Ready");
     await inspectCurrentReport();
   } catch (error) {
     setStatus(error.message);
     state.template = normalizeTemplate({});
+    state.hostFields = [];
     ensureActiveBand();
   }
   render();
@@ -771,8 +788,15 @@ async function loadCreatedReport(template) {
   state.redoStack = [];
   state.collapsedDatasetIds.clear();
   state.selectedDatasetField = null;
+  state.hostFields = [];
+  let fieldCatalogWarning = "";
+  try {
+    await refreshHostFieldCatalog();
+  } catch (error) {
+    fieldCatalogWarning = `Host field catalog unavailable: ${error.message}`;
+  }
   state.dirty = true;
-  state.statusMessage = "New report created.";
+  state.statusMessage = fieldCatalogWarning || "New report created.";
   render();
 }
 
@@ -1177,14 +1201,15 @@ function bandAtPagePosition(y) {
 
 function renderFieldsPanel() {
   const query = String(elements.fieldSearch.value || "").trim().toLowerCase();
-  const sampleFields = getTemplateFields(state.template).filter((field) => {
-    if (!query) {
-      return true;
-    }
-    return [field.path, field.label, field.sample].some((value) => String(value || "").toLowerCase().includes(query));
-  });
+  const allHostPaths = new Set(state.hostFields.map((field) => field.path));
+  const hostFields = state.hostFields.filter((field) => fieldMatchesQuery(field, query));
+  const sampleFields = getTemplateFields(state.template)
+    .filter((field) => !allHostPaths.has(field.path))
+    .filter((field) => fieldMatchesQuery(field, query));
+
   elements.fieldsList.innerHTML = "";
   elements.fieldsList.appendChild(bindingWarningsPanel());
+
   let visibleDatasetFieldCount = 0;
   if (runtime.sqlDatasetsEnabled) {
     for (const dataset of state.template.datasets || []) {
@@ -1204,21 +1229,14 @@ function renderFieldsPanel() {
       elements.fieldsList.appendChild(datasetFieldGroup(dataset, fields, Boolean(query)));
     }
   }
-  if (sampleFields.length > 0) {
+
+  if (hostFields.length > 0 || sampleFields.length > 0) {
     elements.fieldsList.appendChild(formulaExamplesPanel());
-    for (const [groupName, groupFields] of Object.entries(groupFieldsByRoot(sampleFields))) {
-      const group = document.createElement("section");
-      group.className = "field-group";
-      const title = document.createElement("div");
-      title.className = "field-group-title";
-      title.textContent = `Sample: ${groupName}`;
-      group.appendChild(title);
-      for (const field of groupFields) {
-        group.appendChild(fieldListItem(field));
-      }
-      elements.fieldsList.appendChild(group);
-    }
   }
+
+  appendFieldGroups(hostFields, "Host");
+  appendFieldGroups(sampleFields, "Sample");
+
   const selected = state.selectedDatasetField;
   const selectedStillExists = selected && getDatasetById(state.template, selected.datasetId)?.fields
     ?.some((field) => field.name === selected.fieldName && datasetFieldObjectDefaults(field.dataType ?? field.data_type));
@@ -1229,7 +1247,11 @@ function renderFieldsPanel() {
   elements.datasetFieldInsert.disabled =
     !runtime.sqlDatasetsEnabled || !state.selectedDatasetField;
 
-  if (visibleDatasetFieldCount === 0 && sampleFields.length === 0) {
+  if (
+    visibleDatasetFieldCount === 0
+    && hostFields.length === 0
+    && sampleFields.length === 0
+  ) {
     if (query) {
       elements.fieldsList.appendChild(
         fieldsEmptyState("No fields match the search.")
@@ -1258,6 +1280,77 @@ function renderFieldsPanel() {
       );
     }
   }
+}
+
+function appendFieldGroups(fields, prefix) {
+  for (const [groupName, groupFields] of Object.entries(groupFieldsByRoot(fields))) {
+    const group = document.createElement("section");
+    group.className = "field-group";
+    const title = document.createElement("div");
+    title.className = "field-group-title";
+    title.textContent = `${prefix}: ${groupName}`;
+    group.appendChild(title);
+    for (const field of groupFields) {
+      group.appendChild(fieldListItem(field));
+    }
+    elements.fieldsList.appendChild(group);
+  }
+}
+
+function availableTemplateFields() {
+  const hostPaths = new Set(state.hostFields.map((field) => field.path));
+  return [
+    ...state.hostFields,
+    ...getTemplateFields(state.template).filter((field) => !hostPaths.has(field.path))
+  ];
+}
+
+function fieldMatchesQuery(field, query) {
+  if (!query) {
+    return true;
+  }
+  return [
+    field.path,
+    field.name,
+    field.label,
+    field.sample,
+    field.dataType,
+    field.data_type
+  ].some((value) => String(value || "").toLowerCase().includes(query));
+}
+
+async function refreshHostFieldCatalog() {
+  const templateId = fieldCatalogTemplateId();
+  if (!templateId) {
+    state.hostFields = [];
+    return;
+  }
+
+  const fields = await loadFieldCatalog(templateId);
+  state.hostFields = fields
+    .map(normalizeHostField)
+    .filter((field) => Boolean(field.path));
+}
+
+function normalizeHostField(field) {
+  const path = normalizeFieldPath(field?.name || field?.path || "");
+  return {
+    ...field,
+    name: path,
+    path,
+    label: String(field?.label || path),
+    sample: field?.sample ?? "",
+    dataType: field?.dataType ?? field?.data_type ?? "unknown",
+    source: "host"
+  };
+}
+
+function fieldCatalogTemplateId() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("template")
+    || runtime.templateId
+    || state.template?.metadata?.custom?.id
+    || "";
 }
 
 function datasetFieldGroup(dataset, fields, searchActive) {
@@ -1856,14 +1949,5 @@ function activeRepeatForBand(bandId) {
 }
 
 function rowRelativeBinding(path, repeatDataPath) {
-  const normalized = normalizeFieldPath(path);
-  const repeatPath = normalizeArrayFieldPath(repeatDataPath);
-  if (!repeatPath) {
-    return normalized;
-  }
-  const arrayPrefix = `${repeatPath}[].`;
-  if (normalized.startsWith(arrayPrefix)) {
-    return normalized.slice(arrayPrefix.length);
-  }
-  return normalized;
+  return relativeFieldPathForCollection(path, repeatDataPath);
 }
